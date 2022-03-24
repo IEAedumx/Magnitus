@@ -1,0 +1,517 @@
+<tarea id="ProAdeEjeFisAnt" nombre="Procesa Adeudos de Ejercicios Fiscales Anteriores" autor="Erick Maya">
+    <pagina id="1">
+        
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo"/>
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+					<campo name="id_separador"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+		<nivel nombre="Parametros" id="inParams" interactivo="false">
+		    <componente tipo="cursor" nombre="Parametros" id="inParams">
+		        <tabla schema="catalog" nombre="dummy">
+		            <campo name="id" text="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+		            <campo name="ur" local="true" type="string" calc="$config.ur$"/>
+		            <campo name="periodoanterior" local="true" type="long" calc="(%buscaPeriodo.buscaPeriodo.id_periodo%-1)"/>
+		        </tabla>
+		    </componente>
+		</nivel>
+		
+        <nivel id="obSeparador" nombre="obSeparador" interactivo="false">
+			<componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+				<tabla schema="catalog" nombre="separador">
+					<campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_separador%"/>
+					<campo name="caracter"/>
+				</tabla>
+			</componente>
+		</nivel>
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+       <nivel id="datos_gen" nombre="Procesa Adeudos de Ejercicios Fiscales Anteriores" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" id="datos_gen" nombre="Datos Generales para Procesamiento de Adeudos de Ejercicios Fiscales Anteriores">
+                <tabla schema="operation" nombre="adefa_datos_generales">
+                    <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="%inParams.inParams.ur%" habilitado="false" />
+					<campo name="periodo" text="Año" visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false"/>
+					<campo name="id_adefa_dg" autogenerado="true" generacion="@prox()+1" visible="false" />
+					<campo name="articulo" columnas="3" margen-izquierdo="2"  text="Articulo" autoFiltrado="true" autoFiltradoDescripcion="clave_articulo,descripcion_articulo" llavesFijas="clave_articulo='51101-01-0001'"/>
+					
+					<campo name="mes_cve_pres" text="Mes" calc="@fechaSistema(&quot;MM&quot;)"  llaveForanea="false" visible="false" />
+					<campo name="clave_presupuestal" text="Clave Presupuestal" autoFiltrado="true"  autoFiltradoDescripcion="clave_presupuestal" columnas="3" margen-derecho="2" llavesFijas="cog='9-9-1-01'"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar"  columnas="3" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="agregaClavePres" nombre="Barrido Contraro/Pedido" interactivo="false">
+            <componente id="agregaClavePres" nombre="Barrido Contraro/Pedido" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodoanterior%"/>
+                    <!--<campo name="campo_cierre_pres" filtroCampo="campo_cierre_pres" filtroOperador="=" filtroValor="true"/>-->
+                    <campo name="articulo_adefa" calc="%datos_gen.datos_gen.articulo%"/>
+                    <campo name="mes_cve_presup_adefa" calc="%datos_gen.datos_gen.mes_cve_pres%"/>
+                    <campo name="clave_presup_adefa" calc="%datos_gen.datos_gen.clave_presupuestal%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="ctto_pedido" nombre="Procesamiento de Folios de Adeudos de Ejercicios Fiscales Anteriores" mostrarNivelAnterior="false">
+            <componente tipo="tabla" id="ctto_pedido" nombre="Procesamiento de Folios de Adeudos de Ejercicios Fiscales Anteriores" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="duep_contrato_pedido" mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false">
+                    <campo name="ur" habilitado="false" llaveForanea="false" visible="false" columna-visible="false" text="Unidad Responsable" filtroCampo="ur" calc="%inParams.inParams.ur%" />
+                    <campo name="periodo" text="Periodo" llaveForanea="false" habilitado="false" visible="false" columna-visible="true" calc="%inParams.inParams.periodoanterior%" width="100"/>
+                    <campo name="id_duep_contrato_pedido" text="Orden de Compra/P" habilitado="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_con_ordecom" text="Orden de Compra/Contrato" width="200" columnas="3" margen-izquierdo="2" habilitado="false" cellsalign="center"/>
+                    <campo name="proveedor" text="Proveedor" descripcionForanea="folio_beneficiario,razon_social" descripcionForaneaTabla="folio_beneficiario,razon_social" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="concepto" text="Concepto" columnas="6" margen-izquierdo="2" margen-derecho="2" habilitado="false" height="100"/>
+                    <campo name="total" text="Importe" columnas="3" margen-izquierdo="2" habilitado="false" formatoMoneda="true"/>
+                    <campo name="estatus" text="Estatus" columnas="3" margen-derecho="2" habilitado="false"/>
+                    
+                    <campo name="mes_cve_presup_adefa" text="Clave Prespuestal" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="clave_presup_adefa" text="Clave Prespuestal" columnas="6" habilitado="true" margen-izquierdo="2" descripcionForanea="clave_presupuestal" descripcionForaneaTabla="clave_presupuestal" calc="%datos_gen.datos_gen.clave_presupuestal%"/>
+                </tabla>
+            </componente>
+             <componente tipo="formulario" id="dat_g" nombre="Datos Generales para Procesamiento de Adeudos de Ejercicios Fiscales Anteriores" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="adefa_datos_generales">
+                    <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="%datos_gen.datos_gen.ur%" habilitado="false" />
+					<campo name="periodo" text="Año" visible="false" llaveForanea="false" calc="%datos_gen.datos_gen.periodo%" habilitado="false"/>
+					<campo name="id_adefa_dg" visible="false" calc="%datos_gen.datos_gen.id_adefa_dg%" />
+					<campo name="articulo" columnas="3" margen-izquierdo="2"  text="Articulo" descripcionForanea="descripcion_articulo" habilitado="false"/>
+					<campo name="mes_cve_pres" text="Mes" llaveForanea="false" visible="false"/>
+					<campo name="clave_presupuestal" text="Clave Presupuestal" autoFiltrado="true"  descripcionForanea="clave_presupuestal" columnas="3" margen-derecho="2" habilitado="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="false"  columnas="3" margen-izquierdo="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="BarreCCTOOC" nombre="Barrido Duep Contraro/Pedido" interactivo="false">
+            <componente id="BarreCCTOOC" nombre="Barrido Duep Contraro/Pedido" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodoanterior%"/>
+                    <!--<campo name="campo_cierre_pres" filtroCampo="campo_cierre_pres" filtroOperador="=" filtroValor="true"/>-->
+                    <campo name="id_duep_contrato_pedido"/>
+                    <campo name="tipo_documento"/>
+                    <campo name="folio_con_ordecom"/>
+                    <campo name="folio_req"/>
+                    <campo name="proceso_origen"/>
+                    <campo name="id_cat_fondo"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="id_cat_fuente"/>
+                    <campo name="fuente_financiamiento"/>
+                    <campo name="estatus"/>
+                    <campo name="id_cat_area_requiriente"/>
+                    <campo name="area_requiriente"/>
+                    <campo name="proveedor"/>
+                    <campo name="nombre_comercial"/>
+                    <campo name="direccion_prov"/>
+                    <campo name="id_pais"/>
+                    <campo name="estado_prov"/>
+                    <campo name="tel_prov"/>
+                    <campo name="representante_prov"/>
+                    <campo name="lugar_entrega"/>
+                    <campo name="contacto_recepcion"/>
+                    <campo name="tiempo_entrega"/>
+                    <campo name="condiciones_pago"/>
+                    <campo name="requiere_anticipo"/>
+                    <campo name="anticipo"/>
+                    <campo name="total" /><!-- filtroCampo="total" filtroOperador="&gt;" filtroValor="0" -->
+                    <campo name="concepto"/>
+                    <campo name="cantidad_letra"/>
+                    <campo name="mes_cve_presup_adefa" filtroCampo="mes_cve_presup_adefa" filtroOperador="=" filtroValor="%datos_gen.datos_gen.mes_cve_pres%"/>
+                    <campo name="clave_presup_adefa" filtroCampo="clave_presup_adefa" filtroOperador="=" filtroValor="%datos_gen.datos_gen.clave_presupuestal%"/>
+                </tabla>
+                <nivel id="AltaPolizas" nombre="Generación del Encabezado de la Póliza" interactivo="false">
+                    <componente id="AltaPolizas" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                        <tabla schema="operation" nombre="movimientos_auxiliares">
+                           <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/> 
+                           <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                           <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                           <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                           <campo name="id_catalogo" calc="%BarreCCTOOC.BarreCCTOOC.id_cat_fondo%"/>
+                           <campo name="fondo_contable" calc="%BarreCCTOOC.BarreCCTOOC.id_fondo_contable%"/>
+                           <!--<campo name="duep_origen" calc="%md_auto_orden_compra.md_auto_orden_compra.duep%" />-->
+                           <campo name="momento_contable" calc="4"/>
+                           <campo name="estatus_poliza" calc="1"/>
+                           <campo name="origen_poliza" calc="1"/>
+                           <campo name="tipo_poliza" calc="1"/>
+                           <campo name="concepto_general" calc="'PAGO DE ADEFAS'"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="AltaAdefa" nombre="Alta Duep Adefa" interactivo="false"> 
+                    <componente id="AltaAdefa" nombre="Alta Duep Adefa" tipo="altaDirect">
+                        <tabla schema="operation" nombre="duep_adefa">
+                            <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                            <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <!--<campo name="campo_cierre_pres" filtroCampo="campo_cierre_pres" filtroOperador="=" filtroValor="true"/>-->
+                            <campo name="id_duep_adefa" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_duep_contrato_pedido" calc="%BarreCCTOOC.BarreCCTOOC.id_duep_contrato_pedido%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()"/>
+                            <campo name="tipo_documento" calc="%BarreCCTOOC.BarreCCTOOC.tipo_documento%"/>
+                            <campo name="folio_duep_ant" calc="%BarreCCTOOC.BarreCCTOOC.folio_con_ordecom%"/>
+                            <campo name="folio_req" calc="%BarreCCTOOC.BarreCCTOOC.folio_req%"/>
+                            <campo name="proceso_origen" calc="%BarreCCTOOC.BarreCCTOOC.proceso_origen%"/>
+                            <campo name="id_cat_fondo" calc="%BarreCCTOOC.BarreCCTOOC.id_cat_fondo%"/>
+                            <campo name="id_fondo_contable" calc="%BarreCCTOOC.BarreCCTOOC.id_fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%BarreCCTOOC.BarreCCTOOC.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%BarreCCTOOC.BarreCCTOOC.fuente_financiamiento%"/>
+                            <campo name="estatus" calc="2"/>
+                            <campo name="id_cat_area_requiriente" calc="%BarreCCTOOC.BarreCCTOOC.id_cat_area_requiriente%"/>
+                            <campo name="area_requiriente" calc="%BarreCCTOOC.BarreCCTOOC.area_requiriente%"/>
+                            <campo name="proveedor" calc="%BarreCCTOOC.BarreCCTOOC.proveedor%"/>
+                            <campo name="nombre_comercial" calc="%BarreCCTOOC.BarreCCTOOC.nombre_comercial%"/>
+                            <campo name="direccion_prov" calc="%BarreCCTOOC.BarreCCTOOC.direccion_prov%"/>
+                            <campo name="id_pais" calc="%BarreCCTOOC.BarreCCTOOC.id_pais%"/>
+                            <campo name="estado_prov" calc="%BarreCCTOOC.BarreCCTOOC.estado_prov%"/>
+                            <campo name="tel_prov" calc="%BarreCCTOOC.BarreCCTOOC.tel_prov%"/>
+                            <campo name="representante_prov" calc="%BarreCCTOOC.BarreCCTOOC.representante_prov%"/>
+                            <campo name="lugar_entrega" calc="%BarreCCTOOC.BarreCCTOOC.lugar_entrega%"/>
+                            <campo name="contacto_recepcion" calc="%BarreCCTOOC.BarreCCTOOC.contacto_recepcion%"/>
+                            <campo name="tiempo_entrega" calc="%BarreCCTOOC.BarreCCTOOC.tiempo_entrega%"/>
+                            <campo name="condiciones_pago" calc="%BarreCCTOOC.BarreCCTOOC.condiciones_pago%"/>
+                            <campo name="requiere_anticipo" calc="%BarreCCTOOC.BarreCCTOOC.requiere_anticipo%"/>
+                            <campo name="anticipo" calc="%BarreCCTOOC.BarreCCTOOC.anticipo%"/>
+                            <campo name="total" calc="%BarreCCTOOC.BarreCCTOOC.total%"/>
+                            <campo name="concepto" calc="%BarreCCTOOC.BarreCCTOOC.concepto%"/>
+                            <campo name="cantidad_letra" calc="%BarreCCTOOC.BarreCCTOOC.cantidad_letra%"/>
+                            <campo name="poliza" calc="%AltaPolizas.AltaPolizas.folio_movimiento_auxiliar%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="Actualizapolizas" nombre="Actualiza Encabezado de la Póliza" interactivo="false">
+                    <componente id="Actualizapolizas" nombre="Actualiza Encabezado de la Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="movimientos_auxiliares">
+                           <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/> 
+                           <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                           <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%AltaPolizas.Altapolizas%"/>
+                           <campo name="duep_origen" calc="%BarreCCTOOC.BarreCCTOOC.id_duep_contrato_pedido%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel nombre="ActualizaFolioADEFA" id="folioadefa" interactivo="false">
+                    <componente tipo="cursor" nombre="ActualizaFolioADEFA" id="folioadefa">
+                        <tabla schema="operation" nombre="duep_adefa">
+                            <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%AltaAdefa.AltaAdefa.ur%"/>
+                             <campo name="periodo" text="perido" filtroCampo="periodo" filtroOperador="=" filtroValor="%AltaAdefa.AltaAdefa.perido%"/>
+                            <campo name="id_duep_adefa" text="ID ADEFA" filtroCampo="id_duep_adefa" filtroOperador="=" filtroValor="%AltaAdefa.AltaAdefa.id_duep_adefa%"/>
+                            <campo name="folio_duep" text=" folio Duep Adefa" calc="@concatenar(
+                                'ADEFA-'+
+                                @ifThenElse(%AltaAdefa.AltaAdefa.id_duep_adefa% &lt; 10,'00000',
+                                @ifThenElse(%AltaAdefa.AltaAdefa.id_duep_adefa% &lt; 100,'0000',
+                                @ifThenElse(%AltaAdefa.AltaAdefa.id_duep_adefa% &lt; 1000,'000',
+                                @ifThenElse(%AltaAdefa.AltaAdefa.id_duep_adefa% &lt; 10000,'00',
+                                @ifThenElse(%AltaAdefa.AltaAdefa.id_duep_adefa% &lt; 100000,'0',null)))))+
+                                %AltaAdefa.AltaAdefa.id_duep_adefa%)"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="barreDuepDetalle" nombre="Barre Detalle OC/CTTO" interactivo="false">
+        			<componente tipo="cursor" id="barreDuepDetalle" nombre="Barre Detalle OC/CTTO">
+        				<tabla schema="operation" nombre="duep_contrato_pedido_det">
+        					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+        					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodoanterior%"/>
+        					<campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%BarreCCTOOC.BarreCCTOOC.id_duep_contrato_pedido%"/>
+        					<campo name="id_duep_contrato_pedido_det"/>
+    						<campo name="clave_articulo"/>
+        					<campo name="id_cat_cog"/>
+        					<campo name="clasificador_objeto_gasto"/>
+        					<campo name="caracteristica"/>
+        					<campo name="clave_presup"/>
+        					<campo name="id_cat_centro_registro"/>
+        					<campo name="centro_registro"/>
+        					<campo name="cantidad"/>
+        					<campo name="precio_unitario"/>
+        					<campo name="importe_total"/>
+        					<campo name="tasa_iva"/>
+        					<campo name="unidad_medida"/>
+        					<campo name="id_cat_programa_presupuestal"/>
+        					<campo name="programa_presupuestal"/>
+        				</tabla>
+            			<nivel id="agregaDetallesAdefa" nombre="Agrega Detalles Adefa" interactivo="false">
+            				<componente tipo="altaDirect" id="agregaDetallesAdefa" nombre="Agrega Detalles Adefa">
+            					<tabla schema="operation" nombre="duep_adefa_det">
+            						<campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+            						<campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+            						<campo name="id_duep_adefa" calc="%AltaAdefa.AltaAdefa.id_duep_adefa%"/>
+            						<campo name="id_duep_adefa_det" calc="%barreDuepDetalle.barreDuepDetalle.id_duep_contrato_pedido_det%"/>
+            						<campo name="clave_articulo" calc="%datos_gen.datos_gen.articulo%"/>
+                					<campo name="id_cat_cog" calc="%barreDuepDetalle.barreDuepDetalle.id_cat_cog%"/>
+                					<campo name="clasificador_objeto_gasto" calc="%barreDuepDetalle.barreDuepDetalle.id_cog%"/>
+                					<campo name="caracteristica" calc="%barreDuepDetalle.barreDuepDetalle.caracteristica%"/>
+                					<campo name="mes" calc="%BarreCCTOOC.BarreCCTOOC.mes_cve_presup_adefa%"/>
+                					<campo name="clave_presup" calc="%BarreCCTOOC.BarreCCTOOC.clave_presup_adefa%"/>
+                					<campo name="id_cat_centro_registro" calc="%barreDuepDetalle.barreDuepDetalle.id_cat_centro_registro%"/>
+                					<campo name="centro_registro" calc="%barreDuepDetalle.barreDuepDetalle.centro_registro%"/>
+                					<campo name="cantidad" calc="%barreDuepDetalle.barreDuepDetalle.cantidad%"/>
+                					<campo name="precio_unitario" calc="%barreDuepDetalle.barreDuepDetalle.importe_unitario%"/>
+                					<campo name="importe_total" calc="%barreDuepDetalle.barreDuepDetalle.importe_total%"/>
+                					<campo name="tasa_iva" calc="%barreDuepDetalle.barreDuepDetalle.tasa_iva%"/>
+                					<campo name="unidad_medida" calc="%barreDuepDetalle.barreDuepDetalle.unidad_medida%"/>
+                					<campo name="id_cat_programa_presupuestal" calc="%barreDuepDetalle.barreDuepDetalle.id_cat_programa%"/>
+                					<campo name="programa_presupuestal" calc="%barreDuepDetalle.barreDuepDetalle.programa_presupuestal%"/>
+            					</tabla>
+            				</componente>
+            			</nivel>
+            			
+            			<!-- COMPROMETIDO CARGO -->
+            			<nivel id="AltaCargo" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                            <componente id="AltaCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%AltaPolizas.AltaPolizas.ur%" />
+                                    <campo name="id_periodo" calc="%AltaPolizas.AltaPolizas.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%AltaPolizas.AltaPolizas.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                    <campo name="clave_presupuestal" calc="%BarreCCTOOC.BarreCCTOOC.clave_presup_adefa%"/>
+                                    <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                            '2'+%obSeparador.obSeparador.caracter%+
+                                            '4'+%obSeparador.obSeparador.caracter%+
+                                            '0'+%obSeparador.obSeparador.caracter%+
+                                            '0'+%obSeparador.obSeparador.caracter%+
+                                            '001'+%obSeparador.obSeparador.caracter%+
+                                            '01'+%obSeparador.obSeparador.caracter%+
+                                            '001')" />
+                                    <campo name="importe_cargo" calc="%barreDuepDetalle.barreDuepDetalle.importe_total%"/>
+                                    <campo name="concepto_bloque" calc="'PAGO DE ADEFAS'"/>
+                                    <!-- %BarreCCTOOC.BarreCCTOOC.articulo_adefa% -->
+                                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                        WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '4'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                                    <campo name="tipo_detalle" calc="1"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                        <nivel id="AltaAbono" nombre="Alta Detalle ABONO de Duep" interactivo="false">
+                            <componente id="AltaAbono" nombre="Alta Detalle ABONO de Duep" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                   <campo name="ur" calc="%AltaPolizas.AltaPolizas.ur%" />
+                                    <campo name="id_periodo" calc="%AltaPolizas.AltaPolizas.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%AltaPolizas.AltaPolizas.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                    <campo name="clave_presupuestal" calc="%BarreCCTOOC.BarreCCTOOC.clave_presup_adefa%"/>
+                                    <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '001'+%obSeparador.obSeparador.caracter%+
+                                        '01'+%obSeparador.obSeparador.caracter%+
+                                        '001')" />
+                                    <campo name="importe_abono" calc="%barreDuepDetalle.barreDuepDetalle.importe_total%"/>
+                                    <campo name="concepto_bloque" calc="'PAGO DE ADEFAS'"/>
+                                    <!-- %BarreCCTOOC.BarreCCTOOC.articulo_adefa% -->
+                                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                        WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                                    <campo name="tipo_detalle" calc="1"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+
+                        <!-- SEGUNDO CARGO -->
+            			<nivel id="AltaCargo2" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                            <componente id="AltaCargo2" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%AltaPolizas.AltaPolizas.ur%" />
+                                    <campo name="id_periodo" calc="%AltaPolizas.AltaPolizas.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%AltaPolizas.AltaPolizas.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                    <campo name="clave_presupuestal" calc="%BarreCCTOOC.BarreCCTOOC.clave_presup_adefa%"/>
+                                    <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                            '2'+%obSeparador.obSeparador.caracter%+
+                                            '5'+%obSeparador.obSeparador.caracter%+
+                                            '0'+%obSeparador.obSeparador.caracter%+
+                                            '0'+%obSeparador.obSeparador.caracter%+
+                                            '001'+%obSeparador.obSeparador.caracter%+
+                                            '01'+%obSeparador.obSeparador.caracter%+
+                                            '001')" />
+                                    <campo name="importe_cargo" calc="%barreDuepDetalle.barreDuepDetalle.importe_total%"/>
+                                    <campo name="concepto_bloque" calc="'PAGO DE ADEFAS'"/>
+                                    <!-- %BarreCCTOOC.BarreCCTOOC.articulo_adefa% -->
+                                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                        WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '5'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                                    <campo name="tipo_detalle" calc="1"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <!-- SEGUNDO ABONO -->
+                        <nivel id="AltaAbono2" nombre="Alta Detalle ABONO de Duep" interactivo="false">
+                            <componente id="AltaAbono2" nombre="Alta Detalle ABONO de Duep" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                   <campo name="ur" calc="%AltaPolizas.AltaPolizas.ur%" />
+                                    <campo name="id_periodo" calc="%AltaPolizas.AltaPolizas.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%AltaPolizas.AltaPolizas.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                    <campo name="clave_presupuestal" calc="%BarreCCTOOC.BarreCCTOOC.clave_presup_adefa%"/>
+                                    <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '4'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '001'+%obSeparador.obSeparador.caracter%+
+                                        '01'+%obSeparador.obSeparador.caracter%+
+                                        '001')" />
+                                    <campo name="importe_abono" calc="%barreDuepDetalle.barreDuepDetalle.importe_total%"/>
+                                    <campo name="concepto_bloque" calc="'PAGO DE ADEFAS'"/>
+                                    <!-- %BarreCCTOOC.BarreCCTOOC.articulo_adefa% -->
+                                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                        WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '4'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                                    <campo name="tipo_detalle" calc="1"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- TERCER CARGO -->
+            			<nivel id="AltaCargo3" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                            <componente id="AltaCargo3" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%AltaPolizas.AltaPolizas.ur%" />
+                                    <campo name="id_periodo" calc="%AltaPolizas.AltaPolizas.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%AltaPolizas.AltaPolizas.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                    <campo name="clave_presupuestal" calc="%BarreCCTOOC.BarreCCTOOC.clave_presup_adefa%"/>
+                                    <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                            '2'+%obSeparador.obSeparador.caracter%+
+                                            '6'+%obSeparador.obSeparador.caracter%+
+                                            '0'+%obSeparador.obSeparador.caracter%+
+                                            '0'+%obSeparador.obSeparador.caracter%+
+                                            '001'+%obSeparador.obSeparador.caracter%+
+                                            '01'+%obSeparador.obSeparador.caracter%+
+                                            '001')" />
+                                    <campo name="importe_cargo" calc="%barreDuepDetalle.barreDuepDetalle.importe_total%"/>
+                                    <campo name="concepto_bloque" calc="'PAGO DE ADEFAS'"/>
+                                    <!-- %BarreCCTOOC.BarreCCTOOC.articulo_adefa% -->
+                                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                        WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '6'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                                    <campo name="tipo_detalle" calc="1"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <!-- TERCER ABONO -->
+                        <nivel id="AltaAbono3" nombre="Alta Detalle ABONO de Duep" interactivo="false">
+                            <componente id="AltaAbono3" nombre="Alta Detalle ABONO de Duep" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                   <campo name="ur" calc="%AltaPolizas.AltaPolizas.ur%" />
+                                    <campo name="id_periodo" calc="%AltaPolizas.AltaPolizas.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%AltaPolizas.AltaPolizas.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                    <campo name="clave_presupuestal" calc="%BarreCCTOOC.BarreCCTOOC.clave_presup_adefa%"/>
+                                    <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '5'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '001'+%obSeparador.obSeparador.caracter%+
+                                        '01'+%obSeparador.obSeparador.caracter%+
+                                        '001')" />
+                                    <campo name="importe_abono" calc="%barreDuepDetalle.barreDuepDetalle.importe_total%"/>
+                                    <campo name="concepto_bloque" calc="'PAGO DE ADEFAS'"/>
+                                    <!-- %BarreCCTOOC.BarreCCTOOC.articulo_adefa% -->
+                                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                        WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '4'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                                    <campo name="tipo_detalle" calc="1"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+        			</componente>
+        	    </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="ProAdeEjeFisAnte" nombre="Procesamiento de Adeudos de Ejercicios Fiscales Anteriores" mostrarNivelAnterior="false">
+            <componente tipo="tabla" id="ProAdeEjeFisAnte" nombre="Procesamiento de Adeudos de Ejercicios Fiscales Anteriores"  mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false">
+                <tabla schema="operation" nombre="duep_adefa">
+                    <campo name="ur" habilitado="false" llaveForanea="false" filtroCampo="ur" filtroValor="=" filtroOperador="%AltaAdefa.AltaAdefa.ur%" visible="false" columna-visible="true" text="Unidad Responsable" calc="%inParams.inParams.ur%" />
+                    <campo name="periodo" habilitado="false" llaveForanea="false" filtroCampo="periodo" filtroValor="=" filtroOperador="%AltaAdefa.AltaAdefa.periodo%" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" columna-visible="true" text="Periodo" descripcionForanea="id_periodo"/>
+                    <campo name="id_duep_adefa" text="ID ADEFA" habilitado="false" visible="false" columna-visible="true"/>
+                    <campo name="folio_duep_ant" text="Folio Origen" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                    <campo name="folio_duep" text="Folio Adefa" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                    <campo name="proveedor" text="Beneficiario" columnas="3" margen-derecho="2" habilitado="false" descripcionForaneaTabla="folio_beneficiario,razon_social" descripcionForanea="folio_beneficiario,razon_social"/>
+                    <campo name="concepto" text="Concepto" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="total" text="Importe" columnas="3" margen-derecho="2" habilitado="false" formatoMoneda="true"/>
+                    <campo name="estatus" text="Estatus" columnas="3" margen-derecho="2" habilitado="false" columna-visible="false"/>
+                    <campo name="poliza" visible="false" columna-visible="false"/>
+                    <campo name="id_duep_contrato_pedido" visible="false" columna-visible="false"/>
+                    <!--<campo name="clave_pres" text="Clave Prespuestal" local="true" type="string" calc="%datos_gen.datos_gen.clave_presupuestal%"/>-->
+                    <campo name="usuario" text="Usuario" local="true" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%" visible="false" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Ver Detalles" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_adefa,id_duep_contrato_pedido,usuario" ref="task=b3f041fa-037a-4801-9327-316dc33bdd38"/>  
+                        <!-- Pag 24 Click derecho Adefa-->                         
+                        <tarea nombre="Ver Póliza" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_adefa,poliza,usuario" ref="task=73d752f6-18c8-4300-a7e3-192d6b9f4ebf"/>  
+                        <!-- Pag 24 Click derecho Adefa Muestra Poliza-->                         
+                    </tareas>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!--96ac6753-9457-4cdd-8e74-ce88cfc12f65-->
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false">
+			<componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+				<parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+					<parametro name="enterprise" calc="'MAGNITUS'"/>
+					<parametro name="process" calc="'96ac6753-9457-4cdd-8e74-ce88cfc12f65'"/>
+					<parametro name="user" calc="$protocolarios.user$"/>
+					<parametro name="out_ur" calc="%AltaAdefa.AltaAdefa.ur%" mostrarEsc="true"/>
+					<parametro name="out_periodo" calc="%AltaAdefa.AltaAdefa.periodo%" mostrarEsc="true"/>
+					<parametro name="out_id_adefa_dg" calc="%datos_gen.datos_gen.id_adefa_dg%" mostrarEsc="true"/>
+					<!--<parametro name="out_id_adefa" calc="%Registro_presup.Registro_presup.id_presupuesto_egresos%" mostrarEsc="false"/>-->
+				</parametros>
+			</componente>
+    	</nivel> 
+    </pagina>
+</tarea>
