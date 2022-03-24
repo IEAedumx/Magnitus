@@ -1,0 +1,301 @@
+<tarea nombre="Registra Modificación de Techo de Requisicion" version="1.0.0" fechaModificacion="2019-01-21" autor="Erick Maya"> 
+    <pagina id="1" nombre="Registra Transaccion"  mostrarNivelAnterior="false">
+         <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    
+				</tabla>
+			</componente>
+		</nivel>
+		
+		 <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barre_detalle_req" nombre="barre_detalle_req" interactivo="false">
+            <componente id="barre_detalle_req" nombre="barre_detalle_req" tipo="cursor">
+                <tabla schema="operation" nombre="requisicion_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> <!--$inParam.periodo$-->
+                    <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="$inParam.folio_req$"/><!--$inParam.folio_add-->
+                    <campo name="folio_req_detalle"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="id_cat_programa_presupuestal"/>
+                    <campo name="programa_presupuestal"/>
+                    <campo name="descripcion_especifica"/>
+                </tabla>
+                <nivel id="barre_adj_det" nombre="barre_adj_det" interactivo="false">
+                    <componente id="barre_adj_det" nombre="barre_adj_det" tipo="cursor">
+                        <tabla schema="operation" nombre="proc_add_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> <!--$inParam.periodo$-->
+                            <campo name="tipo_adjudicacion" filtroCampo="tipo_adjudicacion" filtroOperador="=" filtroValor="$inParam.adjudicacion$"/> <!--$inParam.id_tipo_adjudicacion-->
+                            <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="$inParam.folio_add$"/> <!--$inParam.folio_add-->
+                            <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="$inParam.folio_req$"/> <!--$inParam.periodo$-->
+                            <campo name="folio_req_detalle" filtroCampo="folio_req_detalle" filtroOperador="=" filtroValor="%barre_detalle_req.barre_detalle_req.folio_req_detalle%"/><!--$inParam.folio_add-->
+                            <campo name="importe_total_detalle"/>
+                            <campo name="importe_total_detalle_ganador"/>
+                            <campo name="pendiente_asignar" calc="@castTo(@ifThenElse(%barre_adj_det.barre_adj_det.importe_total_detalle_ganador%==null,0,%barre_adj_det.barre_adj_det.importe_total_detalle_ganador%),'decimal')-@castTo(@ifThenElse(%barre_adj_det.barre_adj_det.importe_total_detalle%==null,0,%barre_adj_det.barre_adj_det.importe_total_detalle%),'decimal')"/>
+                            <campo name="clave_presupuestal" calc="%barre_detalle_req.barre_detalle_req.clave_presupuestal%"/>
+                            <campo name="presupuesto_disp" calc="@consultaDirec('SELECT (presupuesto_autorizado-presupuesto_reduccion+presupuesto_ampliacion-presupuesto_precomprometido-presupuesto_comprometido) AS result FROM operation.presupuesto_egresos_mes_det WHERE id_unidad_responsable='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND clave_presupuestal=\\''+%barre_detalle_req.barre_detalle_req.clave_presupuestal%+'\\' AND mes='+@fechaSistema(&quot;MM&quot;),'result','decimal','MAGNITUS')"/> <!---presupuesto_devengado-presupuesto_ejercido-presupuesto_pagado-->
+                            <campo name="id_cat_programa_presupuestal" calc="%barre_detalle_req.barre_detalle_req.id_cat_programa_presupuestal%"/>
+                            <campo name="programa_presupuestal" calc="%barre_detalle_req.barre_detalle_req.programa_presupuestal%"/>
+                            <campo name="descripcion_bien" calc="%barre_detalle_req.barre_detalle_req.descripcion_especifica%"/>
+
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+         
+       
+        <!-- FIN LEGO TIPO CURSOR -->
+			
+		<nivel id="requi" nombre="Registra Ampliación de Recursos para la Requisición"> 
+		    <componente id="requi" tipo="tabla" nombre="Registra Ampliación de Recursos para la Requisición" filtro="true" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false"> <!--mostrarImportacion="true"-->
+                <tabla schema="operation" nombre="proc_add_detalle">
+                    <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" calc="$inParam.ur$" habilitado="false"/>
+					<campo name="periodo" text="Periodo" columnas="3" margen-izquierdo="2" visible="true" columna-visible="false" llaveForanea="false" calc="$inParam.periodo$" habilitado="false"/>
+					<campo name="tipo_adjudicacion" text="tipo_adjudicacion" columnas="3" margen-izquierdo="2" visible="true" columna-visible="false" llaveForanea="false" calc="$inParam.adjudicacion$" habilitado="false"/>
+					<campo name="folio_add" text="folio_add" columnas="3" margen-izquierdo="2" visible="true" columna-visible="false" llaveForanea="false" calc="$inParam.folio_add$" habilitado="false"/>
+					<campo name="folio_req" text="Folio Requisición" llaveForanea="false" columnas="3" margen-derecho="2"  columna-visible="true" visible="true" calc="$inParam.folio_req$"/>
+					<campo name="folio_req_detalle" text="Bloque" visible="false" columna-visible="false"/>
+					<!--<campo name="id_compra" text="Compra" columnas="3" margen-izquierdo="2" visible="true" columna-visible="true" width="150"/> -->
+					<campo name="clave_articulo" text="Articulo" columnas="3" margen-derecho="2" visible="true" columna-visible="true" width="200" descripcionForanea="clave_articulo,descripcion_articulo" descripcionForaneaTabla="clave_articulo,descripcion_articulo"/>
+					<campo name="clave_presupuestal" text="Clave Presupuestal" columnas="3" margen-izquierdo="2" visible="true" columna-visible="true" width="150"/>
+					<campo name="importe_total_detalle" text="Importe de la Requisición" columnas="3" margen-derecho="2" visible="true" columna-visible="true" height="150"/> 
+					<campo name="importe_total_detalle_ganador" text="Importe Adjudicado" columnas="3" margen-izquierdo="2" visible="true" columna-visible="true" width="150"/> 
+					<campo name="pendiente_asignar" text="Pendiente por asignar" columnas="3" margen-derecho="2" visible="true" columna-visible="true" width="150" />
+					<campo name="presupuesto_disp" text="Presupuesto Disponible" columnas="3" margen-izquierdo="2" width="150"/>
+					<campo name="seleccion_desierta" text="Selección" editable="true" columna-visible="true" columnas="3" margen-izquierdo="2" width="150" /><!--filtroCampo="seleccion_desierta" filtroOperador="=" filtroValor="true"-->
+
+                </tabla>
+            </componente>
+            <!--<componente tipo="maestroDetalle" id="agregarReq" nombre="Registra Modificación de Techo de Requisicion"> 
+                <encabezado accionDefault="seleccionar">
+                    <tabla schema="operation" nombre="requisicion">
+                        <campo name="ur" text="Unidad Responsable" visible="false" calc="$config.ur$" habilitado="false"/>
+						<campo name="periodo" text="Periodo" columnas="3" margen-izquierdo="2" visible="true" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false"/>
+						<campo name="folio_req" text="Folio Requisición" columnas="3" margen-derecho="2"  visible="true" calc="$inParam.folio_req$"/>
+						<campo name="id_cat_unidad_ejecutora_gasto" text="id_cat_unidad_ejecutora_gasto" width="100" visible="false" columna-visible="false"/>
+						<campo name="id_unidad_ejecutora_gasto" text="id_unidad_ejecutora_gasto" width="100" visible="false" columna-visible="false"/>
+						<campo name="concepto" text="concepto" columnas="6" margen-izquierdo="2"  cellsalign="left" width="100" height="100" visible="true" habilitado="false" />
+						<campo name="id_tipo_duep" text="Tipo Duep" cellsalign="left" width="100" visible="false"/>
+						<campo name="estatus_duep" text="Estatus Duep" columnas="3" margen-izquierdo="2"  cellsalign="left" width="100" descripcionForanea="descripcion" visible="true" columna-visible="true"/>
+						<campo name="total" text="Total" cellsalign="left" columnas="3" margen-derecho="2" width="100" visible="true" habilitado="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Grabar" />
+                     </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla schema="operation" nombre="requisicion_detalle" tituloDetalle="Bloques" id="detalle_uno"  mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                        <campo name="ur" llaveForanea="false" visible="false" columna-visible="false"/>
+						<campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false"/>
+						<campo name="folio_req" text="folio_req" llaveForanea="false" visible="false" columna-visible="false"/>
+						<campo name="folio_req_detalle" text="Bloque" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="false"/>
+						<campo name="id_compra" text="Compra" columnas="3" margen-izquierdo="2" visible="true" columna-visible="true" width="150"/> 
+						<campo name="articulo" text="Articulo" columnas="3" margen-derecho="2" visible="true" columna-visible="true" width="200" descripcionForanea="clave_articulo,descripcion" descripcionForaneaTabla="clave_articulo,descripcion"/>
+						<campo name="clave_presupuestal" text="Clave Presupuestal" columnas="3" margen-izquierdo="2" visible="true" columna-visible="true" width="150"/>
+						<campo name="importe_total" text="Techo según requisición" columnas="3" margen-derecho="2" visible="true" columna-visible="true" height="150"/> 
+						<campo name="importe_adjudicado" text="Importe Adjudicado" columnas="3" margen-izquierdo="2" visible="true" columna-visible="true" width="150"/> 
+						<campo name="pendiente_asignar" text="Pendiente por asignar" columnas="3" margen-derecho="2" visible="true" columna-visible="true" width="150" calc="@castTo(@ifThenElse(%importe_total%==null,0,%importe_total%),'decimal')-@castTo(@ifThenElse(%importe%==null,0,%importe_total%),'decimal')"/>
+						<campo name="presupuesto_disp" text="Presupuesto Disponible" columnas="3" margen-izquierdo="2" local="true" type="decimal" width="150" calc="%agregarRequNivel.agregarReq.total%"/>
+						<campo name="ultimo_usuario_modificador" text="Usuario Modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                    </tabla>
+                </detalles>
+            </componente>-->
+        </nivel>
+        <nivel id="barreFol" nombre="barreFol" interactivo="false">
+             <componente id="barreFol" nombre="barreFol" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" visible="false"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_req AS result FROM operation.requisicion WHERE ur='+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND folio_ant='+$inParam.folio_req$,'result','long','MAGNITUS')"/> 
+                </tabla>
+            </componente>
+        </nivel>    
+        <!--ALTA NUEVA REQUISICIÓN-->
+         
+         <nivel id="barreReq" nombre="barreReq" interactivo="false">
+            <componente id="barreReq" nombre="barreReq" tipo="cursor">
+                <tabla schema="operation" nombre="requisicion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> <!--$inParam.periodo$-->
+                    <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="$inParam.folio_req$"/><!--$inParam.folio_add-->
+                    <campo name="id_tipo_duep"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto"/>
+                    <campo name="id_unidad_ejecutora_gasto"/>
+                    <campo name="concepto"/>
+                    <campo name="estatus_duep"/>
+                    <campo name="total"/>
+                    <campo name="total_letra"/>
+                    <campo name="fecha_registro"/>
+                    <campo name="proceso"/>
+                    <campo name="nombre_programa"/>
+                    <campo name="nombre_indicador"/>
+                    <campo name="meta_asociada"/>
+                    <campo name="proceso_adjudicacion"/>
+                    <campo name="fecha_solicitud_adj"/>
+                    
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="AltaReq" nombre="AltaReq" interactivo="false">
+            <componente id="AltaReq" nombre="AltaReq" tipo="altaDirect" >
+                <tabla schema="operation" nombre="requisicion">
+                    <campo name="ur" calc="$inParam.ur$"/>
+                     <campo name="periodo" calc="$inParam.periodo$"/> 
+                    <campo name="folio_req" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="id_tipo_duep" calc="%barreReq.barreReq.id_tipo_duep%"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto" calc="%barreReq.barreReq.id_cat_unidad_ejecutora_gasto%"/>
+                    <campo name="id_unidad_ejecutora_gasto" calc="%barreReq.barreReq.id_unidad_ejecutora_gasto%"/>
+                    <campo name="concepto" calc="%barreReq.barreReq.concepto%"/>
+                    <campo name="estatus_duep" calc="1"/>
+                    <campo name="fecha_registro" calc="@fechaSistema()"/>
+                    <campo name="proceso" calc="%barreReq.barreReq.proceso%"/>
+                    <campo name="nombre_programa" calc="%barreReq.barreReq.nombre_programa%"/>
+                    <campo name="nombre_indicador" calc="%barreReq.barreReq.nombre_indicador%"/>
+                    <campo name="meta_asociada" calc="%barreReq.barreReq.meta_asociada%"/>
+                    <campo name="proceso_adjudicacion" calc="%barreReq.barreReq.proceso_adjudicacion%"/>
+                    <campo name="fecha_solicitud_adj" calc="%barreReq.barreReq.fecha_solicitud_adj%"/>
+                    <campo name="folio_ant" calc="$inParam.folio_req$"/>
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <!--<campo name="usuario_autorizacion" calc="%barreUsuarios.barreUsuarios.id_usuario%" />-->
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="acumula_req" interactivo="false" nombre="Acumular">
+            <componente id="acumula_req" tipo="cursor" nombre="Acumular">
+                <tabla schema="operation" nombre="requisicion">
+                    <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%AltaReq.AltaReq.ur%" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%AltaReq.AltaReq.periodo%" llaveForanea="false"/>
+                    <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%AltaReq.AltaReq.folio_req%"/>
+                    <campo name="total_importe" calc="@castTo(@ifThenElse(%barre_adj_det.barre_adj_det.importe_total_detalle_ganador%==null,0,%barre_adj_det.barre_adj_det.importe_total_detalle_ganador%),'decimal')-@castTo(@ifThenElse(%barre_adj_det.barre_adj_det.importe_total_detalle%==null,0,%barre_adj_det.barre_adj_det.importe_total_detalle%),'decimal')"/>
+                    <campo name="total" calc="@castTo(@ifThenElse(%barre_adj_det.barre_adj_det.importe_total_detalle_ganador%==null,0,%barre_adj_det.barre_adj_det.importe_total_detalle_ganador%),'decimal')-@castTo(@ifThenElse(%barre_adj_det.barre_adj_det.importe_total_detalle%==null,0,%barre_adj_det.barre_adj_det.importe_total_detalle%),'decimal')"/>
+                    <campo name="estatus_duep" calc="1"/>
+                </tabla>
+                <nivel id="letra_req" interactivo="false" nombre="Letra">
+                    <componente id="letra_req" tipo="cursor" nombre="Letra">
+                        <tabla schema="operation" nombre="requisicion">
+                            <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                            <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%AltaReq.AltaReq.folio_req%"/>
+                            <campo name="total_letra" calc="@numeroAletra(@castTo(%acumula_req.acumula_req.total%,'float'),'Pesos M.N.')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="barreDetAdj" nombre="barreDetAdj" interactivo="false">
+            <componente id="barreDetAdj" nombre="barreDetAdj" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add_detalle">
+                     <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" />
+					<campo name="tipo_adjudicacion" filtroCampo="tipo_adjudicacion" filtroOperador="=" filtroValor="$inParam.adjudicacion$"/>
+					<campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="$inParam.folio_add$"/>
+					<campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="$inParam.folio_req$"/>
+					<campo name="seleccion_desierta"/>
+					<campo name="folio_req_detalle"/>
+					<campo name="clave_articulo"/>
+					<campo name="clave_presupuestal"/>
+					<campo name="importe_unitario"/> 
+					<campo name="cantidad"/> 
+					<campo name="pendiente_asignar"/>
+					<campo name="presupuesto_disp"/>
+					<campo name="id_cat_programa_presupuestal"/>
+					<campo name="programa_presupuestal"/>
+					<campo name="id_cat_cog"/>
+					<campo name="id_cog"/>
+					<campo name="id_cat_fondo_contable"/>
+					<campo name="fondo_contable"/>
+					<campo name="id_cat_centro_registro"/>
+					<campo name="centro_registro"/>
+					<campo name="tasa_iva"/>
+					<campo name="descripcion_bien"/>
+                </tabla>
+                <nivel id="AltaReqDet" nombre="AltaReqDet" interactivo="false">
+                    <componente id="AltaReqDet" nombre="AltaReqDet" tipo="altaDirect">
+                        <tabla schema="operation" nombre="requisicion_detalle">
+                            <campo name="ur" llaveForanea="false" calc="$inParam.ur$"/>
+                            <campo name="periodo" llaveForanea="false" calc="$inParam.periodo$"/> 
+                            <campo name="folio_req" llaveForanea="false" calc="%AltaReq.AltaReq.folio_req%"/>
+                            <campo name="folio_req_detalle" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="articulo" calc="%barreDetAdj.barreDetAdj.clave_articulo%"/>
+                            <campo name="cantidad" calc="1"/>
+                            <campo name="precio_unitario" calc="%barreDetAdj.barreDetAdj.pendiente_asignar%"/>
+                            <!--<campo name="descuento" calc="%barreDetAdj.barreDetAdj.id_tipo_duep%"/>-->
+                            <!--<campo name="iva" calc="%barreDetAdj.barreDetAdj.tasa_iva%"/>-->
+                            <!--<campo name="otros_impuestos" calc="%barreDetAdj.barreDetAdj.id_tipo_duep%"/>-->
+                            <campo name="importe" calc="%barreDetAdj.barreDetAdj.importe_unitario%"/>
+                            <campo name="id_cat_programa_presupuestal" calc="%barreDetAdj.barreDetAdj.id_cat_programa_presupuestal%"/>
+                            <campo name="programa_presupuestal" calc="%barreDetAdj.barreDetAdj.programa_presupuestal%"/>
+                            <campo name="clave_presupuestal" calc="%barreDetAdj.barreDetAdj.clave_presupuestal%"/>
+                            <campo name="id_cat_fondo_contable" calc="%barreDetAdj.barreDetAdj.id_fondo_contable%"/>
+                            <campo name="id_fondo_contable" calc="%barreDetAdj.barreDetAdj.fondo_contable%"/>
+                            <campo name="descripcion_especifica" calc="%barreDetAdj.barreDetAdj.descripcion_bien%"/>
+                            <!--<campo name="adjuntar_archivos" calc="%barreDetAdj.barreDetAdj.id_cat_programa_presupuestal%"/>-->
+                            <!--<campo name="id_cat_fuente_financiamiento" calc="%barreDetAdj.barreDetAdj.id_cat_programa_presupuestal%"/>-->
+                            <!--<campo name="id_fuente_financiamiento" calc="%barreDetAdj.barreDetAdj.id_cat_programa_presupuestal%"/>-->
+                            <!--<campo name="id_tasa_iva" calc="%barreDetAdj.barreDetAdj.tasa_iva%"/>-->
+                            <campo name="id_cat_cog" calc="%barreDetAdj.barreDetAdj.id_cat_cog%"/>
+                            <campo name="id_cog" calc="%barreDetAdj.barreDetAdj.id_cog%"/>
+                            <campo name="importe_total" calc="%barreDetAdj.barreDetAdj.pendiente_asignar%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="barreProc_ad" nombre="barreProc_ad" interactivo="false">
+            <componente id="barreProc_ad" nombre="barreProc_ad" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> <!--$inParam.periodo$-->
+                    <campo name="id_tipo_adjudicacion" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="$inParam.adjudicacion$"/> <!--$inParam.id_tipo_adjudicacion-->
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="$inParam.folio_add$"/> <!--$inParam.folio_add-->
+                    
+                    <campo name="req_mod_techos" calc="%AltaReq.AltaReq.folio_req%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="AdjuntaFirmas" nombre="Reporte Requisición de Bienes o Servicios" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+             <!--<componente id="cpOfertas" nombre="Ofertas" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1"  visible="false"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_req AS result FROM operation.requisicion WHERE ur='+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND folio_ant='+$inParam.folio_req$,'result','long','MAGNITUS')"/> 
+                    
+                    
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" />
+                </estilos>
+            </componente>-->
+            <componente id="consultaOrdenCompraReporte" nombre="Ampliación de Requisición de Bienes o Servicios" tipo="reporte">
+                <reporte nombre="Techos_con_req_Al" expediente="Expediente de Techos a la Requisición" nombreDocumento="'Ampliación de Requisición de Bienes o Servicios'" grupo="$inParam.folio_add$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio" type="long" calc="%AltaReq.AltaReq.folio_req%"/>
+                    <campo name="id_tipo_adjudicacion" type="long" calc="$inParam.adjudicacion$"/>
+                    <campo name="usuario" text="Usuario" local="true" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>	
+</tarea>
