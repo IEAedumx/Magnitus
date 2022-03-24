@@ -1,0 +1,247 @@
+<tarea id="autSolCanCont" nombre="Autoriza Solicitud de Cancelación de Contrato" version="1.0.0" autor="Froylán Alanís">
+    <pagina id="1">
+        <!-- <nivel id="params" nombre="parametros" interactivo="false">
+            <componente id="params" nombre="parametros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1"/>
+                    <campo name="DUEP" local="true" type="long" calc="$inParam.id_duep_contrato_pedido$"/>
+                </tabla>
+            </componente>
+        </nivel> -->
+        <nivel id="user" nombre="barrerUsuario" interactivo="false">
+            <componente tipo="cursor" id="user" nombre="barrerUsuario">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>    
+            </componente>
+        </nivel>
+        <nivel id="periodo" nombre="barrerPeriodo" interactivo="false">
+            <componente tipo="cursor" id="periodo" nombre="barrerPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="id_separador"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Solicitud de Cancelación de Contrato" id="re" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+             <componente tipo="reporte" nombre="Solicitud de Cancelación de Contrato" id="aaa">
+                <reporte nombre="repor_regiCon_jsus">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="$inParam.id_duep_contrato_pedido$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="formAutSolCanCont" nombre="Autoriza Solicitud de Cancelación de Contrato" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="formAutSolCanCont" tipo="formulario" nombre="Autoriza Cancelación de Contrato" accionDefault="editar">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text="" calc="$inParam.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="" calc="$inParam.periodo$" llaveForanea="false" visible="false"/>
+                    <campo name="id_duep_contrato_pedido" text="" calc="$inParam.id_duep_contrato_pedido$" llaveForanea="false" visible="false"/>
+                    <campo name="observaciones_cancelacion" text="Observaciones" mascara="C" marcador="Observaciones" width="720" height="150" interaccion="%autoriza_cancelacion%==false" validacion="%autoriza_cancelacion%==false AND %observaciones_cancelacion%==null" validacionMensaje="Debe de capturar Observaciones" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="autoriza_cancelacion" text="Autorizar" columnas="4" margen-izquierdo="4" margen-derecho="2"/>
+                    <campo name="estatus_contrato" calc="'Cancelado'" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!-- Genera poliza -->
+        <!-- PÓLIZA -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="obSeparador" nombre="obSeparador" interactivo="false">
+            <componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%periodo.periodo.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barre" nombre="Autoriza Solicitud de Cancelación de Contrato" interactivo="false">
+            <componente id="barre" tipo="cursor" nombre="Autoriza Cancelación de Contrato">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur"  filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/> 
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" />
+                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="$inParam.id_duep_contrato_pedido$"/>
+                    <campo name="proveedor" visible="false"/>
+                    <campo name="id_cat_fondo" visible="false" />
+                    <campo name="id_fondo_contable" visible="false" />
+                     <campo name="contrato"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false">
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="$inParam.ur$"/> 
+                   <campo name="periodo" calc="$inParam.periodo$"/>
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_cancelacion_contraro" calc="$inParam.id_duep_contrato_pedido$"/>
+                   <campo name="id_catalogo" calc="%barre.barre.id_cat_fondo%"/>
+                   <campo name="fondo_contable" calc="%barre.barre.id_fondo_contable%"/>
+                   <campo name="duep_origen" calc="$inParam.id_duep_contrato_pedido$"/>
+                   <campo name="momento_contable" calc="4"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="id_beneficiario_ganador" calc="%barre.barre.proveedor%"/>
+                   <campo name="concepto_general" calc="'Póliza de Cancelacion de Contrato '+ %barre.barre.contrato%"/>
+                   
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles" interactivo="false">
+            <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.id_cancelacion_contraro%"/>
+                    <campo name="id_duep_contrato_pedido_det"/>
+                    <campo name="clave_articulo" />
+                    <campo name="id_cat_cog"/>
+                    <campo name="clasificador_objeto_gasto"/>
+                    <campo name="caracteristica"/>
+                    <campo name="id_cat_programa_presupuestal"/>
+                    <campo name="programa_presupuestal"/>
+                    <campo name="id_cat_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="clave_presup"/>
+                    <campo name="cantidad"/>
+                    <campo name="unidad_medida"/>
+                    <campo name="importe_unitario"/>
+                    <campo name="descuento"/>
+                    <campo name="imp_valor_agregado" />
+                    <campo name="otros_impuestos" />
+                    <campo name="importe_total"/>
+                </tabla>
+                <!-- INGRESA EL CARGO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo" interactivo="false" ejecutar="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.ur%!=null">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presup%" />
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" /> <!--8-2-2-0-0-001-01-001-->
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%*-1"/>
+                            <campo name="concepto_bloque" calc="'Póliza del Presupuesto de Egresos Comprometido'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%user.user.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1" llaveForanea="false"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presup%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" /><!-- 8-2-4-0-0-001-01-001 -->
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%*-1"/>
+                            <campo name="concepto_bloque" calc="'Póliza del Presupuesto de Egresos Comprometido'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%user.user.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1" llaveForanea="false"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="Actualiza presupuesto de Egresos" id="actPptoEgreso" interactivo="false">
+                    <componente tipo="cursor" nombre="Actualiza presupuesto de Egresos" id="actPptoEgreso">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                           <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.periodo%"/>
+                            <campo name="clave_presupuestal" text="clave" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presup%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema('MM')"/>
+                            <campo name="presupuesto_precomprometido" calc="%actPptoEgreso.actPptoEgreso.presupuesto_precomprometido% + %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%"/>
+                            <campo name="presupuesto_comprometido" calc="@consultaDirec('SELECT '+%actPptoEgreso.actPptoEgreso.presupuesto_comprometido%+'-'+%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="repAutSolCanCont" nombre="Autoriza Solicitud de Cancelación de Contrato" mostrarNivelAnterior="false" ejecutar="%formAutSolCanCont.formAutSolCanCont.autoriza_cancelacion%==true">
+                <componente tipo="reporte" nombre="Póliza del Comprometido" id="aaa">
+                <reporte nombre="poliza_contable">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+            <!--<componente tipo="reporte" id="repAutSolCanCont" nombre="Autoriza Solicitud de Cancelación de Contrato" interactivo="false">-->
+            <!--    <reporte nombre="R_Poliza_CancelacionOC_IJ">-->
+            <!--        <campo name="ur" type="long" calc="$inParam.ur$"/>-->
+            <!--        <campo name="periodo" type="long" calc="$inParam.periodo$"/>-->
+            <!--        <campo name="movimiento" type="long" calc="$inParam.movimiento$"/>-->
+            <!--        <campo name="usuario" type="string" calc="$protocolarios.user$"/>-->
+            <!--    </reporte>-->
+            <!--</componente>-->
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%formAutSolCanCont.formAutSolCanCont.autoriza_cancelacion%==false">
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal">
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                   <parametro name="process" calc="$protocolarios.process$"/>
+                   <parametro name="version" calc="$protocolarios.version$"/>
+                   <parametro name="user" calc="$protocolarios.user$"/>
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%formAutSolCanCont.formAutSolCanCont.observaciones_cancelacion%"/>
+                   <parametro name="type" calc="'1'"/>
+               </parametros> 
+           </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%formAutSolCanCont.formAutSolCanCont.autoriza_cancelacion%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%formAutSolCanCont.formAutSolCanCont.autoriza_cancelacion%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

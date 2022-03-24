@@ -1,0 +1,336 @@
+<tarea autor="Julio Demetrio" fechaModificacion="2019-04-21" id="1" modificacionEfectuada="Versión Inicial" nombre="Registra Solicitud de Cancelación de Contrato" requisitosInstalacion="No" version="1.0.1">
+    <pagina id="1" nombre="Registra Solicitud de Cancelación de Contrato">
+        <nivel id="bPer" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="bPer" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreUsuarios" nombre="bU" interactivo="false">
+            <componente id="barreUsuarios" nombre="bU" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" llaveForanea="false"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_duep_contrato_pedido" id="bDUEPcp" interactivo="false">
+            <componente tipo="cursor" nombre="bDUEPcp" id="bDUEPcp">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                   <campo name="seleccion_cancelacion" calc="false"/>
+               </tabla>
+           </componente>
+       </nivel>
+       <nivel nombre="Consulta de Contratos" id="cCon" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+        <componente tipo="tabla" nombre="Listado de Contratos" id="cCon" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false" filtro="true">
+            <tabla schema="operation" nombre="duep_contrato_pedido">
+                <campo name="ur" text="" calc="%bPer.bPer.id_unidad_responsable%" columna-visible="false"/>
+                <campo name="periodo" text="" calc="%bPer.bPer.id_periodo%" columna-visible="false"/>
+                <campo name="id_duep_contrato_pedido" text="" columna-visible="false"/> 
+                <campo name="autoriza" text="" columna-visible="false" filtroCampo="autoriza" filtroOperador="=" filtroValor="true" /> <!---->
+                <campo name="tipo_documento" text="" columna-visible="false" filtroCampo="tipo_documento" filtroOperador="=" filtroValor="1" /> 
+                <campo name="folio_con_ordecom" text="Contratos" habilitado="false" width="150" columnas="3" margen-izquierdo="2"/>
+                <campo name="proveedor" text="Proveedor" width="150" descripcionForaneaTabla="razon_social" columnas="3" margen-derecho="2"/> <!--nombre,primer_apellido,segundo_apellido-->
+                <campo name="nombre_comercial" text="Nombre Comercial" width="250" habilitado="false" columnas="3" margen-izquierdo="2" columna-visible="false"/>
+                <campo name="proyecto_compra" text="Proyecto Compra" width="150" habilitado="false" columnas="3" margen-derecho="2" columna-visible="false"/>
+                <campo name="proceso_origen" text="Proceso Origen" width="170" descripcionForanea="nombre" columnas="3" margen-izquierdo="2"/>
+                <campo name="id_cat_fondo" text="" calc="3" llaveForanea="false" columna-visible="false"/>
+                <campo name="id_fondo_contable" text="Fondo Contable" width="170" marcador="Fondo Contable" llavesFijas="afectable='true'" descripcionForaneaTabla="id_cat,descripcion" columnas="3" margen-derecho="2"/>
+                <campo name="total" text="Importe del Contrato" width="250" />
+                <campo name="comprometido_no_devengado" text="Importe Devengado" width="170" columna-visible="false"/>
+                <campo name="estatus" text="Estatus"  width="180" habilitado="false" columna-visible="false"/>
+                <!--filtroCampo="estatus" filtroOperador="=" filtroValor="2"-->
+                <campo name="estatus_contrato" text="Estatus" width="150" filtroCampo="estatus_contrato" filtroOperador="=" filtroValor="'Activo'" />
+                <!---->
+                <campo name="importe_devengado" text="Devengado"  filtroCampo="importe_devengado" filtroOperador="=" filtroValor="0" columna-visible="true"/>
+                
+                <campo name="seleccion_cancelacion" text="Selección" width="110" editable="true" filtroCampo="seleccion_cancelacion" filtroOperador="=" filtroValor="false"/>
+            </tabla>
+            <estilos>
+                <boton nombre="grabar" visible="true" texto="Continuar" columnas="3"/>
+            </estilos>
+            <acciones>
+                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+            </acciones>
+        </componente>
+        <validaciones>
+            <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*)
+                AS resultado
+                FROM operation.duep_contrato_pedido
+                WHERE ur='+%bPer.bPer.id_unidad_responsable%+' AND periodo='+%bPer.bPer.id_periodo%+' AND seleccion_cancelacion=true','resultado','int','MAGNITUS')==0 OR @consultaDirec('SELECT count(*)
+                AS resultado
+                FROM operation.duep_contrato_pedido
+                WHERE ur='+%bPer.bPer.id_unidad_responsable%+' AND periodo='+%bPer.bPer.id_periodo%+' AND seleccion_cancelacion=true','resultado','int','MAGNITUS')&gt;1" validacionMensaje="'Debe seleccionar un registro'" />
+            </validaciones>
+        </nivel>
+        <nivel id="cCC" mostrarNivelAnterior="false" mostrarProximoNivel="true" nombre="Visualiza Contrato a Cancelar">
+            <componente id="cCC" nombre="Visualiza Contrato a Cancelar" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" calc="%cCon.cCon.ur%" llaveForanea="false" visible="false"/>
+                        <campo name="periodo" calc="%cCon.cCon.periodo%" llaveForanea="false" visible="false"/><!---->
+                        <campo name="id_duep_contrato_pedido" calc="%cCon.cCon.id_duep_contrato_pedido%" llaveForanea="false" visible="false"/>
+                        <campo name="tipo_documento" visible="false"/>
+
+                        <campo name="contrato" text="Contrato" habilitado="false" columnas="2" margen-izquierdo="1" />
+                        <campo name="folio_con_ordecom" text="DDP" width="110" habilitado="false" columnas="4"  />
+                        <campo name="nombre_comercial" text="Nombre Comercial" habilitado="false" columnas="2" margen-derecho="1"/>
+
+                        <campo name="proyecto_compra" text="Proyecto Compra" habilitado="false" columnas="2" margen-izquierdo="1" />
+                        <campo name="direccion_prov" text="Dirección" columnas="4"  habilitado="false"/>
+                        <campo name="proceso_origen" text="Proceso Origen" descripcionForanea="nombre" habilitado="false" columnas="2" margen-derecho="1"/>
+
+                        <campo name="estado_prov" text="Estado" descripcionForanea="nombre" habilitado="false" columnas="2" margen-izquierdo="1"  />
+                        <campo name="id_cat_fondo" text="ID Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" marcador="Fondo Contable" habilitado="false" llavesFijas="afectable='true'" descripcionForaneaTabla="id_cat,descripcion" columna-visible="false" columnas="4"  />
+                        <campo name="tel_prov" text="Teléfono" marcador="Teléfono" habilitado="false" columnas="2" margen-derecho="1"/>
+
+                        <campo name="fecha_contrato_pedido" text="Fecha" habilitado="false" columnas="2" margen-izquierdo="1" />
+                        <campo name="representante_prov" text="Representante Legal" habilitado="false" marcador="Representante Legal" columnas="4" />
+                        <campo name="estatus" text="Estatus" habilitado="false" columnas="2" margen-derecho="1"/>
+
+                        <campo name="lugar_entrega" text="Lugar Entrega" habilitado="false" columnas="2" margen-izquierdo="1"  />
+                        <campo name="contacto_recepcion" text="Contacto de Recepción" habilitado="false" marcador="Contacto de Recepción" columnas="4"  />
+                        <campo name="tiempo_entrega" text="Tiempo de Entrega" habilitado="false" columnas="2" margen-derecho="1"/>
+
+                        <campo name="id_cat_area_requiriente" text="id_cat_area_requiriente" calc="2" llaveForanea="false" visible="false"/>
+                        <campo name="area_requiriente" text="Área Requirente" habilitado="false" marcador="Área Requirente" descripcionForanea="descripcion" columnas="2" margen-izquierdo="1" />
+                        <campo name="proveedor" text="Proveedor" descripcionForanea="nombre,primer_apellido,segundo_apellido" habilitado="false" columnas="4"  />
+                        <campo name="condiciones_pago" text="Condiciones de Pago" habilitado="false" columnas="2" margen-derecho="1"/>
+
+                        <campo name="requiere_anticipo" text="Requiere anticipo" habilitado="false" columnas="4" margen-izquierdo="3"/>
+                        <campo name="anticipo" text="Anticipo" mascara="##" habilitado="false" interaccion-visible="%requiere_anticipo%==true" visible="true" columnas="2"  />
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" columnas="2" margen-izquierdo="6"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det" id="dCon" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_duep_contrato_pedido_det" text="Renglón" width="200" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="clave_articulo" text="Clave Artículo" habilitado="false" width="200" descripcionForanea="clave_articulo, descripcion_articulo" descripcionForaneaTabla="clave_articulo, descripcion_articulo" columnas="3" margen-derecho="2"/>
+                        <campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="clasificador_objeto_gasto" text="Clasificador por Objeto del Gasto" descripcionForanea="descripcion" width="350" columnas="3" margen-izquierdo="2"/>
+                        <campo name="caracteristica" text="Característica Específica" width="350" columnas="3" margen-derecho="2"/>
+                        <campo name="id_cat_programa_presupuestal" text="" columna-visible="false" visible="false"/>
+                        <campo name="clave_presup" text="Clave Presupuestal" width="200" columna-visible="true" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_centro_registro" text="" columna-visible="false" visible="false"/>
+                        <campo name="centro_registro" text="Centro de Registro"  width="200"  columna-visible="true" columnas="3" margen-derecho="2"/>
+                        <campo name="cantidad" text="Cantidad"  width="200" columna-visible="true" columnas="3" margen-izquierdo="2"/>
+                        <campo name="unidad_medida" text="Unidad de Medida"  width="250" columnas="3" margen-derecho="2"/>
+                        <campo name="precio_unitario" text="Costo Unitario"  width="250" columnas="3" margen-izquierdo="2"/>
+                        <campo name="descuento" text="Descuento"  width="200" columnas="3" margen-derecho="2"/>
+                        <campo name="imp_valor_agregado" text="Impuesto al Valor Agregado"  width="350" columnas="3" margen-izquierdo="2"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos"  width="200" columnas="3" margen-derecho="2"/>
+                        <campo name="importe_total" text="Total" width="200" columnas="3" margen-derecho="2" muestraAcumulado="true"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_duep_contrato_pedido_det" id="bCPTotal" interactivo="false">
+            <componente tipo="cursor" nombre="barrido" id="bCPTotal">
+                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%cCon.cCon.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%cCon.cCon.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%cCon.cCon.id_duep_contrato_pedido%"/>
+                    <campo name="importe_total"/>
+                    <campo name="acumulado" local="true" type="double" calc="$sumatoria.importe_total$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="TcCC" mostrarNivelAnterior="false" mostrarProximoNivel="true" nombre="Visualiza Contrato a Cancelar">
+            <componente id="TcCC" nombre="Cancelación de Contratos" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" calc="%cCon.cCon.ur%" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" calc="%cCon.cCon.periodo%" llaveForanea="false" visible="false"/><!---->
+                    <campo name="id_duep_contrato_pedido" calc="%cCon.cCon.id_duep_contrato_pedido%" llaveForanea="false" visible="false"/>
+                    <campo name="tipo_documento" visible="false"/>
+                    <campo name="folio_con_ordecom" text="Contrato" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="proveedor" text="Beneficiario" descripcionForanea="razon_social" habilitado="false" columnas="4"  />
+                    <campo name="fecha_cancelacion" text="Fecha de Cancelación *" marcador="Fecha de Cancelación" validacion="%fecha_cancelacion%==null" validacionMensaje="Indica Fecha de Cancelación" columnas="2" />
+                    <campo name="total" text="Importe a Cancelar" calc="%bCPTotal.bCPTotal.acumulado%" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                    <campo name="desea_cancelar" text="Desea Cancelar Contrato" columnas="4" />
+                    <campo name="motivo_cancelacion" text="Motivo de Cancelación" marcador="Motivo de Cancelación" height="150" columnas="8" margen-izquierdo="1"  />
+                    <campo name="estatus" calc="1" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="Detalle de Contrato a Cancelar" id="dCC" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                    <campo name="ur" text="" calc="%cCon.cCon.ur%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="" calc="%cCon.cCon.periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_duep_contrato_pedido" text="" calc="%cCon.cCon.id_duep_contrato_pedido%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_duep_contrato_pedido_det" text="Renglón" width="60" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="clave_articulo" text="Clave Artículo" habilitado="false" descripcionForanea="clave_articulo, descripcion_articulo" descripcionForaneaTabla="clave_articulo, descripcion_articulo" columnas="3" margen-derecho="2"/>
+                    <campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="clasificador_objeto_gasto" text="Clasificador por Objeto del Gasto" descripcionForanea="descripcion" width="350" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_cat_programa_presupuestal" text="" columna-visible="false" visible="false"/>
+                    <campo name="programa_presupuestal" text="Clave Presupuestal" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="importe_total" text="Total" width="100" columnas="3" margen-derecho="2" muestraAcumulado="true"/>
+                    <campo name="presupuesto_comprometido" text="Importe Comprometido" columna-visible="false"/>
+                    <campo name="presupuesto_devengado" text="Importe Devengado" columna-visible="false"/>
+                    <campo name="devengado_en_proceso" text="Importe Comprometido no Devengado" calc="@ifThenElse(%TcCC.dCC.presupuesto_comprometido%==null,0,%TcCC.dCC.presupuesto_comprometido%)-@ifThenElse(%TcCC.dCC.presupuesto_devengado%==null,0,%TcCC.dCC.presupuesto_devengado%)" columna-visible="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- Genera poliza -->
+        <!-- PÓLIZA -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="obSeparador" nombre="obSeparador" interactivo="false">
+            <componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%bPer.bPer.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false">
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%cCC.cCC.ur%"/> 
+                   <campo name="periodo" calc="%cCC.cCC.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_cancelacion_contraro" calc="%cCC.cCC.id_duep_contrato_pedido%"/>
+                   <campo name="id_catalogo"/>
+                   <campo name="fondo_contable"/>
+                   <campo name="duep_origen"/>
+                   <campo name="momento_contable" calc="4"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles" interactivo="false">
+            <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%cCC.cCC.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%cCC.cCC.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%cCC.cCC.id_duep_contrato_pedido%"/>
+                    <campo name="id_duep_contrato_pedido_det"/>
+                    <campo name="clave_articulo" />
+                    <campo name="id_cat_cog"/>
+                    <campo name="clasificador_objeto_gasto"/>
+                    <campo name="caracteristica"/>
+                    <campo name="id_cat_programa_presupuestal"/>
+                    <campo name="programa_presupuestal"/>
+                    <campo name="id_cat_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="clave_presup"/>
+                    <campo name="cantidad"/>
+                    <campo name="unidad_medida"/>
+                    <campo name="importe_unitario"/>
+                    <campo name="descuento"/>
+                    <campo name="imp_valor_agregado" />
+                    <campo name="otros_impuestos" />
+                    <campo name="importe_total"/>
+                </tabla>
+                <!-- INGRESA EL CARGO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presup%" />
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+'0')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%*-1"/>
+                            <campo name="concepto_bloque" calc="'Póliza del Presupuesto de Egresos Comprometido'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presup%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+'0')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%*-1"/>
+                            <campo name="concepto_bloque" calc="'Póliza del Presupuesto de Egresos Comprometido'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel nombre="crearNuevaInstancia" id="cI" interactivo="false" ejecutar="%TcCC.TcCC.desea_cancelar%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cI" >
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'60759aec-20a1-4bbf-9db4-b672b3f39831'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%cCC.cCC.ur%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%cCC.cCC.periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_duep_contrato_pedido" calc="%cCC.cCC.id_duep_contrato_pedido%" mostrarEsc="true"/>
+                    <parametro name="out_movimiento" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--<nivel nombre="barrido_duep_contrato_pedido" id="cCC" interactivo="false" ejecutar="%TcCC.TcCC.desea_cancelar%==true">
+            <componente tipo="cursor" nombre="barrido" id="cCC">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%cCon.cCon.ur%"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%cCon.cCon.periodo%"/>
+                        <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%cCon.cCon.id_duep_contrato_pedido%"/>
+                        <campo name="estatus_contrato" calc="'Porcancelar'"/>
+                    </tabla>
+            </componente>
+        </nivel>-->
+        <nivel nombre="Reporte Solicitud de Cancelación de Contrato" id="re" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%TcCC.TcCC.desea_cancelar%==true">
+            <componente tipo="reporte" nombre="Solicitud de Cancelación de Contrato" id="aaa">
+                <reporte nombre="repor_regiCon_jsus" update="true" nombreDocumento="'Solicitud de Cancelación de Contrato'" expediente="Solicitud de Cancelación de Contrato"  grupo="%cCC.cCC.id_duep_contrato_pedido%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%cCC.cCC.ur%"/>
+                    <campo name="periodo" type="long" calc="%cCC.cCC.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%cCC.cCC.id_duep_contrato_pedido%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <!--<componente tipo="reporte" nombre="Póliza del Comprometido" id="aaa">
+                <reporte nombre="poliza_contable">
+                    <campo name="ur" type="long" calc="%cCC.cCC.ur%"/>
+                    <campo name="periodo" type="long" calc="%cCC.cCC.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>-->
+            <!--
+            <componente tipo="reporte" nombre="Reporte de Cancelación de Contrato" id="re">
+                <reporte nombre="cancelacion">
+                    <campo name="ur" type="long" calc="%cCon.cCon.ur%"/>
+                    <campo name="periodo" type="long" calc="%cCon.cCon.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%cCon.cCon.id_duep_contrato_pedido%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>-->
+        </nivel>
+    </pagina>
+</tarea>
