@@ -1,0 +1,209 @@
+<tarea nombre="Movimientos Auxiliares" version="1.0.0" fechaModificacion="22/07/2019" autor="Froylán Alanís" modificacionEfectuada="Version Incial">
+    <pagina id="1" nombre="Movimientos Auxiliares">
+        <nivel id="p" nombre="Periodo" interactivo="false">
+            <componente id="p" nombre="Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" />
+                    <campo name="id_periodo" />
+                    <campo name="id_separador" />
+                </tabla>
+                <nivel id="ps" nombre="Separador" interactivo="false">
+                    <componente id="ps" nombre="Separador" tipo="cursor">
+                        <tabla schema="catalog" nombre="separador">
+                            <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%p.p.id_separador%" />
+                            <campo name="caracter"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="u" nombre="Usuario" interactivo="false">
+            <componente id="u" nombre="Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%p.p.id_unidad_responsable%" />
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                    <campo name="id_usuario" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Selección de Rangos" id="selRan" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Selección de Rangos" id="selRan" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="cuenta_publica_mov_aux">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="%p.p.id_periodo%" llaveForanea="false" columnas="3" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="id_mov_aux" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    
+                    <campo name="cuenta_c_inical" text="Cuenta Contable Inicial" columnas="3" margen-izquierdo="1" margen-derecho="2" autoFiltrado="true" autoFiltradoDescripcion="clave_cuenta,descripcion"/>
+                    
+                    <campo name="cuenta_c_final" text="Cuenta Contable Final" columnas="3" margen-izquierdo="1" margen-derecho="4"  autoFiltrado="true" autoFiltradoDescripcion="clave_cuenta,descripcion" validacion="@ifThenElse(@castTo(@reemplazarTexto(%cuenta_c_inical%, %ps.ps.caracter%, ''),'long')&gt;@castTo(@reemplazarTexto(%cuenta_c_final%, %ps.ps.caracter%, ''),'long'),true,false)==true" interaccion="@ifThenElse(%prueba%==null,false,true)" validacionMensaje="La cuenta final no puede ser menor que la inicial" visible="true"/>
+                    
+                    <campo name="valida_cuenta_c_final" type="string" local="true" validacion="%prueba%!=null AND %cuenta_c_final%==null" validacionMensaje="La cuenta contable final no puede ir vacia" visible="false" />
+                    
+                    <campo name="prueba2" text="Numero de cuenta final" type="long" local="true" calcCliente="@castTo(@reemplazarTexto(%cuenta_c_final%,%ps.ps.caracter%, ''),'long')" visible="false" />
+                    
+                    <campo name="prueba" text="Numero de cuenta Inicial" type="long" local="true" calcCliente="@castTo(@reemplazarTexto(%cuenta_c_inical%, %ps.ps.caracter%, ''),'long')" visible="false"/>
+                    
+                    <campo name="mes_inicio" text="Mes inicio" local="true" type="long" columnas="3" margen-izquierdo="1" margen-derecho="1" validacion="%mes_inicio%==null" validacionMensaje="Seleccione el mes de inicio." > 
+                        <opciones>
+                            <opcion texto="Enero" valor="1"/>
+                            <opcion texto="Febrero" valor="2"/>
+ 		                    <opcion texto="Marzo" valor="3"/>
+ 		                    <opcion texto="Abril" valor="4"/>
+ 		                    <opcion texto="Mayo" valor="5"/>
+ 		                    <opcion texto="Junio" valor="6"/>
+ 		                    <opcion texto="Julio" valor="7"/>
+ 		                    <opcion texto="Agosto" valor="8"/>
+ 		                    <opcion texto="Septiembre" valor="9"/>
+ 		                    <opcion texto="Octubre" valor="10"/>
+ 		                    <opcion texto="Noviembre" valor="11"/>
+ 		                    <opcion texto="Diciembre" valor="12"/>
+ 		                </opciones>
+                    </campo>
+                    <campo name="selc_dia" text="Por día?" type="bool" local="true" interaccion-visible="%mes_inicio%!=null" visible="false" columnas="2" editable="true"/>
+                    <campo name="mes_fin" text="Mes Fin" local="true" type="long" columnas="3" margen-izquierdo="1" margen-derecho="2" validacion="%mes_fin%==null AND %selc_dia%==false" validacionMensaje="Seleccione un mes de fin." interaccion-visible="%selc_dia%==false"> 
+                        <opciones>
+                            <opcion texto="Enero" valor="1"/>
+                            <opcion texto="Febrero" valor="2"/>
+ 		                    <opcion texto="Marzo" valor="3"/>
+ 		                    <opcion texto="Abril" valor="4"/>
+ 		                    <opcion texto="Mayo" valor="5"/>
+ 		                    <opcion texto="Junio" valor="6"/>
+ 		                    <opcion texto="Julio" valor="7"/>
+ 		                    <opcion texto="Agosto" valor="8"/>
+ 		                    <opcion texto="Septiembre" valor="9"/>
+ 		                    <opcion texto="Octubre" valor="10"/>
+ 		                    <opcion texto="Noviembre" valor="11"/>
+ 		                    <opcion texto="Diciembre" valor="12"/>
+ 		                </opciones>
+                    </campo>
+                    <campo name="dia" text="Día del Mes(es)" local="true" type="long" columnas="3" margen-izquierdo="1" margen-derecho="2" validacion="%dia%==null AND %selc_dia%==true" validacionMensaje="Ingrese un día real a buscar." interaccion-visible="%selc_dia%==true" visible="false">
+                        <opciones>
+                            <opcion texto="1" valor="1"/>
+                            <opcion texto="2" valor="2"/>
+ 		                    <opcion texto="3" valor="3"/>
+ 		                    <opcion texto="4" valor="4"/>
+ 		                    <opcion texto="5" valor="5"/>
+ 		                    <opcion texto="6" valor="6"/>
+ 		                    <opcion texto="7" valor="7"/>
+ 		                    <opcion texto="8" valor="8"/>
+ 		                    <opcion texto="9" valor="9"/>
+ 		                    <opcion texto="10" valor="10"/>
+ 		                    <opcion texto="11" valor="11"/>
+ 		                    <opcion texto="12" valor="12"/>
+ 		                    <opcion texto="13" valor="13"/>
+                            <opcion texto="14" valor="14"/>
+ 		                    <opcion texto="15" valor="15"/>
+ 		                    <opcion texto="16" valor="16"/>
+ 		                    <opcion texto="17" valor="17"/>
+ 		                    <opcion texto="18" valor="18"/>
+ 		                    <opcion texto="19" valor="19"/>
+ 		                    <opcion texto="20" valor="20"/>
+ 		                    <opcion texto="21" valor="21"/>
+ 		                    <opcion texto="22" valor="22"/>
+ 		                    <opcion texto="23" valor="23"/>
+ 		                    <opcion texto="24" valor="24"/>
+ 		                    <opcion texto="25" valor="25"/>
+                            <opcion texto="26" valor="26"/>
+ 		                    <opcion texto="27" valor="27"/>
+ 		                    <opcion texto="28" valor="28"/>
+ 		                    <opcion texto="29" valor="29"/>
+ 		                    <opcion texto="30" valor="30"/>
+ 		                    <opcion texto="31" valor="31"/>
+ 		               </opciones>
+ 	                </campo>
+                    <campo name="movimientos" text="Solo con movimientos" columnas="3" margen-izquierdo="1" margen-derecho="2" llaveForanea="false"  habilitado="true" type="long" local="true" validacion="%movimientos%==null" validacionMensaje="Seleccione una opción.">  
+                        <opciones>
+                            <opcion texto="Si" valor="1"/>
+                            <opcion texto="No" valor="2"/>
+                       </opciones>
+                    </campo>
+                    <!--<campo name="fecha_inicio" text="Fecha Inicial" columnas="3" margen-izquierdo="1" margen-derecho="6"/>-->
+                    <!--<campo name="fecha_fin" text="Fecha Final" columnas="3" margen-izquierdo="1" margen-derecho="6"/>-->
+                    <!--
+                    <campo name="nivel" text="Nivel" local="true" type="long" columnas="3" margen-izquierdo="1" margen-derecho="1" llaveForanea="false"  habilitado="true" validacion="%nivel%==null" validacionMensaje="Indique nivel" > 
+                        <opciones>
+                            <opcion texto="Todos" valor="99"/>
+                            <opcion texto="Genero" valor="1"/>
+ 		                    <opcion texto="Grupo" valor="2"/>
+ 		                    <opcion texto="Rubro" valor="3"/>
+ 		                    <opcion texto="Cuenta" valor="4"/>
+ 		                    <opcion texto="Subcuenta" valor="5"/>
+ 		                    <opcion texto="Afectables" valor="98"/>
+ 		               </opciones>
+                    </campo>
+                    
+                    <campo name="cuenta_c_final" text="Cuenta Contable Final" autoFiltrado="true" autoFiltradoDescripcion="clave_cuenta,descripcion" columnas="3" margen-izquierdo="1" margen-derecho="1" interaccion="%rubro%==null" validacion="%rubro%==null AND %cuenta_c_final%==null" validacionMensaje="Selecciona cuenta final"/>
+                    
+                    
+                    
+                    <campo name="id_fondo_con_cat" visible="false" llaveForanea="false" calc="3"/>
+                    <campo name="fondo_contable_des" text="Fondo Contable" columnas="3" margen-izquierdo="1" margen-derecho="1" descripcionForanea="id_cat,descripcion" />
+                    
+                    <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="id_fondo_con_cat" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="fondo_contable_des" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        
+                    <campo name="rubro" text="Rubro" columnas="3" margen-izquierdo="1" margen-derecho="1">
+                        <opciones>
+                            <opcion texto="Activo" valor="1"/>
+ 		                    <opcion texto="Pasivo" valor="2"/>
+ 		                    <opcion texto="Patrimonio" valor="3"/>
+                        </opciones>
+                    </campo>
+                    
+                    <campo name="id_fuente_cat" visible="false" llaveForanea="false" calc="5"/>
+                    <campo name="fuente_des" text="Fuente de Financiamiento" columnas="3" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="1" margen-derecho="1" calcCliente="%id_cat_foraneo%" interaccion-visible="@ifThenElse(%id_cat_foraneo%==null,true,false)"/>
+                    <campo name="id_cat_ff" text="Fuente de Financiamiento" local="true" type="string" referenciaForanea="fondo_contable_des" celdaForanea="id_cat_foraneo" autocompletar="true" visible="true" columna-visible="false" interaccion-visible="@ifThenElse(%id_cat_foraneo%==null,false,true)" columnas="3" margen-izquierdo="1" margen-derecho="1"/>
+                    -->
+                    <campo name="fecha_modificacion" calc="@fechaSistema()" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" calc="%u.u.id_usuario%" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="1" margen-derecho="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="reporMovAuxMovimientos" nombre="Reporte de Movimientos Auxiliares Con Movimientos" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%selRan.selRan.movimientos%==1 AND %selRan.selRan.selc_dia%==false">
+            <componente id="reporMovAuxMovimientos" nombre="Reporte de Movimientos Auxiliares Con Movimientos" tipo="reporte">
+                <reporte nombre="Mov_Aux_P_movimientos">
+                    <campo name="ur" local="true" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%selRan.selRan.periodo%"/>
+                    <campo name="fecha_inicio" local="true" type="long" calc="%selRan.selRan.mes_inicio%"/>
+                    <campo name="fecha_fin" local="true" type="long" calc="%selRan.selRan.mes_fin%"/>
+                    <campo name="clave_cuenta_inicial" local="true" type="string" calc="%selRan.selRan.cuenta_c_inical%"/> 
+                    <campo name="clave_cuenta_fin" local="true" type="string" calc="%selRan.selRan.cuenta_c_final%"/> 
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="reporMovAuxMovimientos_d" nombre="Reporte de Movimientos Auxiliares Con Movimientos" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%selRan.selRan.movimientos%==1 AND %selRan.selRan.selc_dia%==true">
+            <componente id="reporMovAuxMovimientos_d" nombre="Reporte de Movimientos Auxiliares Con Movimientos" tipo="reporte">
+                <reporte nombre="Mov_Aux_P_movimientos_dia">
+                    <campo name="ur" local="true" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%selRan.selRan.periodo%"/>
+                    <campo name="fecha_inicio" local="true" type="long" calc="%selRan.selRan.mes_inicio%"/>
+                    <campo name="fecha_fin" local="true" type="long" calc="%selRan.selRan.mes_inicio%"/>
+                    <campo name="dia" local="true" type="long" calc="%selRan.selRan.dia%"/>
+                    <campo name="clave_cuenta_inicial" local="true" type="string" calc="%selRan.selRan.cuenta_c_inical%"/> 
+                    <campo name="clave_cuenta_fin" local="true" type="string" calc="%selRan.selRan.cuenta_c_final%"/> 
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="reporMovAux" nombre="Reporte de Movimientos Auxiliares" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%selRan.selRan.movimientos%==2">
+            <componente id="reporMovAux" nombre="Reporte de Movimientos Auxiliares" tipo="reporte">
+                <reporte nombre="Mov_Aux_P">
+                    <!--R_Movimientos_Auxiliares_AR-->
+                    <campo name="ur" local="true" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%selRan.selRan.periodo%"/>
+                    <campo name="fecha_inicio" local="true" type="long" calc="%selRan.selRan.mes_inicio%"/>
+                    <campo name="fecha_fin" local="true" type="long" calc="%selRan.selRan.mes_fin%"/>
+                    <campo name="clave_cuenta_inicial" local="true" type="string" calc="%selRan.selRan.cuenta_c_inical%"/> 
+                    <campo name="clave_cuenta_fin" local="true" type="string" calc="%selRan.selRan.cuenta_c_final%"/> 
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
