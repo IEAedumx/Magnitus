@@ -1,0 +1,121 @@
+<?xml version="1.0" standalone="yes"?>
+<tarea nombre="Genera Solicitud de Cancelación de Ingresos Pendientes por Recaudar" id="ipc" autor="Marisela">
+    <pagina id="1" nombre="Registro">
+       <nivel id="per" nombre="per" interactivo="false">
+        <componente tipo="cursor" id="per" nombre="per">
+            <tabla schema="catalog" nombre="periodo">
+                <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="id_periodo"/>
+                <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+            </tabla>
+        </componente>
+    </nivel>
+    <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+        <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+            <tabla schema="entity" nombre="usuario">
+                <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="id_usuario"/>
+                <campo name="nombre"/>
+                <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+            </tabla>
+        </componente>
+    </nivel>
+    
+    <nivel id="cma" nombre="Devengado de Ingreso de Aportaciones por Recaudar" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+        <componente tipo="tabla" id="cma" nombre="Ingresos Devengados Por Ministración" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+            <tabla schema="operation" nombre="devengado_ingreso">
+                <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" llaveForanea="false" columna-visible="false"/>
+                <campo name="periodo" text="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" llaveForanea="false" columna-visible="false"/>
+                <campo name="folio_devengado_ingreso" text="folio_devengado_ingreso" columna-visible="false"/>
+                <campo name="devengado_ingreso" text="Folio"/>
+                <campo name="ramo" text="Ramo"/>
+                <campo name="beneficiario" text="Beneficiario" descripcionForaneaTabla="razon_social" width="200"/>
+                <campo name="fondo_aportacion" text="Fondo de Aportación" columna-visible="false" />
+                <campo name="numero_ministraciones" text="Número de Ministraciones" filtroCampo="numero_ministraciones" filtroOperador="!=" filtroValor="0"/>
+                <campo name="importe_total" text="Importe Total" filtroCampo="importe_total" filtroOperador="!=" filtroValor="0"/>
+                <campo name="pc_selecciona_cancelacion" text="Selecciona" editable="true" filtroCampo="selecciona_cancelacion" filtroOperador="=" filtroValor="false"/>
+                <campo name="pc_cancelar" text="cancelar" columna-visible="false" filtroCampo="cancelar" filtroOperador="=" filtroValor="false"/>
+            </tabla>
+            <acciones>
+                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+            </acciones>
+            <estilos>
+                <boton nombre="grabar" posicion="derecha" visible="true" texto="avanzar a nivel"/>
+            </estilos>
+        </componente>
+         <!--<validaciones>-->
+         <!--       <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*)  AS resultado-->
+         <!--                               FROM operation.devengado_ingreso_aport_min-->
+         <!--                               WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' AND seleccion_cancela=true AND cancelar=true','resultado','int','MAGNITUS')==0" validacionMensaje="'Debe seleccionar un registro'" />-->
+         <!--   </validaciones>-->
+    </nivel>
+    <nivel id="badi" nombre="badi" interactivo="false">
+        <componente id="badi" nombre="badi" tipo="cursor">
+            <tabla schema="operation" nombre="devengado_ingreso">
+                <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="periodo" text="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                <campo name="folio_devengado_ingreso"/>
+                <campo name="pc_selecciona_cancelacion" filtroCampo="pc_selecciona_cancelacion" filtroOperador="=" filtroValor="true"/>
+                <campo name="pc_cancelar" filtroCampo="pc_cancelar" filtroOperador="=" filtroValor="false"/>
+            </tabla>
+        </componente>
+    </nivel>
+    <!--<nivel nombre="Folio de Ingreso de Aportaciones por Ministrar" id="fiam" mostrarNivelAnterior="false">-->
+   
+        <!--<componente tipo="reporte" nombre="Reporte Recaudación de Ingreso de Aportaciones por Ministrar" id="rri">-->
+        <!--        <reporte nombre="repor_edo_cta_ingreso_jsus">-->
+        <!--            <campo name="folio_devengado_ingreso" calc="%badi.badi.folio_devengado_ingreso%" type="long"/>-->
+        <!--            <campo name="periodo" calc="%per.per.id_periodo%" type="long"/>-->
+        <!--            <campo name="ur" calc="$config.ur$" type="long"/>-->
+        <!--            <campo name="usuario" local="true" type="string" calc="$protocolarios.user$" />-->
+        <!--        </reporte>-->
+        <!--</componente>-->
+    <!--</nivel>-->
+    <nivel id="cancela" nombre="Cancelación de Ingresos Pendientes por Recaudar" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+        <componente tipo="formulario" id="cancela" nombre="Cancelación de Ministraciones no Recaudadas" accionDefault="editar">
+            <tabla schema="operation" nombre="devengado_ingreso">
+                <campo name="ur" text="ur" calc="$config.ur$" llaveForanea="false" visible="false"/>
+                <campo name="periodo" text="periodo" calc="%per.per.id_periodo%" llaveForanea="false" visible="false"/>
+                <campo name="folio_devengado_ingreso" text="folio_devengado_ingreso" calc="%badi.badi.folio_devengado_ingreso%" visible="false"/>
+                <campo name="pc_cancelar" text="Solicitar cancelación" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                <campo name="pc_motivo_cancelacion" text="Motivo de cancelación" columnas="3" margen-izquierdo="4" margen-derecho="4" width="200" height="200"/>
+                <campo name="estatus" text="estatus" calcCliente="@ifThenElse(%cancelar%==true,6,%estatus%)" visible="false"/>
+                <campo name="exp_ingreso" text="grupo expediente" visible="false" />
+            </tabla>
+            <acciones>
+                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+            </acciones>
+            <estilos>
+                <boton nombre="grabar" posicion="derecha" visible="true" texto="Guardar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+            </estilos>
+        </componente>
+    </nivel>
+    
+    <nivel id="reporte" nombre="Cancelación de Ingresos Pendientes por Recaudar">
+             <componente tipo="reporte" nombre="Documento de cancelación de Ministraciones no Recaudadas" id="fiam">
+            <reporte nombre="R_Ingreso_x_Ministrar_AL" expediente="Expediente de Ingresos/Cancelación de Ministraciones No Recaudadas" nombreDocumento="'Documento de Cancelación'" grupo="%cancela.cancela.exp_ingreso%" url="$config.repository_upload_file$" update="true">
+                <campo name="folio_devengado_ingreso" calc="%badi.badi.folio_devengado_ingreso%" type="long"/>
+                <campo name="periodo" calc="%per.per.id_periodo%" type="long"/>
+                <campo name="ur" calc="$config.ur$" type="long"/>
+                <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+            </reporte>
+        </componente>
+    </nivel>
+    
+    <nivel nombre="" id="pi" interactivo="false" ejecutar="%cancela.cancela.pc_cancelar%==true">
+        <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="pi">
+            <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                <parametro name="enterprise" calc="'MAGNITUS'"/>
+                <parametro name="process" calc="'ca1bcc3f-5736-4db8-826e-50f96fa928be'"/>
+                <parametro name="out_ur" calc="$config.ur$" mostrarEsc="true"/>
+                <parametro name="out_periodo" calc="%per.per.id_periodo%" mostrarEsc="true"/>
+                <parametro name="user" calc="$protocolarios.user$"/>
+                <parametro name="out_folio_devengado_ingreso" calc="%badi.badi.folio_devengado_ingreso%" mostrarEsc="true"/>
+                <parametro name="out_motivo_cancelacion" calc="%cancela.cancela.pc_motivo_cancelacion%" mostrarEsc="false"/>
+                <parametro name="out_folio_ingreso" calc="%cancela.cancela.exp_ingreso%" mostrarEsc="false" />
+            </parametros>
+        </componente>
+    </nivel>
+</pagina>
+</tarea>

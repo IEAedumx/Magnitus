@@ -1,0 +1,307 @@
+<tarea id="1" nombre="Autoriza Solicitud de Cancelación de Ingresos Pendientes por Recaudar" autor="Gustavo Escalante">
+    <pagina id="au">
+    <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+        <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+            <tabla schema="entity" nombre="usuario">
+                <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="id_usuario"/>
+                <campo name="nombre"/>
+                <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+            </tabla>
+        </componente>
+    </nivel>
+    
+    
+        <nivel id="dev" nombre="Devengado de Ingreso de Aportaciones por Recaudar" mostrarNivelAnterior="false">
+                      <componente tipo="reporte" nombre="Documento de Cancelación de Ministraciones no Recaudadas" id="fam" >
+                    <reporte nombre="R_Ingreso_x_Ministrar_AL">
+                        <campo name="folio_devengado_ingreso" calc="$inParam.folio_devengado_ingreso$" type="long"/>
+                        <campo name="periodo" calc="$inParam.periodo$" type="long"/>
+                        <campo name="ur" calc="$config.ur$" type="long"/>
+                        <campo name="usuario" local="true" type="string" calc="$protocolarios.user$" />
+                    </reporte>
+                </componente>
+                <!--<componente tipo="reporte" nombre="Reporte Estado de Cuenta de Registro de Ingresos de Aportaciones por Ministrar" id="rec" colapsado="si">-->
+                <!--    <reporte nombre="repor_edo_cta_ingreso_jsus"> -->
+                <!--        <campo name="folio_devengado_ingreso" calc="$inParam.folio_devengado_ingreso$" type="long"/>-->
+                <!--        <campo name="periodo" calc="$inParam.periodo$" type="long"/>-->
+                <!--        <campo name="ur" calc="$config.ur$" type="long"/>-->
+                <!--        <campo name="usuario" local="true" type="string" calc="$protocolarios.user$" />-->
+                <!--    </reporte>-->
+                <!--</componente>-->
+           <!--<componente id="form" nombre="Cancelación de Ingresos Pendientes por Recaudar" tipo="formulario" accionDefault="editar" mostrarNivelAnterior="false">
+                    <tabla schema="operation" nombre="devengado_ingreso">
+                        <campo name="ur" text="ur" calc="$config.ur$" llaveForanea="false" visible="false"/>
+                        <campo name="periodo" text="periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false"/>
+                        <campo name="folio_devengado_ingreso" text="folio_devengado_ingreso" llaveForanea="false" calc="$inParam.folio_devengado_ingreso$" visible="false"/>
+                        <campo name="pc_cancelar" text="Solicitar cancelación" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="pc_motivo_cancelacion" text="Motivo de cancelación *" habilitado="false" columnas="3" margen-izquierdo="4" margen-derecho="4" width="200" height="200"/>
+                    </tabla>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                
+                    <estilos>
+                       <boton nombre="grabar" posicion="derecha" visible="false" texto="Guardar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                    </estilos>
+                </componente>-->
+        </nivel>
+        <nivel id="ACI" nombre="Autoriza Cancelación de Ministraciones no Recaudadas" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="ACI" nombre="Autoriza Cancelación de Ministraciones no Recaudadas" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" text="ur" calc="$config.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false"/>
+                    <campo name="folio_devengado_ingreso" text="folio_devengado_ingreso" calc="$inParam.folio_devengado_ingreso$" visible="false"/>
+                    <campo name="pc_comentarios_autoriza_can" text="Observaciones *" margen-derecho="3" margen-izquierdo="3" columnas="4" width="200" height="100" interaccion="%pc_autoriza_can%==false"/>
+                    <campo name="pc_autoriza_can" text="Autoriza" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                    <campo name="devengado_ingreso" text="devengado_ingreso" visible="false"/>
+                    <campo name="beneficiario" text="beneficiario" visible="false"/>
+                    
+                     
+                </tabla>
+                <acciones>
+                     <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                      <boton nombre="grabar" posicion="derecha" visible="true" texto="Guardar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        
+        <nivel id="FP" nombre="Filtra Periodo" interactivo="false" ejecutar="%ACI.ACI.pc_autoriza_can%==true">
+	        <componente id="FP" nombre="Filtra Periodo" tipo="cursor"  >
+	        	<tabla schema="catalog" nombre="periodo">
+	        		<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+	        		<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+	        		<campo name="estatus"/>
+	        		<campo name="id_estatus"/>
+	        		<campo name="id_separador"/>
+	        	</tabla>
+	        </componente>
+        </nivel>
+        <nivel id="obSeparador" nombre="obSeparador" interactivo="false" ejecutar="%ACI.ACI.pc_autoriza_can%==true">
+        	<componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+        		<tabla schema="catalog" nombre="separador">
+        			<campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%FP.FP.id_separador%"/>
+        			<campo name="caracter"/>
+        		</tabla>
+        	</componente>
+        </nivel>
+        
+        
+        <!--Inicio Poliza -->
+    <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%ACI.ACI.pc_autoriza_can%==true">
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="$config.ur$"/> 
+                   <campo name="periodo" calc="$inParam.periodo$" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc=""/>
+                   <campo name="fondo_contable" calc=""/>
+                   <!--<campo name="duep_origen" calc="%ACI.ACI.folio%" />-->
+                   <campo name="id_beneficiario_ganador" calc="%ACI.ACI.beneficiario%"/>
+                   <campo name="momento_contable" calc="2"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <!--<campo name="folio_reporte" calc="%barreUsuarios.barreUsuarios.letras%+%barreUsuarios.barreUsuarios.numeros%"/>-->
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                   <campo name="concepto_general" calc="@concatenar('Póliza de Cancelación de Mnistración no Recaudada'+ ' '+%ACI.ACI.devengado_ingreso%)"/>
+                   
+                </tabla>
+            </componente>
+        </nivel>
+       
+        <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%ACI.ACI.pc_autoriza_can%==true">
+            <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="$inParam.folio_devengado_ingreso$"/>
+                    <campo name="importe" />
+                    <campo name="id_clasificador_rubro_ingreso"/>
+                     <campo name="clave_presupuestal" /> 
+                    <campo name="fecha_elaboracion" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                <!--Cargo presupuestal-->
+                
+                                 <nivel id="altaDetalleDirecAbonoCom1" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono1" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                          
+                            <campo name="clave_cuenta_contable" 
+					               calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '1'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '001'+%obSeparador.obSeparador.caracter%+
+                                        '01'+%obSeparador.obSeparador.caracter%+
+                                        '001')" />
+                            <!-- <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT (c_contable_cargo) as resultado FROM  operation.tipo_movimientos 
+                            WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND tipo_movimiento='+$inParam.tipo_moviemiento$+' AND transaccion=' +'\\''+ %sa.sa.transaccion%+'\\'','resultado','string','SIPAAP')"/>
+                             -->
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%*-1"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.id_clasificador_rubro_ingreso%+'-'+@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.catalogos 
+                            WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND id_cat=' +'\\''+ %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.id_clasificador_rubro_ingreso%+'\\'','resultado','string','MAGNITUS')"/>
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.cuentas_contables 
+                            WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' AND clave_cuenta=' +'\\''+ %altaDetalleDirecAbonoCom.altaDetalleDirecAbono.clave_cuenta_contable%+'\\'','resultado','string','MAGNITUS')"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!--abono presupuestal-->
+                 <nivel id="altaDetalleDirecAbonoComa" nombre="altaDetalleDirecAbonoComa" interactivo="false">
+                    <componente id="altaDetalleDirecAbonoComa" nombre="altaDetalleDirecAbonoComa" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                          
+                            <campo name="clave_cuenta_contable" 
+					               calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                        '1'+%obSeparador.obSeparador.caracter%+
+                                        '4'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '001'+%obSeparador.obSeparador.caracter%+
+                                        '01'+%obSeparador.obSeparador.caracter%+
+                                        '001')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%*-1"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.id_clasificador_rubro_ingreso%+'-'+@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.catalogos 
+                            WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND id_cat=' +'\\''+ %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.id_clasificador_rubro_ingreso%+'\\'','resultado','string','MAGNITUS')"/>
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.cuentas_contables 
+                            WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' AND clave_cuenta=' +'\\''+ %altaDetalleDirecAbonoCom.altaDetalleDirecAbono.clave_cuenta_contable%+'\\'','resultado','string','MAGNITUS')"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            
+                            <campo name="clave_cuenta_contable" 
+					               calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                                        '1'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '0'+%obSeparador.obSeparador.caracter%+
+                                        '004'+%obSeparador.obSeparador.caracter%+
+                                        '02'+%obSeparador.obSeparador.caracter%+
+                                        '001')" />
+                           
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%*-1"/>
+                            
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.id_clasificador_rubro_ingreso%+'-'+@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.catalogos 
+                            WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND id_cat=' +'\\''+ %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.id_clasificador_rubro_ingreso%+'\\'','resultado','string','MAGNITUS')"/>
+                            
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.cuentas_contables 
+                            WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' AND clave_cuenta=' +'\\''+ %altaDetalleDirecAbonoCom.altaDetalleDirecAbono.clave_cuenta_contable%+'\\'','resultado','string','MAGNITUS')"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!--abono presupuestal-->
+                 <nivel id="altaDetalleDirecAbonoComa1" nombre="altaDetalleDirecAbonoComa" interactivo="false">
+                    <componente id="altaDetalleDirecAbonoComa1" nombre="altaDetalleDirecAbonoComa" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            
+                            <campo name="clave_cuenta_contable" 
+					               calc="@concatenar('4'+%obSeparador.obSeparador.caracter%+
+                                        '1'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '2'+%obSeparador.obSeparador.caracter%+
+                                        '0')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%*-1"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.id_clasificador_rubro_ingreso%+'-'+@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.catalogos 
+                            WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND id_cat=' +'\\''+ %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.id_clasificador_rubro_ingreso%+'\\'','resultado','string','MAGNITUS')"/>
+                              <campo name="referencia" calc="@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.cuentas_contables 
+                            WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' AND clave_cuenta=' +'\\''+ %altaDetalleDirecAbonoCom.altaDetalleDirecAbono.clave_cuenta_contable%+'\\'','resultado','string','MAGNITUS')"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+
+            </componente>
+        </nivel>
+<!--Fin Poliza -->
+
+        <nivel id="RCI" nombre="Póliza de Cancelación de Mnistración no Recaudada" mostrarNivelAnterior="false" ejecutar="%ACI.ACI.pc_autoriza_can%==true">
+            <componente tipo="reporte" nombre="Póliza de Cancelación de Ministración no Recaudada" id="rri">
+                <reporte nombre="polizacontable" expediente="Expediente de Ingresos/Cancelación de Ministraciones No Recaudadas" nombreDocumento="'Póliza de Cancelación de Ministraciones No Recaudadas'" grupo="$inParam.folio_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="folio_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" type="long"/>
+                    <campo name="periodo" calc="$inParam.periodo$" type="long"/>
+                    <campo name="ur" calc="$config.ur$" type="long"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%ACI.ACI.pc_autoriza_can%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%ACI.ACI.pc_autoriza_can%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%ACI.ACI.pc_autoriza_can%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%ACI.ACI.pc_comentarios_autoriza_can%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+    </pagina>
+</tarea>
