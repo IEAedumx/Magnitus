@@ -1,0 +1,98 @@
+<tarea id="modSolCanIngDevNoRec" nombre="Modifica Solicitud de Cancelación de Ingreso Devengado no Recaudado"  autor="Francisco">
+    <pagina id="1">
+        
+        <!--PASE DE PARAMETROS-->
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="folio_devengado_ingreso" local="true" type="string" calc="$inParam.folio_devengado_ingreso$" />
+                    <campo name="folio" text="" local="true" calc="$inParam.folio$" type="string" />
+                    <campo name="fecha" local="true" type="string" calc="$inParam.fecha$" />
+                    <campo name="beneficiario" text="" local="true" calc="$inParam.beneficiario$" type="string" />
+                    <campo name="importe_total" text="" local="true" calc="$inParam.importe_total$" type="string" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--OBTENER TIPO DE INGRESO-->
+        <nivel id="obtenerTipo" nombre="Obtener Tipo" interactivo="false">
+            <componente id="obtenerTipo" nombre="Obtener Tipo" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="%inParam.inParam.folio_devengado_ingreso%"/>
+                    <campo name="tipo_ingreso"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--REPORTE CONSULTA DE DEVENGADO DE INGRESOS SERVICIOS ESCOLARES-->
+       <!-- <nivel id="repConDevIngSerEsc" nombre="Reporte Consulta de Devengado de Ingresos Servicios Escolares" mostrarNivelAnterior="false"  ejecutar="%obtenerTipo.obtenerTipo.tipo_ingreso%==1 OR %obtenerTipo.obtenerTipo.tipo_ingreso%==2">
+            
+        
+            <componente id="repConDevIngSerEsc" nombre="Reporte Consulta de Devengado de Ingresos de Servicios Escolares" tipo="reporte" ejecutar="%obtenerTipo.obtenerTipo.tipo_ingreso%==1">
+                <reporte nombre="R_Dev_Serv_Escolares_IJ">
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%" />
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="folio_devengado_ingreso" type="long" calc="%inParam.inParam.folio_devengado_ingreso%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+      
+            <componente id="repConDevOtrIng" nombre="Reporte Consulta de Devengado de Otros Ingresos" tipo="reporte" ejecutar="%obtenerTipo.obtenerTipo.tipo_ingreso%==2">
+                <reporte nombre="Dev_Otros_Ingresos_AL">
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%" />
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="folio_devengado" type="long" calc="%inParam.inParam.folio_devengado_ingreso%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+        </nivel>-->
+        
+        <!--CANCELACIÓN DE INGRESO DEVENGADO NO RECAUDADO-->
+        <nivel id="canIngDevNoRec" nombre="Cancelación de ingreso devengado no recaudado" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            
+            <!--CANCELACIÓN DE INGRESO DEVENGADO NO RECAUDADO-->
+            <componente id="canIngDevNoRec" nombre="Cancelación de Ingreso Devengado no Recaudado" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" calc="$config.ur$" visible="false"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="folio_devengado_ingreso" calc="%inParam.inParam.folio_devengado_ingreso%" visible="false"/>
+                    <campo name="opciones" text=" Cancelar SI/NO" local="true" type="long" margen-izquierdo="1" columnas="2" validacion="%opciones%==null" validacionMensaje="Selecciones si desea cancelar">
+                            <opciones>
+                        <opcion texto="SÍ" valor="1" />
+                        <opcion texto="NO" valor="2"/>
+                         </opciones>
+                    </campo>
+                    <campo name="solicitud_cancelacion" text="Solicitar Cancelación" calcCliente="@ifThenElse(%opciones%==1,true,false)" margen-izquierdo="2"  columnas="3" margen-derecho="2" visible="false"/>
+                    <campo name="folio_asociado" text="Folio Asociado" margen-izquierdo="1" columnas="2" habilitado="false" />
+                    <campo name="devengado_ingreso" text="Folio" margen-izquierdo="1" columnas="2" habilitado="false"/>
+                    <campo name="adjunta_documento" local="true" type="file" text="Adjunta Documentación" margen-izquierdo="2" columnas="3" habilitado="false"/>
+                    <campo name="importe_total" text="Importe Total a Cancelar" columnas="3" habilitado="false"/>
+                    <campo name="motivo_cancelacion" text="MOTIVO DE CANCELACIÓN" margen-izquierdo="2" columnas="3" margen-derecho="2" habilitado="false" height="200" mascara="C" interaccion="%solicitud_cancelacion%==true"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" texto="GUARDAR" margen-izquierdo="4" columnas="3" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <!--CANCELACIÓN DE INGRESO DEVENGADO NO RECAUDADO-->
+        <nivel id="canIngDevNoRec1" nombre="Reporte Cancelación de ingreso devengado no recaudado">
+            <!--FOLIO DE CANCELACIÓN DE INGRESO-->
+            <componente id="folCanIng" nombre="Folio de Cancelacion de Ingreso" tipo="reporte">
+                <reporte nombre="R_CancelacIng_IJ" expediente="Expediente Solicitud de Cancelacion de Ingreso Devengado no Recaudado" nombreDocumento="'Folio de Cancelacion de Ingreso'" grupo="$inParam.folio_devengado_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%" />
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="folio_devengado_ingreso" type="long" calc="%inParam.inParam.folio_devengado_ingreso%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

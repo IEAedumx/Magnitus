@@ -1,0 +1,261 @@
+<tarea id="registraSolicitudCancelacionIngresoDebengadoNoRecaudado" nombre="Registra Solicitud de Cancelación de Ingreso Devengado No Recaudado" fechaModificacion="12/06/2019" autor="Luis Eduardo Castañeda Delgadillo" version="1.0.0">
+    <pagina id="uno">
+
+        <!-- BARRE PERIODOS -->
+        <nivel id="nlBarrePeriodo" nombre="Barre Periodo" interactivo="false">
+            <componente id="cpBarrePeriodo" nombre="Barre Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"  /> 
+                    <!--filtroCampo="id_periodo" filtroOperador="=" filtroValor="2019"-->
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/> <!-- -->
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- RESTABLECER LA SELECCIÓN DE CANCELACIÓN -->
+        <nivel id="nlResSelecCan" nombre="RESTABLECER LA SELECCIÓN DE CANCELACIÓN" interactivo="false">
+            <componente id="cpResSelecCan" nombre="RESTABLECER LA SELECCIÓN DE CANCELACIÓN" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                    <campo name="selecciona_cancelacion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRestableceImporte" nombre="Restablece Importe de Devengado Ingreso" interactivo="false">
+            <componente id="cpRestableceImporte" nombre="Restablece Importe de Devengado Ingreso" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                    <campo name="folio_devengado_ingreso" />
+                    <campo name="importe_total" calc="0"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- SUMAR IMPORTES TOTALES EN EL ENCABEZADO -->
+        <!--<nivel id="nlBarreDevIngAct" nombre="Barre Devengado Ingreso" interactivo="false">
+            <componente id="cpBarreDevIngAct" nombre="Barre Devengado Ingreso" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                    <campo name="folio_devengado_ingreso" />
+                </tabla>
+                <nivel id="nlBarreDevIngDet" nombre="Barre de Devengado Ingreso Detalle" interactivo="false">
+                    <componente id="cpBarreDevIngDet" nombre="Barre de Devengado Ingreso Detalle" tipo="cursor">
+                        <tabla schema="operation" nombre="devengado_ingreso_detalle" >
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                            <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="%nlBarreDevIngAct.cpBarreDevIngAct.folio_devengado_ingreso%"/>
+                            <campo name="folio_devengado_ingreso_det" />
+                            <campo name="total" />
+                            <campo name="clave_presupuestal"/> 
+                        </tabla>
+                        <nivel id="nlBarreDevIngImporte" nombre="Barre Importe de Devengado Ingreso" interactivo="false">
+                            <componente id="cpBarreDevIngImporte" nombre="Barre Importe de Devengado Ingreso" tipo="cursor">
+                                <tabla schema="operation" nombre="devengado_ingreso">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                                    <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="%nlBarreDevIngAct.cpBarreDevIngAct.folio_devengado_ingreso%"/>
+                                    <campo name="importe_total" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <nivel id="nlActDevIngImporte" nombre="Actualiza Importe de Devengado Ingreso" interactivo="false">
+                            <componente id="cpActDevIngImporte" nombre="Actualiza Importe de Devengado Ingreso" tipo="cursor">
+                                <tabla schema="operation" nombre="devengado_ingreso">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                                    <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="%nlBarreDevIngAct.cpBarreDevIngAct.folio_devengado_ingreso%"/>
+                                    <campo name="importe_total" calc="%nlBarreDevIngImporte.cpBarreDevIngImporte.importe_total%+@ifThenElse(%nlBarreDevIngDet.cpBarreDevIngDet.total%==null,0,%nlBarreDevIngDet.cpBarreDevIngDet.total%)"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>-->
+        
+        <!-- SUMA IMPORTES TOTALES DEL ENCABEZADO -->
+        
+        <nivel id="sumaImporteEncabezado" nombre="sumaImporteEncabezado" interactivo="false">
+            <componente tipo="cursor" id="sumaImporteEncabezado" nombre="sumaImporteEncabezado">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                    <campo name="folio_devengado_ingreso"/>
+                    <campo name="importe_total" calc="@consultaDirec('select sum (total) as resultado from operation.devengado_ingreso_detalle where ur='+$config.ur$+' and periodo='+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+' and folio_devengado_ingreso='+%sumaImporteEncabezado.sumaImporteEncabezado.folio_devengado_ingreso%,'resultado','decimal','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--  FIN DE SUMA IMPORTES TOTALES DEL ENCABEZADO-->
+        
+        
+        
+        <nivel id="nlConTipoDevIng" nombre="Consulta Tipo de Devengado de Ingreso" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpSelecFolCan" nombre="Selecciona Devengado a Cancelar" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" calc="$config.ur$" visible="false" llaveForanea="false" columna-visible="false"/>
+                    <campo name="periodo" text="Año" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" llaveForanea="false"/>
+                    <campo name="folio_devengado_ingreso" visible="false" columna-visible="false"/>
+                    <campo name="tipo_ingreso" text="Tipo de Ingreso"/>
+                    <campo name="devengado_ingreso" text="Folio"/>
+                    <campo name="fecha_registro" text="Fecha"/>
+                    <campo name="beneficiario" text="Cliente/Beneficiario" descripcionForaneaTabla="razon_social"/>
+                    <campo name="concepto" text="Concepto"/>
+                    <campo name="estatus" text="Estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="2"/>
+                    <campo name="importe_total" text="Importe Devengado"/>
+                    <campo name="saldo_recaudar" text="Saldo por Recaudar"/>
+                    <campo name="selecciona_cancelacion" text="Campo de Selección" editable="true"/>
+                    <campo name="solicitud_cancelacion" visible="false" columna-visible="false" filtroCampo="solicitud_cancelacion" filtroOperador="=" filtroValor="false" /> 
+                    <campo name="recaudado" text="Recaudado" filtroCampo="recaudado" filtroOperador="=" filtroValor="null" columna-visible="false"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR"/>
+                </estilos>
+            </componente>
+            <validaciones>
+        		<validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(selecciona_cancelacion) = 1 seleccion FROM operation.devengado_ingreso 
+                WHERE selecciona_cancelacion = true AND ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\'','seleccion','bool','MAGNITUS')==false" validacionMensaje="'Sólo debe seleccionarse un folio para continuar.'" />
+        	</validaciones>
+        </nivel>
+
+        <!-- BARRE DEVENGADO INGRESO -->
+        <nivel id="nlBarreDevIng" nombre="Barre Devengado del Ingreso" interactivo="false">
+            <componente id="cpBarreDevIng" nombre="Barre Devengado del Ingreso" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                    <campo name="selecciona_cancelacion" filtroCampo="selecciona_cancelacion" filtroOperador="=" filtroValor="true"/> <!--  -->
+                    <campo name="folio_devengado_ingreso"/>
+                    <campo name="tipo_ingreso" />
+                    <campo name="devengado_ingreso" />
+                    <campo name="importe_total" />
+                    <campo name="fecha_registro" />
+                    <campo name="beneficiario" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- REPORTES DE SERVICIOS ESCOLARES Y OTROS INGRESOS -->
+     <!--   <nivel id="nlConDevIngServEscol" nombre="Consulta de Devengado de Ingresos Servicios Escolares" ejecutar="%nlBarreDevIng.cpBarreDevIng.tipo_ingreso%==1 OR %nlBarreDevIng.cpBarreDevIng.tipo_ingreso%==2" mostrarNivelAnterior="false">
+            <componente id="cpConDevIngServEscol" nombre="Consulta de Devengado de Ingresos Servicios Escolares" tipo="reporte" ejecutar="%nlBarreDevIng.cpBarreDevIng.tipo_ingreso%==1">
+                <reporte nombre="R_Dev_Serv_Escolares_IJ">
+                    <campo name="ur" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_devengado_ingreso" local="true" type="long" calc="%nlBarreDevIng.cpBarreDevIng.folio_devengado_ingreso%"/>
+                </reporte>
+            </componente>
+            
+            <componente id="cpRepConDevOtrIng" nombre="Reporte Consulta de Devengado de Otros Ingresos" tipo="reporte" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlBarreDevIng.cpBarreDevIng.tipo_ingreso%==2">
+                <reporte nombre="Dev_Otros_Ingresos_AL">
+                    <campo name="ur" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_devengado" local="true" type="long" calc="%nlBarreDevIng.cpBarreDevIng.folio_devengado_ingreso%"/>
+                </reporte>
+            </componente>
+        </nivel>-->
+        
+        <!-- FORMULARIO DE CANCELACIÓN DE DEVENGADO DE INGRESO -->
+        <nivel id="nlCancelaIngDevIngNoRec" nombre="Cancelación de ingreso devengado no recaudado" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpCancelaIngDevIngNoRec" nombre="Cancelación de ingreso devengado no recaudado" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" calc="$config.ur$" visible="false"/>
+                    <campo name="periodo" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" visible="false"/>
+                    <campo name="folio_devengado_ingreso" calc="%nlBarreDevIng.cpBarreDevIng.folio_devengado_ingreso%" visible="false"/>
+                    <campo name="opciones" text=" Cancelar SI/NO" local="true" type="long" margen-izquierdo="1" columnas="2" validacion="%opciones%==null" validacionMensaje="Selecciones si desea cancelar">
+                            <opciones>
+                        <opcion texto="SÍ" valor="1" />
+                        <opcion texto="NO" valor="2"/>
+                         </opciones>
+                    </campo>
+                    <campo name="solicitud_cancelacion" text="Solicitar Cancelación" calcCliente="@ifThenElse(%opciones%==1,true,false)" margen-izquierdo="2" columnas="3" margen-derecho="2" visible="false"/>
+                    <campo name="folio_asociado" text="Folio Asociado" margen-izquierdo="1" columnas="2" habilitado="false" calc="'C-000001'"/>
+                    <campo name="devengado_ingreso" text="Folio" margen-izquierdo="1" columnas="2" habilitado="false"/>
+                    <campo name="adjunta_documento" local="true" type="file" text="Adjunta Documentación" margen-izquierdo="2" columnas="3" />
+                    <campo name="importe_total" text="Importe Total a Cancelar" columnas="3" habilitado="false"/>
+                    <campo name="motivo_cancelacion" text="Justificación" margen-izquierdo="2" columnas="6" margen-derecho="2" height="200" mascara="C" interaccion="%solicitud_cancelacion%==true" validacion="%motivo_cancelacion%==null AND %solicitud_cancelacion%==true" validacionMensaje="Favor de ingresar un motivo de cancelación para continuar."/>
+                    <campo name="estatus" visible="false" calc="5"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" texto="GUARDAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER DATOS DEL BENEFICIARIO-->
+        <nivel id="buscaBeneficiario" nombre="buscaBeneficiario" interactivo="false" ejecutar="%nlCancelaIngDevIngNoRec.cpCancelaIngDevIngNoRec.solicitud_cancelacion%==true">
+            <componente id="buscaBeneficiario" nombre="buscaBeneficiario" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%nlBarreDevIng.cpBarreDevIng.beneficiario%"/>
+                    <campo name="nombre"/>
+                    <campo name="primer_apellido"/>
+                    <campo name="segundo_apellido"/>
+                    <campo name="razon_social"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- CREACIÓN DE NUEVA INSTANCIA -->
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false" ejecutar="%nlCancelaIngDevIngNoRec.cpCancelaIngDevIngNoRec.solicitud_cancelacion%==true">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'ce6bc34a-4f40-41e4-83a2-7e2794162ade'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="$config.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_folio_devengado_ingreso" calc="%nlBarreDevIng.cpBarreDevIng.folio_devengado_ingreso%" mostrarEsc="true"/>
+                    <parametro name="out_folio" calc="%nlBarreDevIng.cpBarreDevIng.devengado_ingreso%" mostrarEsc="true"/>
+                    <parametro name="out_fecha" calc="%nlBarreDevIng.cpBarreDevIng.fecha_registro%" mostrarEsc="true"/>
+                    <parametro name="out_beneficiario" calc="@concatenar(%buscaBeneficiario.buscaBeneficiario.nombre%+' '+%buscaBeneficiario.buscaBeneficiario.primer_apellido%+' '+%buscaBeneficiario.buscaBeneficiario.segundo_apellido%+' '+%buscaBeneficiario.buscaBeneficiario.razon_social%)" mostrarEsc="true"/>
+                    <parametro name="out_importe_total" calc="%nlBarreDevIng.cpBarreDevIng.importe_total%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!-- REPORTE DE FOLIO DE CANCELACIÓN DEL INGRESO -->
+        <nivel id="nlFolCanIng" nombre="Folio de Cancelacion de Ingreso" ejecutar="%nlCancelaIngDevIngNoRec.cpCancelaIngDevIngNoRec.solicitud_cancelacion%==true" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpFolCanIng" nombre="Folio de Cancelacion de Ingreso" tipo="reporte">
+                <reporte nombre="R_CancelacIng_IJ" expediente="Expediente Solicitud de Cancelacion de Ingreso Devengado no Recaudado" nombreDocumento="'Folio de Cancelacion de Ingreso'" grupo="%nlBarreDevIng.cpBarreDevIng.folio_devengado_ingreso%" url="$config.repository_upload_file$" update="true" >
+                    
+                    <campo name="folio_devengado_ingreso" type="long" calc="%nlBarreDevIng.cpBarreDevIng.folio_devengado_ingreso%" />
+                    <campo name="periodo"  type="long" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" />
+                    <campo name="ur"  type="long" calc="$config.ur$" />
+                    <campo name="usuario"  type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlCerrarTarea" nombre="Cerrar Tarea" interactivo="false" ejecutar="%nlCancelaIngDevIngNoRec.cpCancelaIngDevIngNoRec.solicitud_cancelacion%==false">
+            <componente id="cpCerrarTarea" nombre="Cerrar Tarea" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>
