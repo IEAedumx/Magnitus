@@ -1,0 +1,328 @@
+<tarea id="GRIT" nombre="Gestiona Recaudo de Ingresos">
+    <pagina id="GRIP" nombre="Gestiona Recaudo de Ingresos">
+        <!--CURSOR para periodo -->
+        <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+              <tabla schema="catalog" nombre="periodo">
+                <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="id_periodo"/>
+                <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+              </tabla>
+            </componente>
+        </nivel>
+
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="nombre"/>
+                    <campo name="primer_apellido"/>
+                    <campo name="segundo_apellido"/>
+                    <campo name="permisos_especiales"/>
+                    <campo name="id_cat_centro_registro"/>
+                    <campo name="id_centro_registro"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel id="Actualiza_estatus" nombre="Actualiza_estatus" interactivo="false">
+                <componente id="Actualiza_estatus" nombre="Actualiza_estatus" tipo="cursor">
+                    <tabla schema="operation" nombre="devengado_ingreso">
+                        <campo name="ur"  />                        
+                        <campo name="periodo" />
+                        <campo name="folio_devengado_ingreso"/>
+                        <campo name="seleccionar" calc="false"/>
+                        <campo name="importe_total" calc="@consultaDirec('SELECT SUM(total) as total from operation.devengado_ingreso_detalle WHERE folio_devengado_ingreso='+%Actualiza_estatus.Actualiza_estatus.folio_devengado_ingreso%,'total','decimal','MAGNITUS')"/>
+                        <!--)"/>-->
+                    </tabla>
+                </componente>
+            </nivel>
+         <nivel id="Actualiza_estatus1" nombre="Actualiza_estatus1" interactivo="false">
+                <componente id="Actualiza_estatus1" nombre="Actualiza_estatus1" tipo="cursor">
+                    <tabla schema="operation" nombre="devengado_ingreso_detalle">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                        <campo name="folio_devengado_ingreso"/>
+                        <campo name="folio_devengado_ingreso_det"/>
+                        <campo name="seleccionar" calc="false"/>
+                    </tabla>
+                    
+                </componente>
+            </nivel>
+           
+            
+    <!--FIN CURSOR-->
+        <nivel id="GRRI" nombre="Gestiona Registro para Recaudación de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="TSFFRR" nombre="Selecciona Folio para Recaudación" tipo="tabla" mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false">
+                    <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" llaveForanea="false" calc="%per.per.id_periodo%" width="55"/>
+                    <campo name="folio_devengado_ingreso" text="Folio" columna-visible="false" visible="false" llaveForanea="false" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="devengado_ingreso" text="Folio" width="150" />
+                    <campo name="tipo_ingreso" text="Tipo de Ingreso"  columnas="2" margen-izquierdo="1" width="155"/>
+                    <campo name="fecha_factura" text="Fecha" columnas="2" margen-izquierdo="1" width="175" />
+                    <campo name="beneficiario" text="Beneficiario"  descripcionForaneaTabla="razon_social" columnas="2" margen-izquierdo="1" width="275"/>
+                    <campo name="concepto" text="Concepto"  columnas="2" margen-izquierdo="1" width="75"/>
+                    <campo name="estatus" text="Estatus"  filtroCampo="estatus" filtroOperador="=" filtroValor="2" columnas="2" margen-izquierdo="1" width="100"/>
+                    <campo name="importe_total" text="Importe Devengado"  columnas="2" margen-izquierdo="1" width="155" formatoMoneda="true"/>
+                    <campo name="saldo_recaudar" text="Saldo por Recaudar" columna-visible="false" columnas="2" margen-izquierdo="1" margen-derecho="7" width="155"/>
+                    <campo name="seleccionar" text="Selección" editable="true"/>
+                    <campo name="recaudado" text="recudado" filtroCampo="recaudado" filtroOperador="=" filtroValor="null" columna-visible="false"/>
+                    <campo name="por_recaudar" text="porreca" filtroCampo="por_recaudar" filtroOperador="=" filtroValor="false" columna-visible="false"/>
+                    
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" columnas="2" margen-izquierdo="4" visible="true" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                    
+                    <estilos>
+                        <boton nombre="grabar"  visible="true" texto="CONTINUAR" />
+                        <boton nombre="formulario"  visible="true" texto="CONTINUAR" />
+                    </estilos>
+            </componente>
+                    <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) &gt; 1 as resultado from operation.devengado_ingreso WHERE  seleccionar=true','resultado','bool','MAGNITUS')" validacionMensaje="'Debe seleccionar solo un registro'"/>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) = 0 as resultado_uno from operation.devengado_ingreso WHERE seleccionar=true','resultado_uno','bool','MAGNITUS')" validacionMensaje="'Debe seleccionar un registro'"/>
+                    </validaciones>
+        </nivel>
+        
+
+   
+
+        <!--Lego tipo tabla-->
+      <nivel id="NCDIGR" nombre="Consulta Detalle Ingresos para Gestión de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+           <componente id="TCDIGR" nombre="Selecciona Detalle de Ingresos por Recaudar" accionDefault="editar" tipo="tabla" mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false">
+               <tabla id="detalle" schema="operation" nombre="devengado_ingreso_detalle">
+                   <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$config.ur$" llaveForanea="false"/>
+                   <campo name="periodo" text="Ejercicio Fiscal"  visible="false" llaveForanea="false" calc="%per.per.id_periodo%" width="55"/>
+                   <campo name="folio_devengado_ingreso" text="Folio"  calc="%GRRI.TSFFRR.folio_devengado_ingreso%" llaveForanea="false" habilitado="false" columnas="2" columna-visible="false" margen-izquierdo="1" width="175"/>
+                   <campo name="folio_devengado_ingreso_det" text="Renglón"  llaveForanea="false" habilitado="false" /> 
+                   <campo name="id_cat_clasificador_rubro_ingreso" text="id cat cri" columna-visible="false" visible="false" calc="11"  llaveForanea="false"/>
+                   <campo name="id_clasificador_rubro_ingreso" text="Clasificador por Rubro del Ingreso"  habilitado="false" columnas="2" margen-izquierdo="1" width="300" descripcionForaneaTabla="id_cat,descripcion"/> 
+                   
+                   <campo name="id_fondo_contable" text="Fondo Contable"  habilitado="false" columnas="2" margen-izquierdo="1" width="175"/> 
+                    <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" columna-visible="false" visible="false" calc="2" llaveForanea="false" width="150"/>
+                   <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro"  habilitado="false" columnas="2" margen-izquierdo="1" width="175"/> 
+                   <campo name="clave_presupuestal" text="Clave Presupuestal"  habilitado="false" columnas="2" margen-izquierdo="1" width="250" descripcionForaneaTabla="clave_presupuestal"/> 
+                   <campo name="cantidad" text="Cantidad"  habilitado="false" columnas="2" margen-izquierdo="1" width="120"/>
+                   <campo name="importe" text="Importe"  habilitado="false" columnas="2" margen-izquierdo="1" width="150" formatoMoneda="true"/>
+                   <campo name="descuento" text="Descuento"  habilitado="false" columnas="2" margen-izquierdo="1" width="150" formatoMoneda="true"/>
+                   <campo name="iva" text="IVA" habilitado="false" columnas="2" margen-izquierdo="1" width="100" />
+                   <campo name="total" text="Total" muestraAcumulado="true"  habilitado="false" columnas="2" margen-izquierdo="1" margen-derecho="7" width="150" formatoMoneda="true"/>
+                   <campo name="seleccionar" text="Selección" editable="true"/>
+                   
+               </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                 <acciones>
+                    <accion nombre="grabar"  hacer="saltar siguiente nivel"/>
+                </acciones>
+           </componente>
+       <!-- <validaciones>
+             <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) &gt; 1 as resultado from operation.devengado_ingreso_detalle WHERE  seleccionar=true','resultado','bool','MAGNITUS')" validacionMensaje="'Debe seleccionar solo un'"/>
+             <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) = 0 as resultado_uno from operation.devengado_ingreso_detalle WHERE seleccionar=true','resultado_uno','bool','MAGNITUS')" validacionMensaje="'Debe seleccionar un registro'"/>
+          </validaciones>-->
+        </nivel>
+        <!--FIN TABLA 2--> 
+
+
+    <nivel id="barreOficioGC" nombre="barreOficioGC" interactivo="false">
+        <componente id="barreOficioGC" nombre="barreOficioGC" tipo="cursor">
+            <tabla schema="operation" nombre="devengado_ingreso">
+                <campo name="ur"  filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                <campo name="periodo" filtroCampo="periodo" filtroOperador="periodo" filtroValor="%per.per.id_periodo%"/>
+                <campo name="folio_devengado_ingreso"/> 
+                <campo name="fecha_registro"/>
+                <campo name="referencia"/>
+                <campo name="beneficiario"/>
+                <campo name="concepto"/>
+                <campo name="estatus"/>
+                <campo name="ultimo_usuario_modificador"/>
+                <campo name="importe_total"/>
+                <campo name="forma_cobro"/>
+                <campo name="cuenta_bancaria"/>
+                <campo name="tipo_cuenta"/>
+                <campo name="fondo_aportacion"/>
+                <campo name="saldo_recaudar"/>
+                <campo name="seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                <campo name="por_recaudar" calc="true"/>
+                <campo name="exp_ingreso"/>
+            </tabla>
+        </componente>
+    </nivel>       
+
+    <nivel id="altaDuep" nombre="altaDuep" interactivo="false">
+        <componente id="altaDuep" nombre="altaDuep" tipo="altaDirect">
+            <tabla schema="operation" nombre="recaudacion_registro">
+                <campo name="ur"  calc="$config.ur$"/>
+                <campo name="periodo"  calc="%per.per.id_periodo%" />
+                <campo name="id_recaudacion_registro" generacion="@prox()+1" autogenerado="true"/>  
+                <campo name="folio_asociado" />
+                <campo name="referencia" calc="%barreOficioGC.barreOficioGC.referencia%"/>
+                <campo name="forma_cobro" calc="%barreOficioGC.barreOficioGC.forma_cobro%"/>
+                <campo name="cuenta_bancaria" calc="%barreOficioGC.barreOficioGC.cuenta_bancaria%"/>
+                <campo name="importe_total" calc="%barreOficioGC.barreOficioGC.importe_total%"/>
+                <campo name="tipo_cuenta" calc="%barreOficioGC.barreOficioGC.tipo_cuenta%"/>
+                <campo name="fecha_recaudacion" calc="@fechaSistema()" />
+                <campo name="concepto" calc="%barreOficioGC.barreOficioGC.concepto%"/>
+                <campo name="saldo_recaudar" calc="%barreOficioGC.barreOficioGC.saldo_recaudar%"/>
+                <campo name="estatus" calc="%barreOficioGC.barreOficioGC.estatus%"/>
+                <campo name="beneficiario" calc="%barreOficioGC.barreOficioGC.beneficiario%"/> 
+                <campo name="importe_efectivo"/>
+                <campo name="importe_cheque"/>
+                <campo name="importe_tarjeta"/>
+                <campo name="importe_otra_forma_pago"/>
+                <campo name="importe_total_recaudar"/>
+                <campo name="exp_ingreso" calc="%barreOficioGC.barreOficioGC.exp_ingreso%"/>
+            </tabla>
+        </componente>
+    </nivel>
+    
+    <nivel id="OPC" nombre="OPC" interactivo="false">
+        <componente id="OPCI" nombre="OPCI" tipo="cursor"> 
+        <tabla schema="operation" nombre="recaudacion_registro">
+            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%altaDuep.altaDuep.ur%"/>
+            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%altaDuep.altaDuep.periodo%"/>
+            <campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%altaDuep.altaDuep.id_recaudacion_registro%" /> 
+            <campo name="folio_asociado" calc="@concatenar('DURI-R-'+@ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt;10,'00000',
+                @ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt; 100,'0000',
+                @ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt; 1000,'000',
+                @ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt; 10000,'00',
+                @ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt; 100000,'0',null)))))+%altaDuep.altaDuep.id_recaudacion_registro%)"/> 
+        </tabla>
+        </componente>
+    </nivel>
+
+    
+   <nivel id="barreDetalleGasto" nombre="barreDetalleGasto" interactivo="false">
+        <componente id="barreDetalleGasto" nombre="barreDetalleGasto" tipo="cursor">
+            <tabla schema="operation" nombre="devengado_ingreso_detalle">
+               <campo name="ur"  filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                <campo name="periodo" filtroCampo="periodo" filtroOperador="periodo" filtroValor="%per.per.id_periodo%"/>
+                <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="%barreOficioGC.barreOficioGC.folio_devengado_ingreso%"/>
+                  <campo name="id_cat_clasificador_rubro_ingreso"/> 
+                  <campo name="id_clasificador_rubro_ingreso"/>
+                  <campo name="id_cat_fondo_contable"/>
+                  <campo name="id_fondo_contable"/> 
+                  <campo name="cantidad"/>
+                  <campo name="importe"/>
+                  <campo name="descuento"/>
+                  <campo name="iva"/>
+                  <campo name="total"/>
+                  <campo name="ultimo_usuario_modificador"/>
+                  <campo name="tipo_bloque"/>
+                  <campo name="referencia"/>
+                  <campo name="concepto_recaudacion"/>
+                  <campo name="id_cat_centro_registro"/>
+                  <campo name="id_centro_registro"/>
+                  <campo name="id_cat_unidad_ejecutora_gasto"/>
+                  <campo name="id_unidad_ejecutora_gasto"/>
+                  <campo name="mes_cve_ingreso"/>
+                  <campo name="clave_presupuestal"/> 
+            </tabla>
+            <nivel id="altaDetalleDuep" nombre="altaDetalleDuep" interactivo="false">
+                <componente id="altaDetalleDuep" nombre="altaDetalleDuep" tipo="altaDirect">
+                    <tabla schema="operation" nombre="recaudacion_registro_detalle">
+                        <campo name="ur"  calc="$config.ur$"/>
+                        <campo name="periodo"  calc="%per.per.id_periodo%" />
+                        <campo name="id_recaudacion_registro" calc="%altaDuep.altaDuep.id_recaudacion_registro%"/>
+                        <campo name="id_recaudacion_registro_det" generacion="@prox()+1" autogenerado="true"/>
+                        <campo name="clasificado_rubro_ingreso" calc="%barreDetalleGasto.barreDetalleGasto.clasificado_rubro_ingreso%"/>
+                        <campo name="id_cat_fondo_contable" calc="%barreDetalleGasto.barreDetalleGasto.id_cat_fondo_contable%"/>
+                        <campo name="id_fondo_contable" calc="%barreDetalleGasto.barreDetalleGasto.id_fondo_contable%"/> 
+                        <campo name="cantidad" calc="%barreDetalleGasto.barreDetalleGasto.cantidad%"/>
+                        <campo name="importe" calc="%barreDetalleGasto.barreDetalleGasto.importe%"/>
+                        <campo name="descuento" calc="%barreDetalleGasto.barreDetalleGasto.descuento%"/>
+                        <campo name="iva" calc="%barreDetalleGasto.barreDetalleGasto.iva%"/>
+                        <campo name="total" calc="%barreDetalleGasto.barreDetalleGasto.total%"/>
+                        <campo name="ultimo_usuario_modificador" calc="%barreDetalleGasto.barreDetalleGasto.ultimo_usuario_modificador%"/>
+                        <campo name="tipo_bloque" calc="%barreDetalleGasto.barreDetalleGasto.tipo_bloque%"/>
+                        <campo name="referencia" calc="%barreDetalleGasto.barreDetalleGasto.referencia%"/>
+                        <campo name="concepto_recaudacion" calc="%barreDetalleGasto.barreDetalleGasto.concepto_recaudacion%"/>
+                        <campo name="id_cat_centro_registro" calc="%barreDetalleGasto.barreDetalleGasto.id_cat_unidad_ejecutora_gasto%"/>
+                        <campo name="mes" calc="%barreDetalleGasto.barreDetalleGasto.mes_cve_ingreso%"/>
+                        <campo name="clave_presupuestal" calc="%barreDetalleGasto.barreDetalleGasto.clave_presupuestal%"/>
+                        <campo name="id_centro_registro" calc="%barreDetalleGasto.barreDetalleGasto.id_unidad_ejecutora_gasto%"/>
+                        <campo name="id_cat_cri" calc="%barreDetalleGasto.barreDetalleGasto.id_cat_clasificador_rubro_ingreso%" />
+                        <campo name="id_cri" calc="%barreDetalleGasto.barreDetalleGasto.id_clasificador_rubro_ingreso%"/>
+                    </tabla>
+                </componente>
+            </nivel>
+        </componente>
+    </nivel>
+    
+    <!-- Fin de Paso de Valores de lo que capture al maestro detalle--> 
+     
+      <!--FORMULARIO-->
+           <nivel nombre="Gestiona Recaudación de Ingresos" id="ern" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+                <componente tipo="formulario" nombre="Recaudación de Ingresos" id="ernes" accionDefault="editar">
+                    <tabla schema="operation" nombre="recaudacion_registro">
+                        <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$config.ur$" llaveForanea="false"/>
+                        <campo name="periodo" text="Ejercicio Fiscal"  llaveForanea="false" visible="false" calc="%per.per.id_periodo%" width="55"/>
+                        <campo name="folio_asociado" text="Folio Asociado"  visible="false" />
+                        <campo name="id_recaudacion_registro"  text="Folio" columna-visible="false" llaveForanea="false" calc="%altaDuep.altaDuep.id_recaudacion_registro%"  columnas="2" margen-izquierdo="1"/>
+                        <campo name="importe_efectivo" text="Importe Efectivo" columnas="2" margen-izquierdo="1" interaccion="%forma_cobro%==1 OR %forma_cobro%==5"/> <!-- -->
+                        <campo name="importe_cheque" text="Importe Cheque" columnas="2" margen-izquierdo="1" interaccion="%forma_cobro%==3 OR %forma_cobro%==5 "/> <!--  -->
+                        <campo name="referencia" text="Referencia" habilitado="false" columnas="2" margen-izquierdo="1" descripcionForaneaTabla="id_cat"/>
+                        <campo name="importe_tarjeta" text="Importe Tarjeta" columnas="2" margen-izquierdo="1" interaccion="%forma_cobro%==2 OR %forma_cobro%==5"/> <!--  -->
+                        <campo name="fecha_recaudacion" text="Fecha de Recaudación *" validacion="%fecha_recaudacion%==null" validacion-mensaje="Ingresa la fecha de Recaudación" columnas="2" margen-izquierdo="1"/>
+                        <campo name="importe_otra_forma_pago" text="Importe (otra forma de pago)" columnas="2" margen-izquierdo="1" interaccion="%forma_cobro%==4 OR %forma_cobro%==5"/> 
+                        <campo name="forma_cobro" text="Forma de Cobro" habilitado="true" columnas="2" margen-izquierdo="1"/>
+                        
+                        <campo name="tipo_cuenta" text="Tipo cuenta" calc="1" visible="false" llaveForanea="false"/>
+                        
+                        <campo name="cuenta_bancaria" text="Cuenta Bancaria *" autoFiltrado="true" autoFiltradoDescripcion="cuenta_contable,descripcion" columnas="2" margen-izquierdo="1" validacion="%cuenta_bancaria%==null" validacionMensaje="Seleccione una cuenta bancaria"/>
+                        <campo name="importe_total" text="Importe Total a Recaudar" habilitado="false" columnas="2" margen-izquierdo="1" margen-derecho="7" calcCliente="%importe_efectivo%+%importe_cheque%+%importe_tarjeta%+%importe_otra_forma_pago%"/>
+                    </tabla>
+                      <estilos>
+                    <boton nombre="grabar" visible="true" texto="CONTINUAR" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                </componente>
+        </nivel>
+        <!--FIN FORMULARIO-->
+   
+        
+            <!--INSTANCIAS-->
+        <nivel nombre="Registra Recaudado de Ingresos" id="RRII" interactivo="false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="RRII">
+                    <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'733841e0-da72-4c6f-a00b-3276d10f5847'"/>
+                    <parametro name="out_ur" calc="%per.per.id_unidad_responsable%" />
+                    <parametro name="out_periodo" calc="%per.per.id_periodo%"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    
+                    <parametro name="out_folio_asociado" calc="%ern.ernes.folio_asociado%"/>
+                    <!--<parametro name="out_folio" calc="%ern.ernes.id_recaudacion_registro%"/>-->
+                    <parametro name="out_folio_devengado" calc="%altaDuep.altaDuep.id_recaudacion_registro%"/>
+                    <parametro name="out_folio_devengado_det" calc="%barreDetalleGasto.barreDetalleGasto.folio_devengado_ingreso%"/>
+                    <parametro name="out_referencia" calc="%ern.ernes.referencia%"/>
+                    <parametro name="out_fecha_recaudacion" calc="%ern.ernes.fecha_recaudacion%"/>
+                    <parametro name="out_importe_total" calc="%ern.ernes.importe_total_recaudar%"/>
+                    <parametro name="out_folio_ingreso" calc="%barreOficioGC.barreOficioGC.exp_ingreso%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--FIN INSTANCIAS--> 
+        
+        <!--REPORTE-->
+         <nivel id="rCRI" nombre="Ingresos Recaudados" mostrarNivelAnterior="false">
+            <componente id="rCRI" nombre="Ingresos Recaudados" tipo="reporte">
+                <reporte nombre="R_Dev_Ingreso_MC" expediente="Expediente de Ingresos/Recaudación de Ingresos" grupo="%barreOficioGC.barreOficioGC.exp_ingreso%" url="$config.repository_upload_file$" nombreDocumento="'Recaudado'" update="true">
+                    <campo name="id_devengado_ing" type="long" calc="%ern.ernes.id_recaudacion_registro%" />
+                    <campo name="ur" type="long" calc="$config.ur$" />
+                    <campo name="periodo" type="long" calc="%per.per.id_periodo%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel> 
+        <!--FIN REPORTE-->
+    </pagina>
+</tarea>
