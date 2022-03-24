@@ -1,0 +1,339 @@
+<tarea id="EmiteADD" nombre="Emite Dictámen Adjudicación Directa" autor="Monserrat Gerardo" Version="1">
+    <pagina id="1">
+        <nivel nombre="barreUsuarios" id="barreUsuarios" interactivo="false">
+            <componente nombre="barreUsuarios" id="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario"  filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                </tabla>
+            </componente>   
+        </nivel>
+        <nivel nombre="ValorUMA" id="ValorUMA" interactivo="false">
+            <componente nombre="ValorUMA" id="ValorUMA" tipo="cursor">
+                <tabla schema="operation" nombre="gestion_montos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo"  filtroOperador="=" filtroValor="$inParam.periodo$"/>   
+                    <campo name="valor_unidad_medida"/>
+                </tabla>
+            </componente>   
+        </nivel>
+        <!--<nivel nombre="ValorDummy" id="ValorDummy" interactivo="false">
+            <componente nombre="ValorDummy" id="ValorDummy" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="valor_uma" text="Valor UMA" local="true" type="decimal" calc="(15000*%ValorUMA.ValorUMA.valor_unidad_medida%)" visible="true"/>
+                </tabla>
+            </componente>   
+        </nivel>-->
+        
+        
+        <nivel id="BarreTipi" nombre="BarreTipi" interactivo="false">
+            <componente id="BarreTipi" nombre="BarreTipi" tipo="cursor">
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_tipo_adjudicacion" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="1" llaveForanea="false"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')" llaveForanea="false"/>
+                    <campo name="id_tipo_dictamen" text="Concepto" filtroCampo="id_tipo_dictamen" filtroOperador="!=" filtroValor="null"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="nlEmiteADD" nombre="Emite Dictámen Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%BarreTipi.BarreTipi.id_tipo_dictamen%==null">
+            <componente id="cpEmiteADD" nombre="Emite Dictámen Adjudicación Directa" tipo="formulario" accionDefault="insertar"> 
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo de Adjudicación Directa" visible="false" calc="1"/>
+                    <campo name="folio_add" text="Folio ADD" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')" visible="true" columnas="3" margen-izquierdo="1"/>
+                    <campo name="id_tipo_dictamen" text="Tipo de Dictamen de Adjudicación Directa" descripcionForanea="descripcion" columnas="5" margen-derecho="1" llavesFijas="id_tipo_adjudicacion=1"/>
+                   
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlEmiteADDN" nombre="Emite Dictámen Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%BarreTipi.BarreTipi.id_tipo_dictamen%!=null">
+            <componente id="cpEmiteADDN" nombre="Emite Dictámen Adjudicación Directa" tipo="formulario" accionDefault="seleccionar"> 
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo de Adjudicación Directa" visible="false" calc="1"/>
+                    <campo name="folio_add" text="Folio ADD" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')" visible="true" columnas="3" margen-izquierdo="1"/>
+
+                    <campo name="id_tipo_dictamen" text="Tipo de Dictamen de Adjudicación Directa" descripcionForanea="descripcion" columnas="5" margen-derecho="1" llavesFijas="id_tipo_adjudicacion=1"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+
+        <nivel id="nlEmiteADD1" nombre="Dictámen de Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlEmiteADDN.cpEmiteADDN.id_tipo_dictamen%==3 OR %nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==3">
+            <componente id="cpEmiteADD1" nombre="Dictámen de Adjudicación Directa" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="1" visible="false"/>
+                    <campo name="folio_add" text="Folio Adjudicación" llaveForanea="false" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')" visible="false"/>
+                    <campo name="concepto_contratacion" text="Concepto de Contratacion" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="antecedentes" text="Antecedentes" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="fundamento_legal" text="Fundamento Legal" visible="true" height="100" columnas="8" margen-izquierdo="1"/>
+                    <campo name="justificacion" text="Justificación" height="100"  visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="plazo_lugar_entrega" text="Plazo y Lugar de Entrega" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="resolutivos" text="Resolutivos" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlEmiteADD2" nombre="Emite Dictámen Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlEmiteADDN.cpEmiteADDN.id_tipo_dictamen%==1 OR %nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==1"> 
+            <componente id="cpEmiteADD2" nombre="Dictámen de Adjudicación Directa por Excepción de Ley" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="1" visible="false"/>
+                    <campo name="folio_add" text="Folio Adjudicación" llaveForanea="false" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')" visible="false"/>
+                    <campo name="concepto_contratacion" text="Concepto de Contratacion" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="antecedentes" text="Antecedentes" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="fundamento_legal" text="Fundamento Legal" visible="true" height="100" width="100"  columnas="8" margen-izquierdo="1"/>
+                    <campo name="justificacion" text="Justificación" height="100"  visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="plazo_lugar_entrega" text="Plazo y Lugar de Entrega" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="resolutivos" text="Resolutivos" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlEmiteADD3" nombre="Emite Dictámen Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==2 OR %nlEmiteADDN.cpEmiteADDN.id_tipo_dictamen%==2">
+            <componente id="cpEmiteADD3" nombre="Dictámen de Adjudicación Directa por Declararse Desierta" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="1" visible="false"/>
+                    <campo name="folio_add" text="Folio Adjudicación" llaveForanea="false" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')" visible="false"/>
+                    <campo name="concepto_contratacion" text="Concepto de Contratacion" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="antecedentes" text="Antecedentes" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="fundamento_legal" text="Fundamento Legal" visible="true" height="100" width="100" columnas="8" margen-izquierdo="1"/>
+                    <campo name="justificacion" text="Justificación" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="plazo_lugar_entrega" text="Plazo y Lugar de Entrega" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="resolutivos" text="Resolutivos" height="100" width="100" visible="true" columnas="8" margen-izquierdo="1"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlEmiteADD4" nombre="Dictámen Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpEmiteADD4" nombre="Funcionarios que Firmarán el Fallo" tipo="tabla" mostrarAgregar="true" mostrarEditar="true" mostrarEliminar="true" exportarExcel="false" exportarPDF="false">
+                <tabla schema="operation" nombre="add_funcionarios_eventos">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="1" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio Adjudicación" llaveForanea="false" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')" visible="false" columna-visible="false"/>
+                    <campo name="folio_funcionario" text="Folio de Funcionario" generacion="@prox()+1" autogenerado="true" visible="true" habiltado="false" columnas="3" columa-visible="true"/>
+                    <campo name="nombre" text="Nombre del Funcionario" visible="true" habiltado="false" columnas="3"  columna-visible="true"/>
+                    <campo name="puesto" text="Puesto" visible="true" habiltado="false" columnas="3"  columna-visible="true"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" columna-visible="false"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false"/>
+                    <campo name="tipo_evento" text="Tipo Evento" calc="1" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo -->
+        
+        <nivel id="buscaFondo" nombre="buscaFondo" interactivo="false">
+            <componente id="buscaFondo" nombre="buscaFondo" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccion" nombre="buscaSeccion" interactivo="false">
+            <componente id="buscaSeccion" nombre="buscaSeccion" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerie" nombre="buscaSerie" interactivo="false">
+            <componente id="buscaSerie" nombre="buscaSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerie" nombre="buscaSubSerie" interactivo="false">
+            <componente id="buscaSubSerie" nombre="buscaSubSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="3"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpediente" nombre="concatenaExpediente" interactivo="false">
+            <componente id="concatenaExpediente" nombre="concatenaExpediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondo.buscaFondo.abreviatura%+'/'+%buscaSeccion.buscaSeccion.abreviatura%+'/'+%buscaSerie.buscaSerie.abreviatura%+'/'+%buscaSubSerie.buscaSubSerie.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo-->
+        
+         <nivel id="nlEmiteADD5A" nombre="Dictámen Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false"><!--ejecutar="%nlEmiteADDN.cpEmiteADDN.id_tipo_dictamen%==1 OR %nlEmiteADDN.cpEmiteADDN.id_tipo_dictamen%==3"-->
+            <componente id="cpEmiteADD5A" nombre="Dictámen de Adjudicación Directa" tipo="reporte">
+                <reporte nombre="Dictamen_add" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Dictamen'" 
+                         grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true">  
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                    <campo name="folio_add" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="1"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <!--Reporte con logo UTA-->
+        <!--<nivel id="nlEmiteADD5" nombre="Dictámen Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==1 OR %nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==3">-->
+        <!--    <componente id="cpEmiteADD5" nombre="Reporte de Dictámen de Adjudicación Directa" tipo="reporte">-->
+        <!--        <reporte nombre="Dictamen_add" expediente="Expediente Adquisiciones/Adjudicación Directa" nombreDocumento="'Dictamen'" -->
+        <!--                 grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true"> -->
+        <!--            <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>-->
+        <!--            <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>-->
+        <!--            <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>-->
+        <!--            <campo name="folio_add" type="long" calc="%barreUsuarios.barreUsuarios.folio%"/>-->
+        <!--            <campo name="id_tipo_adquisicion" type="long" calc="1"/>-->
+        <!--        </reporte>-->
+        <!--    </componente>-->
+        <!--</nivel>-->
+        
+       
+        
+         <!--Reporte con logo IEA -->
+        <!--<nivel id="nlEmiteADD5" nombre="Dictámen Adjudicación Directa" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==1 OR %nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==3">-->
+        <!--    <componente id="cpEmiteADD5" nombre="Reporte de Dictámen de Adjudicación Directa" tipo="reporte">-->
+        <!--        <reporte nombre="Dictamen_add_iea"> -->
+        <!--            <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>-->
+        <!--            <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>-->
+        <!--            <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>-->
+        <!--            <campo name="folio_add" type="long" calc="%barreUsuarios.barreUsuarios.folio%"/>-->
+        <!--            <campo name="id_tipo_adquisicion" type="long" calc="1"/>-->
+        <!--        </reporte>-->
+        <!--    </componente>-->
+        <!--</nivel>-->
+        
+        <!--CAMBIO DE ESTATUS A DICTAMINADA-->
+        <nivel id="EstatusDIC" nombre="EstatusDIC" interactivo="false" ejecutar="%nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==1 OR %nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==3">
+            <componente id="EstatusDIC" nombre="EstatusDIC" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                    <campo name="estatus_adjudicacion" calc="4"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="EstatusDICA" nombre="EstatusDICA" interactivo="false" ejecutar="%nlEmiteADDN.cpEmiteADDN.id_tipo_dictamen%==1 OR %nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==3">
+            <componente id="EstatusDIC" nombre="EstatusDIC" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                    <campo name="estatus_adjudicacion" calc="4"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--CAMBIO DE ESTATUS A DESIERTA-->
+        <nivel id="EstatusNDIC" nombre="EstatusNDIC" interactivo="false" ejecutar="%nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==2">
+            <componente id="EstatusNDIC" nombre="EstatusNDIC" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                    <campo name="estatus_adjudicacion" calc="5"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="EstatusNDICA" nombre="EstatusNDIC" interactivo="false" ejecutar="%nlEmiteADD.cpEmiteADD.id_tipo_dictamen%==2">
+            <componente id="EstatusNDICA" nombre="EstatusNDIC" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                    <campo name="estatus_adjudicacion" calc="5"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

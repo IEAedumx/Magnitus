@@ -1,0 +1,159 @@
+<tarea id="MontosMax" nombre="Montos Máximos" autor="Monserrat Gerardo" version="1.0">
+    <pagina id="1">
+        <nivel id="BuscaPeriodo" nombre="BuscaPeriodo" interactivo="false">
+            <componente id="BuscaPeriodo" nombre="BuscaPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="barreUsuarios" interactivo="false">
+            <componente nombre="barreUsuarios" id="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario"  filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>   
+        </nivel>
+        <nivel id="BarreTipi" nombre="BarreTipi" interactivo="false">
+            <componente id="BarreTipi" nombre="BarreTipi" tipo="cursor">
+                <tabla schema="operation" nombre="gestion_montos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%BuscaPeriodo.BuscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%BuscaPeriodo.BuscaPeriodo.id_periodo%"/>
+                    <campo name="monto_maximo" text="Monto" filtroCampo="monto_maximo" filtroOperador="!=" filtroValor="null"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="BarreTipi1" nombre="BarreTipi" interactivo="false">
+            <componente id="BarreTipi1" nombre="BarreTipi" tipo="cursor">
+                <tabla schema="operation" nombre="gestion_montos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%BuscaPeriodo.BuscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%BuscaPeriodo.BuscaPeriodo.id_periodo%"/>
+                    <campo name="monto_superior" text="Monto" filtroCampo="monto_superior" filtroOperador="!=" filtroValor="null"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlMontosmax" nombre="Gestión de Montos Máximos" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpMontosmax" nombre="Selección de Gestión" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="UR" llaveForanea="false" calc="%BuscaPeriodo.BuscaPeriodo.id_unidad_responsable%" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" llaveForanea="false" calc="%BuscaPeriodo.BuscaPeriodo.id_periodo%" visible="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="selecOpcion" text="Selección de Gestión" local="true" type="long" validacion="%selecOpcion%==null" validacionMensaje="Selecciona una opción para continuar...." columnas="3"  margen-derecho="2">
+                        <opciones>
+                            <opcion texto="Configuración de Montos Máximos para Gestión de Contratación" valor="1"/>
+                            <opcion texto="Configuración de Montos Máximos para Gestión de Órdenes de Compra o Pedidos" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlMontosmax1" nombre="Montos Máximos" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlMontosmax.cpMontosmax.selecOpcion%==1 AND %BarreTipi1.BarreTipi1.monto_superior%==null">
+            <componente id="cpMontosmax1" nombre="Configuración de Montos Máximos para Proceso de Gestión de Contratación" tipo="formulario" accionDefault="insertar">
+                <tabla schema="operation" nombre="gestion_montos">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="%nlMontosmax.cpMontosmax.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Años" llaveForanea="false" calc="%nlMontosmax.cpMontosmax.id_periodo%" visible="true" columnas="3" />
+                    <campo name="monto_superior" text="Monto Superior a" visible="true" columnas="3" />
+                    <campo name="valor_unidad_medida" text="Valor de Unidad de Medida y Actualización(UMA)" visible="true" columnas="3" />
+                    <campo name="numero_uma" text="Numero de UMA's" visible="true" columnas="3" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente id="cpRepCont11" nombre="Reporte de Configuración de Montos Máximos para Proceso de Gestión de Contratación" tipo="reporte">
+                <reporte nombre="Ges_mont_con">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" local="true" type="long" calc="%nlMontosmax.cpMontosmax.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo Contable" local="true" type="long" calc="%nlMontosmax.cpMontosmax.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>    
+        <nivel id="nlMontosmax1a" nombre="Montos Máximos" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlMontosmax.cpMontosmax.selecOpcion%==1 AND %BarreTipi1.BarreTipi1.monto_superior%!=null">
+            <componente id="cpMontosmax1a" nombre="Configuración de Montos Máximos para Proceso de Gestión de Contratación" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="gestion_montos">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="%nlMontosmax.cpMontosmax.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Año" llaveForanea="false" calc="%nlMontosmax.cpMontosmax.id_periodo%" visible="true" columnas="3" />
+                    <campo name="monto_superior" text="Monto Superior a" visible="true" columnas="3" />
+                    <campo name="valor_unidad_medida" text="Valor de Unidad de Medida y Actualización(UMA)" visible="true" columnas="3" />
+                    <campo name="numero_uma" text="Numero de UMA's" visible="true" columnas="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente id="cpRepCont1" nombre="Reporte de Configuración de Montos Máximos para Proceso de Gestión de Contratación" tipo="reporte">
+                <reporte nombre="Ges_mont_con">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" local="true" type="long" calc="%BuscaPeriodo.BuscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo Contable" local="true" type="long" calc="%BuscaPeriodo.BuscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="nlMontosmax2" nombre="Montos Máximos" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlMontosmax.cpMontosmax.selecOpcion%==2 AND %BarreTipi.BarreTipi.monto_maximo%==null">
+            <componente id="cpMontosmax2" nombre="Configuración de Montos Máximos para Proceso de Gestión de Órdenes de Compra o Pedidos" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="gestion_montos">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="%nlMontosmax.cpMontosmax.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Año" llaveForanea="false" calc="%nlMontosmax.cpMontosmax.id_periodo%" visible="true" columnas="3" />
+                    <campo name="monto_maximo" text="Monto Maximo" visible="true" columnas="3" />
+                    <campo name="monto_superior" text="Monto Superior a" visible="true" columnas="3" />
+                    <campo name="valor_unidad_medida" text="Valor de Unidad de Medida y Actualización(UMA)" visible="true" columnas="3" />
+                    <campo name="numero_uma" text="Numero de UMA's" visible="true" columnas="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente id="cpRepOrdC1" nombre="Reporte de Configuración de Montos Máximos para Proceso de Gestión de Órdenes de Compra o Pedidos" tipo="reporte">
+                <reporte nombre="Ges_mont_ped">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" local="true" type="long" calc="%BuscaPeriodo.BuscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo Contable" local="true" type="long" calc="%BuscaPeriodo.BuscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="nlMontosmax2a" nombre="Montos Máximos" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlMontosmax.cpMontosmax.selecOpcion%==2 AND %BarreTipi.BarreTipi.monto_maximo%!=null">
+            <componente id="cpMontosmax2a" nombre="Configuración de Montos Máximos para Proceso de Gestión de Órdenes de Compra o Pedidos" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="gestion_montos">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="%nlMontosmax.cpMontosmax.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Año" llaveForanea="false" calc="%nlMontosmax.cpMontosmax.id_periodo%" visible="true" columnas="3" />
+                    <campo name="monto_maximo" text="Monto Maximo" visible="true" columnas="3" />
+                    <campo name="monto_superior" text="Monto Superior a" visible="true" columnas="3" />
+                    <campo name="valor_unidad_medida" text="Valor de Unidad de Medida y Actualización(UMA)" visible="true" columnas="3" />
+                    <campo name="numero_uma" text="Numero de UMA's" visible="true" columnas="3" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente id="cpRepOrdC" nombre="Reporte de Configuración de Montos Máximos para Proceso de Gestión de Órdenes de Compra o Pedidos" tipo="reporte">
+                <reporte nombre="Ges_mont_ped">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" local="true" type="long" calc="%BuscaPeriodo.BuscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo Contable" local="true" type="long" calc="%BuscaPeriodo.BuscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

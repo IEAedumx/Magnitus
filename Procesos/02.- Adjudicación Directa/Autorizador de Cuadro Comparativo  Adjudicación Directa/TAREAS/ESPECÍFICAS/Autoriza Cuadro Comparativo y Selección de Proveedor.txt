@@ -1,0 +1,361 @@
+<tarea id="AutorizaAdjudicacion" nombre="Gestion de Adjudicacion Directa" version="1" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel nombre="periodo" id="periodo" interactivo="false">   
+            <componente nombre="periodo" id="periodo" tipo="cursor">
+                <tabla nombre="periodo" schema="catalog">
+                    <campo filtroValor="$inParam.ur$" filtroOperador="=" filtroCampo="id_unidad_responsable" name="id_unidad_responsable"/>
+                    <campo name="id_periodo"/>
+                    <campo filtroValor="true" filtroOperador="=" filtroCampo="estatus" name="estatus"/>
+                    <campo filtroValor="3" filtroOperador="=" filtroCampo="id_estatus" name="id_estatus"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                    <campo name="no_ofertantes" text="Ofertantes" local="true" type="long" calc="@consultaDirec('SELECT no_ofertantes AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="barreUsuarios" interactivo="false">
+            <componente nombre="barreUsuarios" id="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario"  filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>   
+        </nivel>
+        <nivel nombre="ValorUMA" id="ValorUMA" interactivo="false">
+            <componente nombre="ValorUMA" id="ValorUMA" tipo="cursor">
+                <tabla schema="operation" nombre="gestion_montos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo"  filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="monto_maximo"/>
+                    <campo name="monto_superior"/>
+                </tabla>
+            </componente>   
+        </nivel>
+        <nivel nombre="ValorDummy" id="ValorDummy" interactivo="false">
+            <componente nombre="ValorDummy" id="ValorDummy" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo"  filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_add" text="Folio Adjudicación" filtroCampo="folio_add"  filtroOperador="=" filtroValor="%periodo.periodo.folio%"/>
+                    <campo name="total_ganador" text="Ganador"/>
+                    <campo name="total_proyecto_compra" text="Ganador"/>
+                </tabla>
+            </componente>   
+        </nivel>
+        <nivel id="nlAutAdj" nombre="Datos Generales" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+           <!-- <componente id="cpAutAdj" nombre="Datos Generales" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="compras">
+                    <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="$inParam.periodo$" llaveForanea="false" visible="false"/>
+                    <campo name="folio_req" text="Requisicion" llaveForanea="false" visible="false"/>
+                    <campo name="folio_adj" text="Folio Adjudicación" local="true" type="string" calc="%periodo.periodo.folio%" habilitado="false"  visible="true" columnas="3" />
+        
+                    <campo name="id_compras" text="Proyecto de Compra" filtroValor="$inParam.id_compras$" filtroOperador="=" filtroCampo="id_compras" llaveForanea="false" habilitado="false" visible="true" columnas="3"/>
+                    <campo name="proceso" text="Tipo de Adjudicación" habilitado="false" visible="true" columnas="3"/>
+                    <campo name="fecha_registro" text="Fecha" habilitado="false" visible="true" columnas="3"  calc="$inParam.fecha_referencia$"/>
+                    <campo name="id_cat_fuente_financiamiento" text="ID Fuente de Financiamiento" calc="5" visible="false"/>
+                    <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" habilitado="false" visible="true" columnas="3"/>
+                    <campo name="no_ofertantes" text="Indique Número de Ofertantes" calc="%periodo.periodo.no_ofertantes%" visible="true" columnas="3"  habilitado="false"/>
+                    <campo name="referencia" text="Referencia Normativa" height="100" width="100" habilitado="false" visible="true" columnas="6" calc="$inParam.referencia$"/>
+                    
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" posicion="derecha" visible="false" texto="Continuar" />
+                    </estilos>
+            </componente>-->
+            <componente id="cpAutAdjRep" tipo="reporte" nombre="Reporte Cuadro Comparativo" colapsado="SI">
+                <reporte nombre="Cuadro_comp" expediente="Expediente Adquisiciones/Adjudicación Directa" nombreDocumento="'Cuadro Comparativo'" 
+                         grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_add" type="long" calc="%periodo.periodo.folio%"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="cpAutAdjRep1" tipo="reporte" nombre="Reporte Ganador" colapsado="SI">
+                <reporte nombre="Asig_ganador_add" expediente="Expediente Adquisiciones/Adjudicación Directa" nombreDocumento="'Asignación de Ganador'" 
+                         grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_add" type="long" calc="%periodo.periodo.folio%"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            
+            <!--iea
+            
+            <componente id="cpAutAdjRep" tipo="reporte" nombre="Reporte Cuadro Comparativo" colapsado="SI">
+                <reporte nombre="Cuadro_comp_iea"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_add" type="long" calc="%periodo.periodo.folio%"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="cpAutAdjRep1" tipo="reporte" nombre="Reporte Ganador" colapsado="SI">
+                <reporte nombre="Asig_ganador_add_iea"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_add" type="long" calc="%periodo.periodo.folio%"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="1"/>
+                </reporte>
+            </componente>-->
+            
+            <componente id="ParDes" nombre="Partidas Desiertas" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" exportarExcel="false" exportarPDF="false" colapsado="SI">
+                <tabla schema="operation" nombre="proc_add_detalle">
+                    <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" llaveForanea="false" visible="true" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false" visible="true" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio ADD" calc="%periodo.periodo.folio%" llaveForanea="false" visible="true" columna-visible="false"/>
+                    <campo name="folio_add_detalle" text="Folio ADD Detalle" visible="true" columna-visible="true"/>
+                    <campo name="partida_desierta" text="Partidas" visible="true" columna-visible="false" filtroCampo="partida_desierta" filtroOperador="=" filtroValor="true"/>
+                    <campo name="clave_articulo" text="Clave Articulo" visible="true" columna-visible="true"/>
+                    <!--<campo name="seleccion_concursar" text="Volver a Concursar" visible="true" editable="true" columna-visible="true" />-->
+                    <campo name="seleccion_desierta" text="Cancelacion de Partidas Desiertas" editable="true" visible="true" columna-visible="true"/>
+                    <!--<campo name="val_seleccion_concursar" type="bool" local="true" calc="%seleccion_concursar%" validacionModificacion="%seleccion_desierta%==true AND %seleccion_concursar%==true" validacionModificacionMensaje="Solo se puede seleccionar una opción" visible="false" columna-visible="false"/>-->
+                    <campo name="comentarios" text="Comentarios" visible="false" columna-visible="true"/>
+                </tabla>
+            </componente>
+            
+            
+            <componente id="cpAutAdj1" nombre="Autoriza Adjudicación Directa" tipo="formulario" accionDefault="editar" colapsado="NO">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" calc="$inParam.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" calc="$inParam.periodo$" visible="false" llaveForanea="false"/>
+                    <campo name="folio_add" text="Folio Adjudicación" calc="%periodo.periodo.folio%" visible="false"/>
+                    <campo name="id_tipo_contratacion" text="Tipo Contratación" descripcionForanea="descripcion" visible="true" habilitado="true" columnas="3"  calc="@ifThenElse(%ValorUMA.ValorUMA.monto_maximo%&gt;=%ValorDummy.ValorDummy.total_ganador%,1,2)"/>
+                    <campo name="total_ganador" text="Ganador" visible="false" columnas="4"  formatoMoneda="true"/>
+                    <campo name="totala" text="UMA" local="true" type="long" calc="%ValorUMA.ValorUMA.monto_maximo%" visible="false"/>
+                    <campo name="totalg" text="Gan" local="true" type="long" calc="%ValorDummy.ValorDummy.total_ganador%" visible="false"/>
+                    <campo name="total" text="Total UMA" local="true" type="long" calc="@ifThenElse(%ValorUMA.ValorUMA.monto_maximo%&gt;=%ValorDummy.ValorDummy.total_ganador%,1,2)" visible="false"/>
+                    <campo name="obs_autorizacion" text="Observaciones" height="250" interaccion="%autoriza_adjudicacion%==false" validacion="%obs_autorizacion%==null AND %autoriza_adjudicacion%==false" validacionMensaje="Favor de insertar una observación para continuar." columnas="6" margen-izquierdo="2"/>
+                    <campo name="autoriza_adjudicacion" text="Autoriza Adjudicación" visible="true" columnas="3" margen-izquierdo="2"/> <!-- validacion="%autoriza_adjudicacion%==true AND %ValorUMA.ValorUMA.monto_superior%&gt;=%ValorDummy.ValorDummy.total_ganador%" validacionMensaje="MONTO NO ALCANZA CON EL LIMITE DEFINIDO"-->
+                    <campo name="fecha" text="Validar" local="true" type="string" visible="false" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="fecha_autorizacion" text="Fecha Autorización" calcCliente="@ifThenElse(%autoriza_adjudicacion%==true,%fecha%,'')" visible="false"/>
+                    <campo name="usuario_autorizacion" text="usuario_valida_req" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+      
+      
+      
+      <!--NEGOCIA INSTANCIA
+        <nivel nombre="Instancia Rechazo" id="RechazoInstancia" interactivo="false" ejecutar="%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==false"> 
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="RechazoInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                    <parametro name="out_observaciones" calc="%nlAutAdj.cpAutAdj1.obs_autorizacion%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>-->
+        
+        
+      <!--AGREGAR MENSAJE-->
+        <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==false"> 
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado"> 
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                    <parametro name="process" calc="$protocolarios.process$"/>    
+                    <parametro name="version" calc="$protocolarios.version$"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>  
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                    <parametro name="message" calc="%nlAutAdj.cpAutAdj1.obs_autorizacion%"/>
+                    <parametro name="type" calc="'1'"/> 
+                </parametros> 
+            </componente>
+        </nivel>
+ 
+
+        <!--Aqui estoy modificando-->
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+    <!--CAMBIO DE ESTATUS A NO AUTORIZADA-->
+        <nivel id="EstatusNOAUT" nombre="EstatusNOAUT" interactivo="false" ejecutar="%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==false">
+            <componente id="EstatusNOAUT" nombre="EstatusNOAUT" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="%periodo.periodo.folio%"/>
+                    <campo name="estatus_adjudicacion" calc="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="GrabaGan" nombre="GrabaGan" interactivo="false">
+            <componente id="GrabaGan" nombre="GrabaGan" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add_detalle">
+                    <campo name="ur" text="ur" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" text="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="tipo_adjudicacion" text="Tipo ADD" llaveForanea="false" filtroCampo="tipo_adjudicacion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="folio_add" text="Folio" filtroCampo="folio_add" filtroOperador="=" filtroValor="%periodo.periodo.folio%"/>
+                    <campo name="folio_add_detalle" text="Folio Detalle"/>
+                    <campo name="id_beneficiario_ganador" text="Beneficiario"/>
+                </tabla>
+                <nivel id="GrabaGan1" nombre="GrabaGan1" interactivo="false" ejecutar="%GrabaGan.GrabaGan.id_beneficiario_ganador%!=null">
+                    <componente id="GrabaGan1" nombre="GrabaGan1" tipo="cursor">
+                        <tabla schema="operation" nombre="add_oferentes">
+                            <campo name="ur" text="ur" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%GrabaGan.GrabaGan.ur%"/>
+                            <campo name="periodo" text="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%GrabaGan.GrabaGan.periodo%"/>
+                            <campo name="id_tipo_adjudicacion" text="Tipo ADD" llaveForanea="false" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="%GrabaGan.GrabaGan.id_tipo_adjudicacion%"/>
+                            <campo name="folio_add" text="Folio" filtroCampo="folio_add" filtroOperador="=" filtroValor="%GrabaGan.GrabaGan.folio_add%"/>
+                            <campo name="id_beneficiario" text="Beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%GrabaGan.GrabaGan.id_beneficiario_ganador%"/>
+                            <campo name="seleccionar" text="Seleccionar" calc="true"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--CREAR INSTANCIA A PEDIDO-->
+        <nivel id="CreaInsDic" nombre="CreaInsDic" interactivo="false">
+            <componente id="CreaInsDic" nombre="CreaInsDic" tipo="cursor">
+                <tabla schema="operation" nombre="add_oferentes">
+                    <campo name="ur" text="ur" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" text="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo ADD" llaveForanea="false" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="folio_add" text="Folio" filtroCampo="folio_add" filtroOperador="=" filtroValor="%periodo.periodo.folio%"/>
+                        <campo name="id_beneficiario" text="Beneficiario"/>
+                    <campo name="seleccionar" text="Seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+                <!-- INSTANCIA A ORDEN DE COMPRA -->
+                <nivel id="CreaInsDic1" nombre="Crea Instancia" interactivo="false" ejecutar="%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==true  AND %CreaInsDic.CreaInsDic.seleccionar%==true AND %nlAutAdj.cpAutAdj1.id_tipo_contratacion%==1 AND %ValorDummy.ValorDummy.total_ganador%&lt;=%ValorDummy.ValorDummy.total_proyecto_compra%"> 
+                    <componente id="CreaInsDic1" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                        <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                            <parametro name="enterprise" calc="'MAGNITUS'"/>
+                            <parametro name="process" calc="'ea6a7b1c-02fd-4050-945c-ae2203825177'"/> 
+                            <parametro name="user" calc="$protocolarios.user$"/>
+                            <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                            <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                            <parametro name="out_id_compras" calc="$inParam.id_compras$" mostrarEsc="true"/>
+                            <parametro name="out_id_fuente_financiamiento" calc="$inParam.id_fuente_financiamiento$" mostrarEsc="true"/>
+                            <parametro name="out_folio_req" calc="$inParam.folio_req$" mostrarEsc="true"/>
+                            <parametro name="out_referencia" calc="$inParam.referencia$" mostrarEsc="true"/>
+                            <parametro name="out_adjudicacion" calc="$inParam.adjudicacion$" mostrarEsc="true"/>
+                            <parametro name="out_beneficiario" calc="%CreaInsDic.CreaInsDic.id_beneficiario%" mostrarEsc="true"/>
+                            <parametro name="out_folio_add" calc="%periodo.periodo.folio%" mostrarEsc="true"/>
+                            <parametro name="out_adquisicion" calc="$inParam.adquisicion$" mostrarEsc="true"/>
+                        </parametros>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="CreaInsDic1a" nombre="Crea Instancia" interactivo="false" ejecutar="(%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==true AND %CreaInsDic.CreaInsDic.seleccionar%==true AND %nlAutAdj.cpAutAdj1.id_tipo_contratacion%==1 AND %ValorDummy.ValorDummy.total_ganador%&lt;=%ValorDummy.ValorDummy.total_proyecto_compra%)">
+            <componente id="CreaInsDic1a" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                        <parametro name="process" calc="$protocolarios.process$"/>
+                        <parametro name="version" calc="$protocolarios.version$"/>
+                        <parametro name="instance" calc="$protocolarios.instance$"/>
+                        <parametro name="user" calc="$protocolarios.user$"/>
+                        <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+             </componente>
+        </nivel>
+        <!--CREAR INSTANCIA CONTRATO-->
+        <nivel id="CreaInsDic2" nombre="CreaInsDic2" interactivo="false">
+            <componente id="CreaInsDic2" nombre="CreaInsDic2" tipo="cursor">
+                <tabla schema="operation" nombre="add_oferentes">
+                    <campo name="ur" text="ur" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" text="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo ADD" llaveForanea="false" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="folio_add" text="Folio" filtroCampo="folio_add" filtroOperador="=" filtroValor="%periodo.periodo.folio%"/>
+                    <campo name="id_beneficiario" text="Beneficiario"/>
+                    <campo name="seleccionar" text="Seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+           
+                <nivel id="CreaInsDic3" nombre="Crea Instancia" interactivo="false" ejecutar="%CreaInsDic.CreaInsDic.seleccionar%==true AND %nlAutAdj.cpAutAdj1.id_tipo_contratacion%==2 AND %ValorDummy.ValorDummy.total_ganador%&lt;=%ValorDummy.ValorDummy.total_proyecto_compra%">
+                    <componente id="CreaInsDic3" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                        <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                            <parametro name="enterprise" calc="'MAGNITUS'"/>
+                            <parametro name="process" calc="'c7c5c2a8-93ba-4d8f-838a-a164222083aa'"/> 
+                            <parametro name="user" calc="$protocolarios.user$"/>
+                            <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                            <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                            <parametro name="out_id_compras" calc="$inParam.id_compras$" mostrarEsc="true"/>
+                            <parametro name="out_id_fuente_financiamiento" calc="$inParam.id_fuente_financiamiento$" mostrarEsc="true"/>
+                            <parametro name="out_folio_req" calc="$inParam.folio_req$" mostrarEsc="true"/>
+                            <parametro name="out_referencia" calc="$inParam.referencia$" mostrarEsc="true"/>
+                            <parametro name="out_adjudicacion" calc="$inParam.adjudicacion$" mostrarEsc="true"/>
+                            <parametro name="out_beneficiario" calc="%CreaInsDic.CreaInsDic.id_beneficiario%" mostrarEsc="true"/>
+                            <parametro name="out_folio_add" calc="%periodo.periodo.folio%" mostrarEsc="true"/>
+                            <parametro name="out_adquisicion" calc="$inParam.adquisicion$" mostrarEsc="true"/>
+                        </parametros>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--  -->
+        <nivel id="CreaInsDic2a" nombre="Crea Instancia" interactivo="false" ejecutar="%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==true AND %CreaInsDic.CreaInsDic.seleccionar%==true AND %nlAutAdj.cpAutAdj1.id_tipo_contratacion%==2 AND %ValorDummy.ValorDummy.total_ganador%&lt;=%ValorDummy.ValorDummy.total_proyecto_compra%">
+            <componente id="CreaInsDic2a" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--CREA INSTANCIA TECHOS DE LA REQUISICION-->
+        <!--  -->
+        <nivel id="CreaInsDic4" nombre="Crea Instancia" interactivo="false" ejecutar="(%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==true AND (%ValorDummy.ValorDummy.total_ganador%&gt;%ValorDummy.ValorDummy.total_proyecto_compra%))">
+            <componente id="CreaInsDic4" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'414b3d62-6acb-43ff-8bea-2743ae7c4167'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                    <parametro name="out_id_compras" calc="$inParam.id_compras$" mostrarEsc="true"/>
+                    <parametro name="out_id_fuente_financiamiento" calc="$inParam.id_fuente_financiamiento$" mostrarEsc="true"/>
+                    <parametro name="out_folio_req" calc="$inParam.folio_req$" mostrarEsc="true"/>
+                    <parametro name="out_referencia" calc="$inParam.referencia$" mostrarEsc="true"/>
+                    <parametro name="out_adjudicacion" calc="$inParam.adjudicacion$" mostrarEsc="true"/>
+                    <parametro name="out_folio_add" calc="%periodo.periodo.folio%" mostrarEsc="true"/>
+                    <parametro name="out_adquisicion" calc="$inParam.adquisicion$" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--   -->
+        <nivel id="CreaInsDic2c" nombre="Crea Instancia" interactivo="false" ejecutar="(%nlAutAdj.cpAutAdj1.autoriza_adjudicacion%==true AND (%nlAutAdj.ParDes.seleccion_desierta%==true OR %ValorDummy.ValorDummy.total_ganador%&gt;%ValorDummy.ValorDummy.total_proyecto_compra%))">
+            <componente id="CreaInsDic2c" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
