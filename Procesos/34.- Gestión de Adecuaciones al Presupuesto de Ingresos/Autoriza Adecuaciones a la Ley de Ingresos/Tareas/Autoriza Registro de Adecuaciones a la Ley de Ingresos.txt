@@ -1,0 +1,758 @@
+<tarea nombre="AUTORIZA ADECUACIONES AL PRESUPUESTO DE INGRESOS" id="AUTORIZAR_ADECUACIONES_AL_PRESUPUESTO_DE_INGRESOS">
+    <pagina id="1" nombre="paginaUno">
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="id_adecuacion" local="true" type="string" calc="$inParam.id_adecuacion$" />
+                    <campo name="tip" local="true" type="string" calc="$inParam.tipo_adecuacion_presupuestaria$" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+       
+       <!-- Nivel para mostrar reportes -->
+        <nivel id="nlConAdecPresuIng" nombre="Consulta Adecuación Presupuestaria del Ingreso" mostrarNivelAnterior="false" >
+            <componente tipo="reporte" nombre="Reporte Ampliación Líquida Ingreso" id="ReporteAmpliacionLiquidaIngreso" ejecutarComponente="%inParam.inParam.tip%=='AMPLIACIÓN'">
+                <reporte nombre="6_R_Ampliac_Liq_Jo">
+                    <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                    <campo name="id_adecuacion" local="true" type="long" calc="%inParam.inParam.id_adecuacion%"/>
+                </reporte>
+            </componente>
+            
+            <componente tipo="reporte" nombre="Reporte Reducción Líquida Ingreso" id="ReporteReduccionLiquidaIngreso" ejecutarComponente="%inParam.inParam.tip%=='REDUCCIÓN'">
+                <reporte nombre="Red_Liq">
+                    <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="id_adecuacion" local="true" type="long" calc="%inParam.inParam.id_adecuacion%"/>
+                </reporte>
+            </componente>
+            
+            <componente tipo="reporte" nombre="Reporte Traspaso Presupuestal Ingreso" id="ReporteTraspasoPresupuestalIngreso" ejecutarComponente="%inParam.inParam.tip%=='TRASPASO'">
+                <reporte nombre="traspaso_presupuestal">
+                    <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="usuario" local="true" type="string" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="id_adecuacion" local="true" type="long" calc="%inParam.inParam.id_adecuacion%"/>
+                </reporte>
+            </componente>
+          
+        </nivel>
+        
+        <!-- Nivel para autorizar -->
+        <nivel id="nlAtzAdecPresuIng" nombre="Autoriza Adecuación Presupuestaria del Ingreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+               <componente id="cpAtzAdecPresuIng" nombre="Autoriza Adecuación Presupuestaria del Ingreso" tipo="formulario" accionDefault="seleccionar" >
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false"/>
+                   <campo name="solicita_cancelacion_obs" text="Observaciones" interaccion="%solicita_cancelacion%==false" borrarValor="false" local="true" type="text" mascara="C" margen-izquierdo="2" columnas="3" height="200" validacion="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion_obs%==null AND %nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==false" validacionMensaje="Favor de ingresar observaciones para continuar."/> <!--  -->
+                   <campo name="solicita_cancelacion" text="Autorizar" local="true" type="bool" margen-izquierdo="2" columnas="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="GUARDAR" margen-izquierdo="4" columnas="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlCambiaEstatus" nombre="Cambia Estatus de la Adecuación" interactivo="false">
+            <componente id="cpCambiaEstatus" nombre="Cambia Estatus de la Adecuación" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%" />
+                    <campo name="estatus" calc="@ifThenElse(%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true,2,3)" />
+                    <campo name="concepto" text="Concepto"/>
+                    <campo name="folio_adecuacion" text="Folio"/>
+                    <campo name="usuario_autoriza" text="usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="nclave1" nombre="nclave1" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true">
+            <componente id="nclave1" nombre="nclave1" tipo="cursor">
+                <tabla schema="operation" nombre="gestion_leyingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_gestion_leyingreso"/>
+                    <campo name="estatus" calc="'Aprobada'"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- AUTORIZACIÓN AMPLIACIÓN LÍQUIDA -->
+        <nivel id="nlBarreAmpLiqudDet" nombre="Autorización de Ampliación Líquida" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='AMPLIACIÓN'">
+            <componente id="cpBarreAmpLiqudDet" nombre="Autorización de Ampliación Líquida" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+                <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+         <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+         <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%" />
+         <campo name="id_adecuacion_det" />
+         <campo name="id_presupuesto_ingresos_origen" />
+         <campo name="id_presupuesto_ingresos_det_origen" />
+         <campo name="ampliacion_liquida_autorizada" />
+         <campo name="enero" />
+         <campo name="febrero" />
+         <campo name="marzo" />
+         <campo name="abril" />
+         <campo name="mayo" />
+         <campo name="junio" />
+         <campo name="julio" />
+         <campo name="agosto" />
+         <campo name="septiembre" />
+         <campo name="octubre" />
+         <campo name="noviembre" />
+         <campo name="diciembre" />
+      </tabla>
+      <!-- INGRESA EL IMPORTE DE LA AMPLIACIÓN COMO IMPORTE AUTORIZADO Y LO QUITA 'EN PROCESO DE AMPLIACIÓN -->
+      <nivel id="nlAtrzAmpLiqudDet" nombre="Autorización de Ampliación Líquida" interactivo="false">
+         <componente id="nlAtrzAmpLiqudDet" nombre="Autorización de Ampliación Líquida" tipo="cursor">
+            <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+               <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.ur%" />
+               <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.periodo%" />
+               <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.id_adecuacion%" />
+               <campo name="id_adecuacion_det" filtroCampo="id_adecuacion_det" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.id_adecuacion_det%" />
+               <!--<campo name="ampliacion_liquida_por_autorizar" calc="0"/>-->
+               <campo name="ampliacion_liquida_autorizada" calc="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.ampliacion_liquida_autorizada%" />
+            </tabla>
+         </componente>
+      </nivel>
+      <nivel id="nlObPresuIng" nombre="Actualizar Presupuesto del Ingreso" interactivo="false">
+         <componente id="cpObPresuIng" nombre="Actualizar Presupuesto del Ingreso" tipo="cursor">
+            <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+               <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.ur%" />
+               <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.periodo%" />
+               <campo name="id_gestion_leyingreso" filtroCampo="id_gestion_leyingreso" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.id_presupuesto_ingresos_origen%" />
+               <campo name="id_gestion_leyingreso_d" filtroCampo="id_gestion_leyingreso_d" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.id_presupuesto_ingresos_det_origen%" />
+               <campo name="clave_presupuestal" />
+               <campo name="enero" />
+               <campo name="febrero" />
+               <campo name="marzo" />
+               <campo name="abril" />
+               <campo name="mayo" />
+               <campo name="junio" />
+               <campo name="julio" />
+               <campo name="agosto" />
+               <campo name="septiembre" />
+               <campo name="octubre" />
+               <campo name="noviembre" />
+               <campo name="diciembre" />
+            </tabla>
+         </componente>
+      </nivel>
+      <nivel id="nlActPresuIng" nombre="Actualizar Presupuesto del Ingreso" interactivo="false">
+         <componente id="cpActPresuIng" nombre="Actualizar Presupuesto del Ingreso" tipo="cursor">
+            <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+               <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.ur%" />
+               <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.periodo%" />
+               <campo name="id_gestion_leyingreso" filtroCampo="id_gestion_leyingreso" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.id_presupuesto_ingresos_origen%" />
+               <campo name="id_gestion_leyingreso_d" filtroCampo="id_gestion_leyingreso_d" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.id_presupuesto_ingresos_det_origen%" />
+               <campo name="enero" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.enero%==null,0,%nlObPresuIng.cpObPresuIng.enero%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.enero%" />
+               <campo name="febrero" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.febrero%==null,0,%nlObPresuIng.cpObPresuIng.febrero%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.febrero%" />
+               <campo name="marzo" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.marzo%==null,0,%nlObPresuIng.cpObPresuIng.marzo%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.marzo%" />
+               <campo name="abril" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.abril%==null,0,%nlObPresuIng.cpObPresuIng.abril%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.abril%" />
+               <campo name="mayo" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.mayo%==null,0,%nlObPresuIng.cpObPresuIng.mayo%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.mayo%" />
+               <campo name="junio" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.junio%==null,0,%nlObPresuIng.cpObPresuIng.junio%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.junio%" />
+               <campo name="julio" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.julio%==null,0,%nlObPresuIng.cpObPresuIng.julio%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.julio%" />
+               <campo name="agosto" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.agosto%==null,0,%nlObPresuIng.cpObPresuIng.agosto%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.agosto%" />
+               <campo name="septiembre" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.septiembre%==null,0,%nlObPresuIng.cpObPresuIng.septiembre%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.septiembre%" />
+               <campo name="octubre" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.octubre%==null,0,%nlObPresuIng.cpObPresuIng.octubre%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.octubre%" />
+               <campo name="noviembre" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.noviembre%==null,0,%nlObPresuIng.cpObPresuIng.noviembre%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.noviembre%" />
+               <campo name="diciembre" calc="@ifThenElse(%nlObPresuIng.cpObPresuIng.diciembre%==null,0,%nlObPresuIng.cpObPresuIng.diciembre%)+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.diciembre%" />
+            </tabla>
+         </componente>
+      </nivel>
+      <nivel id="nlBarreDetMesPresuIng" nombre="Barre Detalle Mes del Presupuesto del Egreso" interactivo="false">
+         <componente id="cpBarreDetMesPresuIng" nombre="Barre Detalle Mes del Presupuesto del Egreso" tipo="cursor">
+            <tabla schema="operation" nombre="gestion_leyingreso_mes_det">
+               <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.ur%" />
+               <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.periodo%" />
+               <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%nlObPresuIng.cpObPresuIng.clave_presupuestal%" />
+               <campo name="mes" />
+               <campo name="presupuesto_ampliacion" />
+            </tabla>
+            <nivel id="nlActDetMesPresuIng" nombre="Actualiza Detalle Mes del Presupuesto del Egreso" interactivo="false">
+               <componente id="cpActDetMesPresuIng" nombre="Actualiza Detalle Mes del Presupuesto del Egreso" tipo="cursor">
+                  <tabla schema="operation" nombre="gestion_leyingreso_mes_det">
+                     <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.ur%" />
+                     <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.periodo%" />
+                     <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%nlObPresuIng.cpObPresuIng.clave_presupuestal%" />
+                     <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%" />
+                     <campo name="presupuesto_ampliacion" calc="@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==1,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.enero%, @ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==2,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.febrero%, @ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==3,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.marzo%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==4,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.abril%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==5,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.mayo%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==6,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.junio%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==7,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.julio%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==8,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.agosto%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==9,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.septiembre%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==10,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.octubre%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==11,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.noviembre%,@ifThenElse(%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.mes%==12,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%+%nlBarreAmpLiqudDet.cpBarreAmpLiqudDet.diciembre%,%nlBarreDetMesPresuIng.cpBarreDetMesPresuIng.presupuesto_ampliacion%))))))))))))" />
+                  </tabla>
+               </componente>
+            </nivel>
+         </componente>
+      </nivel>
+   </componente>
+</nivel>
+        
+        <!-- AUTORIZACIÓN REDUCCIÓN LÍQUIDA -->
+        <nivel id="nlBarreReduLiqudDet" nombre="Autorización de Reducción Líquida" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='REDUCCIÓN'">
+            <componente id="cpBarreReduLiqudDet" nombre="Autorización de Reducción Líquida" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%" />
+                    <campo name="id_adecuacion_det" />
+                    <campo name="id_presupuesto_ingresos_origen" />
+                    <campo name="id_presupuesto_ingresos_det_origen" />
+                    <campo name="reduccion_liquida_autorizada"/>
+                    <campo name="enero"/>
+                    <campo name="febrero"/>
+                    <campo name="marzo"/>
+                    <campo name="abril"/>
+                    <campo name="mayo"/>
+                    <campo name="junio"/>
+                    <campo name="julio"/>
+                    <campo name="agosto"/>
+                    <campo name="septiembre"/>
+                    <campo name="octubre"/>
+                    <campo name="noviembre"/>
+                    <campo name="diciembre"/>
+                </tabla>
+                
+                <!-- INGRESA EL IMPORTE DE LA REDUCCIÓN COMO IMPORTE AUTORIZADO Y LO QUITA 'EN PROCESO DE REDUCCIÓN -->
+                <nivel id="nlAtrzReduLiqudDet" nombre="Autorización de Reducción Líquida" interactivo="false" >
+                    <componente id="nlAtrzReduLiqudDet" nombre="Autorización de Reducción Líquida" tipo="cursor">
+                        <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.periodo%" />
+                            <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.id_adecuacion%" />
+                            <campo name="id_adecuacion_det" filtroCampo="id_adecuacion_det" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.id_adecuacion_det%"/>
+                            <!--<campo name="reduccion_liquida_por_autorizar" calc="0"/>-->
+                            <campo name="reduccion_liquida_autorizada" calc="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.reduccion_liquida_autorizada%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="nlObPresuIngRedu" nombre="Actualizar Presupuesto del Ingreso Reducción" interactivo="false">
+                    <componente id="cpObPresuIngRedu" nombre="Actualizar Presupuesto del Ingreso Reducción" tipo="cursor">
+                        <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.periodo%"/>
+                            <campo name="id_gestion_leyingreso" filtroCampo="id_gestion_leyingreso" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.id_presupuesto_ingresos_origen%"/>
+                            <campo name="id_gestion_leyingreso_d" filtroCampo="id_gestion_leyingreso_d" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.id_presupuesto_ingresos_det_origen%"/>
+                            <campo name="clave_presupuestal" />
+                            <campo name="enero" />
+                            <campo name="febrero" />
+                            <campo name="marzo" />
+                            <campo name="abril" />
+                            <campo name="mayo" />
+                            <campo name="junio" />
+                            <campo name="julio" />
+                            <campo name="agosto" />
+                            <campo name="septiembre" />
+                            <campo name="octubre" />
+                            <campo name="noviembre" />
+                            <campo name="diciembre" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="nlActPresuIngRedu" nombre="Actualizar Presupuesto del Ingreso Reducción" interactivo="false">
+                    <componente id="cpActPresuIngRedu" nombre="Actualizar Presupuesto del Ingreso Reducción" tipo="cursor">
+                        <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.periodo%"/>
+                            <campo name="id_gestion_leyingreso" filtroCampo="id_gestion_leyingreso" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.id_presupuesto_ingresos_origen%"/>
+                            <campo name="id_gestion_leyingreso_d" filtroCampo="id_gestion_leyingreso_d" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.id_presupuesto_ingresos_det_origen%"/>
+                            <campo name="enero" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.enero%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.enero%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.enero%"/>
+                            <campo name="febrero" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.febrero%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.febrero%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.febrero%"/>
+                            <campo name="marzo" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.marzo%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.marzo%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.marzo%"/>
+                            <campo name="abril" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.abril%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.abril%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.abril%"/>
+                            <campo name="mayo" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.mayo%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.mayo%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.mayo%"/>
+                            <campo name="junio" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.junio%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.junio%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.junio%"/>
+                            <campo name="julio" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.julio%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.julio%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.julio%"/>
+                            <campo name="agosto" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.agosto%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.agosto%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.agosto%"/>
+                            <campo name="septiembre" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.septiembre%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.septiembre%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.septiembre%"/>
+                            <campo name="octubre" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.octubre%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.octubre%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.octubre%"/>
+                            <campo name="noviembre" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.noviembre%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.noviembre%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.noviembre%"/>
+                            <campo name="diciembre" calc="@ifThenElse(%nlObPresuIngRedu.cpObPresuIngRedu.diciembre%==null,0,%nlObPresuIngRedu.cpObPresuIngRedu.diciembre%)-%nlBarreReduLiqudDet.cpBarreReduLiqudDet.diciembre%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="nlBarreDetMesPresuIngRedu" nombre="Barre Detalle Mes del Presupuesto del Ingreso Reducción" interactivo="false">
+                    <componente id="cpBarreDetMesPresuIngRedu" nombre="Barre Detalle Mes del Presupuesto del Ingreso Reducción" tipo="cursor">
+                        <tabla schema="operation" nombre="gestion_leyingreso_mes_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreReduLiqudDet.cpBarreReduLiqudDet.periodo%"/>
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%nlObPresuIngRedu.cpObPresuIngRedu.clave_presupuestal%"/>
+                            <campo name="mes"/>
+                            <campo name="presupuesto_reduccion" />
+                        </tabla>
+                        
+                        <nivel id="nlActDetMesPresuIngRedu" nombre="Actualiza Detalle Mes del Presupuesto del Egreso Reducción" interactivo="false">
+                            <componente id="cpActDetMesPresuIngRedu" nombre="Actualiza Detalle Mes del Presupuesto del Egreso Reducción" tipo="cursor">
+                                <tabla schema="operation" nombre="gestion_leyingreso_mes_det">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.ur%"/>
+                                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.periodo%"/>
+                                    <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.clave_presupuestal%"/>
+                                    <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%"/>
+                                    <campo name="presupuesto_reduccion" calc="@ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==1,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.enero%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==2,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.febrero%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==3,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.marzo%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==4,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.abril%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==5,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.mayo%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==6,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.junio%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==7,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.julio%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==8,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.agosto%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==9,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.septiembre%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==10,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.octubre%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==11,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.noviembre%,
+                                                                                @ifThenElse(%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.mes%==12,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%+%nlBarreReduLiqudDet.cpBarreReduLiqudDet.diciembre%,%nlBarreDetMesPresuIngRedu.cpBarreDetMesPresuIngRedu.presupuesto_reduccion%))))))))))))"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+                
+            </componente>
+        </nivel>
+        
+        
+        <!-- AUTORIZACIÓN TRASPASO PRESUPUESTAL -->
+        <nivel id="nlBarreAdecLiqudDet" nombre="Autorización de Traspaso Presupuestal" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='TRASPASO'">
+            <componente id="cpBarreAdecLiqudDet" nombre="Autorización de Traspaso Presupuestal" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%" />
+                    <campo name="id_adecuacion_det" />
+                    <campo name="reduccion_liquida_por_autorizar"/>
+                    <campo name="ampliacion_liquida_por_autorizar"/>
+                    <campo name="id_presupuesto_ingresos_origen"/>
+                    <campo name="id_presupuesto_ingresos_det_origen"/>
+                    <campo name="delmes"/>
+                    <campo name="id_presupuesto_ingresos_destino"/>
+                    <campo name="id_presupuesto_ingresos_det_destino"/>
+                    <campo name="almes"/>
+                </tabla>
+                
+                <nivel id="nlAtrzTraspLiqudDet" nombre="Autorización de Traspaso Presupuestal" interactivo="false" >
+                    <componente id="nlAtrzTraspLiqudDet" nombre="Autorización de Traspaso Presupuestal" tipo="cursor">
+                        <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.periodo%" />
+                            <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.id_adecuacion%" />
+                            <campo name="id_adecuacion_det" filtroCampo="id_adecuacion_det" filtroOperador="=" filtroValor="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.id_adecuacion_det%"/>
+                            <campo name="reduccion_liquida_por_autorizar" calc="0"/>
+                            <campo name="reduccion_liquida_autorizada" calc="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.reduccion_liquida_por_autorizar%"/>
+                            <!--<campo name="ampliacion_liquida_por_autorizar" calc="0"/>-->
+                            <campo name="ampliacion_liquida_autorizada" calc="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.ampliacion_liquida_por_autorizar%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+            
+            <nivel id="nlTraspasarAdecuacion" nombre="Traspasar Adecuación" interactivo="false">
+                <componente id="cpTraspasarAdecuacion" nombre="Traspasar Adecuación" tipo="cursor">
+                    <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.ur%"/>
+                        <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.periodo%"/>
+                        <campo name="id_gestion_leyingreso" filtroCampo="id_gestion_leyingreso" filtroOperador="=" filtroValor="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.id_presupuesto_ingresos_origen%"/>
+                        <campo name="id_gestion_leyingreso_d" filtroCampo="id_gestion_leyingreso_d" filtroOperador="=" filtroValor="%nlBarreAdecLiqudDet.cpBarreAdecLiqudDet.id_presupuesto_ingresos_det_origen%"/>
+                        <campo name="enero"/>
+                        <campo name="febrero"/>
+                        <campo name="marzo"/>
+                        <campo name="abril"/>
+                        <campo name="mayo"/>
+                        <campo name="junio"/>
+                        <campo name="julio"/>
+                        <campo name="agosto"/>
+                        <campo name="septiembre"/>
+                        <campo name="octubre"/>
+                        <campo name="noviembre"/>
+                        <campo name="diciembre"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            
+        </nivel>
+        
+        <!-- BARRE LA ADECUACIÓN PRESUPUESTAL DEL INGRESO PARA OBTENER LAS CLAVES DEL PRESUPUESTO DEL EGRESO-->
+        <nivel id="nlBarreAdecuacion" nombre="Barre Adecuación Presupuestal del Egreso" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true" >
+            <componente id="cpBarreAdecuacion" nombre="Barre Adecuación Presupuestal del Egreso" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%"/>
+                    <campo name="id_adecuacion_det"/>
+                    <campo name="id_presupuesto_ingresos_origen"/>
+                    <campo name="id_presupuesto_ingresos_det_origen" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER EL FONDO CONTABLE DEL PRESUPUESTO EGRESO DETALLE -->
+        <nivel id="nlBarrePresupIngreDet" nombre="Barre Presupuesto Ingresos Detalle" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true">
+            <componente id="cpBarreAdecuacion" nombre="Barre Presupuesto Ingresos Detalle" tipo="cursor" >
+                <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_gestion_leyingreso" filtroCampo="id_gestion_leyingreso" filtroOperador="=" filtroValor="%nlBarreAdecuacion.cpBarreAdecuacion.id_presupuesto_ingresos_origen%" />
+                    <campo name="id_gestion_leyingreso_d" filtroCampo="id_gestion_leyingreso_d" filtroOperador="=" filtroValor="%nlBarreAdecuacion.cpBarreAdecuacion.id_presupuesto_ingresos_det_origen%" />
+                    <campo name="id_cat_fondo" />
+                    <campo name="fondo_contable" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--OBTENER EL SEPARADOR POR PERIODO -->
+        <nivel id="obIdSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false">
+            <componente id="obIdSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="obSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false">
+            <componente id="obSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%obIdSeparador.obIdSeparador.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--GENERACIÓN DE PÓLIZA DE AMPLIACIÓN LÍQUIDA -->
+        <nivel id="nlGenEncabezadoPolizaDAmp" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='AMPLIACIÓN'">
+            <componente id="cpGenEncabezadoPolizaAmp" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%inParam.inParam.ur%"/> 
+                   <campo name="periodo" calc="%inParam.inParam.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%nlBarrePresupIngreDet.cpBarreAdecuacion.id_cat_fondo%"/>
+                   <campo name="fondo_contable" calc="%nlBarrePresupIngreDet.cpBarreAdecuacion.fondo_contable%"/>
+                   <campo name="momento_contable" calc="3"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="folio_reporte" calc="@concatenar(%inParam.inParam.periodo%+'-T'+
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%folio_movimiento_auxiliar%)" />
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                   <campo name="concepto_general" calc="'POLIZA DE '+ %inParam.inParam.tip% + ' AL PRESUPUESTO DE INGRESOS ' + %nlCambiaEstatus.cpCambiaEstatus.folio_adecuacion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarridoDetalleAdecAmp" nombre="Barrido de los Detalles de la Adecuación Presupuestal" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='AMPLIACIÓN'">
+            <componente id="cpBarridoDetalleAdecAmp" nombre="Barrido de los Detalles de la Adecuación Presupuestal" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%"/>
+                    <campo name="id_adecuacion_det"/>
+                    <campo name="id_presupuesto_ingresos_origen"/>
+                    <campo name="id_presupuesto_ingresos_det_origen" />
+                    <campo name="ampliacion_liquida_autorizada" />
+                </tabla>
+                
+                <!-- BARRE EL DETALLE DEL PRESUPUESTO DEL EGRESO -->
+                <nivel id="nlBarrePresupIngregDetPoliza" nombre="Barre Presupuesto Ingresos Detalle" interactivo="false" >
+                    <componente id="cpBarreAdecuacionPoliza" nombre="Barre Presupuesto Ingresos Detalle" tipo="cursor" >
+                        <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                            <campo name="id_gestion_leyingreso" filtroCampo="id_gestion_leyingreso" filtroOperador="=" filtroValor="%nlBarridoDetalleAdecAmp.cpBarridoDetalleAdecAmp.id_presupuesto_ingresos_origen%" />
+                            <campo name="id_gestion_leyingreso_d" filtroCampo="id_gestion_leyingreso_d" filtroOperador="=" filtroValor="%nlBarridoDetalleAdecAmp.cpBarridoDetalleAdecAmp.id_presupuesto_ingresos_det_origen%" />
+                            <campo name="clave_presupuestal" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL CARGO A LA PÓLIZA-->
+                <nivel id="nlAltaDirectDetalleCargoAmp" nombre="Alta Detalle Cargo Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleCargoAmp" nombre="Alta Detalle Cargo Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDAmp.cpGenEncabezadoPolizaAmp.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarrePresupIngregDetPoliza.cpBarreAdecuacionPoliza.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '3'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <!--'001'+%obSeparador.obSeparador.caracter%+'001'-->
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleAdecAmp.cpBarridoDetalleAdecAmp.ampliacion_liquida_autorizada%"/>
+                            <campo name="concepto_bloque" calc="%inParam.inParam.tip% + ' DE INGRESOS'"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '3'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\'','descripcion','string','MAGNITUS');"/>
+                                <!--'001'+%obSeparador.obSeparador.caracter%+-->
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="nlAltaDirectDetalleAbonooAmp" nombre="Alta Detalle Abono Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleAbonoAmp" nombre="Alta Detalle Abono Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDAmp.cpGenEncabezadoPolizaAmp.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarrePresupIngregDetPoliza.cpBarreAdecuacionPoliza.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalleAdecAmp.cpBarridoDetalleAdecAmp.ampliacion_liquida_autorizada%"/>
+                            <campo name="concepto_bloque" calc="%inParam.inParam.tip% + ' DE INGRESOS'"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!--GENERACIÓN DE PÓLIZA DE REDUCCIÓN LÍQUIDA -->
+        <nivel id="nlGenEncabezadoPolizaRedu" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='REDUCCIÓN'">
+            <componente id="cpGenEncabezadoPolizaRedu" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%inParam.inParam.ur%"/> 
+                   <campo name="periodo" calc="%inParam.inParam.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%nlBarrePresupIngreDet.cpBarreAdecuacion.id_cat_fondo%"/>
+                   <campo name="fondo_contable" calc="%nlBarrePresupIngreDet.cpBarreAdecuacion.fondo_contable%"/>
+                   <campo name="momento_contable" calc="3"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="folio_reporte" calc="@concatenar(%inParam.inParam.periodo%+'-T'+
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%folio_movimiento_auxiliar%)" />
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                   <campo name="concepto_general" calc="'POLIZA DE '+ %inParam.inParam.tip% + ' AL PRESUPUESTO DE INGRESOS ' + %nlCambiaEstatus.cpCambiaEstatus.folio_adecuacion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarridoDetalleAdecRedu" nombre="Barrido de los Detalles de la Adecuación Presupuestal" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='REDUCCIÓN'">
+            <componente id="cpBarridoDetalleAdecRedu" nombre="Barrido de los Detalles de la Adecuación Presupuestal" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%"/>
+                    <campo name="id_adecuacion_det"/>
+                    <campo name="id_presupuesto_ingresos_origen"/>
+                    <campo name="id_presupuesto_ingresos_det_origen" />
+                    <campo name="reduccion_liquida_autorizada" />
+                </tabla>
+                
+                <!-- BARRE EL DETALLE DEL PRESUPUESTO DEL EGRESO -->
+                <nivel id="nlBarrePresupIngregDetPolizaRedu" nombre="Barre Presupuesto Ingresos Detalle" interactivo="false" >
+                    <componente id="cpBarreAdecuacionPoliza" nombre="Barre Presupuesto Ingresos Detalle" tipo="cursor" >
+                        <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                            <campo name="id_gestion_leyingreso" filtroCampo="id_gestion_leyingreso" filtroOperador="=" filtroValor="%nlBarridoDetalleAdecRedu.cpBarridoDetalleAdecRedu.id_presupuesto_ingresos_origen%" />
+                            <campo name="id_gestion_leyingreso_d" filtroCampo="id_gestion_leyingreso_d" filtroOperador="=" filtroValor="%nlBarridoDetalleAdecRedu.cpBarridoDetalleAdecRedu.id_presupuesto_ingresos_det_origen%" />
+                            <campo name="clave_presupuestal" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL CARGO A LA PÓLIZA-->
+                <nivel id="nlAltaDirectDetalleCargoRedu" nombre="Alta Detalle Cargo Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleCargoRedu" nombre="Alta Detalle Cargo Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaRedu.cpGenEncabezadoPolizaRedu.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarrePresupIngregDetPolizaRedu.cpBarreAdecuacionPoliza.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleAdecRedu.cpBarridoDetalleAdecRedu.reduccion_liquida_autorizada%"/>
+                            <campo name="concepto_bloque" calc="'POLIZA DE ADEUCUACION DE INGRESOS '+%inParam.inParam.id_adecuacion%+' REDUCCIÓN'"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="nlAltaDirectDetalleAbonooRedu" nombre="Alta Detalle Abono Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleAbonoRedu" nombre="Alta Detalle Abono Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaRedu.cpGenEncabezadoPolizaRedu.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarrePresupIngregDetPolizaRedu.cpBarreAdecuacionPoliza.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '3'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalleAdecRedu.cpBarridoDetalleAdecRedu.reduccion_liquida_autorizada%"/>
+                            <campo name="concepto_bloque" calc="'POLIZA DE ADEUCUACION DE INGRESOS '+%inParam.inParam.id_adecuacion%+' REDUCCIÓN'"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '3'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarrePolizaCon" nombre="Barre Póliza Contable" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='REDUCCIÓN'">
+            <componente id="cpBarrePolizaCon" nombre="Barre Póliza Contable" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/> 
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlGenEncabezadoPolizaRedu.cpGenEncabezadoPolizaRedu.folio_reporte%"/>
+                    <campo name="folio_reporte"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlActFolioPolizaAdecAmp" nombre="Actualiza Folio Póliza Ampliación" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='REDUCCIÓN'">
+            <componente id="cpActFolioPolizaAdecAmp" nombre="Actualiza Folio Póliza Ampliación" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%"/>
+                    <campo name="poliza" calc="%nlBarrePolizaCon.cpBarrePolizaCon.folio_reporte%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!-- COMPONENTES SOLICITUD PARA NEGOCIAR LA INSTANCIA Y MANDAR MENSAJE DE RETROALIMENTACIÓN -->
+        <nivel id="nlNegociarInstancia" nombre="Enlace con Dynamo" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==false" >
+            <componente id="cpNegociarInstancia" nombre="Enlace con Dynamo" tipo="solicitud" >
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRetroalimentarMensaje" nombre="Envio de Parámetros Dynamo" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==false" >
+           <componente id="cpRetroalimentarMensaje" nombre="Envio de Parámetros Dynamo" tipo="solicitud" >  
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion_obs%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+        
+        <!-- TERMINAR INSTANCIA-->
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true">
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlPolizaAdecuacionAmpLiqud" nombre="Poliza de Adecuación de Ampliación Líquida" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='AMPLIACIÓN'">
+            <componente id="cpPolizaAdecuacionAmpLiqud" nombre="Poliza de Adecuación de Ampliación Líquida" tipo="reporte">
+                <reporte nombre="poliza_contable" expediente="Expediente Adecuaciones Presupuesto Ingreso" nombreDocumento="'Póliza Adecuación Ampliación Líquida'" grupo="$inParam.folio_adecuacion$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/> 
+                    <campo name="folio_movimiento_auxiliar" local="true" type="long" calc="%nlGenEncabezadoPolizaDAmp.cpGenEncabezadoPolizaAmp.folio_movimiento_auxiliar%"/>
+                    <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlPolizaAdecuacionReduLiqud" nombre="Poliza de Adecuación de Reducción Líquida" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%nlAtzAdecPresuIng.cpAtzAdecPresuIng.solicita_cancelacion%==true AND %inParam.inParam.tip%=='REDUCCIÓN'">
+            <componente id="cpPolizaAdecuacionReduLiqud" nombre="Poliza de Adecuación de Reducción Líquida" tipo="reporte">
+                <reporte nombre="poliza_contable" expediente="Expediente Adecuaciones Presupuesto Ingreso" nombreDocumento="'Póliza Adecuación Reducción Líquida'" grupo="$inParam.folio_adecuacion$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/> 
+                    <campo name="folio_movimiento_auxiliar" local="true" type="long" calc="%nlGenEncabezadoPolizaRedu.cpGenEncabezadoPolizaRedu.folio_movimiento_auxiliar%"/>
+                    <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+       
+    </pagina>
+</tarea>
