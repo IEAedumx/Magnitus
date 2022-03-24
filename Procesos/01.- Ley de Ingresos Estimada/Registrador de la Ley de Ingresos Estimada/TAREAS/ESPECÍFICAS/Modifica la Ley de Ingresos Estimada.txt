@@ -1,0 +1,229 @@
+<tarea nombre="Modifica Registro de la Ley de Ingresos Estimada" version="1.0.0" fechaModificacion="2019-04-10" autor="Francisco" modificacionEfectuada="Versión Inicial" requisitosInstalacion="No">
+    <pagina id="1" nombre="Modifica Registro de la Ley de Ingresos Estimada" mostrarNivelAnterior="false">
+        
+        <nivel nombre="bPer" id="bP" interactivo="false">
+            <componente tipo="cursor" nombre="bPer" id="bP">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                    <campo name="seleccion" local="true" type="long" calc="$inParam.seleccion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="regLeyIngE" nombre="Registro de la Ley de Ingresos Estimada" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%bP.bP.seleccion%==1">
+            <componente id="regLeyIE" nombre="Registro de la Ley de Ingresos Estimada" tipo="tabla">
+                <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                    <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" visible="false" columna-visible="false" calc="$inParam.id_periodo$" llaveForanea="false"/>
+                    <campo name="id_gestion_leyingreso" text="Gestion Ley Ingreso" descripcionForanea="id_gestion_leyingreso" calc="$inParam.id_gestion_leyingreso$" llaveForanea="false" visible="false" columna-visible="false" />
+                    <campo name="id_gestion_leyingreso_d" text="" autogenerado="true" generacion="@prox()+1"  visible="false" columna-visible="false"/>
+                    <campo name="fecha_elaboracion" text="Fecha Elavoración" visible="false" columna-visible="false"/>
+                    
+                    <campo name="id_clave_presupuestal" text="ID Clave" width="250" columnas="3"  margen-izquierdo="2"
+                    columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" columnas="3" margen-derecho="2" visible="true" columna-visible="true" habilitado="false" calcCliente="@concatenar(@ifThenElse(%centro_registro%==null,'',%centro_registro%)+' '+@ifThenElse(%fondo_contable%==null,'',%fondo_contable%)+' '+@ifThenElse(%cog%==null,'',%cog%)+' '+@ifThenElse(%fuente_financiamiento%==null,'',%fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestario%==null,'',%programa_presupuestario%))"/>
+                    
+                    <campo name="techo_presupuestal" text="Techo Presupuestal" columnas="3"  margen-izquierdo="2"  visible="true" columna-visible="true" validacion="@ifThenElse((%enero%+%febrero%+%marzo%+%abril%+%mayo%+%junio%+%julio%+%agosto%+%septiembre%+%octubre%+%noviembre%+%diciembre%) &gt;%techo_presupuestal%,true,false)" validacionMensaje="La suma de los meses supera el techo presupuestal"/>
+                    
+                    <campo name="por_distrubuir" text="Por Distrubuir" columnas="3" margen-derecho="2"  visible="true" columna-visible="false" habilitado="false" calcCliente="(%techo_presupuestal%-%enero%-%febrero%-%marzo%-%abril%-%mayo%-%junio%-%julio%-%agosto%-%septiembre%-%octubre%-%noviembre%-%diciembre%)"
+                    validacion="%por_distrubuir%!=0" validacionMensaje="La suma de los importes de los  meses debe ser igual al importe del campo techo presupuestal"/>
+                    
+                   
+                     
+                    
+                    <campo name="id_cat_centro_registro" text="id_cat_centro_registro" llaveForanea="false" calc="2" visible="false" columna-visible="false"/>
+                    <campo name="centro_registro" text="Centro Registro" validacion="%centro_registro%==null" validacionMensaje="Favor de agregar el centro de registro" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion"
+                     columna-visible="false" columnas="3" margen-izquierdo="2" llavesFijas="afectable=true"/>
+                     <campo name="enero" text="Enero" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <campo name="id_cat_fondo" text="id_cat_fondo" llaveForanea="false" calc="3" visible="false" columna-visible="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" validacion="%fondo_contable%==null" validacionMensaje="Favor de agregar el fondo contable" columna-visible="false" referenciaForaneaTabla="id_cat_fondo" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" margen-izquierdo="2" llavesFijas="afectable=true"/>
+                    <campo name="febrero" text="Febrero" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <!-- Agregado -->
+                    <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <!-- Agregado -->
+                    
+                    
+                    <campo name="id_cat_fuente" text="id_cat_fuente" llaveForanea="false" calc="5" visible="false" columna-visible="false" calcCliente="%id_catalogo_foraneo%"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" validacion="%fuente_financiamiento%==null" validacionMensaje="Favor de agregar el fuente de financiamiento" columna-visible="false" columnas="3" margen-izquierdo="2" llavesFijas="afectable=true" habilitado="false" calcCliente="%id_cat_foraneo%" descripcionForanea="id_cat,descripcion"/> <!-- autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion"-->
+                    <campo name="marzo" text="Marzo" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false" calc="11" visible="false" columna-visible="false"/>
+                    <campo name="cog" text="Clasificador Rubro Ingreso(CRI)" validacion="%cog%==null" validacionMensaje="Favor de agregar el Clasificador Rubro Ingreso(CRI) " autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" columnas="3" margen-izquierdo="2" llavesFijas="afectable=false"/>
+                    <campo name="abril" text="Abril" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <campo name="id_cat_municipio" text="id_cat_municipio" visible="false" llaveForanea="false" columna-visible="false" calc="7"/>
+                    <campo name="municipio" text="Municipio" columnas="3" margen-izquierdo="2" validacion="%municipio%==null" validacionMensaje="Campo 'Municipio' no puede quedar vacío" visible="true" columna-visible="false" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                    <campo name="mayo" text="Mayo" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <!--<campo name="id_cat_progra_presup" text="id_cat_progra_presup" llaveForanea="false" calc="10" visible="false" columna-visible="false"/>-->
+                    
+                    <campo name="id_programa_recaudacion" text="Programa de Recaudación" validacion="%id_programa_recaudacion%==null" validacionMensaje="Favor de agregar el programa de recaudacion" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_clave_programa,descripcion" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="junio" text="Junio" width="100" columnas="3" margen-derecho="2"/>
+                    <campo name="julio" text="Julio" width="100" columnas="3" margen-izquierdo="2"/>
+                    
+                    <!--<campo name="programa_presupuestario" text="Programa de Recaudación" validacion="%programa_presupuestario%==null" validacionMensaje="Favor de agregar el programa presupuestario" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" columnas="3" margen-izquierdo="2"/>-->
+                    <!--<campo name="julio" text="Julio" width="100" columnas="3" margen-derecho="2"/>-->
+                    
+                    
+                    <campo name="agosto" text="Agosto" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <campo name="septiembre" text="Septiembre" width="100" columnas="3" margen-izquierdo="2"/>
+                    <campo name="octubre" text="Octubre" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    <campo name="noviembre" text="Noviembre" width="100" columnas="3" margen-izquierdo="2"/>
+                    <campo name="diciembre" text="Diciembre" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    <campo name="validacionmesellenos" text="validacionmesellenos" local="true" type="long" columna-visible="false" calcCliente="@ifThenElse(%enero%!=0,1,0)+@ifThenElse(%febrero%!=0,1,0)+@ifThenElse(%marzo%!=0,1,0)+@ifThenElse(%abril%!=0,1,0)+@ifThenElse(%mayo%!=0,1,0)+@ifThenElse(%junio%!=0,1,0)+@ifThenElse(%julio%!=0,1,0)+@ifThenElse(%agosto%!=0,1,0)+@ifThenElse(%septiembre%!=0,1,0)+@ifThenElse(%octubre%!=0,1,0)+@ifThenElse(%noviembre%!=0,1,0)+@ifThenElse(%diciembre%!=0,1,0)" validacion="%validacionmesellenos%==0" validacionMensaje="Por lo menos un mes debe de tener valor" visible="false"/>
+                    <campo name="usuario_elabora" text="" calc="%bU.bU.id_usuario%" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_gestion_leyingreso_detalle" id="bGestioLI" interactivo="false">
+            <componente tipo="cursor" nombre="barrido" id="bGestioLI">
+                <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.id_periodo$"/>
+                    <campo name="id_filtro" filtroCampo="id_filtro" filtroOperador="=" filtroValor="$inParam.id_gestion_leyingreso$"/>
+                    <campo name="id_gestion_leyingreso"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="regLeyIngEImp" nombre="Registro de la Ley de Ingresos Estimada" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%bP.bP.seleccion%==2">
+            <componente id="regLeyIngEImp" nombre="Registro de la Ley de Ingresos Estimada" tipo="tabla">
+                <tabla schema="operation" nombre="gestion_leyingreso_detalle">
+                    <campo name="id_filtro" text="" filtroCampo="id_filtro" filtroOperador="=" filtroValor="$inParam.folio$" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" visible="false" columna-visible="false" calc="$inParam.id_periodo$" llaveForanea="false"/>
+                    <campo name="id_gestion_leyingreso" text="Gestion Ley Ingreso" calc="%bGestioLI.bGestioLI.id_gestion_leyingreso%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_gestion_leyingreso_d" text="" autogenerado="true" generacion="@prox()+1"  visible="false" columna-visible="false"/>
+                    <campo name="fecha_elaboracion" text="Fecha Elavoración" visible="false" columna-visible="false"/>
+                    
+                    <campo name="id_clave_presupuestal" text="Clave Presupuestal" width="250" columnas="3"  margen-izquierdo="2"
+                    columna-visible="false" />
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" columnas="3" margen-derecho="2" visible="true" columna-visible="true" habilitado="false" calcCliente="@concatenar(@ifThenElse(%centro_registro%==null,'',%centro_registro%)+' '+@ifThenElse(%fondo_contable%==null,'',%fondo_contable%)+' '+@ifThenElse(%cog%==null,'',%cog%)+' '+@ifThenElse(%fuente_financiamiento%==null,'',%fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestario%==null,'',%programa_presupuestario%))"/>
+                    
+                    <campo name="techo_presupuestal" text="Techo Presupuestal" columnas="3"  margen-izquierdo="2"  visible="true" columna-visible="true" validacion="@ifThenElse((%enero%+%febrero%+%marzo%+%abril%+%mayo%+%junio%+%julio%+%agosto%+%septiembre%+%octubre%+%noviembre%+%diciembre%) &gt;%techo_presupuestal%,true,false)" validacionMensaje="La suma de los meses supera el techo presupuestal"/>
+                    
+                    <campo name="por_distrubuir" text="Por Distrubuir" columnas="3" margen-derecho="2"  visible="true" columna-visible="false" habilitado="false" calcCliente="(%techo_presupuestal%-%enero%-%febrero%-%marzo%-%abril%-%mayo%-%junio%-%julio%-%agosto%-%septiembre%-%octubre%-%noviembre%-%diciembre%)"
+                    validacion="%por_distrubuir%!=0" validacionMensaje="La suma de los importes de los  meses debe ser igual al importe del campo techo presupuestal"/>
+                    
+                     
+                    
+                    <campo name="id_cat_centro_registro" text="id_cat_centro_registro" llaveForanea="false" calc="2" visible="false" columna-visible="false"/>
+                    <campo name="centro_registro" text="Centro Registro" validacion="%centro_registro%==null" validacionMensaje="Favor de agregar el centro de registro" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion"
+                     columna-visible="false" columnas="3" margen-izquierdo="2" llavesFijas="afectable=true"/>
+                     <campo name="enero" text="Enero" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <campo name="id_cat_fondo" text="id_cat_fondo" llaveForanea="false" calc="3" visible="false" columna-visible="false" llavesFijas="afectable=true"/>
+                    <campo name="fondo_contable" text="Fondo Contable" validacion="%fondo_contable%==null" validacionMensaje="Favor de agregar el fondo contable" columna-visible="false" referenciaForaneaTabla="id_cat_fondo" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" margen-izquierdo="2" llavesFijas="afectable=true"/>
+                    <campo name="febrero" text="Febrero" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <!-- Agregado -->
+                    <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <!-- Agregado -->
+                    
+                    <campo name="id_cat_fuente" text="id_cat_fuente" llaveForanea="false" calc="5" visible="false" columna-visible="false" calcCliente="%id_catalogo_foraneo%"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" validacion="%fuente_financiamiento%==null" validacionMensaje="Favor de agregar el fuente de financiamiento" columna-visible="false" columnas="3" margen-izquierdo="2" calcCliente="%id_cat_foraneo%" descripcionForanea="id_cat,descripcion"/> <!-- autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion"-->
+                    <campo name="marzo" text="Marzo" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false" calc="11" visible="false" columna-visible="false"/>
+                    <campo name="cog" text="Clasificador Rubro Ingreso(CRI)" validacion="%cog%==null" validacionMensaje="Favor de agregar el Clasificador Rubro Ingreso(CRI) " autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" columnas="3" margen-izquierdo="2" llavesFijas="afectable=false"/>
+                    <campo name="abril" text="Abril" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <campo name="id_cat_municipio" text="id_cat_municipio" visible="false" llaveForanea="false" columna-visible="false" calc="7"/>
+                    <campo name="municipio" text="Municipio" columnas="3" margen-izquierdo="2" validacion="%municipio%==null" validacionMensaje="Campo 'Municipio' no puede quedar vacío" visible="true" columna-visible="false" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                    <campo name="mayo" text="Mayo" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <!--<campo name="id_cat_progra_presup" text="id_cat_progra_presup" llaveForanea="false" calc="10" visible="false" columna-visible="false"/>
+                    <campo name="programa_presupuestario" text="Programa de Recaudación" validacion="%programa_presupuestario%==null" validacionMensaje="Favor de agregar el programa presupuestario" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" columnas="3" margen-izquierdo="2"/>-->
+                    <campo name="id_programa_recaudacion" text="Programa de Recaudación" validacion="%id_programa_recaudacion%==null" validacionMensaje="Favor de agregar el programa de recaudacion" autoFiltrado="true" busquedaAutomatica="true" maxlength="10" autoFiltradoDescripcion="id_clave_programa,descripcion" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="junio" text="Junio" width="100" columnas="3" margen-derecho="2"/>
+                    <campo name="julio" text="Julio" width="100" columnas="3" margen-izquierdo="2"/>
+                    
+                    
+                    <campo name="agosto" text="Agosto" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    
+                    <campo name="septiembre" text="Septiembre" width="100" columnas="3" margen-izquierdo="2"/>
+                    
+                    
+                    <campo name="octubre" text="Octubre" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    <campo name="noviembre" text="Noviembre" width="100" columnas="3" margen-izquierdo="2"/>
+                    <campo name="diciembre" text="Diciembre" width="100" columnas="3" margen-derecho="2"/>
+                    
+                    <campo name="validacionmesellenos" text="validacionmesellenos" local="true" type="long" columna-visible="false" calcCliente="@ifThenElse(%enero%!=0,1,0)+@ifThenElse(%febrero%!=0,1,0)+@ifThenElse(%marzo%!=0,1,0)+@ifThenElse(%abril%!=0,1,0)+@ifThenElse(%mayo%!=0,1,0)+@ifThenElse(%junio%!=0,1,0)+@ifThenElse(%julio%!=0,1,0)+@ifThenElse(%agosto%!=0,1,0)+@ifThenElse(%septiembre%!=0,1,0)+@ifThenElse(%octubre%!=0,1,0)+@ifThenElse(%noviembre%!=0,1,0)+@ifThenElse(%diciembre%!=0,1,0)" validacion="%validacionmesellenos%==0" validacionMensaje="Por lo menos un mes debe de tener valor" visible="false"/>
+                    <campo name="usuario_elabora" text="" calc="%bU.bU.id_usuario%" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" columas="2" margen-izquierdo="4"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="reportes" id="rep1" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%bP.bP.seleccion%==2">
+            <componente tipo="reporte" nombre="Reporte de Importación" id="rep1">
+                <reporte nombre="R_Rep_importacion_AL" expediente="Expediente Ley de Ingresos Estimada" nombreDocumento="'Reporte Importación'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                <campo name="folio" type="long" calc="$inParam.id_gestion_leyingreso$"/>
+                <campo name="periodo" type="long" calc="$inParam.id_periodo$"/>
+		        <campo name="ur" type="long" calc="$inParam.ur$"/>
+                <campo name="usuario" type="string" calc="$protocolarios.user$"/> 
+                </reporte>
+            </componente>
+            <componente tipo="reporte" nombre="Reporte de la Ley de Ingresos Estimada" id="repo2">
+                <reporte nombre="R_presupuesto_Egreso_IJ">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="id_gestion_leyingreso" type="long" calc="$inParam.id_gestion_leyingreso$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte de la Ley de Ingresos Estimada" id="repo2" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%bP.bP.seleccion%==1">
+             <componente tipo="reporte" nombre="Reporte de la Ley de Ingresos Estimada" id="repo2">
+                <reporte nombre="R_presupuesto_Egreso_IJ" expediente="Expediente Ley de Ingresos Estimada" nombreDocumento="'Reporte Manual'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="id_gestion_leyingreso" type="long" calc="$inParam.id_gestion_leyingreso$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
