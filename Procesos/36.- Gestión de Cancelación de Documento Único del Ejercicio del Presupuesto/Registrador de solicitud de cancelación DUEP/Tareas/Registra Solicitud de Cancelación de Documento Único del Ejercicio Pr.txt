@@ -1,0 +1,336 @@
+<tarea id="RegistraSolicitudCancelacionDUEP" nombre="Registra Solcitud de Cancelación" version="1" autor="Luis Eduardo Castañeda Delgadillo">
+    <pagina id="uno">
+        
+        <!-- BUSCAR PERIODO ACTUAL -->
+        <nivel id="BP" nombre="BP" interactivo="false">
+            <componente id="BP" tipo="cursor"  nombre="BP">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="BU" nombre="BU" interactivo="false">
+            <componente id="BU" nombre="BU" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+    
+        
+        <!--Selección de Trámite-->
+        <nivel id="ST" nombre="Selecciona Trámite" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="ST" nombre="Selecciona Trámite a Cancelar" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" calc="1" visible="false"/>
+                    <campo name="tipo_tramite" text="Tipo de Trámite" local="true" type="long" marcador="Selecciona Trámite" columnas="4" margen-izquierdo="3" margen-derecho="3" validacion="%tipo_tramite%==null" validacionMensaje="Selecciona un tipo de trámite">
+                        <opciones>
+                            <opcion texto="CM - Compra Menor Directa" valor="1"/>
+                            <opcion texto="CMS - Compra Menor Directa Simultánea" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Seleccionar" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- Reestablecer Selección de Cancelación EDI a false -->
+        <nivel id="RSEDI" nombre="Restablece la Selección Ejercicio Directo" interactivo="false" ejecutar="%ST.ST.tipo_tramite%==1">
+            <componente id="RSEDI" nombre="Restablece la Selección  Ejercicio Directo" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%BP.BP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%BP.BP.id_periodo%"/>
+                    <campo name="folio_duep"/>
+                    <campo name="tramite" filtroCampo="tramite" filtroOperador="=" filtroValor="2"/> <!-- EDI -->
+                    <campo name="estatus_duep" filtroCampo="estatus_duep" filtroOperador="=" filtroValor="2"/><!--AUTORIZADO -->
+                    <campo name="seleccion_cancelacion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- Reestablecer Selección de Cancelación SIM a false -->
+        <nivel id="RSSIM" nombre="Restablece la Selección del Ejercicio Directo Simultáneo" interactivo="false" ejecutar="%ST.ST.tipo_tramite%==2">
+            <componente id="RSSIM" nombre="Restablece la Selección  del Ejercicio Directo Simultáneo" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%BP.BP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%BP.BP.id_periodo%"/>
+                    <campo name="folio_duep"/>
+                    <campo name="tramite" filtroCampo="tramite" filtroOperador="=" filtroValor="3"/><!-- SIM-->
+                    <campo name="estatus_duep" filtroCampo="estatus_duep" filtroOperador="=" filtroValor="4"/><!--AUTORIZADO -->
+                    <campo name="seleccion_cancelacion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="FET" nombre="Filtro de Estatus y Trámite" interactivo="false">
+            <componente id="FET" nombre="Filtro de Estatus y Trámite" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="estatus" text="Estatus" local="true" type="long" calc="@ifThenElse(%ST.ST.tipo_tramite%==1,2,4)"/>
+                    <campo name="tramite" text="Tramite" local="true" type="long" calc="@ifThenElse(%ST.ST.tipo_tramite%==1,2,3)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- Listado de DUEPS de tipo EDI -->
+        <nivel id="LDEDI" nombre="Consulta de Compras Menores" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%ST.ST.tipo_tramite%==1">
+            <componente id="LDEDI" nombre="Consulta de Compras Menores" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" text="ur" llaveForanea="false" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="%BP.BP.id_unidad_responsable%"/>
+                    <campo name="periodo" llaveForanea="false" text="periodo" columna-visible="false" calc="%BP.BP.id_periodo%" filtroCampo="periodo" filtroOperador="=" filtroValor="%BP.BP.id_periodo%"/>
+                    <campo name="folio_duep" text="Folio" visible="false" columna-visible="false"/>
+                    <campo name="folio_duep_a" text="Folio" filtroCampo="folio_duep_a" width="110" /> 
+                    <campo name="beneficiario" text="Beneficiario"  descripcionForanea="folio_beneficiario,razon_social" descripcionForaneaTabla="folio_beneficiario,razon_social" width="350"/>
+                    <campo name="fecha_solicitud" text="Fecha" width="170"/>
+                    <campo name="estatus_duep" text="Estatus" descripcionForaneaTabla="descripcion" columna-visible="true" filtroCampo="estatus_duep" filtroOperador="=" filtroValor="%FET.FET.estatus%"/>
+                    <campo name="tramite" visible="false" columna-visible="true" text="Tramite" filtroCampo="tramite" filtroOperador="=" filtroValor="2" />
+                    <campo name="total" text="Importe"  formatoMoneda="true" cellsalign="right"/>
+                    <campo name="id_cat_fondo_contable" columna-visible="false" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion"/>
+                    <campo name="seleccion_cancelacion" text="Seleccionar" editable="true" width="100"/>
+                    <campo name="autoriza_devengado" columna-visible="false" filtroCampo="autoriza_devengado" filtroOperador="=" filtroValor="false"/> 
+                    <campo name="solicita_cancelacion" columna-visible="false" filtroCampo="solicita_cancelacion" filtroOperador="=" filtroValor="null"/>
+                </tabla>
+            <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(seleccion_cancelacion) = 1 AS seleccion FROM operation.duep WHERE ur='+%BP.BP.id_unidad_responsable%+' AND periodo='+%BP.BP.id_periodo%+' AND estatus_duep=2 AND tramite=2 AND seleccion_cancelacion=true','seleccion','bool','MAGNITUS')==false" validacionMensaje="'Sólo debe seleccionarse un DUEP para continuar.'" />
+        	</validaciones>
+        </nivel>
+        
+        <!-- Listado de DUEPS de tipo SIM -->
+        <nivel id="LDSIM" nombre="Consulta Compras Menores de Forma Simultánea" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%ST.ST.tipo_tramite%==2">
+            <componente id="LDSIM" nombre="Consulta Compras Menores de Forma Simultánea" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" text="ur" llaveForanea="false" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="%BP.BP.id_unidad_responsable%"/>
+                    <campo name="periodo" llaveForanea="false" text="periodo" columna-visible="false" calc="%BP.BP.id_periodo%" filtroCampo="periodo" filtroOperador="=" filtroValor="%BP.BP.id_periodo%"/>
+                    <campo name="folio_duep" text="Folio" columna-visible="false"/>
+                    <campo name="folio_duep_a" text="Folio" width="110"/>
+                       
+                    <campo name="beneficiario" text="Beneficiario"  descripcionForanea="folio_beneficiario,razon_social" descripcionForaneaTabla="folio_beneficiario,razon_social" width="350"/>
+                    <campo name="fecha_solicitud" text="Fecha" width="170"/>
+                    <campo name="estatus_duep" text="Estatus" descripcionForaneaTabla="descripcion" columna-visible="true" filtroCampo="estatus_duep" filtroOperador="=" filtroValor="%FET.FET.estatus%"/>
+                    <campo name="total" text="Importe" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="id_cat_fondo_contable" columna-visible="false" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion"/>
+                    <campo name="tramite" visible="false" columna-visible="true" text="Tramite" filtroCampo="tramite" filtroOperador="=" filtroValor="3"/>
+                    <campo name="seleccion_cancelacion" text="Campo de Selección" editable="true"/>
+                    <!--
+                    <campo name="solicita_cancelacion" visible="false" columna-visible="false" filtroCampo="solicita_cancelacion" filtroOperador="=" filtroValor="null"/> 
+                    <campo name="autoriza_devengado" calc="false" visible="false" columna-visible="false" filtroCampo="autoriza_devengado" filtroOperador="=" filtroValor="true"/>
+                    <campo name="listo_para_pago" calc="false" visible="false" columna-visible="false" filtroCampo="listo_para_pago" filtroOperador="=" filtroValor="true"/>
+                    -->
+                    <campo name="folio_orden_pago" text="FOP" width="200" filtroCampo="estatus_orden_pago" filtroOperador="=" filtroValor="4" />
+                    <!--
+                    <campo name="" local="true" referenciaForanea="folio_orden_pago" celdaForanea="autoriza"/>
+                    -->
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(seleccion_cancelacion) = 1 seleccion FROM operation.duep
+                WHERE seleccion_cancelacion = true AND ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%BP.BP.id_periodo%+'\\' AND estatus_duep=4 AND tramite=3','seleccion','bool','MAGNITUS')==false" validacionMensaje="'Sólo debe seleccionarse un DUEP para continuar.'" />
+        	</validaciones>
+        </nivel>
+        
+        <!-- FILTRAR DUEP SELECCIONADO -->
+        <nivel id="FDS" nombre="Filtrar DUEP Seleccionado" interactivo="false">
+            <componente id="FDS" nombre="Filtrar DUEP Seleccionado" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%BP.BP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%BP.BP.id_periodo%"/>
+                    <campo name="folio_duep"/>
+                    <campo name="tramite" filtroCampo="tramite" filtroOperador="=" filtroValor="%FET.FET.tramite%"/>
+                    <campo name="estatus_duep" filtroCampo="estatus_duep" filtroOperador="=" filtroValor="%FET.FET.estatus%"/>
+                    <campo name="seleccion_cancelacion" filtroCampo="seleccion_cancelacion" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- RESTABLE DUEP SELECCIONADO-->
+        <nivel id="RDS" nombre="Restablecer DUEP Seleccionado" interactivo="false">
+            <componente id="RDS" nombre="Restablecer DUEP Seleccionado" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FDS.FDS.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FDS.FDS.periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FDS.FDS.folio_duep%"/>
+                    <campo name="tramite" filtroCampo="tramite" filtroOperador="=" filtroValor="%FET.FET.tramite%"/>
+                    <campo name="estatus_duep" filtroCampo="estatus_duep" filtroOperador="=" filtroValor="%FET.FET.estatus%"/>
+                    <campo name="seleccion_cancelacion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="CDUEP" nombre="Consulta de Compra Menor" mostrarNivelAnterior="false">
+            <componente id="CDUEP" nombre="Consulta de Compra Menor" tipo="maestroDetalle">
+                <encabezado accionDefault="seleccionar">
+                    <tabla id="EncabezadoDUEP" schema="operation" nombre="duep">
+                         <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" calc="%FDS.FDS.ur%"  habilitado="false"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" calc="%FDS.FDS.periodo%"  habilitado="false"/>
+                        <campo name="folio_duep" text="Folio" visible="false" calc="%FDS.FDS.folio_duep%" habilitado="false"/>
+                        <campo name="folio_duep_a" text="Folio" margen-izquierdo="1" columnas="2" habilitado="false"/>
+                        <campo name="tramite" text="Trámite" marcador="Trámite" habilitado="false" columnas="3"/>
+                        <campo name="beneficiario" text="Beneficiario"  descripcionForanea="folio_beneficiario,razon_social" margen-izquierdo="1" columnas="2" habilitado="false"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" visible="false" habilitado="false" llaveForanea="false" />
+                        <campo name="id_fondo_contable" text="Fondo Contable" descripcionForanea="id_cat,descripcion" margen-izquierdo="1" columnas="2"  llavesFijas="afectable=true" habilitado="false"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" llaveForanea="false" visible="false" habilitado="false" />
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" descripcionForanea="id_cat,descripcion" margen-izquierdo="1" columnas="2" habilitado="false"/>
+                        <campo name="id_fuente_financiamiento" text="ID FF" llaveForanea="false" habilitado="false" visible="false"/>
+                        <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento" descripcionForanea="id_cat,descripcion" habilitado="false" margen-izquierdo="1" columnas="2"/>
+                        <campo name="fecha_solicitud" text="Fecha de Solicitud" habilitado="false" margen-izquierdo="1" columnas="2"/>
+                        <campo name="fecha_autorizacion" text="Fecha de Autorización" habilitado="false" visible="false"/>
+                        <campo name="concepto" text="Concepto" height="100" mascara="C" marcador="Ingresa un concepto" margen-izquierdo="1" columnas="2" habilitado="false"/>
+                        <campo name="ultimo_usuario_modificador" text="Usuario" visible="false"/>
+                        <campo name="folio_expediente" text="expediente" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2" margen-derecho="4" visible="false"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="duep_detalle" tituloDetalle="Renglones" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                       <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" />
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false" />
+                        <campo name="folio_duep" text="Folio" llaveForanea="false" visible="false" columna-visible="false" />
+                        <campo name="folio_duep_detalle" text="Renglón" width="80" />
+                        <campo name="tipo_detalle" text="Tipo de Renglón" width="100"/>
+                        <campo name="proveedor" text="Proveedor" marcador="Seleccione un proveedor" descripcionForanea="folio_beneficiario,razon_social" descripcionForaneaTabla="folio_beneficiario,razon_social" columna-visible="false"/>
+                        <campo name="articulo" text="Artículo" habilitado="true" descripcionForanea="clave_articulo,descripcion_articulo" descripcionForaneaTabla="descripcion" marcador="Seleccione un artículo" width="200"/> 
+                        <campo name="id_cat_objeto_gasto" text="Cat Objeto del Gasto" visible="false" calc="4" columna-visible="false" llaveForanea="false"/>
+                        <campo name="c_objeto_gasto" text="COG" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" visible="true" width="200"/>
+                        <campo name="clave_presupuestal" text="clave presupuestal" columna-visible="false" habilitado="false"/>
+                        <campo name="retencion" text="Retención" width="100"/>
+                        <campo name="descripcion_especifica" text="Descripción Específica" width="200"/>
+                        <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" marcador="Seleccione un programa presupuestal" width="200"/>
+                        <campo name="folio_comprobante" text="Folio Comprobante" habilitado="false" columna-visible="false"/>
+                        <campo name="cantidad" text="Cantidad" validacion="%cantidad%==null" validacionMensaje="Favor de Capturar la Cantidad" width="100"/>
+                        <campo name="u_medida" text="U.M." validacion="%u_medida%==null" validacionMensaje="Capture la Unidad de Medida" width="100"/>
+                        <campo name="precio_unitario" text="Importe Unitario" validacion="%precio_unitario%" validacionMensaje="Debe de Capturar el Precio Unitario" width="150" formatoMoneda="true"/>
+                        <campo name="descuento" text="Descuento" columna-visible="false" width="100" formatoMoneda="true"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos" muestraAcumulado="true" width="100" columna-visible="false"/>
+                        <campo name="importe" text="Importe" visible="false" columna-visible="false" habilitado="false" width="150" formatoMoneda="true"/>
+                        <campo name="iva" text="Impuesto al Valor Agregado" formatoMoneda="true" habilitado="false" width="100" columna-visible="true"/>
+                        <campo name="total" text="Importe Total" muestraAcumulado="true" habilitado="false" width="150" formatoMoneda="true" />
+                        <campo name="fecha_registro" text="Fecha Registro"  habilitado="false" visible="false" columna-visible="false"/>
+                      </tabla>
+                </detalles> 
+           </componente>
+        </nivel>
+        
+        <nivel id="nlRegCancelacionDUEP" nombre="Registro de Cancelacion" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpCancelaDUEP" nombre="Cancelación" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" calc="%FDS.FDS.ur%" visible="false"/>
+                    <campo name="periodo" calc="%FDS.FDS.periodo%" visible="false"/>
+                    <campo name="folio_duep" calc="%FDS.FDS.folio_duep%" visible="false"/>
+                    <campo name="solicita_cancelacion" text="Solicitar cancelación" margen-izquierdo="2" columnas="6"/>
+                    <campo name="solicita_cancelacion_obs" text="MOTIVO CANCELACIÓN" interaccion="%solicita_cancelacion%==true" margen-izquierdo="2" columnas="6" height="200" validacion="%solicita_cancelacion%==true AND %solicita_cancelacion_obs%==null" validacionMensaje="Favor de ingresar el motivo de la cancelación para continuar."/>
+                    <campo name="descripcion_autoriza" local="true" type="string" calc="'EN PROCESO DE CANCELACIÓN'" visible="false" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="GUARDAR" margen-izquierdo="4" columnas="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+
+        <nivel id="nlRestableceDUEP" nombre="Actualiza el Estatus" interactivo="false" ejecutar="%nlRegCancelacionDUEP.cpCancelaDUEP.solicita_cancelacion%==false">
+            <componente id="cpRestableceDUEP" nombre="Actualiza el Estatus" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FDS.FDS.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FDS.FDS.periodo%" />
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FDS.FDS.folio_duep%"/>
+                    <campo name="seleccion_cancelacion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+
+        <nivel id="nlRepSolCancelacionDUEP" nombre="Documento de Solicitud de Cancelación" mostrarNivelAnterior="false" ejecutar="%nlRegCancelacionDUEP.cpCancelaDUEP.solicita_cancelacion%==true" >
+            <componente id="cpRepSolCancelacionDUEP" nombre="Documento de Solicitud de Cancelación" tipo="reporte">
+                <reporte nombre="documento_presupuesto"  expediente="Expediente de Compras Menores/Solicitud de Cancelación" nombreDocumento="'Documento de Solicitud de Cancelación'" grupo="%CDUEP.CDUEP.folio_expediente%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%BP.BP.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" calc="%CDUEP.CDUEP.periodo%"/>
+                    <campo name="folio_duep" type="long" calc="%CDUEP.CDUEP.folio_duep%"/>
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaCentroRegistro" nombre="buscaCentroRegistro" interactivo="false" ejecutar="%nlRegCancelacionDUEP.cpCancelaDUEP.solicita_cancelacion%==true">
+            <componente id="buscaCentroRegistro" nombre="buscaCentroRegistro" tipo="cursor">
+                <tabla schema="catalog" nombre="catalogos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%CDUEP.CDUEP.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo"  filtroOperador="=" filtroValor="%CDUEP.CDUEP.periodo%"/>
+                    <campo name="id_catalogo" filtroCampo="id_catalogo"  filtroOperador="=" filtroValor="%CDUEP.CDUEP.id_cat_unidad_ejecutora_gasto%"/>
+                    <campo name="id_cat" filtroCampo="id_cat" filtroOperador="=" filtroValor="%CDUEP.CDUEP.id_unidad_ejecutora_gasto%"/>
+                    <campo name="descripcion"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaBeneficiario" nombre="buscaBeneficiario" interactivo="false" ejecutar="%nlRegCancelacionDUEP.cpCancelaDUEP.solicita_cancelacion%==true">
+            <componente id="buscaBeneficiario" nombre="buscaBeneficiario" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%CDUEP.CDUEP.beneficiario%"/>
+                    <campo name="nombre"/>
+                    <campo name="primer_apellido"/>
+                    <campo name="segundo_apellido"/>
+                    <campo name="razon_social"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlCerrarTarea" nombre="Cerrar Tarea" interactivo="false" ejecutar="%nlRegCancelacionDUEP.cpCancelaDUEP.solicita_cancelacion%==false">
+            <componente id="cpCerrarTarea" nombre="Cerrar Tarea" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false" ejecutar="%nlRegCancelacionDUEP.cpCancelaDUEP.solicita_cancelacion%==true">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'52f57663-0b88-49fb-8fab-c77122a77f1e'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%BP.BP.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%CDUEP.CDUEP.periodo%" mostrarEsc="true"/>
+                    <parametro name="out_folio_duep" calc="%CDUEP.CDUEP.folio_duep%" mostrarEsc="true"/>
+                    <parametro name="out_folio_reporte" calc="%CDUEP.CDUEP.folio_duep_a%" mostrarEsc="true"/>
+                    <parametro name="out_centro_registro" calc="%buscaCentroRegistro.buscaCentroRegistro.descripcion%" mostrarEsc="true"/>
+                    <parametro name="out_concepto" calc="%CDUEP.CDUEP.concepto%" mostrarEsc="true"/>
+                    <parametro name="out_beneficiario" calc="@concatenar(%buscaBeneficiario.buscaBeneficiario.nombre%+' '+%buscaBeneficiario.buscaBeneficiario.primer_apellido%+' '+%buscaBeneficiario.buscaBeneficiario.segundo_apellido%+' '+%buscaBeneficiario.buscaBeneficiario.razon_social%)" mostrarEsc="true"/>
+                    <parametro name="out_folio_compra_menor" calc="%CDUEP.CDUEP.folio_expediente%"/> 
+                    
+                </parametros>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>
