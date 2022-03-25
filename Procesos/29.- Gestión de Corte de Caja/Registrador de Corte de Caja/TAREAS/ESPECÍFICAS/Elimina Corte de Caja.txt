@@ -1,0 +1,89 @@
+<tarea autor="Daniel" fechaModificacion="2019-23-08" modificacionEfectuada="Versión Inical"  nombre="Elimina Corte de Caja" requisitosIntalacion="no" version="1.0.0">
+    <pagina id="1" nombre="Elimina Corte de Caja">
+        <nivel nombre="buscaPeriodo" id="bP" interactivo="false">
+            <componente tipo="cursor" nombre="buscaPeriodo" id="bP">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                    <campo name="id_recaudacion_registro" local="true" type="long" calc="$inParam.id_recaudacion_registro$"/> 
+                </tabla>
+            </componente>
+        </nivel>
+          <nivel nombre="Datos Generales del Corte de Caja" id="dCorteCaja" mostrarNivelAnterior="false" mostrarProximoNivel="false" interactivo="false">
+            <componente tipo="cursor" nombre="Datos Generales del Corte de Caja" id="dCorteCaja">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" calc="$inParam.ur$" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo"  filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false" visible="false"/>
+                    <campo name="id_corte_caja"  visible="false"/>
+                    <campo name="fecha_registro" text="Fecha Elaboración" columnas="3" margen-izquierdo="3" margen-derecho="5"/>
+                    <campo name="importe_total" text="Importe Total" habilitado="false"/>
+                </tabla>
+            </componente>
+         </nivel>
+        <nivel nombre="Reporte Corte de Caja" id="rCC"  mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Reporte Corte de Caja" id="rCr">
+                <reporte nombre="5_Reporte_corte_Jo">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="idCorte" type="long" calc="$inParam.id_corte_caja$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente tipo="reporte" nombre="Vale de Depósito" id="rC" mostrarNivelAnterior="false">
+                <reporte nombre="R_Vale_deposito_IJ">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_corte_caja" type="long" calc="$inParam.id_corte_caja$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="formElimCorCaja" nombre="Elimina Corte de Caja" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="ElimCorCaja" nombre="Elimina Corte de Caja" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" text="ur" calc="$inParam.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" text="periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false"/>
+                    <campo name="id_corte_caja" text="corte de caja" calc="$inParam.id_corte_caja$" visible="false"/>
+                    <campo name="eliminar" text="Eliminar" local="true" type="bool" columas="3" margen-izquierdo="4"/>
+                    <campo name="observaciones_eliminado" text="Observaciones" width="720" height="200" interaccion-visible="%eliminar%==false" visible="true" validacion="%eliminar%==false AND %observaciones%==null" validacionMensaje="Observaciones" columnas="3" margen-izquierdo="2"/>
+                    <cmapo name="usuario_modificador" text="usuario" calc="%usuario.usuario.id_usuario%" visible="false"/>
+                    <!--<campo name="seleccionar_corte_caja" calcCliente="@ifThenElse(%eliminar%==true,false,true)" visible="false"/>-->
+                </tabla>
+                     <estilos>
+                         <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="4"/>
+                    </estilos>
+                  <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                  </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="valores_en_false" id="xxxX" interactivo="false" ejecutar="%formElimCorCaja.ElimCorCaja.eliminar%==true">
+            <componente tipo="cursor" id="xxxX" nombre="valores_en_false">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <!--<campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%bP.bP.id_recaudacion_registro%"/>-->
+                    <campo name="seleccionar_corte_caja" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="terminaInstancia" nombre="terminaInstancia" interactivo="false" ejecutar="%formElimCorCaja.ElimCorCaja.eliminar%==true">
+            <componente id="terminaInstancia" nombre="terminaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte Corte de Caja" id="xxx" interactivo="false">
+            <componente tipo="reporte" nombre="Reporte Corte de Caja" id="xxx">
+                <reporte nombre="poliza_contable">
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

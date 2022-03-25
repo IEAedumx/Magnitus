@@ -1,0 +1,98 @@
+<tarea autor="Froylán Alanís" fechaModificacion="2019-23-08" modificacionEfectuada="Versión Inical"  nombre="Autoriza Corte de Caja" requisitosIntalacion="no" version="1.0.0">
+    <pagina id="1" nombre="Autoriza Corte de Caja">
+        <nivel nombre="buscaPeriodo" id="bP" interactivo="false">
+            <componente tipo="cursor" nombre="buscaPeriodo" id="bP">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                    <campo name="id_recaudacion_registro" local="true" type="long" calc="$inParam.id_recaudacion_registro$"/> 
+                </tabla>
+            </componente>
+        </nivel>
+       <!--<nivel nombre="Datos Generales del Corte de Caja" id="dCorteCaja" mostrarNivelAnterior="false" mostrarProximoNivel="false" interactivo="false">-->
+       <!--     <componente tipo="cursor" nombre="Datos Generales del Corte de Caja" id="dCorteCaja">-->
+       <!--         <tabla schema="operation" nombre="corte_caja">-->
+       <!--             <campo name="ur" calc="$inParam.ur$" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false" visible="false"/>-->
+       <!--             <campo name="id_periodo"  filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false" visible="false"/>-->
+       <!--             <campo name="id_corte_caja"  visible="false"/>-->
+       <!--             <campo name="fecha_registro" text="Fecha Elaboración" columnas="3" margen-izquierdo="3" margen-derecho="5"/>-->
+       <!--             <campo name="importe_total" text="Importe Total" habilitado="false"/>-->
+       <!--         </tabla>-->
+       <!--     </componente>-->
+       <!-- </nivel>-->
+        <nivel nombre="Reporte Corte de Caja" id="rCC"  mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Reporte Corte de Caja" id="rCr">
+                <reporte nombre="5_Reporte_corte_Jo">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="idCorte" type="long" calc="$inParam.id_corte_caja$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente tipo="reporte" nombre="Vale de Depósito" id="rC" mostrarNivelAnterior="false">
+                <reporte nombre="R_Vale_deposito_IJ">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_corte_caja" type="long" calc="$inParam.id_corte_caja$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="formElimCorCaja" nombre="Autoriza Corte de Caja" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="ElimCorCaja" nombre="Autoriza Corte de Caja" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" text="ur" calc="$inParam.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" text="periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false"/>
+                    <campo name="id_corte_caja" text="corte de caja" calc="$inParam.id_corte_caja$" visible="false"/>
+                    <campo name="comentarios_autorizador" text="Observaciones*" width="720" height="200" interaccion-visible="%autorizar_corte_caja%==false" validacion="%autorizar_corte_caja%==false AND %comentarios_autorizador%==null" validacionMensaje="Observaciones" columnas="6" margen-izquierdo="2"/>
+                    <campo name="autoriza_corte_caja" text="Autoriza" columas="3" margen-izquierdo="5"/>
+                    <cmapo name="usuario_modificador" text="usuario" calc="%usuario.usuario.id_usuario%" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" columnas="3" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+         <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%formElimCorCaja.ElimCorCaja.autoriza_corte_caja%==false">
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal">
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                   <parametro name="process" calc="$protocolarios.process$"/>
+                   <parametro name="version" calc="$protocolarios.version$"/>
+                   <parametro name="user" calc="$protocolarios.user$"/>
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%formElimCorCaja.ElimCorCaja.comentarios_autorizador%"/>
+                   <parametro name="type" calc="'1'"/>
+               </parametros> 
+           </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%formElimCorCaja.ElimCorCaja.autoriza_corte_caja%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel id="terminaInstancia" nombre="terminaInstancia" interactivo="false" ejecutar="%formElimCorCaja.ElimCorCaja.autoriza_corte_caja%==true">
+            <componente id="terminaInstancia" nombre="terminaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
