@@ -1,0 +1,203 @@
+    <tarea id="RSCPC" nombre="Registra Solicitud de Cancelación de Proyecto de Compra" autor="Carlos Rivera" actualizacion="30/10/19 Monserrat Gerardo">
+        <pagina id="RSCPCP" nombre="Registra Solicitud de Cancelación de Proyecto de Compra">
+            <!--CURSORES-->
+            <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+                <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                    <tabla schema="catalog" nombre="periodo">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_periodo"/>
+                        <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                        <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    </tabla>
+                </componente>
+            </nivel>
+              <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            <!--FIN DE LOS CURSORES-->
+            <!--28/05/2019 -->
+            <nivel id="Actualiza_estatus" nombre="Actualiza_estatus" interactivo="false">
+                <componente id="Actualiza_estatus" nombre="Actualiza_estatus" tipo="cursor">
+                    <tabla schema="operation" nombre="compras">
+                        <campo name="ur"/>
+                        <campo name="periodo"/>
+                        <campo name="id_compras"/>
+                        <campo name="seleccion_opcion" calc="false"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            <!--Fin de cursor 28/05/2019 -->
+            <!--Tabla-->
+            <nivel id="RSCPCN" nombre="Registra Solicitud de Cancelación de Proyecto de Compra" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                <componente id="CPC" nombre="Proyectos de Compra" tipo="tabla" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false" filtro="true">
+                    <tabla schema="operation" nombre="compras">
+                        <campo name="ur" text="UR" llaveForanea="false" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                        <campo name="periodo" text="text" llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                        <campo name="id_compras" text="Folio de Proyecto de Compra" columnas="3" margen-izquierdo="2"/>
+                        <campo name="folio_req" text="Folio Requerimiento" visible="false" columna-visible="false"/> 
+                        <campo name="sum_bloque" text="Renglon" habilitado="false" llaveForanea="false" visible="false"/>
+                        
+                        <campo name="estatus" text="Estatus"  columnas="3" margen-izquierdo="2" />
+                        <!-- filtroCampo="estatus" filtroOperador="=" filtroValor="'Autorizado'" -->
+                       
+                        <campo name="autorizado" text="Autorizado"  columna-visible="false" filtroCampo="autorizado" filtroOperador="=" filtroValor="true"/>
+                        <!--  -->
+                        <campo name="proceso" text="Proceso"  columna-visible="false" filtroCampo="proceso" filtroOperador="=" filtroValor="null"/>
+                        <!--  -->
+                        <campo name="folio_add" text="Folio Adjudicación"  columna-visible="false" filtroCampo="folio_add" filtroOperador="=" filtroValor="null"/>
+                        <!--  -->
+                        <!-- FILTRO -->
+                        <campo name="cancelar_proyecto_com" text="Estatus" filtroCampo="cancelar_proyecto_com" filtroOperador="=" filtroValor="false" columnas="3" margen-izquierdo="2" columna-visible="false"/>
+                        <campo name="fecha_registro" text="Fecha" columnas="3" margen-derecho="2" habilitado="true" />
+                        <campo name="id_cat_fuente_financiamiento" columna-visible="false" text="Fuente de Financiamiento"/>
+                        <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" columnas="3" margen-derecho="2" habilitado="false" />
+                        <!-- FILTRO -->
+                        <campo name="autoriza_cancelacion" text="AC" columna-visible="false" filtroCampo="autoriza_cancelacion" filtroOperador="=" filtroValor="false"/> 
+                        <!--  -->
+                        <!-- revisar default -->
+                        <!-- FILTRO -->
+                        <campo name="seleccion_opcion" text="Selección" editable="true" validacion="%seleccion_opcion%==false" validacionMensaje="Debe de Seleccionar una Opción"/>
+                        <campo name="referencia" columna-visible="false"/> 
+                        
+                        <campo name="folio_cancelar" text="folio_cancelar" columna-visible="false" />
+                        <!--  filtroCampo="folio_cancelar" filtroOperador="=" filtroValor="'0'"-->
+                        
+                        <tareas>
+                        <tarea nombre="Ver Detalle" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,folio_req,usuario,id_compras,id_fuente_financiamiento" ref="task=ee28866e-8ca8-4a46-ae4f-877923462d9a"/>
+                        <!--Nombre de la tarea click derecho "Detalle Cancela PCompra"-->
+                    </tareas>
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/> 
+                    </acciones>
+                    <estilos>
+                        <boton nombre="grabar" posicion="derecha" visible="true" texto="CONTINUAR"/>
+                    </estilos>
+               </componente>
+               <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) &gt; 1 as resultado from operation.compras WHERE seleccion_opcion=true','resultado','bool','MAGNITUS')" validacionMensaje="'Debe seleccionar un registro'"/>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) = 0 as resultado_uno from operation.compras WHERE seleccion_opcion=true','resultado_uno','bool','MAGNITUS')" validacionMensaje="'Debe seleccionar un registro'"/>
+            </validaciones>
+            </nivel> 
+            <!--FIN TABLA-->
+            <!--MAESTRO DETALLE-->
+            <nivel id="DPCN" nombre="Registra Solicitud de Cancelación de Proyecto de Compra" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                 <componente nombre="Detalle de Proyecto de Compra" tipo="maestroDetalle" id="DPC" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                    <encabezado accionDefault="editar"> 
+                        <tabla schema="operation" nombre="compras" id="detab">
+                            <campo name="ur" habilitado="false" calc="$config.ur$" llaveForanea="false" visible="false" text="Unidad Responsable"/>
+                            <campo name="periodo" habilitado="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false" text="Periodo"/>
+                            <campo name="id_compras" text="Folio Proyecto Compra" calc="%RSCPCN.CPC.id_compras%"  habilitado="false" columnas="3"/>
+                            <campo name="fecha_registro" text="Fecha"  calc="%RSCPCN.CPC.fecha_registro%" habilitado="false" columnas="3" />
+                            <campo name="estatus" text="Estatus" calc="'Autorizado'" habilitado="false" columnas="3" />
+                            <campo name="id_cat_fuente_financiamiento" text="Fuente" calc="5" visible="false" columna-visible="false" />
+                            <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" descripcionForanea="id_cat,descripcion" visible="true" habilitado="false" columnas="3"  />
+                            <campo name="referencia" text="Referencia" calc="%RSCPCN.CPC.referencia%"  columnas="3" habilitado="false"/>        
+                        </tabla>
+                            <estilos>
+                                <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2" margen-derecho="4" visible="false"/>
+                            </estilos>
+                          
+                    </encabezado>
+
+                    <detalles id="det1">
+                        <tabla schema="operation" nombre="compras_det" id="detab1" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false"> 
+                            <campo name="ur" habilitado="false" calc="$config.ur$" llaveForanea="false" visible="false" text="Unidad Responsable" columna-visible="false"/>
+                            <campo name="periodo" habilitado="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" text="Periodo" columna-visible="false"/>
+                            <campo name="id_compras" text="Folio Proyecto Compra" calc="%RSCPCN.CPC.id_compras%" habilitado="false" columna-visible="false"/>
+                            <campo name="id_compras_det" text="Renglón" autogenerado="true" columna-visible="true" habilitado="false"/>
+                            <campo name="clave_articulo" text="Clave del Artículo" descripcionForaneaTabla="clave_articulo,descripcion_articulo" width="150"/>
+                            <campo name="id_cat_cog" text="ID COG" calc="4" llaveForanea="false" columna-visible="false"/>
+                            <campo name="clasificador_objeto_gasto" text="Clasificador por Objeto del gasto" descripcionForaneaTabla="id_cat,descripcion" width="250"/>
+                            <campo name="cantidad" text="Cantidad" width="100"/>
+                            <campo name="id_cat_unidad_ejecutora_gasto" text="ID Centro Registro" calc="2" llaveForanea="false" visible="false" columna-visible="false"/>
+                            <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" descripcionForaneaTabla="id_cat,descripcion" habilitado="false" width="150"/>
+                            <campo name="id_cat_fondo_contable" text="Fondo Contable" calc="3" llaveForanea="false" columna-visible="false" width="150"/>
+                            <campo name="fondo_contable" text="Fondo Contable" descripcionForaneaTabla="id_cat,descripcion" width="150"/>
+                             <campo name="id_cat_fuente_financiamiento" text="Fuente" llaveForanea="false" calc="5" columna-visible="false" />
+                            <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" descripcionForaneaTabla="id_cat,descripcion" habilitado="false"/>
+                            <campo name="importe_unitario" text="Importe Unitario" habilitado="false" width="150" formatoMoneda="true"/>
+                            <campo name="importe_total" text="Importe Total" habilitado="false" width="150" formatoMoneda="true" muestraAcumulado="true"/>
+                            <campo name="total" text="Total" formatoMoneda="true" habilitado="false" columna-visible="false"/>
+                            <campo name="seleccion_cancelar" text="Seleccionar" validacion="%seleccion_cancelar%==false" validacionMensaje="Debe de Seleccionar una Opción" editable="true"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" text="ultimo_usuario_modificador" columna-visible="false"/>
+                        </tabla>
+                            <estilos>
+                                <boton nombre="grabar" visible="true" texto="CONTINUAR"/>
+                            </estilos>
+                            <acciones>
+                                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                            </acciones>
+                    </detalles>
+                </componente>
+            </nivel>
+            <!--FIN MAESTRO DETALLE-->
+            
+            <!--FORMULARIO CANCELACION-->
+            <nivel id="CPC" nombre="Cancelación de Proyecto de Compra" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                <componente id="CPC" nombre="Cancelación de Proyecto de Compra" tipo="formulario" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="true" accionDefault="editar">
+                <tabla schema="operation" nombre="compras"> 
+                    <campo name="ur" calc="$config.ur$" visible="false"/>
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="id_compras" text="Folio Proyecto Compra" calc="%RSCPCN.CPC.id_compras%" llaveForanea="false" columnas="3" />
+                    <campo name="folio_req" visible="false" text="Folio Requisición" calc="%RSCPCN.CPC.folio_req%" habilitado="false"/>
+                    
+                    <campo name="fecha_cancelacion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="Fecha"  habilitado="false" columnas="3"/> 
+                    <campo name="estatus" text="Estatus" calc="'Generado'" habilitado="false" columnas="3" />
+                    <campo name="id_cat_fuente_financiamiento" calc="5" visible="false" columna-visible="false" text="Fuente de Financiamiento1"/>
+                    <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" calc="%RSCPCN.CPC.id_fuente_financiamiento%" visible="true" habilitado="false" columnas="3"  />
+                    <campo name="justificacion_can" text="Justificación de la Cancelación"  columnas="3"  /> <!--width="720" height="150"-->
+                    <campo name="cancelar_proyecto_com" text="Cancelar Proyecto de Compra*" validacion="%cancelar_proyecto_com%==false" validacionMensaje="Selecciona una Opción" columnas="3" />
+
+                    <campo name="ultimo_usuario_autorizador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" text="ultimo_usuario_modificador" /> 
+                </tabla>
+                            <estilos>
+                                <boton nombre="grabar" visible="true" texto="GUARDAR" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                            </estilos>
+                            <acciones>
+                                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                            </acciones>
+                </componente>
+            </nivel>
+            <!--FIN FORMULARIO CANCELACION-->
+        
+            
+            <!--INSTANCIAS-->
+         <nivel nombre="CrearInsCance" id="CIC" interactivo="false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="CIC">
+                    <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="process" calc="'67387a3e-f446-4677-b8e6-4564c5ffaca9'"/>
+                    <parametro name="out_ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <parametro name="out_folio_req" calc="%RSCPCN.CPC.folio_req%" mostrarEsc="true"/>
+                    <parametro name="out_id_compras" calc="%RSCPCN.CPC.id_compras%"/>
+                    <parametro name="out_id_cat_fuente_financiamiento" calc="%RSCPCN.CPC.id_fuente_financiamiento%"/> 
+                    <!--<parametro name="out_importe_total" calc="%CII.CII.importe_total%"/> -->
+
+                </parametros>
+            </componente>
+        </nivel>
+        
+        
+        
+
+         <nivel id="CPCR" nombre="Cancelación de Proyecto de Compra" mostrarNivelAnterior="false" mostrarProximoNivel="true">          
+                <componente tipo="reporte" nombre="Solicitud de Cancelación de Proyecto de Compra" id="CPCR1">
+                    <reporte nombre="cancelacion_proyecto_comp" id="CPCR2" update="true" nombreDocumento="'Solicitud de Cancelación de Proyecto de Compra'" expediente="Cancelación de Proyecto de Compra"  grupo="%RSCPCN.CPC.id_compras%" url="$config.repository_upload_file$">
+                        <campo name="ur" type="long" calc="$config.ur$"/>
+                        <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                        <campo name="id_compras" type="string" calc="%RSCPCN.CPC.id_compras%"/>
+                    </reporte>
+                </componente>
+            </nivel>
+         <!--FIN INSTANCIAS-->
+    </pagina>
+</tarea>
