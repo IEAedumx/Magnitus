@@ -1,0 +1,114 @@
+<tarea id="ConsultaAnticipo" nombre="Consulta de Anticipos" autor="Monserrat Gerardo" version="1.0">
+	<pagina id="1">
+		<nivel id="periodo" nombre="periodo" interactivo="false">
+			<componente id="periodo" nombre="periodo" tipo="cursor">
+				<tabla schema="catalog" nombre="periodo">
+                	<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                	<campo name="id_periodo"/>
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="nlBarreUsuarios" nombre="Barre Usuarios" interactivo="false">
+			<componente id="cpBarreUsuarios" nombre="Barre Usuarios" tipo="cursor">
+				<tabla schema="entity" nombre="usuario">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_usuario"/>
+					<campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+		
+		<!--
+		<nivel id="barreContrato1" nombre="barreContrato1" interactivo="false">
+			<componente id="barreContrato1" nombre="barreContrato" tipo="cursor">
+				<tabla schema="operation" nombre="duep_contrato_pedido">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%periodo.periodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido"/>
+					<campo name="estatus"/>
+						<campo name="anticipo" calc="@ifThenElse(%anticipo%==null,0.00,%anticipo%)"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+		<nivel id="barreContrato2" nombre="barreContrato2" interactivo="false">
+			<componente id="barreContrato2" nombre="barreContrato" tipo="cursor">
+				<tabla schema="operation" nombre="duep_contrato_pedido">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%periodo.periodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido"/>
+					<campo name="estatus"/>
+						<campo name="importe_amortizado" calc="@ifThenElse(%importe_amortizado%==null,0.00,%importe_amortizado%)"/>
+				</tabla>
+			</componente>
+		</nivel>
+		-->
+		
+		
+		<nivel id="barreContrato" nombre="barreContrato" interactivo="false">
+			<componente id="barreContrato" nombre="barreContrato" tipo="cursor">
+				<tabla schema="operation" nombre="duep_contrato_pedido">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%periodo.periodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido"/>
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="2"/>
+					<campo name="anticipo" /> <!--importe_total_anticipo-->
+					<campo name="importe_amortizado" text="Importe Amortizado" columna-visible="true" width="200"/>
+					<campo name="amortizar"/> <!-- calc="@consultaDirec('SELECT CASE WHEN anticipo is null AND importe_amortizado is null THEN 0.00 WHEN anticipo is null AND importe_amortizado &lt;&gt; null THEN importe_amortizado WHEN importe_amortizado is null AND anticipo &lt;&gt; null THEN anticipo - 0.00 ELSE anticipo - importe_amortizado END AS amortizar FROM operation.duep_contrato_pedido		
+WHERE ur='+%ur%+' AND periodo='+%periodo%+' AND id_duep_contrato_pedido='+%id_duep_contrato_pedido%+' AND estatus=2','amortizar','decimal','MAGNITUS')"-->
+				</tabla>
+				<nivel id="barreContratoResta" nombre="barreContratoResta" interactivo="false" ejecutar="%barreContrato.barreContrato.ur%!=null">
+		        	<componente id="barreContratoResta" nombre="barreContratoResta" tipo="cursor">
+		        		<tabla schema="operation" nombre="duep_contrato_pedido">
+			        		<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barreContrato.barreContrato.ur%"/>
+		         			<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barreContrato.barreContrato.periodo%"/>
+		        			<campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%barreContrato.barreContrato.id_duep_contrato_pedido%"/>
+		          			<campo name="estatus"/>
+		        			<campo name="anticipo" />
+				        	<campo name="importe_amortizado"/>
+			        		<campo name="amortizar" calc="@ifThenElse(%barreContrato.barreContrato.anticipo%==null,0,%barreContrato.barreContrato.anticipo%)-@ifThenElse(%barreContrato.barreContrato.importe_amortizado%==null,0,%barreContrato.barreContrato.importe_amortizado%)"/>
+			        	</tabla>
+		        	</componente>
+	        	</nivel>
+			</componente>
+		</nivel>
+		
+		
+		
+		<nivel id="nlConAnt" nombre="Consulta de Anticipos" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+			<componente id="cpConAnt" nombre="Consulta de Anticipos (incluye acción de Click Derecho)" tipo="tabla" filtro="true" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" exportarExcel="false" exportarPDF="false">
+				<tabla schema="operation" nombre="duep_contrato_pedido">
+					<campo name="ur" text="UR" calc="%periodo.periodo.id_unidad_responsable%" llaveForanea="false" columna-visible="false"/>
+					<campo name="periodo" text="periodo" calc="%periodo.periodo.id_periodo%" llaveForanea="false" columna-visible="false"/>
+					<campo name="id_duep_contrato_pedido" text="DUEP" columna-visible="true"/>
+					<!--<campo name="id_duep" text="DUEP" local="true" type="string" columna-visible="true" calc="@concatenar(@consultaDirec('SELECT folio_con_ordecom AS resultado FROM operation.duep_contrato_pedido WHERE ur='+%periodo.periodo.id_unidad_responsable%+' AND periodo='+%periodo.periodo.id_periodo%+ ' AND id_duep_contrato_pedido='+%id_duep_contrato_pedido%,'resultado','string','MAGNITUS')+'-'+%id_duep_contrato_pedido%)"/>-->
+					<campo name="folio_con_ordecom" text="DUEP"  columna-visible="true" width="100" />
+					<campo name="proveedor" text="Beneficiario" descripcionForaneaTabla="razon_social" width="400" columna-visible="true"/>
+					<campo name="estatus" text="Estatus" descripcionForaneaTabla="descripcion" width="200" columna-visible="true" filtroCampo="estatus" filtroOperador="=" filtroValor="2"/>
+					<campo name="fecha_registro" text="Fecha" columna-visible="true" width="200" /> <!--fecha_gestion_anticipo-->
+					<campo name="area_requiriente" text="Centro de Registro" columna-visible="true" width="400"/> <!--MpI-->
+					<campo name="total" text="Importe de Anticipo" columna-visible="true" width="200" filtroCampo="anticipo" filtroOperador="!=" filtroValor="0.00" /> <!--importe_total_anticipo-->
+					<campo name="importe_amortizado" text="Importe Amortizado" columna-visible="true" width="200"/>
+					
+					<campo name="amortizar" text="Importe por Amortizar"/>
+				<!--
+					<campo name="amortizar" text="Importe por Amortizar" local="true" type="decimal" calc="@ifThenElse(%importe_total_anticipo%==null OR %importe_amortizado%==null,0,%importe_total_anticipo%-%importe_amortizado%)"/>-->
+					<campo name="ultimo_usuario_modificador" text="Usuario" columna-visible="false"/>
+					<tareas>
+                        <tarea nombre="Ver Detalle" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_contrato_pedido,folio_con_ordecom,proveedor,ultimo_usuario_modificador" ref="task=2c326eca-cbea-4775-8928-58703fb0c59c"/>
+                    </tareas> 
+				</tabla>
+				
+				<!-- <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>-->
+			</componente>
+		</nivel>
+	</pagina>
+</tarea>
