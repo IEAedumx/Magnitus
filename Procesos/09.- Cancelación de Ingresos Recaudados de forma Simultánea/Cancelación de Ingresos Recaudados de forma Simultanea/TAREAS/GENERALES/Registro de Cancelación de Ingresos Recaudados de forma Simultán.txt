@@ -1,0 +1,112 @@
+<tarea id="Solicitud de Recaudación simultanea de ingreso para Cancelación" nombre="Solicitud de Recaudación simultanea de ingreso para Cancelación" version="1" autor="" mostrarCarrusel="false">
+    <pagina id="sol_can_rsi" mostrarCarrusel="false">
+         <nivel id="per" nombre="per" interactivo="false">
+        <componente tipo="cursor" id="per" nombre="per">
+            <tabla schema="catalog" nombre="periodo">
+                <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="id_periodo"/>
+                <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+            </tabla>
+        </componente>
+    </nivel>
+        <nivel id="busca_cancela_rec" nombre="Cancelación de Ingresos Recaudados de Forma Simultanea" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="busca_cancela_rec" nombre="Cancelación de Ingresos Recaudados de Forma Simultanea" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false" filtro="true">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" text="Unidad Responsable" width="120" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" visible="false"/>
+					<campo name="periodo" text="Año" width="100" columna-visible="false" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" visible="false"/>
+					<campo name="id_recaudacion_registro" text="Recaudación Simultanea" width="100" visible="false" columna-visible="false"/>
+					<campo name="folio_asociado" text="Folio" width="120" columnas="3"/>
+					<campo name="fecha_recaudacion" text="Fecha Registro" columnas="3" width="150" habilitado="false" visible="true"/>
+					<campo name="referencia2" text="Referencia" columnas="3" width="250"/>
+					<campo name="beneficiario" text="Beneficiario" columnas="3" width="170"  descripcionForanea="razon_social" descripcionForaneaTabla="razon_social"/>
+					<campo name="tipo_recaudacion" text="Tipo Recaudación" width="100" visible="false" columna-visible="false" />
+					<campo name="concepto" text="Concepto" width="200" columnas="3" />
+					<campo name="estatus" text="Estatus" width="150" columnas="3"   filtroCampo="estatus" filtroOperador="=" filtroValor="2"/>
+		 		    <campo name="pc_selecciona_cancelacion" text="Selecciona" editable="true" filtroCampo="selecciona_cancelacion" filtroOperador="=" filtroValor="false"/>
+                    	<campo name="pc_cancelar" text="cancelar" columna-visible="false" filtroCampo="pc_cancelar" filtroOperador="=" filtroValor="false" visible="false"/>
+                   <campo name="tipo_recaudacion_ingreso" text="tipo_ingreso" columna-visible="false"  visible="false"/><!--filtroCampo="tipo_recaudacion_ingreso" filtroOperador="entre" filtroValor="'1','2'"-->
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" texto="Guardar" columnas="6" margen-izquierdo="2"/>
+                     </estilos>
+                     <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+            </componente>
+        </nivel>
+        
+        
+    
+    <nivel id="badi" nombre="badi" interactivo="false">
+        <componente id="badi" nombre="badi" tipo="cursor">
+            <tabla schema="operation" nombre="recaudacion_registro">
+                <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="periodo" text="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                <campo name="id_recaudacion_registro"/>
+                <campo name="tipo_ingreso"/>
+                <campo name="pc_selecciona_cancelacion" filtroCampo="pc_selecciona_cancelacion" filtroOperador="=" filtroValor="true"/>
+                <campo name="pc_cancelar" filtroCampo="pc_cancelar" filtroOperador="=" filtroValor="false"/>
+            </tabla>
+        </componente>
+    </nivel>
+     <nivel id="cancela" nombre="Justificación de Cancelación de Ingresos Recaudados de Forma Simultánea" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+        <componente tipo="formulario" id="cancela" nombre="Justificación de Cancelación de Ingresos Recaudados de Forma Simultánea" accionDefault="editar">
+            <tabla schema="operation" nombre="recaudacion_registro">
+                <campo name="ur" text="ur" calc="$config.ur$" llaveForanea="false" visible="false"/>
+                <campo name="periodo" text="periodo" calc="%per.per.id_periodo%" llaveForanea="false" visible="false"/>
+                <campo name="id_recaudacion_registro" text="id_recaudacion_registro" calc="%badi.badi.id_recaudacion_registro%" visible="false"/>
+                <campo name="pc_cancelar" text="Solicitar cancelación" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                <campo name="pc_motivo_cancelacion" text="Justificación de la Cancelación" columnas="3" margen-izquierdo="4" margen-derecho="4" width="200" height="200"/>
+                <campo name="exp_ingreso" text="Grupo Exp Ingreso" visible="false" />
+
+
+
+            </tabla>
+            <acciones>
+                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+            </acciones>
+            <estilos>
+                <boton nombre="grabar" posicion="derecha" visible="true" texto="Guardar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+            </estilos>
+        </componente>
+    </nivel>
+    <nivel id="rep_ServiciosEscolares" nombre="Recaudación Simultánea de Ingresos" mostrarNivelAnterior="false" ejecutar="%badi.badi.tipo_ingreso%==1">
+            <componente id="rep_ServiciosEscolares" nombre="Cancelación de Ingresos Recaudados de Forma Simultanea" tipo="reporte">
+                <reporte nombre="R_Reg_Rec_Sim_SE_Can" expediente="Expediente de Ingresos/Cancelación de Ingresos Recaudados de Forma Simultanea" grupo="%cancela.cancela.exp_ingreso%" url="$config.repository_upload_file$" nombreDocumento="'Cancelación'" update="true">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%per.per.id_periodo%"/>
+                    <campo name="id_recaudacion_simultanea_i" type="long" calc="%badi.badi.id_recaudacion_registro%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="rep_OtrosIngresos" nombre="Recaudación Simultánea de Ingresos" mostrarNivelAnterior="false" ejecutar="%badi.badi.tipo_ingreso%==2">
+            <componente id="rep_ServiciosEscolares" nombre="Cancelación de Ingresos Recaudados de Forma Simultanea" tipo="reporte">
+                <reporte nombre="Rec_Sim_otros_ingresos_Can" expediente="Expediente de Ingresos/Cancelación de Ingresos Recaudados de Forma Simultanea" grupo="%cancela.cancela.exp_ingreso%" url="$config.repository_upload_file$" nombreDocumento="'Cancelación'" update="true">
+                   <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%per.per.id_periodo%"/>
+                    <campo name="id_recaudacion_simultanea_i" type="long" calc="%badi.badi.id_recaudacion_registro%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+       
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false">
+			<componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+				<parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+					<parametro name="enterprise" calc="'MAGNITUS'"/>
+					<parametro name="process" calc="'fa5f25c9-cdc8-4a2b-a89f-8a97e71a00f6'"/>
+					<parametro name="user" calc="$protocolarios.user$"/>
+					<parametro name="out_ur" calc="$config.ur$" mostrarEsc="true"/>
+					<parametro name="out_periodo" calc="%per.per.id_periodo%" mostrarEsc="true"/>
+					<parametro name="out_id_recaudacion_registro" calc="%badi.badi.id_recaudacion_registro%" mostrarEsc="false"/>
+					<parametro name="out_tipo_ingreso" calc="%badi.badi.tipo_ingreso%" mostrarEsc="true"/>
+					<parametro name="out_folio_ingreso" calc="%cancela.cancela.exp_ingreso%" mostrarEsc="false"/> 
+
+				</parametros>
+			</componente>
+    	</nivel> 
+    </pagina>
+    
+</tarea>
