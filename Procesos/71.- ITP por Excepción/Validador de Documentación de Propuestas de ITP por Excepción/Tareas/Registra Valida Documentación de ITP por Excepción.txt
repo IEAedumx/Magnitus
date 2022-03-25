@@ -1,0 +1,72 @@
+<tarea id="RegistraValidacionITP" nombre="Registra Validación de Documentación de ITP por Excepción">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreBeneficiarios" nombre="barreBeneficiarios" interactivo="false">
+            <componente id="barreBeneficiarios" nombre="barreBeneficiarios" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add_licitantes_aclaracion">
+                    <campo name="ur" text="UR" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Adjudicación" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="$inParam.adjudicacion$" llaveForanea="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                    <campo name="numero_consecutivo" text="No." autogenerado="true" generacion="@prox()+1"/>
+                    <campo name="id_beneficiario" text="Nombre, Razón o Denominación Social" llaveForanea="false"/>
+                </tabla>
+                <nivel id="grabaBeneficiarios" nombre="grabaBeneficiarios" interactivo="false">
+                    <componente id="grabaBeneficiarios" nombre="grabaBeneficiarios" tipo="altaDirect">
+                        <tabla schema="operation" nombre="proc_add_participantes">
+                            <campo name="ur" text="UR" calc="$inParam.ur$" llaveForanea="false"/>
+                            <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                            <campo name="id_tipo_adjudicacion" text="Adjudicación" calc="$inParam.adjudicacion$" llaveForanea="false"/>
+                            <campo name="folio_add" text="Folio de Licitación Pública" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                            <campo name="id_beneficiario" text="Beneficiario" calc="%barreBeneficiarios.barreBeneficiarios.id_beneficiario%"/>
+                            <campo name="nivel" text="nivel" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="nlRegVDSLP" nombre="Registra Validación de Documentación de ITP por Excepción" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpRegVDSLP" nombre="Validación de Documentación de ITP por Excepción" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="proc_add_participantes">
+                    <campo name="ur" text="UR" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicacion" calc="$inParam.adjudicacion$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio ADD" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_beneficiario" text="Nombre o Razón Social" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_compras" text="Proyecto Compras" local="true" type="string" calc="$inParam.id_compras$" visible="false" columna-visible="false"/>
+                    <campo name="usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$" visible="false" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Valida Documentos" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_tipo_adjudicacion,folio_add,id_beneficiario,id_compras,usuario" ref="task=92dd9138-0113-49ae-b244-99ad1620cb3d"/>                          
+                    </tareas>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar"/>
+                    <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="nlRepDVLP" nombre="Validación de la Documentación de ITP por Excepción" mostrarProximoNivel="false" mostrarNivelAnterior="tue"> 
+            <componente id="cpRepDVLP" nombre="Validación de la Documentación de ITP por Excepción" tipo="reporte">
+                <reporte nombre="Val_doc_lpn"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="$inParam.adjudicacion$"/>
+                    <campo name="folio_add" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

@@ -1,0 +1,107 @@
+<tarea id="RegistraFalloITP" nombre="Registra Fallo de ITP por Excepción" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="BarreITP" nombre="BarreITP" interactivo="false">
+            <componente id="BarreITP" nombre="BarreITP" tipo="cursor">
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_tipo_adjudicacion" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="$inParam.adjudicacion$" llaveForanea="false"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="%barreUsuarios.barreUsuarios.folio%" llaveForanea="false"/>
+                    <campo name="concepto_contratacion" text="Concepto" filtroCampo="concepto_contratacion" filtroOperador="!=" filtroValor="null"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlEmiteITPI" nombre="Registra Fallo de ITP por Excepción" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%BarreITP.BarreITP.concepto_contratacion%==null">
+            <componente id="cpEmiteITPI" nombre="Emite Acta Fallo de ITP por Excepción" tipo="formulario" accionDefault="insertar">
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false"/>
+                    <campo name="folio_add" text="Folio ITP" llaveForanea="false" calc="%barreUsuarios.barreUsuarios.folio%" visible="false"/>
+                    <campo name="concepto_contratacion" text="Concepto de Contratacion*" validacion="%concepto_contratacion%==null" validacionMensaje="Debe Capturarse Concepto de Contratacion" height="100" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="antecedentes" text="Antecedentes*" validacion="%antecedentes%==null" validacionMensaje="Debe Capturarse Antecedentes" height="100" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fundamento_legal" text="Fundamento Legal*" validacion="%fundamento_legal%==null" validacionMensaje="Debe Capturarse Fundamento Legal" height="100" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="justificacion" text="Justificación*" validacion="%justificacion%==null" validacionMensaje="Debe Capturarse Justificación" height="100" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="plazo_lugar_entrega" text="Plazo y Lugar de Entrega*"  height="100" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="resolutivos" text="Resolutivos*" validacion="%resolutivos%==null" validacionMensaje="Debe Capturarse Resolutivos" height="100" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlEmiteITPE" nombre="Registra Fallo de ITP por Excepción" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%BarreITP.BarreITP.concepto_contratacion%!=null">
+            <componente id="cpEmiteITPE" nombre="Emite Fallo de ITP por Excepción" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="add_dictamen">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false"/>
+                    <campo name="folio_add" text="Folio ITP" llaveForanea="false" calc="%barreUsuarios.barreUsuarios.folio%" visible="false"/>
+                    <campo name="concepto_contratacion" text="Concepto de Contratacion*" validacion="%concepto_contratacion%==null" validacionMensaje="Debe Capturarse Concepto de Contratacion" height="50" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="antecedentes" text="Antecedentes*" validacion="%antecedentes%==null" validacionMensaje="Debe Capturarse Antecedentes" height="50" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fundamento_legal" text="Fundamento Legal*" validacion="%fundamento_legal%==null" validacionMensaje="Debe Capturarse Fundamento Legal" height="50" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="justificacion" text="Justificación*" validacion="%justificacion%==null" validacionMensaje="Debe Capturarse Justificación" height="50" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="plazo_lugar_entrega" text="Plazo y Lugar de Entrega*"  height="50" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="resolutivos" text="Resolutivos*" validacion="%resolutivos%==null" validacionMensaje="Debe Capturarse Resolutivos" height="50" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlEmiteITP1" nombre="Dictámen ITP por Excepción" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="nlEmiteITP1" nombre="Lista de Funcionarios que Firmarán el Fallo" tipo="tabla" mostrarAgregar="true" mostrarEditar="true" mostrarEliminar="true" exportarExcel="false" exportarPDF="false">
+                <tabla schema="operation" nombre="add_funcionarios_eventos">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio ITP" llaveForanea="false" calc="%barreUsuarios.barreUsuarios.folio%" visible="false" columna-visible="false"/>
+                    <campo name="folio_funcionario" text="Folio de Funcionario" generacion="@prox()+1" autogenerado="true" visible="true" habiltado="false" columnas="3" margen-izquierdo="2" columa-visible="true"/>
+                    <campo name="nombre" text="Nombre del Funcionario" visible="true" habiltado="false" columnas="3" margen-derecho="2" columna-visible="true"/>
+                    <campo name="puesto" text="Puesto del Funcionario" visible="true" habiltado="false" columnas="3" margen-izquierdo="2" columna-visible="true"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" columna-visible="false"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false"/>
+                    <campo name="tipo_evento" text="Tipo Evento" calc="1" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlEmiteLP2" nombre="Reporte Fallo de ITP por Excepción" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpEmiteLP2" nombre="Acta Fallo de ITP por Excepción" tipo="reporte">
+                <reporte nombre="Dictamen_add"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_add" type="long" calc="%barreUsuarios.barreUsuarios.folio%"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="$inParam.adjudicacion$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
