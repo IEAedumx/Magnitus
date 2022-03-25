@@ -1,0 +1,138 @@
+<tarea id="RegProCompra" nombre="Cancela Licitación Pública" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlDatosG" nombre="Datos Generales" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="cpDatosG" nombre="Datos Generales" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="proc_add_convocatoria">
+                    <campo name="ur" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false"/>
+                    <campo name="folio_add" text="temp" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')" visible="false" />
+                    <campo name="folio_add_concatenado" text="Folio de Licitación Pública" 
+                    calc="@concatenar('LPN-'+@ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10,'00000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100,'0000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;1000,'000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10000,'00',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100000,'0','')))))+
+                    @consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS'))"  columnas="3" margen-izquierdo="2"/>
+                    <!--calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"-->
+                    <campo name="folio_convocatoria" text="Folio de Convocatoria*" visible="true" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="fecha_pccompra" text="Fecha Proyecto de Compra" local="true" type="string" calc="$inParam.fecha_referencia$" columnas="3" margen-izquierdo="2"/>
+                    <campo name="proyecto_compra" text="Proyecto de Compra" local="true" type="string" calc="$inParam.id_compras$" columnas="3" margen-derecho="2"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" local="true" type="string" calc="$inParam.id_fuente_financiamiento$" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlCancelaLP1" nombre="Regresar a Proyecto de Compra" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpConBasesLP" nombre=" Reporte Bases y convocatoria de Licitación Pública" tipo="reporte">
+                <reporte nombre="bases_lpn"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc= "$protocolarios.user$"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="$inParam.adjudicacion$"/>
+                    <campo name="folio_add" type="long" calc="%nlDatosG.cpDatosG.folio_add%"/>
+                </reporte>
+            </componente>
+            <componente id="cpCancelaLP1" nombre="Regresar a Proyecto de Compra" tipo="formulario" accionDefault="editar" colapsado="NO">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" calc="$inParam.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" calc="$inParam.periodo$" visible="false" llaveForanea="false"/>
+                    <campo name="folio_add" text="Folio Adjudicación" calc="%nlDatosG.cpDatosG.folio_add%" visible="false"/>
+                    <campo name="cancela_licitacion" text="Cancela Licitación Pública" visible="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="motivo_cancelacion_lp" text="Observaciones" height="250" interaccion="%cancela_licitacion%==false" validacion="%motivo_cancelacion_lp%==null AND %cancela_licitacion%==false" validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%cancela_licitacion%==true,'',%cancela_licitacion%)" columnas="6" margen-izquierdo="2"/>
+                    <campo name="fecha" text="FCancelacion" local="true" type="string" visible="false" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="fecha_cancelacion_lp" text="Fecha Autorización" calcCliente="@ifThenElse(%cancela_licitacion%==true,%fecha%,'')" visible="false"/>
+                    <campo name="usuario_cancelacion_lp" text="Usuario Cancelacion" calc="$inParam.ur$" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>            
+        </nivel>
+        <nivel id="ProcCan" nombre="ProcCan" interactivo="false" ejecutar="%nlCancelaLP1.cpCancelaLP1.cancela_licitacion%==true">
+            <componente id="ProcCan" nombre="ProcCan" tipo="cursor">
+                <tabla schema="operation" nombre="requisicion_detalle">
+                    <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_req" text="Folio Req" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlCancelaLP1.cpCancelaLP1.folio_req%"/>
+                    <campo name="id_fuente_financiamiento" text="Fuente Financiamiento" calc="$inParam.id_fuente_financiamiento$"/>
+                    <campo name="fecha_registro" text="Fecha Referencia" calc="$inParam.fecha_referencia$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--CAMBIO DE ESTATUS A CANCELADA-->
+        <nivel id="EstatusCan" nombre="EstatusCan" interactivo="false" ejecutar="%nlCancelaLP1.cpCancelaLP1.cancela_licitacion%==true">
+            <componente id="EstatusCan" nombre="EstatusCan" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="%nlDatosG.cpDatosG.folio_add%"/>
+                    <campo name="estatus_adjudicacion" calc="6"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--AGREGAR MENSAJE-->        
+        <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%nlCancelaLP1.cpCancelaLP1.cancela_licitacion%==true"> 
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado"> 
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                    <parametro name="process" calc="$protocolarios.process$"/>    
+                    <parametro name="version" calc="$protocolarios.version$"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>  
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                    <parametro name="message" calc="%nlCancelaLP1.cpCancelaLP1.motivo_cancelacion_lp%"/>
+                    <parametro name="type" calc="'1'"/> 
+                </parametros> 
+            </componente>
+        </nivel>
+        <!--CREAR INSTANCIA-->
+        <nivel nombre="Agregar Proyecto de Compra" id="nlAgrInsCta" interactivo="false" ejecutar="%nlCancelaLP1.cpCancelaLP1.cancela_licitacion%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosInstancia" id="nlAgrInsCta">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="'9e6ad80f-bad1-4eca-9d6a-5ff39784b572'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                    <parametro name="out_folio_req" calc="$inParam.folio_req$" mostrarEsc="true"/>
+                    <parametro name="out_referencia" calc="$inParam.referencia$" mostrarEsc="true"/>
+                    <parametro name="out_id_compras" calc="$inParam.id_compras$" mostrarEsc="true"/>
+                    <parametro name="out_fecha_registro" calc="@fechaSistema()" mostrarEsc="true"/>
+                    <parametro name="out_id_fuente_financiamiento" calc="$inParam.id_fuente_financiamiento$" mostrarEsc="true"/>
+                    <parametro name="out_adquisicion" calc="$inParam.adquisicion$" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--FINALIZAR INSTANCIA-->
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlCancelaLP1.cpCancelaLP1.cancela_licitacion%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

@@ -1,0 +1,246 @@
+<tarea id="RegistraEnvioConvocatoriaLP" nombre="Registra Envío de Convocatoria de Licitación Pública" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <!--<nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">-->
+        <!--    <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">-->
+        <!--        <tabla schema="entity" nombre="usuario">-->
+        <!--            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>-->
+        <!--            <campo name="id_usuario"/>-->
+        <!--            <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>-->
+        <!--            <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>-->
+        <!--        </tabla>-->
+        <!--    </componente>-->
+        <!--</nivel>-->
+        <nivel id="inParam" nombre="Parametros" interactivo="false">
+            <componente id="inParam" nombre="Parametros" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_add" local="true" type="long" calc="$inParam.folio_add$"/>
+                    <campo name="id_compras" local="true" type="string" calc="$inParam.id_compras$"/>
+                    <campo name="tipo_adjudicacion" local="true" type="long" calc="$inParam.adjudicacion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+         
+         <nivel id="FU" nombre="Filtrar Usuario" interactivo="false">
+            <componente id="FU" nombre="Filtrar Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo -->
+        
+        <nivel id="buscaFondo" nombre="buscaFondo" interactivo="false">
+            <componente id="buscaFondo" nombre="buscaFondo" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccion" nombre="buscaSeccion" interactivo="false">
+            <componente id="buscaSeccion" nombre="buscaSeccion" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerie" nombre="buscaSerie" interactivo="false">
+            <componente id="buscaSerie" nombre="buscaSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerie" nombre="buscaSubSerie" interactivo="false">
+            <componente id="buscaSubSerie" nombre="buscaSubSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="3"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpediente" nombre="concatenaExpediente" interactivo="false">
+            <componente id="concatenaExpediente" nombre="concatenaExpediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondo.buscaFondo.abreviatura%+'/'+%buscaSeccion.buscaSeccion.abreviatura%+'/'+%buscaSerie.buscaSerie.abreviatura%+'/'+%buscaSubSerie.buscaSubSerie.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlEnvioConLP" nombre="Registra Envío de Bases y Convocatoria de Licitación Pública" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpEnvioConLP" nombre="Registra Envío de Bases y Convocatoria de Licitación Pública" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="proc_add_convocatoria">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="%inParam.inParam.tipo_adjudicacion%" visible="false"/>
+                    <campo name="folio_add" text="Folio Adjudicacion" calc="%inParam.inParam.folio_add%" visible="false" />
+                    <campo name="folio_add_concatenado" text="Folio de Licitación Pública" columnas="3" margen-izquierdo="2"/>
+                    <campo name="publicacion1" text="Publicación en (1)" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_compranet" text="Fecha de Envío" visible="true" columnas="2" margen-izquierdo="2" 
+                    validacion="%fecha_envio_compranet%== null OR %fecha_envio_compranet%== ' ' " validacionMensaje="Registrar Fecha de Envio"/>
+                    <campo name="fecha_publicacion_compranet" text="Fecha de Públicación" visible="true" columnas="2" 
+                    validacion="%fecha_publicacion_compranet%== null OR %fecha_publicacion_compranet%== ' ' " validacionMensaje="Registrar Fecha de Publicación"/>
+                    <campo name="adjunta" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Públicación 1'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="2" margen-derecho="2" archivosAceptados="application/pdf"/>
+                    <campo name="ruta_publicacion_compranet" text="Ruta de Publicación" visible="true" height="100" columnas="3" margen-izquierdo="2" validacion="%ruta_publicacion_compranet%== null OR %ruta_publicacion_compranet%== ' ' " validacionMensaje="Registrar Ruta"/>
+                    <campo name="observariones_compranet" text="Observaciones" visible="true" height="100" columnas="3" margen-derecho="2"/>
+                    <campo name="publicacion2" text="Publicación en (2)" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_dof" text="Fecha de Envío" visible="true" columnas="2" margen-izquierdo="2"
+                    validacion="%fecha_envio_dof%== null OR %fecha_envio_dof%== ' ' " validacionMensaje="Registrar Fecha de Envio"/>
+                    <campo name="fecha_publicacion_dof" text="Fecha de Publicación" visible="true" columnas="2"  validacion="%fecha_publicacion_dof%== null OR %fecha_publicacion_dof%== ' ' " validacionMensaje="Registrar Fecha de Publicación"/>
+                    
+                     <campo name="adjunta2" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Publicación 2'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="2" margen-derecho="2" archivosAceptados="application/pdf"/>
+                     
+                    <campo name="ruta_publicacion_dof" text="Ruta de Publicación" visible="true" height="100" columnas="3" margen-izquierdo="2" validacion="%ruta_publicacion_dof%== null OR %ruta_publicacion_dof%== ' ' " validacionMensaje="Registrar Ruta"/>
+                    <campo name="observariones_dof" text="Observaciones" visible="true" height="100" columnas="3" margen-derecho="2"/>
+                    <campo name="publicacion3" text="Pubicación en (3)"  visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_otro" text="Fecha de Envío" visible="true" columnas="2" margen-izquierdo="2"
+                    validacion="%fecha_envio_otro%== null OR %fecha_envio_otro%== ' ' " validacionMensaje="Registrar Fecha de Envío"/>
+                    <campo name="fecha_publicacion_otro" text="Fecha de Publicación" visible="true" columnas="2"  validacion="%fecha_publicacion_otro%==null OR %fecha_publicacion_otro%== ' ' " validacionMensaje="Registrar Fecha de Publicación"/>
+                    <campo name="adjunta3" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Publicación 3'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="2" margen-derecho="2" archivosAceptados="application/pdf"/>
+                    <campo name="ruta_publicacion_otro" text="Ruta de Publicación" visible="true" height="100" columnas="3" margen-izquierdo="2"
+                    validacion="%ruta_publicacion_otro%== null OR %ruta_publicacion_otro%== ' ' " validacionMensaje="Registrar Ruta"/>
+                    <campo name="observariones_otro" text="Observaciones" visible="true" height="100" columnas="3" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel> 
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo-->
+        <!-- CODIGO ANTERIOR
+        <nivel id="nlEnvioConLP" nombre="Registra Envío de Bases y Convocatoria de Licitación Pública" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpEnvioConLP" nombre="Registra Envío de Bases y Convocatoria de Licitación Pública" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="proc_add_convocatoria">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false"/>
+                    <campo name="folio_add" text="temp" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')" visible="false" />
+                    <campo name="folio_add_concatenado" text="Folio de Licitación Pública" 
+                    calc="@concatenar('LPN-'+@ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10,'00000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100,'0000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;1000,'000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10000,'00',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100000,'0','')))))+
+                    @consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS'))"  columnas="3" margen-izquierdo="2"/>
+                    <campo name="titulo1" text=" " local="true" type="string" calc="'Publicación en CompraNET'" habilitado="false" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_compranet" text="Fecha de Envío" visible="true" columnas="2" margen-izquierdo="2" 
+                    validacion="%fecha_envio_compranet%== null OR %fecha_envio_compranet%== ' ' " validacionMensaje="Registrar Fecha de Envio"/>
+                    <campo name="fecha_publicacion_compranet" text="Fecha de Públicación" visible="true" columnas="2" 
+                    validacion="%fecha_publicacion_compranet%== null OR %fecha_publicacion_compranet%== ' ' " validacionMensaje="Registrar Fecha de Publicación"/>
+                    <campo name="adjunta" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Públicación CompraNET'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="2" margen-derecho="2" archivosAceptados="application/pdf"/>
+                    
+                   
+                    
+                    <campo name="ruta_publicacion_compranet" text="Ruta de Publicación" visible="true" height="100" columnas="3" margen-izquierdo="2" validacion="%ruta_publicacion_compranet%== null OR %ruta_publicacion_compranet%== ' ' " validacionMensaje="Registrar Ruta"/>
+                    <campo name="observariones_compranet" text="Observaciones" visible="true" height="100" columnas="3" margen-derecho="2"/>
+                    <campo name="titulo2" text=" " local="true" type="string" calc="'Publicación en el Diario Oficial de la Federación'" habilitado="false" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_dof" text="Fecha de Envío" visible="true" columnas="2" margen-izquierdo="2"
+                    validacion="%fecha_envio_dof%== null OR %fecha_envio_dof%== ' ' " validacionMensaje="Registrar Fecha de Envio"/>
+                    <campo name="fecha_publicacion_dof" text="Fecha de Publicación" visible="true" columnas="2"  validacion="%fecha_publicacion_dof%== null OR %fecha_publicacion_dof%== ' ' " validacionMensaje="Registrar Fecha de Publicación"/>
+                    
+                   
+                     <campo name="adjunta2" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Publicación en el Diario Oficial de la Federación'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="2" margen-derecho="2" archivosAceptados="application/pdf"/>
+                     
+                    <campo name="ruta_publicacion_dof" text="Ruta de Publicación" visible="true" height="100" columnas="3" margen-izquierdo="2" validacion="%ruta_publicacion_dof%== null OR %ruta_publicacion_dof%== ' ' " validacionMensaje="Registrar Ruta"/>
+                    <campo name="observariones_dof" text="Observaciones" visible="true" height="100" columnas="3" margen-derecho="2"/>
+                    <campo name="titulo3" text=" " local="true" type="string" calc="'Otro'" habilitado="false" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_otro" text="Fecha de Envío" visible="true" columnas="2" margen-izquierdo="2"
+                    validacion="%fecha_envio_otro%== null OR %fecha_envio_otro%== ' ' " validacionMensaje="Registrar Fecha de Envio"/>
+                    <campo name="fecha_publicacion_otro" text="Fecha de Publicación" visible="true" columnas="2"  validacion="%fecha_publicacion_otro%== null OR %fecha_publicacion_otro%== ' ' " validacionMensaje="Registrar Fecha de Publicación"/>
+                    <campo name="adjunta3" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Otro'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="2" margen-derecho="2" archivosAceptados="application/pdf"/>
+                    
+                  
+                    <campo name="ruta_publicacion_otro" text="Ruta de Publicación" visible="true" height="100" columnas="3" margen-izquierdo="2"
+                    validacion="%ruta_publicacion_otro%== null OR %ruta_publicacion_otro%== ' ' " validacionMensaje="Registrar Ruta"/>
+                    <campo name="observariones_otro" text="Observaciones" visible="true" height="100" columnas="3" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel> 
+        -->
+        
+        <nivel id="nlConBasesLP" nombre="Envío de Convocatoria de Licitación Pública" mostrarProximoNivel="true" mostrarNivelAnterior="false"> 
+            <componente id="cpConBasesLP" nombre="Envío de Convocatoria de Licitación Pública" tipo="reporte">
+                <reporte nombre="Evidencia_lpn" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Envío de Convocatoria Licitación Pública'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="%inParam.inParam.tipo_adjudicacion%"/>
+                    <campo name="folio_add" type="long" calc="%inParam.inParam.folio_add%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+         <nivel nombre="TSR" id="TSR" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Turnar Siguiente Rol" id="TSR" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" visible="false" calc="1"/>
+                    <campo name="turnar" text="¿Desea Turnar?" local="true" type="long" calc="1" habilitado="true" columnas="3" margen-izquierdo="4">
+                        <opciones>
+                            <opcion texto="SI" valor="1"/>
+                            <opcion texto="NO" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="3" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+            
+        <nivel nombre="turnarInstancia" id="tI" interactivo="false" ejecutar="%TSR.TSR.turnar%==1">
+            <componente tipo="solicitud" nombre="" id="tI">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+            
+        <nivel nombre="CT" id="CT" interactivo="false">
+            <componente tipo="cursor" nombre="CT" id="CT">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
