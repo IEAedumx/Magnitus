@@ -1,0 +1,280 @@
+<tarea id="registraDevolucionIngresos" nombre="Registra Devolución de Ingresos" version="1.0.0" autor="Luis Eduardo Castañeda Delgadillo">
+    <pagina id="uno">
+        
+        <nivel id="nlRegDevolIng" nombre="Registra Devolución de Ingresos" mostrarProximoNivel="false">
+            <componente id="cpSelecAnoRecibo" nombre="Selección de Ejercicio Fiscal" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" visible="false" calc="1"/>
+                    <campo name="ur" visible="false" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" descripcionForanea="id_periodo" marcador="Selecciona un Ejercicio Fiscal" margen-izquierdo="3" columnas="4"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRestableceSelec" nombre="Restablecer Selección" interactivo="false">
+            <componente id="cpRestableceSelec" nombre="Restablecer Selección" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegDevolIng.cpSelecAnoRecibo.periodo%"/>
+                    <campo name="id_recaudacion_registro" />
+                    <campo name="seleccionar" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/> <!-- -->
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlSelecDURI" nombre="Registra Devolución de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpSelecDURI" nombre="Selecciona Documento Digital Electrónico Del Ingreso Recaudado" tipo="tabla" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" calc="$config.ur$" visible="false" columna-visible="false"/>
+                    <campo name="periodo" calc="%nlRegDevolIng.cpSelecAnoRecibo.periodo%" visible="false" columna-visible="false"/>
+                    <campo name="id_recaudacion_registro" visible="false" columna-visible="false"/>
+                    <campo name="folio_asociado" text="Folio" width="150"/>  <!-- <campo name="folio" text="Folio"/> -->
+                    <campo name="fecha_recaudacion" text="Fecha" width="175"/>
+                    <campo name="caja_recaudacion" text="Caja de Recaudación" width="200" />
+                    <campo name="beneficiario" text="Beneficiario" descripcionForaneaTabla="razon_social" width="250"/>
+                    <campo name="importe_total_recaudar" text="Importe Total" width="150" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="concepto" text="Concepto" width="300"/>
+                    <campo name="estatus" text="Estatus" width="150" filtroCampo="estatus" filtroOperador="=" filtroValor="2"/>
+                    <campo name="seleccionar" text="Selecciona" editable="true" width="150"/>
+                    <campo name="pc_autoriza_can" text="no cancelados" columna-visible="false" filtroCampo="pc_autoriza_can" filtroOperador="=" filtroValor="false"/>
+                    <campo name="pc_cancelar" text="no cancelados" columna-visible="false" filtroCampo="pc_cancelar" filtroOperador="=" filtroValor="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(seleccionar)= 1 count FROM operation.recaudacion_registro
+                WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\' AND seleccionar = true','count','bool','MAGNITUS')==false" 
+                validacionMensaje="'Favor de seleccionar sólo un registro'"/>
+            </validaciones>
+        </nivel>
+        
+        <nivel id="nlBarreRecIng" nombre="Barre Recaudación de Ingresos" interactivo="false">
+            <componente id="cpBarreRecIng" nombre="Barre Recaudación de Ingresos" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegDevolIng.cpSelecAnoRecibo.periodo%" />
+                    <campo name="id_recaudacion_registro"/>
+                    <campo name="beneficiario"/>
+                    <campo name="importe_total" />
+                    <campo name="seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="exp_ingreso"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRestableceSelecDet" nombre="Restablecer Selección del Detalle" interactivo="false">
+            <componente id="cpRestableceSelecDet" nombre="Restablecer Selección del Detalle" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_registro_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegDevolIng.cpSelecAnoRecibo.periodo%"/>
+                    <campo name="id_recaudacion_registro" />
+                    <campo name="id_recaudacion_registro_det" />
+                    <campo name="seleccionar" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlVisBloqDURI" nombre="Registra Devolución de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpVisBloqDURI" nombre="Visualiza Renglones Del Documento Digital Electrónico Del Ingreso Recaudado" tipo="tabla" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="recaudacion_registro_detalle" >
+                    <campo name="ur" calc="$config.ur$" visible="false" columna-visible="false"/>
+                    <campo name="periodo" calc="%nlRegDevolIng.cpSelecAnoRecibo.periodo%" visible="false" columna-visible="false"/>
+                    <campo name="id_recaudacion_registro" visible="false" calc="%nlBarreRecIng.cpBarreRecIng.id_recaudacion_registro%" columna-visible="false"/>
+                    <campo name="tipo_bloque" text="Tipo de Renglón" width="150"/>
+                    <campo name="id_recaudacion_registro_det" text="Número de Renglón" width="150" cellsalign="center"/>
+                    <campo name="id_cat_cri" calc="11" visible="false" columna-visible="false"/>
+                    <campo name="id_cri" text="Clasificador por Rubro del Ingreso" width="300"/>
+                    <campo name="id_cat_fondo_contable" calc="3" visible="false" columna-visible="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" width="250"/>
+                    <campo name="id_cat_centro_registro" calc="2" visible="false" columna-visible="false"/>
+                    <campo name="id_centro_registro" text="Centro de Registro" width="250"/>
+                    <campo name="mes" calc="@fechaSistema(&quot;MM&quot;)" visible="false" columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" llaveForanea="false" width="200" cellsalign="center"/>
+                    <campo name="cantidad" text="Cantidad" width="75" cellsalign="center"/>
+                    <campo name="importe" text="Importe" width="150" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="descuento" text="Descuento" width="150" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="iva" text="IVA" width="150" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="total" text="Total" width="150" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="seleccionar" text="Selección" editable="true"/>
+                    <campo name="devuelto" filtroCampo="devuelto" filtroOperador="=" filtroValor="false" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(seleccionar) &lt; 1 count FROM operation.recaudacion_registro_detalle
+                    WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\' 
+                    AND id_recaudacion_registro = '+'\\''+%nlBarreRecIng.cpBarreRecIng.id_recaudacion_registro%+'\\' AND seleccionar = true','count','bool','MAGNITUS')==true" 
+                    validacionMensaje="'Debe seleccionar al menos un registro'"/>
+            </validaciones>
+        </nivel>
+
+        <nivel id="nlDatCompDevol" nombre="Registra Devolución de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpDatCompDevol" nombre="Información Adicional Para la Devolución" tipo="formulario">
+                <tabla schema="operation" nombre="devolucion_recaudacion_ingreso">
+                    <campo name="ur" calc="$config.ur$" visible="false"/>
+                    <campo name="periodo" calc="%nlRegDevolIng.cpSelecAnoRecibo.periodo%" visible="false"/>
+                    <campo name="id_devol_rec_ing" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    <campo name="folio" text="Folio De Devolución" columnas="2" margen-izquierdo="1" habilitado="false"
+                    calc="@ifThenElse(@consultaDirec('SELECT COUNT(id_devol_rec_ing)+1 count FROM operation.devolucion_recaudacion_ingreso
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\'','count','string','MAGNITUS')==null,'DEV-000001',@concatenar('DEV-'+
+					@ifThenElse(@consultaDirec('SELECT COUNT(id_devol_rec_ing)+1 count FROM operation.devolucion_recaudacion_ingreso
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\'','count','string','MAGNITUS') &lt;10,'00000',
+					@ifThenElse(@consultaDirec('SELECT COUNT(id_devol_rec_ing)+1 count FROM operation.devolucion_recaudacion_ingreso
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\'','count','string','MAGNITUS') &lt;100,'0000',
+					@ifThenElse(@consultaDirec('SELECT COUNT(id_devol_rec_ing)+1 count FROM operation.devolucion_recaudacion_ingreso
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\'','count','string','MAGNITUS') &lt;1000,'000',
+					@ifThenElse(@consultaDirec('SELECT COUNT(id_devol_rec_ing)+1 count FROM operation.devolucion_recaudacion_ingreso
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\'','count','string','MAGNITUS') &lt;10000,'00',
+					@ifThenElse(@consultaDirec('SELECT COUNT(id_devol_rec_ing)+1 count FROM operation.devolucion_recaudacion_ingreso
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\'','count','string','MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT COUNT(id_devol_rec_ing)+1 count FROM operation.devolucion_recaudacion_ingreso
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\'','count','string','MAGNITUS')))"/>
+                    <campo name="id_recaudacion_ingreso" text="Folio De Recaudación" descripcionForanea="folio_asociado" calc="%nlBarreRecIng.cpBarreRecIng.id_recaudacion_registro%" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="fecha_devolucion" text="Fecha Devolución"  columnas="2" margen-izquierdo="1" validacion="%fecha_devolucion%==null" validacionMensaje="Favor de ingresar la fecha devolución para continuar"/>
+                    <campo name="beneficiario" text="Beneficiario" calc="%nlBarreRecIng.cpBarreRecIng.beneficiario%" habilitado="false" columnas="2" margen-izquierdo="1" descripcionForanea="razon_social" marcador="Seleccione una beneficiario"/>
+                    <campo name="cuenta_bancaria_beneficiario" text="Cuenta Bancaria Beneficiario" local="true" type="string"  columnas="2" margen-izquierdo="1"  habilitado="false" calc="@ifThenElse(@consultaDirec('SELECT cuenta_bancaria FROM entity.beneficiario_cuenta_bancaria WHERE id_beneficiario = '+%nlBarreRecIng.cpBarreRecIng.beneficiario%+'','cuenta_bancaria','string','MAGNITUS')==null,'No existe cuenta bancaria asociada al beneficiario',@consultaDirec('SELECT cuenta_bancaria FROM entity.beneficiario_cuenta_bancaria WHERE id_beneficiario ='+%nlBarreRecIng.cpBarreRecIng.beneficiario%+'','cuenta_bancaria','string','MAGNITUS'))"
+                        />
+                    <campo name="tipo_cuenta" visible="true" text="Tipo Cuenta Pagadora" columnas="2" margen-izquierdo="1" marcador="Seleccione tipo de cuenta pagadora" validacion="%tipo_cuenta%==null" validacionMensaje="Favor de seleccionar el tipo de cuenta pagadora para continuar"/>
+                    <campo name="cuenta_pagadora" text="Cuenta Pagadora" descripcionForanea="cuenta_bancaria" columnas="2" margen-izquierdo="1" marcador="Seleccione Cuenta Bancaria" validacion="%cuenta_pagadora%==null" validacionMensaje="Favor de seleccionar una cuenta pagadora para continuar,"/>
+                    <campo name="importe_total" text="Importe Total a Pagar" 
+                        calc="@consultaDirec('SELECT SUM(total) FROM operation.recaudacion_registro_detalle
+                        WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\' 
+                        AND id_recaudacion_registro = '+'\\''+%nlBarreRecIng.cpBarreRecIng.id_recaudacion_registro%+'\\' AND seleccionar = true','sum','string','MAGNITUS')" 
+                        habilitado="false" columnas="2" margen-izquierdo="1" marcador="Ingrese el importe total"/>  <!-- +@consultaDirec('SELECT SUM(iva) FROM operation.recaudacion_registro_detalle
+                        WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlRegDevolIng.cpSelecAnoRecibo.periodo%+'\\' 
+                        AND id_recaudacion_registro = '+'\\''+%nlBarreRecIng.cpBarreRecIng.id_recaudacion_registro%+'\\' AND seleccionar = true','sum','string','MAGNITUS') -->
+                    <campo name="estatus" text="Estatus" columnas="2" margen-izquierdo="1" marcador="Seleccione un estatus" calc="1" habilitado="false"/>
+                    <campo name="adjunta_documentacion" text="Adjunta Documentación" local="true" type="file" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Documento Adjunto'" grupo="%nlBarreRecIng.cpBarreRecIng.exp_ingreso%" expediente="Expediente de Ingresos/Devolución de Ingresos Solo Recaudado" archivosAceptados="application/pdf" update="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="concepto_devolucion" text="Justificación De La Devolución" columnas="6" margen-izquierdo="2" margen-derecho="2" marcador="Ingrese el concepto de la devolución" validacion="%concepto_devolucion%==null" validacionMensaje="Favor de ingresar el concepto de devolución para continuar"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" margen-izquierdo="4" columnas="2" texto="Continuar"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreRecIngDet" nombre="Barre Recaudación Ingreso Detalle" interactivo="false">
+            <componente id="cpBarreRecIngDet" nombre="Barre Recaudación Ingreso Detalle" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_registro_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegDevolIng.cpSelecAnoRecibo.periodo%"/>
+                    <campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%nlBarreRecIng.cpBarreRecIng.id_recaudacion_registro%"/>
+                    <campo name="id_recaudacion_registro_det" />
+                    <campo name="tipo_bloque" />
+                    <campo name="id_recaudacion_registro_det" />
+                    <campo name="id_cat_cri" />
+                    <campo name="id_cri" />
+                    <campo name="id_cat_fondo_contable" />
+                    <campo name="id_fondo_contable"/>
+                    <campo name="id_cat_centro_registro" />
+                    <campo name="id_centro_registro" />
+                    <campo name="mes" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="cantidad" />
+                    <campo name="importe" />
+                    <campo name="descuento" />
+                    <campo name="iva" />
+                    <campo name="total" />
+                    <campo name="seleccionar" />
+                    <campo name="devuelto" calc="true"/>
+                </tabla>
+                <nivel id="nlAltaDetDevolRecIngDet" nombre="Alta de Devolución de Recaudación de Ingreso Detalle" interactivo="false">
+                    <componente id="cpAltaDetDevolRecIngDet" nombre="Alta de Devolución de Recaudación de Ingreso Detalle" tipo="altaDirect">
+                        <tabla schema="operation" nombre="devolucion_recaudacion_ingreso_det">
+                            <campo name="ur" calc="%nlBarreRecIngDet.cpBarreRecIngDet.ur%"/>
+                            <campo name="periodo" calc="%nlBarreRecIngDet.cpBarreRecIngDet.periodo%"/>
+                            <campo name="id_devol_rec_ing" calc="%nlDatCompDevol.cpDatCompDevol.id_devol_rec_ing%"/>
+                            <campo name="id_devol_rec_ing_det" autogenerado="true" generacion="@prox()+1"/>
+                            <campo name="tipo_bloque" calc="%nlBarreRecIngDet.cpBarreRecIngDet.tipo_bloque%"/>
+                            <campo name="id_cat_cri" calc="%nlBarreRecIngDet.cpBarreRecIngDet.id_cat_cri%"/>
+                            <campo name="id_cri" calc="%nlBarreRecIngDet.cpBarreRecIngDet.id_cri%"/>
+                            <campo name="id_cat_fondo_contable" calc="%nlBarreRecIngDet.cpBarreRecIngDet.id_cat_fondo_contable%"/>
+                            <campo name="id_fondo_contable" calc="%nlBarreRecIngDet.cpBarreRecIngDet.id_fondo_contable%"/>
+                            <campo name="id_cat_centro_registro" calc="%nlBarreRecIngDet.cpBarreRecIngDet.id_cat_centro_registro%"/>
+                            <campo name="id_centro_registro" calc="%nlBarreRecIngDet.cpBarreRecIngDet.id_centro_registro%"/>
+                            <campo name="mes" calc="%nlBarreRecIngDet.cpBarreRecIngDet.mes%"/>
+                            <campo name="clave_presupuestal" calc="%nlBarreRecIngDet.cpBarreRecIngDet.clave_presupuestal%"/>
+                            <campo name="cantidad" calc="%nlBarreRecIngDet.cpBarreRecIngDet.cantidad%"/>
+                            <campo name="importe" calc="%nlBarreRecIngDet.cpBarreRecIngDet.importe%"/>
+                            <campo name="descuento" calc="%nlBarreRecIngDet.cpBarreRecIngDet.descuento%"/>
+                            <campo name="total" calc="%nlBarreRecIngDet.cpBarreRecIngDet.total%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="rec_ing_det" calc="%nlBarreRecIngDet.cpBarreRecIngDet.id_recaudacion_registro_det%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlObBeneficiario" nombre="Obtener Beneficiario" interactivo="false">
+            <componente id="cpObBeneficiario" nombre="Obtener Beneficiario" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlRegDevolIng.cpSelecAnoRecibo.periodo%"/>
+                    <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%nlBarreRecIng.cpBarreRecIng.beneficiario%"/>
+                    <campo name="razon_social"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false" >
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'e3d43241-37f5-46e0-ba3b-32fec58df000'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="$config.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%nlRegDevolIng.cpSelecAnoRecibo.periodo%" mostrarEsc="true" />
+                    <parametro name="out_id_devolucion" calc="%nlDatCompDevol.cpDatCompDevol.id_devol_rec_ing%" mostrarEsc="true" />
+                    <parametro name="out_folio" calc="%nlDatCompDevol.cpDatCompDevol.folio%" mostrarEsc="true" />
+                    <parametro name="out_fecha" calc="@fechaSistema()" mostrarEsc="true" />
+                    <parametro name="out_beneficiario" calc="%nlObBeneficiario.cpObBeneficiario.razon_social%" mostrarEsc="true" />
+                    <parametro name="out_importe" calc="%nlDatCompDevol.cpDatCompDevol.importe_total%" mostrarEsc="true" />
+                     <parametro name="out_folio_ingreso" calc="%nlBarreRecIng.cpBarreRecIng.exp_ingreso%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRepRecibDevolIngRec" nombre="Recibo de Devolución de Ingresos (Solo Recaudado)">
+            <componente id="cpRepRecibDevolIngRec" nombre="Recibo de Devolución de Ingresos Recaudados" tipo="reporte">
+                <reporte nombre="repor_RDevolIng_jsus" expediente="Expediente de Ingresos/Devolución de Ingresos Solo Recaudado" nombreDocumento="'Documento'" grupo="%nlBarreRecIng.cpBarreRecIng.exp_ingreso%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%nlRegDevolIng.cpSelecAnoRecibo.periodo%"/>
+                    <campo name="usuario" type="String" calc="$protocolarios.user$"/>
+                    <campo name="id_devol_rec_ing" type="long" calc="%nlDatCompDevol.cpDatCompDevol.id_devol_rec_ing%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
