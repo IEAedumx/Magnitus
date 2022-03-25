@@ -1,0 +1,127 @@
+<tarea id="consultaCatalogosPresupuestales" nombre="Consulta de Catálogos Presupuestales" version="1" autor="Monserrat Gerardo">
+    <pagina id="uno" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+      <nivel id="nlPeriodoC" nombre="Periodo" interactivo="false">
+            <componente tipo="cursor" id="PeriodoC" nombre="Periodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlUsuariosC" nombre="Usuarios" interactivo="false">
+            <componente id="UsuariosC" nombre="Usuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlPeriodoC.PeriodoC.id_unidad_responsable%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor= "$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlGestionCatalogoPre" nombre="Catálogos Presupuestales" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpSeleccionarCatPresupuestal" nombre="Consulta de Catálogos Presupuestales - Seleccionar Catálogo" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="segmento_mascara">
+                    <campo name="id_unidad_responsable" calc="%nlPeriodoC.PeriodoC.id_unidad_responsable%" text="Unidad Responsable" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" calc="%nlPeriodoC.PeriodoC.id_periodo%" text="Ejercicio Fiscal" llaveForanea="false" visible="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_catalogo" text="Catálogo" visible="true" validacion="%id_catalogo%==null" validacionMensaje="Favor de seleccionar una opción para continuar..." llavesFijas="id_seccion!=5" columnas="3" margen-derecho="2"/>
+                    <campo name="id_segmento" text="Segmento" generacion="@prox()+1" autogenerado="true" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlCCatalogoPre" nombre="CatálogosPre" interactivo="false" >
+            <componente id="nlCCatalogoPre" nombre="CatálogosPre" tipo="cursor">
+                <tabla schema="catalog" nombre="catalogos_presupuestales">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlPeriodoC.PeriodoC.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlPeriodoC.PeriodoC.id_periodo%"/>
+                    <campo name="id_catalogo" filtroCampo="id_catalogo" filtroOperador="=" filtroValor="%nlGestionCatalogoPre.cpSeleccionarCatPresupuestal.id_catalogo%"/>
+                    <campo name="nombre"/>
+                </tabla>
+            </componente>
+        </nivel>  
+        <nivel id="nlCCatalogoPreSel" nombre="CatálogosPreSel"  mostrarNivelAnterior="true">
+            <componente id="cpTipoRegistroCatalogoPre" nombre="Consulta de Catálogos Presupuestales - Opciones de Consulta" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false"/>
+                    <campo name="ur" text="ur" local="true" type="string" calc="%nlPeriodoC.PeriodoC.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" local="true" type="string" visible="true" calc="%nlPeriodoC.PeriodoC.id_periodo%" columnas="3" margen-izquierdo="2"/>
+                    <campo name="catalogo" text="Consulta" local="true" type="string" visible="true" calc="%nlCCatalogoPre.nlCCatalogoPre.nombre%" habilitado="false" columnas="3" margen-derecho="2"/>
+                    <campo name="funcion" text="Opciones de Consulta" local="true" type="string" validacion="%funcion%==null" validacionMensaje="Por favor selecciona una acción a realizar" columnas="3" margen-izquierdo="2">
+                        <opciones>
+                            <!--<opcion texto="Agregar" valor="Agregar"/>-->
+                            <opcion texto="Consulta" valor="consulta"/>
+                            <opcion texto="Reporte" valor="reporte"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="Consulta Catálogos Presupuestales" id="nlCons_catalogos_presupuestales" mostrarProximoNivel="false" mostrarNivelAnterior="true" ejecutar="%nlCCatalogoPreSel.cpTipoRegistroCatalogoPre.funcion%=='consulta'" >
+            <componente id="cpConsCatalogoPre_" nombre="Consulta de Catálogos Presupuestales (incluye acción de Click Derecho)" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false"/>
+                    <campo name="ur" text="ur" local="true" type="string" calc="%nlPeriodoC.PeriodoC.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" local="true" type="string" visible="true" calc="%nlPeriodoC.PeriodoC.id_periodo%" columnas="3" margen-izquierdo="2"/>
+                    <campo name="catalogo" text="Gestión de " local="true" type="string" visible="true" calc="%nlCCatalogoPre.nlCCatalogoPre.nombre%" columnas="3" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="false" texto="Continuar"/>
+                </estilos>
+            </componente>
+            <componente  tipo="tabla" nombre="Consulta de Catálogos Presupuestales (incluye acción de Click Derecho)" id="cpAgregarCatalogoPre"  mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false" filtro="true">
+                <tabla schema="catalog" nombre="catalogos">
+                    <campo name="ur" text="Unidad Responsable" calc="%nlPeriodoC.PeriodoC.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false" /> 
+                    <campo name="id_periodo" text="Ejercicio Fiscal" calc="%nlPeriodoC.PeriodoC.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo" text="Catálogo" calc="%nlGestionCatalogoPre.cpSeleccionarCatPresupuestal.id_catalogo%" llaveForanea="false" visible="false" columna-visible="false"  /> 
+                    <campo name="nivel" text="Nivel" visible="true"/>
+                    <!--<campo name="result" text="Desc Nivel" calc="@consultaDirec('SELECT descripcion AS result FROM catalog.segmento_mascara WHERE id_unidad_responsable= '+%nlPeriodoC.PeriodoC.id_unidad_responsable%+' AND id_periodo='+%nlPeriodoC.PeriodoC.id_periodo%+' AND id_catalogo='+%nlGestionCatalogoPre.cpSeleccionarCatPresupuestal.id_catalogo%+ ' AND nivel='+@castTo(%nivel%,'long'),'result','string','MAGNITUS')" local = "true" type = "string" visible="true" columna-visible="true"/>-->
+                    <campo name="id_cat" text="Clave del Registro" ordenar="asc"/>
+                    <campo name="descripcion" text="Descripción" />
+                    <campo name="clave_cuenta" text="Cuenta Contable" />
+                    <campo name="clasificador_economico" text="Clasificador Economico" />
+                    <!--<campo name="clave_cuenta" text="Descripción de la Cuenta"   visible="true" columna-visible="true"/> -->
+                    <campo name="afectable1" text="Detalle" calc="@ifThenElse(%afectable%==true,'SI','NO')" local = "true" type = "string" visible="true" columna-visible="true"/>
+                    <campo name="afectable" text="Detalle" /> 
+                    <campo name="estatus" text="Estatus" />
+                    <campo name="usuario_c" text="Estatus" local="true" type="string" calc="%nlUsuariosC.UsuariosC.nombre_usuario%"/>
+                    <!--<campo name="estatus" text="Estatus" calc="1" descripcionForanea="descripcion" visible="true" columna-visible="true"/>-->
+                    <tareas>
+                        <tarea nombre="Consulta Detalle" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,id_periodo,id_catalogo,id_cat,usuario_c" ref="task=ce28ccd0-c3bf-44cc-b5e6-91dbc70a6b40"/>
+                        <!--Nombre de la tarea de click derecho Consulta Detalle Catálogos Presupuestales-->
+                    </tareas>    
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Reporte" />
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel nombre="Imprime Catálogos Presupuestales" id="nlRep_catalogos_presupuestales"  mostrarNivelAnterior="true" >
+            <componente id="cpRepCatPresupFS_" nombre="Consulta Reporte Catálogos Presupuestales" tipo="reporte">
+                <reporte nombre="Cons_cat_presup">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" local="true" type="long" calc="%nlPeriodoC.PeriodoC.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo Contable" local="true" type="long" calc="%nlPeriodoC.PeriodoC.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="tabla" text="tabla" local="true" type="long" calc="1"/>
+                    <campo name="id_catalogo" text="Id Catalogo" local="true" type="long" calc="%nlGestionCatalogoPre.cpSeleccionarCatPresupuestal.id_catalogo%"/>
+                    <campo name="id_cat" text="Id Cat" local="true" type="string" calc="'0'"/>
+                    <campo name="folio_operacion" local="true" type="long" text="Folio" calc="0"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
