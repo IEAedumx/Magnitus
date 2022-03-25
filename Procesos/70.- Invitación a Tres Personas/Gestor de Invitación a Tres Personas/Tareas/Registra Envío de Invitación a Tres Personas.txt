@@ -1,0 +1,154 @@
+<tarea id="RegEnvio" nombre="Registra Envío de Invitación a Tres Proveedores" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                    
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreFecha" nombre="barreFecha" interactivo="false">
+            <componente id="barreFecha" nombre="barreFecha" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_tipo_adjudicacion" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="$inParam.adjudicacion$"/>
+                    <campo name="folio_add" text="Folio" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                    <campo name="fecha_elaboracion"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo -->
+        
+        <nivel id="buscaFondo" nombre="buscaFondo" interactivo="false">
+            <componente id="buscaFondo" nombre="buscaFondo" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccion" nombre="buscaSeccion" interactivo="false">
+            <componente id="buscaSeccion" nombre="buscaSeccion" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerie" nombre="buscaSerie" interactivo="false">
+            <componente id="buscaSerie" nombre="buscaSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerie" nombre="buscaSubSerie" interactivo="false">
+            <componente id="buscaSubSerie" nombre="buscaSubSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="3"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpediente" nombre="concatenaExpediente" interactivo="false">
+            <componente id="concatenaExpediente" nombre="concatenaExpediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondo.buscaFondo.abreviatura%+'/'+%buscaSeccion.buscaSeccion.abreviatura%+'/'+%buscaSerie.buscaSerie.abreviatura%+'/'+%buscaSubSerie.buscaSubSerie.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo-->
+        <nivel id="nlEnvioConLP" nombre="Registra Envío de Invitación a Tres Personas" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpEnvioConLP" nombre="Registra Envío de Invitación a Tres Personas" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="proc_add_convocatoria">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicación" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false"/>
+                    <campo name="folio_add" text="Folio de ITP" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS')" columnas="6" margen-izquierdo="2" margen-derecho="2" visible="false"/>
+                    <campo name="folio_itp" text="Folio de Invitación a Tres Personas" local="true" type="string" calc="@concatenar('ITP-'+@ifThenElse(%barreUsuarios.barreUsuarios.folio_add% &lt;10,'00000',
+                    @ifThenElse(%barreUsuarios.barreUsuarios.$inParam% &lt;100,'0000',
+                    @ifThenElse(%barreUsuarios.barreUsuarios.folio_add% &lt;1000,'000',
+                    @ifThenElse(%barreUsuarios.barreUsuarios.folio_add% &lt;10000,'00',
+                    @ifThenElse(%barreUsuarios.barreUsuarios.folio_add% &lt;100000,'0',null)))))+
+                     @consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\'','result','long','MAGNITUS'))" columnas="6" margen-derecho="2" margen-izquierdo="2"/>
+                     <!--BENEFICIARIO1-->
+                    <campo name="id_beneficiario1" text="Participante Invitado 1" calc="@consultaDirec('SELECT id_beneficiario AS result FROM operation.add_oferentes WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' LIMIT 1 OFFSET 0','result','long','MAGNITUS')" descripcionForanea="razon_social" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_compranet" text="Fecha de Envío por Correo Electrónico" visible="true" columnas="3" margen-izquierdo="2" />
+                    <!--validacion="%fecha_envio_compranet% &lt; %barreFecha.barreFecha.fecha_elaboracion%" validacionMensaje="Fecha no puede ser Menor a la de Elaboración"-->
+                    <campo name="adjunta1" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Envío por Correo Electrónico 1'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%adjunta1%==null" validacionMensaje="Debe adjuntarse Evidencia"/>
+                    
+                    <campo name="fecha_publicacion_compranet" text="Fecha de Confirmación de recepción" visible="true" columnas="3" margen-izquierdo="2"/>
+                    <!-- validacion="%fecha_publicacion_compranet% &lt; %barreFecha.barreFecha.fecha_elaboracion% AND %fecha_publicacion_compranet% &lt; %fecha_envio_compranet%" validacionMensaje="Fecha no puede ser Menor a la de Envío por Correo Electrónico"-->
+                    <campo name="ruta_publicacion_compranet" text="Ruta de Publicación" calc="'SI'" visible="false"/>
+                    
+                    <campo name="adjunta2" text="Adjunta Acuse de Recepción" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Acuse de Recepción 1'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%adjunta2%==null" validacionMensaje="Debe adjuntarse Acuse de Recepción"/>
+                    
+                    <campo name="observariones_compranet" text="Observaciones" visible="true" height="50" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <!--BENEFICIARIO2-->
+                    <campo name="id_beneficiario2" text="Participante Invitado 2" calc="@consultaDirec('SELECT id_beneficiario AS result FROM operation.add_oferentes WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' LIMIT 1 OFFSET 1','result','long','MAGNITUS')" descripcionForanea="razon_social" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_dof" text="Fecha de Envío por Correo Electrónico" visible="true" columnas="3" margen-izquierdo="2" />
+                    <!--validacion="%fecha_envio_dof% &lt; %barreFecha.barreFecha.fecha_elaboracion% AND %fecha_envio_dof%" validacionMensaje="Fecha no puede ser Menor a la de Elaboración"-->
+                    <campo name="adjunta3" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Envío por Correo Electrónico 2'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%adjunta3%==null" validacionMensaje="Debe adjuntarse Evidencia"/>
+                    
+                    <campo name="fecha_publicacion_dof" text="Fecha de Confirmación de recepción" visible="true" columnas="3" margen-izquierdo="2" />
+                    <!--validacion="%fecha_publicacion_dof% &lt; %barreFecha.barreFecha.fecha_elaboracion% AND %fecha_publicacion_dof% &lt; %fecha_envio_dof%" validacionMensaje="Fecha no puede ser Menor a la Fecha de Envío por Correo Electrónico"-->
+                    <campo name="adjunta4" text="Adjunta Acuse de Recepción" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Acuse de Recepción 2'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%adjunta4%==null" validacionMensaje="Debe adjuntarse Acuse de Recepción"/>
+                    <campo name="ruta_publicacion_dof" text="Ruta de Publicación" calc="'SI'" visible="false" height="50" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="observariones_dof" text="Observaciones" visible="true" height="50" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <!--BENEFICIARIO3-->
+                    <campo name="id_beneficiario3" text="Participante Invitado 3" calc="@consultaDirec('SELECT id_beneficiario AS result FROM operation.add_oferentes WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' LIMIT 1 OFFSET 2','result','long','MAGNITUS')" descripcionForanea="razon_social" visible="true" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="fecha_envio_otro" text="Fecha de Envío por Correo Electrónico" visible="true" columnas="3" margen-izquierdo="2" />
+                    <!--validacion="%fecha_envio_otro% &lt; %barreFecha.barreFecha.fecha_elaboracion%" validacionMensaje="Fecha no puede ser Menor a la de Elaboración"-->
+                    <campo name="adjunta5" text="Adjunta Evidencia" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Envío por Correo Electrónico 3'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%adjunta5%==null" validacionMensaje="Debe adjuntarse Evidencia"/>
+                    <campo name="fecha_publicacion_otro" text="Fecha de Confirmación de recepción" visible="true" columnas="3" margen-izquierdo="2"/>
+                    <!--validacion="%fecha_publicacion_otro% &lt; %barreFecha.barreFecha.fecha_elaboracion% AND %fecha_publicacion_otro% &lt; %fecha_envio_otro%" validacionMensaje="Fecha no puede ser Menor a la Fecha de Envío por Correo Electrónico"-->
+                    <campo name="adjunta6" text="Adjunta Acuse de Recepción" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Acuse de Recepción 3'" grupo="$inParam.adquisicion$" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%adjunta6%==null" validacionMensaje="Debe adjuntarse Acuse de Recepción"/>
+                    <campo name="ruta_publicacion_otro" text="Ruta de Publicación" visible="false" height="50" columnas="6" margen-izquierdo="2" margen-derecho="2" calc="'SI'"/>
+                    <campo name="observariones_otro" text="Observaciones" visible="true" height="50" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="nlConBasesLP" nombre="Registro de Envío  de Convocatoria de Invitación a Tres Personas" mostrarProximoNivel="false" mostrarNivelAnterior="tue"> 
+            <componente id="cpConBasesLP" nombre="Registro de Envío  de Convocatoria de Invitación a Tres Personas" tipo="reporte">
+                <reporte nombre="Evidencia_i3p" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Envío de Convocatoria'" 
+                         grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="$inParam.adjudicacion$"/>
+                    <campo name="folio_add" type="long" calc="%barreUsuarios.barreUsuarios.folio%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
