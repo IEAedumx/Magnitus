@@ -1,0 +1,352 @@
+<tarea id="registraCatalogoDeRecaudacion" nombre="registraCatalogoDeRecaudacion">
+    <pagina id="1">
+        
+        <nivel id="FU" nombre="Filtra Usuarios" interactivo="false" >
+            <componente id="FU" nombre="Filtra Usuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="FP" nombre="Filtra Periodo" interactivo="false">
+            <componente id="FP" nombre="Filtra Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_separador"/>
+                    <campo name="id_periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="FS" nombre="Filtra Separador" interactivo="false">
+            <componente id="FS" nombre="Filtra Separador" tipo="cursor">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%FP.FP.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="RFCR" nombre="Registra Catálogo de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="RFCR" nombre="Datos Generales" tipo="formulario">
+                <tabla schema="catalog" nombre="folio_cat_recaudacion">
+                    <campo name="ur" text="ur" visible="false" llaveForanea="false" calc="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" marcador="Periodo" validacion="%periodo%==null" validacionMensaje="Debe de Seleccionar el Periodo" llavesFijas="id_estatus=3 AND estatus=true" descripcionForanea="id_periodo" columnas="4" margen-izquierdo="3" calc="%FP.FP.id_periodo%" />
+                    <campo name="folio_operacion" text="folio_operacion" visible="false" autogenerado="true" generacion="@prox()+1"/>
+                    <campo name="fecha_registro" text="fecha_registro"  visible="false" calc="@fechaSistema()"/>
+                    <campo name="tipo_registro" text="Tipo de Registro" local="true" type="string" validacion="%tipo_registro%==null" validacionMensaje="Debe de Seleccionar el Tipo de Registro" marcador="Seleccionar Tipo de Registro" columnas="4" margen-izquierdo="3">
+                        <opciones>
+                            <opcion texto="Presupuestal" valor="1"/>
+                            <opcion texto="Extra Presupuestal" valor="2"/>
+                        </opciones>
+                    </campo>    
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" margen-derecho="4" margen-izquierdo="4" columnas="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        
+        
+        
+        
+        
+        <nivel id="SIM" nombre="Seleccionar Importar o Manual"  mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%RFCR.RFCR.tipo_registro%=='1'">
+            <componente id="SIM" nombre="Seleccionar Importar o Manual"  tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" calc="1" visible="false"/>
+                    <campo name="seleccion" text="Selecciona Opción" calc="2" habilitado="true" local="true" type="long" validacion="%seleccion%==null" validacionMensaje="Seleccione una opción" columnas="4" margen-izquierdo="3" margen-derecho="3">
+                        <opciones>
+                            <opcion texto="Importar" valor="1"/>
+                            <opcion texto="Manual" valor="2"/>
+                        </opciones>
+                    </campo>
+                    <campo name="seleccion_tipo" text="Selecciona Nivel" calc="1" interaccion-visible="%seleccion%==1" visible="false" habilitado="true" local="true" type="long" validacion="%seleccion_tipo%==null AND %seleccion%==1" validacionMensaje="Seleccione Numeral o Inciso" columnas="4" margen-izquierdo="3" margen-derecho="3">
+                        <opciones>
+                            <opcion texto="Numeral" valor="1"/>
+                            <opcion texto="Inciso" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="ICRN" nombre="Importa Catálogo de Recaudación Númeral"  mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%RFCR.RFCR.tipo_registro%=='1' AND %SIM.SIM.seleccion%==1 AND %SIM.SIM.seleccion_tipo%==1">
+            <componente id="ICRN" nombre="Importa Catálogo de Recaudación - Númeral" tipo="tabla" mostrarImportacion="true" mostrarEliminar="true" mostrarEditar="false" ><!--mostrarAgregar="false"-->
+                <tabla schema="catalog" nombre="cat_recaudacion_aux">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%RFCR.RFCR.ur%"  columna-visible="false" importacion="true"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" llaveForanea="false" calc="%RFCR.RFCR.periodo%" columna-visible="false" importacion="true"/>
+                    <campo name="tipo" text="Tipo" calc="%RFCR.RFCR.tipo_registro%"  importacion="true" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo"  text="catalogo" columna-visible="false" calc="11" llaveForanea="false" importacion="true"/>
+                    <campo name="nivel" text="Nivel"  descripcionForanea="nivel,descripcion" columnaImportacion="Nivel" importacion="true"/>
+                    <campo name="descripcion" text="Descripción" columnaImportacion="Descripción" importacion="true"/>
+                    <campo name="clave_recaudacion" text="Clave" columnaImportacion="Clave" importacion="true" />   
+                    
+                    <campo name="folio_operacion" text="Folio Operación" calc="%RFCR.RFCR.folio_operacion%" visible="false" llaveForanea="false" importacion="true" columna-visible="false"/>
+                    <campo name="clave_acumulativa" text="Clave Acumulativa" descripcionForanea="id_cat,descripcion" columnaImportacion="Clave Acumulativa" importacion="true"/>
+                    <campo name="costo" text="Costo" columnaImportacion="Costo" importacion="true"/>
+                    <campo name="nieto" text="Númeral" columnaImportacion="Númeral" importacion="true"/>
+                    <campo name="fecha_registro" text="Fecha de Registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false" importacion="true"/>
+                    <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%" visible="false" columna-visible="false" importacion="true"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+         
+        <nivel id="ICR" nombre="Importa Catálogo de Recaudación Inciso"  mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%RFCR.RFCR.tipo_registro%=='1' AND %SIM.SIM.seleccion%==1 AND %SIM.SIM.seleccion_tipo%==2">
+            <componente id="ICR" nombre="Importa Catálogo de Recaudación - Inciso" tipo="tabla" mostrarImportacion="true" mostrarEliminar="true" mostrarEditar="false" ><!--mostrarAgregar="false"-->
+                <tabla schema="catalog" nombre="cat_recaudacion_aux">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%RFCR.RFCR.ur%" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" llaveForanea="false" calc="%RFCR.RFCR.periodo%" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="tipo" text="Tipo" calc="%RFCR.RFCR.tipo_registro%"  importacion="true" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo" columna-visible="false" text="catalogo" calc="11" llaveForanea="false" importacion="true"/>
+                    <campo name="nivel" text="Nivel"  descripcionForanea="nivel,descripcion" columnaImportacion="Nivel" importacion="true"/>
+                    <campo name="descripcion" text="Descripción" columnaImportacion="Descripción" importacion="true"/>
+                    <campo name="clave_recaudacion" text="Clave" columnaImportacion="Clave" importacion="true" />   
+                    
+                    <campo name="folio_operacion" text="Folio Operación" calc="%RFCR.RFCR.folio_operacion%" visible="false" llaveForanea="false" importacion="true" columna-visible="false"/>
+                    <campo name="clave_acumulativa" text="Clave Acumulativa" descripcionForanea="id_cat,descripcion" columnaImportacion="Clave Acumulativa" importacion="true"/>
+                    
+                    <campo name="unidad_medida" text="Unidad de Medida" columnaImportacion="Unidad de Medida" importacion="true"/>
+                    <campo name="cuenta_por_cobrar" text="Cuenta por Cobrar" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" columnaImportacion="Cuenta por Cobrar" importacion="true"/>
+                    <campo name="cuenta_de_ingresos" text="Cuenta de Ingresos" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" columnaImportacion="Cuenta de Ingresos" importacion="true"/>
+                    <campo name="costo" text="Costo" columnaImportacion="Costo" importacion="true"/>
+                    <campo name="bisnieto"  text="Inciso" columnaImportacion="Inciso" importacion="true"/>
+                    <campo name="fecha_registro" text="Fecha de Registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false" importacion="true"/>
+                    <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%" visible="false" columna-visible="false" importacion="true"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- VERIFICAR SI HAY CLAVES DE RECAUDACIóN REPETIDAS -->
+        <nivel id="VCRI" nombre="Validación de Catálogo de Recaudacion Importación" interactivo="false" ejecutar="%RFCR.RFCR.tipo_registro%=='1' AND %SIM.SIM.seleccion%==1">
+            <componente id="VCRI" nombre="Validación de Catálogo de Recaudacion Importación" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="validacion_cr" local="true" type="long" calc="@ifThenElse(@consultaDirec('SELECT COUNT(*) AS result FROM catalog.cat_recaudacion_aux cra WHERE ur='+%RFCR.RFCR.ur%+' AND periodo='+%RFCR.RFCR.periodo%+' AND clave_recaudacion IN (SELECT clave_recaudacion FROM catalog.cat_recaudacion_aux
+							 WHERE ur='+%RFCR.RFCR.ur%+' AND periodo='+%RFCR.RFCR.periodo%+'
+							 GROUP BY clave_recaudacion
+							 HAVING COUNT(*)>1)','result','int','MAGNITUS')==0,1,2)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="FCR" nombre="Filtra Catálogo de Recaudación"  interactivo="false" ejecutar="%RFCR.RFCR.tipo_registro%=='1' AND %SIM.SIM.seleccion%==1 AND %VCRI.VCRI.validacion_cr%==2">
+            <componente id="FCR" nombre="Filtra Catálogo de Recaudación" tipo="cursor">
+                <tabla schema="catalog" nombre="cat_recaudacion_aux">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%RFCR.RFCR.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%RFCR.RFCR.periodo%"/>
+                    <campo name="clave_recaudacion" />
+                    <campo name="folio_operacion" filtroCampo="folio_operacion" filtroOperador="=" filtroValor="%RFCR.RFCR.folio_operacion%"/>
+                </tabla>
+                <nivel id="RBCR" nombre="Rollback Catalogo de Recaudación"  interactivo="false">
+                    <componente id="RBCR" nombre="Rollback Catalogo de Recaudación" tipo="bajaDirect">
+                        <tabla schema="catalog" nombre="cat_recaudacion_aux">
+                            <campo name="ur" calc="%FCR.FCR.ur%"/>
+                            <campo name="periodo" calc="%FCR.FCR.periodo%"/>
+                            <campo name="clave_recaudacion" calc="%FCR.FCR.clave_recaudacion%"/>
+                            <campo name="folio_operacion" calc="%FCR.FCR.folio_operacion%"/>
+                            
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel  id="VCR" nombre="VALIDACIÓN DE CLAVES DE RECAUDACIÓN" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%RFCR.RFCR.tipo_registro%=='1' AND %SIM.SIM.seleccion%==1 AND %VCRI.VCRI.validacion_cr%==2">
+            <componente id="VCR" nombre="VALIDACIÓN DE CLAVES DE RECAUDACIÓN" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" calc="1" visible="false"/>
+                    <etiqueta nombre="mensaje" texto="EL DOCUMENTO IMPORTADO GENERÓ CLAVES DE RECAUDACION DUPLICADAS O CONTIENE CLAVES YA REGISTRADAS" color="red" bold="normal" tamaño="28px" alineacion="center" interlineado="25px" width="500px" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="mensaje2" text="Mensaje" local="true" type="text" calc="'El catálogo de recaudación no ha sido registrado correctamente.\\n\\nCierre la ventana e intente nuevamente una vez corregido su documento.'" margen-izquierdo="1" height="100" columnas="8"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="false" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="RCR" nombre="Registra Catálogo de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%RFCR.RFCR.tipo_registro%=='1' AND %SIM.SIM.seleccion%==2">
+            <componente id="RCR" nombre="Registro Presupuestal" tipo="tabla">
+                <tabla schema="catalog" nombre="cat_recaudacion_aux">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="$config.ur$" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" llaveForanea="false" calc="%RFCR.RFCR.periodo%" visible="false"/>
+                    <campo name="tipo" text="Tipo" calc="%RFCR.RFCR.tipo_registro%" habilitado="false" columnas="2" margen-izquierdo="1" filtroCampo="tipo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_catalogo" columna-visible="false" text="catalogo" visible="false" calc="11" llaveForanea="false"/>
+                    <campo name="clave_acumulativa" text="Clave Acumulativa" validacion="%clave_acumulativa%==null" validacionMensaje="Debe de Capturar la Clave Acumulativa" columnas="2" margen-izquierdo="1" columna-visible="false" autoFiltrado="true" maxlength="50" autoFiltradoDescripcion="id_cat,descripcion"/>
+                    <campo name="nivel" text="Clave Nivel Descripción" marcador="Nivel" columnas="2" margen-izquierdo="1" validacion="%nivel%==null" validacionMensaje="Debe de Capturar el Nivel" llavesFijas="id_segmento&gt;3" autoFiltrado="true"  maxlength="50" autoFiltradoDescripcion="nivel,descripcion" auroFiltradoDescripcionTabla="nivel,descripcion"/>
+                    <campo name="afectable" text="afectable" local="true" type="bool" referenciaForanea="nivel" celdaForanea="afectable" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="caracteres" text="numero" local="true" type="long" referenciaForanea="nivel" celdaForanea="num_caracteres" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" interaccion="%afectable%==true" autoFiltrado="true" maxlength="50" marcador="Unidad de Medida" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="estatus" text="Estatus" columnas="2" margen-izquierdo="1"/>
+                    <campo name="clave_uno" text="clave uno" local="true" type="string" referenciaForanea="clave_acumulativa" celdaForanea="id_cat" autocompletar="true" visible="false" columna-visible="false"/> 
+                    <campo name="hijo" calcCliente="@ifThenElse(%nivel%==4,@consultaDirec('SELECT count(hijo)+1 as resultado from catalog.cat_recaudacion_aux where folio_operacion='+%folio_operacion%+'','resultado','long','MAGNITUS'),'')" validacion="@ifThenElse(%caracteres%==1 AND %hijo%&lt;10,true,@ifThenElse(%caracteres%==2 AND %hijo%&lt;100,true,@ifThenElse(%caracteres%==3 AND %hijo%&lt;1000,true,@ifThenElse(%caracteres%==4 AND %hijo%&lt;10000,true,@ifThenElse(%caracteres%==5 AND %hijo%&lt;100000,true,false)))))==false" validacionMensaje="No se pueden agregar mas niveles a esta clave" visible="false" columna-visible="false"/>
+                    <campo name="nieto" calcCliente="@ifThenElse(%nivel%==5,@consultaDirec('SELECT count(nieto)+1 as resultado from catalog.cat_recaudacion_aux where clave_acumulativa='+'\\''+%clave_acumulativa%+'\\'','resultado','long','MAGNITUS'),'')" validacion="@ifThenElse(%caracteres%==1 AND %nieto%&lt;10,true,@ifThenElse(%caracteres%==2 AND %nieto%&lt;100,true,@ifThenElse(%caracteres%==3 AND %nieto%&lt;1000,true,@ifThenElse(%caracteres%==4 AND %nieto%&lt;10000,true,@ifThenElse(%caracteres%==5 AND %nieto%&lt;100000,true,false)))))==false" validacionMensaje="No se pueden agregar mas niveles a esta clave" visible="false" columna-visible="false"/>
+                    <campo name="bisnieto" calcCliente="@ifThenElse(%nivel%==6,@consultaDirec('SELECT count(bisnieto)+1 as resultado from catalog.cat_recaudacion_aux where clave_acumulativa='+'\\''+%clave_acumulativa%+'\\'','resultado','long','MAGNITUS'),'')" validacion="@ifThenElse(%caracteres%==1 AND %bisnieto%&lt;10,true,@ifThenElse(%caracteres%==2 AND %bisnieto%&lt;100,true,@ifThenElse(%caracteres%==3 AND %bisnieto%&lt;1000,true,@ifThenElse(%caracteres%==4 AND %bisnieto%&lt;10000,true,@ifThenElse(%caracteres%==5 AND %bisnieto%&lt;100000,true,false)))))==false" validacionMensaje="No se pueden agregar mas niveles a esta clave" visible="false" columna-visible="false"/>
+                    <campo name="clave_recaudacion" text="Clave" marcador="Clave Recaudación" columnas="2" margen-izquierdo="1" habilitado="false" calcCliente="
+                    @concatenar(
+                    @ifThenElse(%clave_uno%==null,'',%clave_uno%+%FS.FS.caracter%+
+                    @ifThenElse(%nivel%==4 AND %caracteres%==1 AND %hijo%&lt;10,%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==2 AND %hijo%&lt;10,'0'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==2 AND %hijo%&lt;100,%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==3 AND %hijo%&lt;10,'00'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==3 AND %hijo%&lt;100,'0'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==3 AND %hijo%&lt;1000,%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==4 AND %hijo%&lt;10,'000'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==4 AND %hijo%&lt;100,'00'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==4 AND %hijo%&lt;1000,'0'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==4 AND %hijo%&lt;10000,%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==5 AND %hijo%&lt;10,'0000'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==5 AND %hijo%&lt;100,'000'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==5 AND %hijo%&lt;1000,'00'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==5 AND %hijo%&lt;10000,'0'+%hijo%,
+                    @ifThenElse(%nivel%==4 AND %caracteres%==5 AND %hijo%&lt;100000,%hijo%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==1 AND %nieto%&lt;10,%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==2 AND %nieto%&lt;10,'0'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==2 AND %nieto%&lt;100,%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==3 AND %nieto%&lt;10,'00'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==3 AND %nieto%&lt;100,'0'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==3 AND %nieto%&lt;1000,%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==4 AND %nieto%&lt;10,'000'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==4 AND %nieto%&lt;100,'00'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==4 AND %nieto%&lt;1000,'0'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==4 AND %nieto%&lt;10000,%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==5 AND %nieto%&lt;10,'0000'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==5 AND %nieto%&lt;100,'000'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==5 AND %nieto%&lt;1000,'00'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==5 AND %nieto%&lt;10000,'0'+%nieto%,
+                    @ifThenElse(%nivel%==5 AND %caracteres%==5 AND %nieto%&lt;100000,%nieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==1 AND %bisnieto%&lt;10,%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==2 AND %bisnieto%&lt;10,'0'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==2 AND %bisnieto%&lt;100,%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==3 AND %bisnieto%&lt;10,'00'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==3 AND %bisnieto%&lt;100,'0'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==3 AND %bisnieto%&lt;1000,%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==4 AND %bisnieto%&lt;10,'000'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==4 AND %bisnieto%&lt;100,'00'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==4 AND %bisnieto%&lt;1000,'0'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==4 AND %bisnieto%&lt;10000,%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==5 AND %bisnieto%&lt;10,'0000'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==5 AND %bisnieto%&lt;100,'000'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==5 AND %bisnieto%&lt;1000,'00'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==5 AND %bisnieto%&lt;10000,'0'+%bisnieto%,
+                    @ifThenElse(%nivel%==6 AND %caracteres%==5 AND %bisnieto%&lt;100000,%bisnieto%,''
+                    )))))))))))))))))))))))))))))))))))))))))))))))"/>     
+                    <campo name="cuenta_por_cobrar" text="Cuenta por Cobrar" interaccion="%afectable%==true" marcador="Cuenta por Cobrar" autoFiltrado="true" maxlength="50" validacion="(%cuenta_por_cobrar%==null AND %afectable%==true)" validacionMensaje="Debe de Seleccionar la Cuenta por Cobrar" columna-visible="false" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    <campo name="descripcion" text="Descripción" marcador="Descripción" validacion="%descripcion%" validacionMensaje="Debe de Capturar la Descripción" columnas="2" margen-izquierdo="1"/>
+                    <campo name="cuenta_de_ingresos" text="Cuenta de Ingresos" interaccion="%afectable%==true" marcador="Cuenta de Ingresos" autoFiltrado="true" maxlength="50" validacion="%cuenta_de_ingresos%==null AND %afectable%==true" validacionMensaje="Debe de Capturar la Cuenta de Ingresos" columna-visible="false" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" columnas="2" margen-izquierdo="1"/>
+                    <campo name="costo" text="Costo" interaccion="%afectable%==true" validacion="%costo%==null AND %afectable%==true" marcador="Costo" validacionMensaje="Debe de Capturar el Costo" columna-visible="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="folio_operacion" text="Folio Operación" marcador="Folio Operación" calc="%RFCR.RFCR.folio_operacion%" visible="false" llaveForanea="false" columna-visible="false" FiltrarConCalc="false"/>
+                    <campo name="fecha_registro" text="Fecha de Registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%" visible="false" columna-visible="false"/>
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        
+        <nivel id="RCRNP" nombre="Registra Catálogo de Recaudacion No Presupuestal" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%RFCR.RFCR.tipo_registro%=='2'" >
+            <componente id="RCRNP" nombre="Registro No Presupuestal" tipo="tabla" filtro="true">
+                <tabla schema="catalog" nombre="cat_recaudacion_aux">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="$config.ur$" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="%RFCR.RFCR.periodo%" visible="false" width="65"/>
+                    <campo name="tipo" text="Tipo" calc="%RFCR.RFCR.tipo_registro%" habilitado="false" columnas="2" margen-izquierdo="1" filtroCampo="tipo" filtroOperador="=" filtroValor="2" width="150" columna-visible="false"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" marcador="Unidad de Medida" autoFiltrado="true" maxlength="50" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="clave_recaudacion" text="Clave" validacion="%clave_recaudacion%==null" validacionMensaje="Debe Capturar la Clave" columnas="2" margen-izquierdo="1" width="350"/>
+                    <campo name="cuenta_contable_cargo" text="Cuenta Contable de Cargo" marcador="Cuenta Contable de Cargo" autoFiltrado="true" maxlength="50" validacion="%cuenta_contable_cargo%==null" validacionMensaje="Debe de Capturar la Cuenta Contable de Cargo" columnas="2" margen-izquierdo="1" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" width="470"/>
+                    <campo name="descripcion" text="Descripción" marcador="Descripción" validacion="%descripcion%" validacionMensaje="Debe de Capturar la Descripción" columnas="2" margen-izquierdo="1" width="445"/>
+                    <campo name="cuenta_contable_abono" text="Cuenta Contable de Abono" marcador="Cuenta Contable de Abono" autoFiltrado="true" maxlength="50" validacion="%cuenta_contable_abono%==null" validacionMensaje="Debe de Capturar la Cuenta Contable de Abono" columnas="2" margen-izquierdo="1" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" width="570"/>
+                    <campo name="estatus" text="Estatus" columnas="2" margen-izquierdo="4" width="70"/>
+                    <campo name="folio_operacion" text="Folio Operación" calc="%RFCR.RFCR.folio_operacion%" visible="false" columna-visible="false" FiltrarConCalc="false"/>
+                    <campo name="fecha_registro" text="Fecha de Registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo" calc="11" text="catalogo" llaveForanea="false" columna-visible="false" visible="false"/>
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+
+        <!--NIVEL INSTANCIA-->
+        <nivel id="crearNuevaInstancia" nombre="crearInstancia" interactivo="false">
+            <componente id="crearInstancia" nombre="crearInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'c276f899-40f0-4532-9334-a57a7f466bd7'"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="$config.ur$"/>
+                    <parametro name="out_periodo" calc="%RFCR.RFCR.periodo%" mostrarEsc="true"/>
+                    <parametro name="out_folio_operacion" calc="%RFCR.RFCR.folio_operacion%" mostrarEsc="true"/>
+                    <parametro name="out_fecha" calc="%RFCR.RFCR.fecha_registro%" mostrarEsc="true"/>
+                    <parametro name="out_tipo_registro" calc="%RFCR.RFCR.tipo_registro%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--FIN NIVEL INSTANCIA-->
+        
+        <nivel id="reportes" nombre="Consulta Catálogo de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%RFCR.RFCR.tipo_registro%=='1'" >
+            <componente id="reporteP" nombre="Reporte Registro Presupuestal" tipo="reporte">
+                <reporte nombre="agregar_presupuestal" update="true" nombreDocumento="'Gestión de Registro Presupuestal'" expediente="Gestión de Catálogo de Recaudación"  grupo="%RFCR.RFCR.folio_operacion%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%RFCR.RFCR.periodo%"/>
+                    <campo name="folio_operacion" type="long" calc="%RFCR.RFCR.folio_operacion%"/>
+                </reporte>
+            </componente>
+        </nivel>    
+
+        <nivel id="RRCRNP" nombre="Reporte Registro de Catálogo de Recaudacion No Presupuestal" ejecutar="%RFCR.RFCR.tipo_registro%=='2'" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="reporteNP" nombre="Reporte Registro No Presupuestal" tipo="reporte">
+                <reporte nombre="repor_agreNoPresp_jsus" update="true" nombreDocumento="'Registro No Presupuestal'" expediente="Catálogo de Recaudación"  grupo="%RFCR.RFCR.folio_operacion%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%RFCR.RFCR.periodo%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_operacion" type="long" calc="%RFCR.RFCR.folio_operacion%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>

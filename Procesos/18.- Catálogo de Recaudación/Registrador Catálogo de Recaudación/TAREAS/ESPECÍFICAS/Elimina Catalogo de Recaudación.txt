@@ -1,0 +1,64 @@
+<tarea id="EliminaCatalogoRecaudacion" nombre="EliminaCatalogoRecaudacion">
+    <pagina id="1">
+        <nivel id="inParams" nombre="inParams" interactivo="false">
+			<componente id="inParams" nombre="inParams" tipo="cursor">
+				<tabla schema="catalog" nombre="dummy">
+					<campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+					<campo name="ur" text="UR" local="true" type="string" calc="$inParam.ur$" />
+					<campo name="periodo" text="Periodo" local="true" type="string" calc="$inParam.periodo$" />
+					<campo name="folio_operacion" text="Folio Operacion" local="true" type="string" calc="$inParam.folio_operacion$" />
+					<campo name="tipo_registro" text="Periodo" local="true" type="string" calc="$inParam.tipo_registro$" />
+				</tabla>
+			</componente>
+		</nivel>
+        <nivel id="reportes" nombre="Consulta Gestión de Catálogo de Recaudación" mostrarNivelAnterior="false">
+            <componente id="reporteP" nombre="Reporte Gestión de Registro Prespuestal" tipo="reporte" ejecutarComponente="%inParams.inParams.tipo_registro%=='1'">
+                <reporte nombre="agregar_presupuestal">
+                    <campo name="ur" type="long" calc="%inParams.inParams.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParams.inParams.periodo%"/>
+                    <campo name="folio_operacion" type="long" calc="%inParams.inParams.folio_operacion%"/>
+                </reporte>
+            </componente>
+            <componente id="reporteNP" nombre="Reporte Gestión de Registro No Presupuestal" tipo="reporte" ejecutarComponente="%inParams.inParams.tipo_registro%=='2'">
+                <reporte nombre="repor_agreNoPresp_jsus">
+                    <campo name="ur" type="long" calc="%inParams.inParams.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParams.inParams.periodo%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_operacion" type="long" calc="%inParams.inParams.folio_operacion%"/>
+                </reporte>
+            </componente>
+        </nivel>        
+        <nivel id="EliminaCatalogoRecaudacion" nombre="Elimina Catálogo de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="EliminaCatalogoRecaudacion" nombre="Elimina Catálogo de Recaudación" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false"/>
+                    <campo name="elimina" text="¿Elimina Catálogo?" local="true" type="bool" visible="true" margen-derecho="2" margen-izquierdo="2" columnas="6"/>
+                </tabla>
+                <estilos>
+                   <boton nombre="grabar" visible="true" texto="Elimina Catálogo de Recaudacion"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <confirmaciones>
+                <confirmacion confirmacionTitulo="'Eliminar Catáogo de Recaudación'" confirmacionMensaje="'¿Está seguro de eliminar la gestión de los registros del catálogo de recaudación?'" tipo="avanzar"/>
+            </confirmaciones>
+        </nivel>
+        
+        <!--TERMINAR INSTANCIA-->
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" ejecutar="%EliminaCatalogoRecaudacion.EliminaCatalogoRecaudacion.elimina%==true">
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                    <parametro name="process" calc="$protocolarios.process$" />
+                    <parametro name="version" calc="$protocolarios.version$" />
+                    <parametro name="instance" calc="$protocolarios.instance$" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="url" calc="$protocolarios.url$" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>
