@@ -1,0 +1,565 @@
+<tarea id="regCalConBan" nombre="Regenera Cálculo de Conciliación Bancaria"  autor="Francisco">
+    <pagina id="1">
+                
+        <!--RECIBE PARAMETROS-->
+         <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="id_estado_cuenta" local="true" type="string" calc="$inParam.id_estado_cuenta$"  />
+                    <campo name="id_conciliacion" local="true" type="string" calc="$inParam.id_conciliacion$" />
+                    <campo name="id_banco" local="true" type="string" calc="$inParam.id_banco$" />
+                    <campo name="cuenta_bancaria" local="true" type="string" calc="$inParam.cuenta_bancaria$" />
+                    <campo name="mes_conciliacion" local="true" type="string" calc="$inParam.mes_conciliacion$" />
+                    <campo name="institucion_bancaria" local="true" type="string" calc="$inParam.institucion_bancaria$" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barrePeriodo" nombre="Barre Periodo" interactivo="false">
+            <componente id="barrePeriodo" nombre="Barre Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_estatus" /> <!-- filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" -->
+                    <campo name="aperturar" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/> <!-- -->
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlObNumMes" nombre="Obtener Número del Mes" interactivo="false">
+            <componente id="cpObNumMes" nombre="Obtener Número del Mes" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo_mensual">
+                    <campo name="id_periodo_mensual"  />
+                    <campo name="nombre" filtroCampo="nombre" filtroOperador="=" filtroValor="%inParam.inParam.mes_conciliacion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreConciliacion" nombre="Barre Conciliación" interactivo="false">
+            <componente id="cpBarreConciliacion" nombre="Barre Conciliación" tipo="cursor">
+                <tabla schema="operation" nombre="conciliacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_conciliacion" filtroCampo="id_conciliacion" filtroOperador="=" filtroValor="%inParam.inParam.id_conciliacion%"/>
+                    <campo name="cuenta_bancaria" />
+                    <campo name="cuenta_contable" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRegCalcConBan" nombre="Registro Cálculo de Conciliación Bancaria" interactivo="false">
+            <componente id="cpSelecMes" nombre="Selección del mes" tipo="cursor" >
+                <tabla schema="operation" nombre="estado_cuenta">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                    <campo name="id_estado_cuenta" filtroCampo="id_estado_cuenta" filtroOperador="=" filtroValor="%inParam.inParam.id_estado_cuenta%"/>
+                    <campo name="mes" />
+                    <campo name="tipo_cuenta_bancaria" />
+                    <campo name="cuenta_bancaria" />
+                    <campo name="banco" />
+                    <campo name="fecha_registro" />
+                    <campo name="ultimo_usuario_modificador" />
+                    <campo name="cuenta_contable" type="string" local="true" referenciaForanea="cuenta_bancaria" celdaForanea="cuenta_contable" autocompletar="true"/>/>
+                    <campo name="institucion_bancaria" local="true" type="string" referenciaForanea="banco" celdaForanea="nombre" autocompletar="true" text="Institución Bancaria" margen-izquierdo="3" columnas="4" margen-derecho="3"/>
+                    <campo name="mes_letra" local="true" type="string" referenciaForanea="mes" celdaForanea="nombre" autocompletar="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--REGENERA CÁLCULO DE CONCILIACIÓN BANCARIA-->
+        <nivel id="nlRegCalConBan" nombre="Regenera Cálculo de Conciliación Bancaria" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <!--ESTADO DE CUENTA-->
+            <componente id="cpEdoCuenta" nombre="Estado de cuenta de la Conciliación Bancaria" tipo="tabla" exportarPDF="false" exportarExcel="false" mostrarAgregar="false" mostrarEliminar="true" mostrarEditar="false">
+                <tabla schema="operation" nombre="estado_cuenta_det">
+                    <campo name="ur" columna-visible="false" calc="%inParam.inParam.ur%" llaveForanea="false" />
+                    <campo name="periodo"  columna-visible="false" calc="%inParam.inParam.periodo%" llaveForanea="false" />
+                    <campo name="banco" columna-visible="false" llaveForanea="false" /> 
+                    <campo name="id_estado_cuenta" columna-visible="false" llaveForanea="false" calc="%inParam.inParam.id_estado_cuenta%"/> 
+                    <campo name="id_estado_cuenta_det" columna-visible="false" />
+                    <campo name="fecha" columna-visible="false" />
+                
+                    <campo name="referencia" text="Referencia" />
+                    <campo name="codigo" text="Código" llaveForanea="false" />
+                    <campo name="descripcion" text="Descripción" />
+                    <campo name="sucursal" columna-visible="false" />
+                    <campo name="depositos" text="Depositos" />
+                    <campo name="retiros" text="Retiros" />
+                    <campo name="saldo" text="Saldo" />
+                    <campo name="detalle" columna-visible="false" />
+                    <campo name="estatus" text="Estatus" descripcionForaneaTabla="descripcion" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONCILIAR"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreDetConciliacion" nombre="Barre Detalle de Conciliación" interactivo="false">
+            <componente id="cpBarreDetConciliacion" nombre="Barre Detalle de Conciliación" tipo="cursor">
+                <tabla schema="operation" nombre="conciliacion_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_conciliacion" filtroCampo="id_conciliacion" filtroOperador="=" filtroValor="%inParam.inParam.id_conciliacion%" />
+                    <campo name="tipo_detalle_conciliacion" />
+                    <campo name="id_conciliacion_det" />
+                </tabla>
+                <nivel id="nlBorraDetConciliacion" nombre="Borra Detalle de Conciliación" interactivo="false">
+                    <componente id="cpBorraDetConciliacion" nombre="Borra Detalle de Conciliación" tipo="bajaDirect">
+                        <tabla schema="operation" nombre="conciliacion_det">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                            <campo name="tipo_detalle_conciliacion" calc="%nlBarreDetConciliacion.cpBarreDetConciliacion.tipo_detalle_conciliacion%"/>
+                            <campo name="id_conciliacion_det" calc="%nlBarreDetConciliacion.cpBarreDetConciliacion.id_conciliacion_det%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!--*************************************************************-->
+        <!--********************CONTABILIDAD VS BANCO********************-->
+        <!--*************************************************************-->
+        
+        <!-- BARRE LAS PÓLIZAS CONTABLES QUE TIENEN EL PERIODO MENSUAL ESTABLECIDO -->
+        <nivel id="nlBarrePolizaCvB" nombre="Barre Póliza Contable" interactivo="false">
+            <componente id="cpBarrePolizaCvB" nombre="Barre Póliza Contable" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar"/>
+                    <campo name="periodo_mensual" filtroCampo="periodo_mensual" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.mes%"/>
+                </tabla>
+                
+                <!-- BARRE DETALLES DE LAS PÓLIZAS CONTABLES -->
+                <nivel id="nlBarreDetPolizaCvB" nombre="Barre Detalle de la Póliza Contable" interactivo="false" ejecutar="%nlBarrePolizaCvB.cpBarrePolizaCvB.ur%!=null">
+                    <componente id="cpBarreDetPolizaCvB" nombre="Barre Detalle de la Póliza Contable" tipo="cursor">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                            <campo name="clave_cuenta_contable" filtroCampo="clave_cuenta_contable" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.cuenta_contable%"/>
+                            <campo name="id_movimiento_auxiliar" filtroCampo="id_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlBarrePolizaCvB.cpBarrePolizaCvB.folio_movimiento_auxiliar%"/>
+                            <campo name="id_detalle_movimiento_auxiliar" />
+                            <campo name="fecha_registro" /> 
+                            <campo name="importe_abono" />
+                            <campo name="importe_cargo" />
+                            <campo name="referencia" />
+                        </tabla> 
+                        
+                        <!-- BARRE EL ESTADO DE CUENTA PARA ENCONTRAR REGISTROS SIMILARES DE DEPÓSITOS A LOS DE LA PÓLIZA CONTABLE (CARGO)-->
+                        <nivel id="nlBarreEstadoDeCuentaDepCvB" nombre="Barre el Estado de Cuenta" interactivo="false">
+                            <componente id="cpBarreEstadoDeCuentaDepCvB" nombre="Barre el Estado de Cuenta" tipo="cursor">
+                                <tabla schema="operation" nombre="estado_cuenta_det_aux">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%" /> 
+                                    <campo name="banco"  filtroCampo="banco" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.banco%"/> 
+                                    <campo name="id_estado_cuenta" filtroCampo="id_estado_cuenta" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.id_estado_cuenta%"/> 
+                                    <campo name="id_estado_cuenta_det"/>
+                                    <campo name="fecha"/>
+                                    <campo name="depositos" filtroCampo="depositos" filtroOperador="=" filtroValor="%nlBarreDetPolizaCvB.cpBarreDetPolizaCvB.importe_cargo%"/>
+                                    <campo name="descripcion" filtroCampo="descripcion" filtroOperador="=" filtroValor="%nlBarreDetPolizaCvB.cpBarreDetPolizaCvB.referencia%"/> <!-- -->
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- BARRE EL ESTADO DE CUENTA PARA ENCONTRAR REGISTROS SIMILARES DE RETIROS A LOS DE LA PÓLIZA CONTABLE (ABONO)-->
+                        <nivel id="nlBarreEstadoDeCuentaRetCvB" nombre="Barre el Estado de Cuenta" interactivo="false">
+                            <componente id="cpBarreEstadoDeCuentaRetCvB" nombre="Barre el Estado de Cuenta" tipo="cursor">
+                                <tabla schema="operation" nombre="estado_cuenta_det_aux">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%" /> 
+                                    <campo name="banco"  filtroCampo="banco" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.banco%"/> 
+                                    <campo name="id_estado_cuenta" filtroCampo="id_estado_cuenta" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.id_estado_cuenta%"/> 
+                                    <campo name="id_estado_cuenta_det"/>
+                                    <campo name="fecha"/>
+                                    <campo name="retiros" filtroCampo="retiros" filtroOperador="=" filtroValor="%nlBarreDetPolizaCvB.cpBarreDetPolizaCvB.importe_abono%"/>
+                                    <campo name="descripcion" filtroCampo="descripcion" filtroOperador="=" filtroValor="%nlBarreDetPolizaCvB.cpBarreDetPolizaCvB.referencia%"/> <!-- -->
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- MARCA LOS DETALLES DE DEPÓSITO DE LAS PÓLIZAS ENCONTRADAS EN EL ESTADO DE CUENTA (CARGO)-->
+                        <nivel id="nlRegEnconBancoDep" nombre="Deposito Encontrado del Banco" ejecutar="%nlBarreEstadoDeCuentaDepCvB.cpBarreEstadoDeCuentaDepCvB.ur%!=null AND %nlBarreEstadoDeCuentaDepCvB.cpBarreEstadoDeCuentaDepCvB.depositos%&gt;0">
+                            <componente id="cpRegEnconBancoDep" nombre="Deposito Encontrado del Banco" tipo="cursor">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                                    <campo name="id_movimiento_auxiliar" filtroCampo="id_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlBarrePolizaCvB.cpBarrePolizaCvB.folio_movimiento_auxiliar%"/>
+                                    <campo name="id_detalle_movimiento_auxiliar" filtroCampo="id_detalle_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlBarreDetPolizaCvB.cpBarreDetPolizaCvB.id_detalle_movimiento_auxiliar%"/>
+                                    <campo name="enc_conciliacion" calc="true"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- MARCA LOS DETALLES DE RETIROS DE LAS PÓLIZAS ENCONTRADAS EN EL ESTADO DE CUENTA (ABONO)-->
+                        <nivel id="nlRegEnconBancoRet" nombre="Deposito Encontrado del Banco" ejecutar="%nlBarreEstadoDeCuentaRetCvB.cpBarreEstadoDeCuentaRetCvB.ur%!=null AND %nlBarreEstadoDeCuentaRetCvB.cpBarreEstadoDeCuentaRetCvB.retiros%&gt;0">
+                            <componente id="cpRegEnconBancoRet" nombre="Deposito Encontrado del Banco" tipo="cursor">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                                    <campo name="id_movimiento_auxiliar" filtroCampo="id_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlBarrePolizaCvB.cpBarrePolizaCvB.folio_movimiento_auxiliar%"/>
+                                    <campo name="id_detalle_movimiento_auxiliar" filtroCampo="id_detalle_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlBarreDetPolizaCvB.cpBarreDetPolizaCvB.id_detalle_movimiento_auxiliar%"/>
+                                    <campo name="enc_conciliacion" calc="true"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    
+                        <!-- ALTA DE LOS INGRESOS CONTABLES RECONOCIDOS POR EL BANCO (CARGO)-->
+                        <nivel id="nlAltaDetConciliacionBancoDep" nombre="Alta Detalle Conciliación Banco Depósito" interactivo="false" ejecutar="%nlBarreEstadoDeCuentaDepCvB.cpBarreEstadoDeCuentaDepCvB.ur%!=null AND %nlBarreDetPolizaCvB.cpBarreDetPolizaCvB.importe_cargo%&gt;0">
+                            <componente id="cpAltaDetConciliacionBancoDep" nombre="Alta Detalle Conciliación Banco Depósito" tipo="altaDirect">
+                                <tabla schema="operation" nombre="conciliacion_det">
+                                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                                    <campo name="periodo" calc="%barrePeriodo.barrePeriodo.id_periodo%" />
+                                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                                    <campo name="tipo_detalle_conciliacion" calc="5" />
+                                    <campo name="id_conciliacion_det" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="fecha" calc="@fechaSistema()" />
+                                    <campo name="concepto" calc="%nlBarreEstadoDeCuentaDepCvB.cpBarreEstadoDeCuentaDepCvB.descripcion%" />
+                                    <campo name="importe" calc="%nlBarreEstadoDeCuentaDepCvB.cpBarreEstadoDeCuentaDepCvB.depositos%" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                    <campo name="tipo_importe" calc="1"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- ALTA DE LOS RETIROS CONTABLES RECONOCIDOS POR EL BANCO (ABONO)-->
+                        <nivel id="nlAltaDetConciliacionBancoRet" nombre="Alta Detalle Conciliación Banco Retiros" interactivo="false" ejecutar="%nlBarreEstadoDeCuentaRetCvB.cpBarreEstadoDeCuentaRetCvB.ur%!=null AND %nlBarreDetPolizaCvB.cpBarreDetPolizaCvB.importe_cargo%&gt;0">
+                            <componente id="cpAltaDetConciliacionBancoRet" nombre="Alta Detalle Conciliación Banco Retiros" tipo="altaDirect">
+                                <tabla schema="operation" nombre="conciliacion_det">
+                                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                                    <campo name="periodo" calc="%barrePeriodo.barrePeriodo.id_periodo%" />
+                                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                                    <campo name="tipo_detalle_conciliacion" calc="6" />
+                                    <campo name="id_conciliacion_det" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="fecha" calc="@fechaSistema()" />
+                                    <campo name="concepto" calc="%nlBarreEstadoDeCuentaRetCvB.cpBarreEstadoDeCuentaRetCvB.descripcion%" />
+                                    <campo name="importe" calc="%nlBarreEstadoDeCuentaRetCvB.cpBarreEstadoDeCuentaRetCvB.retiros%" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                    <campo name="tipo_importe" calc="1"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+                
+                <!-- BARRE LOS DETALLES DE LA PÓLIZA NO RECONOCIDOS POR EL BANCO -->
+                <nivel id="nlBarreDetPolizaNoEnconCvB" nombre="Barre Detalle de la Póliza Contable no Encontrado en el Banco" interactivo="false">
+                    <componente id="cpBarreDetPolizaNoEnconCvB" nombre="Barre Detalle de la Póliza Contable no Encontrado en el Banco" tipo="cursor">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                            <campo name="clave_cuenta_contable" filtroCampo="clave_cuenta_contable" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.cuenta_contable%"/>
+                            <campo name="id_movimiento_auxiliar" filtroCampo="id_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlBarrePolizaCvB.cpBarrePolizaCvB.folio_movimiento_auxiliar%"/>
+                            <campo name="id_detalle_movimiento_auxiliar" />
+                            <campo name="enc_conciliacion" filtroCampo="enc_conciliacion" filtroOperador="=" filtroValor="false"/> 
+                            <campo name="fecha_registro" /> 
+                            <campo name="importe_cargo" />
+                            <campo name="importe_abono"/>
+                            <campo name="referencia" />
+                        </tabla>
+                        
+                        <!-- ALTA DE LOS INGRESOS CONTABLES NO RECONOCIDOS POR EL BANCO (CARGO)-->
+                        <nivel id="nlAltaIngConNoRecBanco" nombre="Alta Detalle de Ingresos No reconocidos por el banco" interactivo="false" ejecutar="%nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.ur%!=null AND %nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.importe_cargo%&gt;0">
+                            <componente id="cpAltaIngConNoRecBanco" nombre="Alta Detalle Conciliación Cargo" tipo="altaDirect">
+                                <tabla schema="operation" nombre="conciliacion_det">
+                                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                                    <campo name="periodo" calc="%barrePeriodo.barrePeriodo.id_periodo%" />
+                                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                                    <campo name="tipo_detalle_conciliacion" calc="1" />
+                                    <campo name="id_conciliacion_det" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="fecha" calc="%nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.fecha_registro%" />
+                                    <campo name="concepto" calc="%nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.referencia%" />
+                                    <campo name="importe" calc="%nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.importe_cargo%" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                    <!--<campo name="tipo_importe" calc="1"/>-->
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- ALTA DE LOS RETIROS CONTABLES NO RECONOCIDOS POR EL BANCO (ABONO)-->
+                        <nivel id="nlAltaRetConNoRecBanco" nombre="Alta Detalle de Ingresos No reconocidos por el banco" interactivo="false" ejecutar="%nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.ur%!=null AND %nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.importe_abono%&gt;0">
+                            <componente id="cpAltaRetConNoRecBanco" nombre="Alta Detalle Conciliación Cargo" tipo="altaDirect">
+                                <tabla schema="operation" nombre="conciliacion_det">
+                                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                                    <campo name="periodo" calc="%barrePeriodo.barrePeriodo.id_periodo%" />
+                                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                                    <campo name="tipo_detalle_conciliacion" calc="3" />
+                                    <campo name="id_conciliacion_det" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="fecha" calc="%nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.fecha_registro%" />
+                                    <campo name="concepto" calc="%nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.referencia%" />
+                                    <campo name="importe" calc="%nlBarreDetPolizaNoEnconCvB.cpBarreDetPolizaNoEnconCvB.importe_abono%" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                    <!--<campo name="tipo_importe" calc="1"/>-->
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                    </componente>
+                </nivel>
+                
+            </componente>
+        </nivel>
+        
+        
+        <!--*************************************************************-->
+        <!--********************BANCO VS CONTABILIDAD********************-->
+        <!--*************************************************************-->
+        
+        <!-- BARRE LAS PÓLIZAS CONTABLES QUE TIENEN EL PERIODO MENSUAL ESTABLECIDO -->
+        <nivel id="nlBarrePolizaBvC" nombre="Barre Póliza Contable" interactivo="false">
+            <componente id="cpBarrePolizaBvC" nombre="Barre Póliza Contable" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar"/>
+                    <campo name="periodo_mensual" filtroCampo="periodo_mensual" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.mes%"/>
+                    <campo name="tipo_poliza" />
+                </tabla>
+                
+                <nivel id="barreEstadoDeCuentaBvC" nombre="barreEstadoDeCuenta" interactivo="false">
+                    <componente tipo="cursor" id="barreEstadoDeCuentaBvC" nombre="barreEstadoDeCuenta">
+                        <tabla schema="operation" nombre="estado_cuenta_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%" /> 
+                            <campo name="banco"  filtroCampo="banco" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.banco%"/> 
+                            <campo name="id_estado_cuenta" filtroCampo="id_estado_cuenta" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.id_estado_cuenta%"/> 
+                            <campo name="id_estado_cuenta_det"/>
+                            <campo name="fecha"/>
+                            <campo name="retiros"/>
+                            <campo name="depositos" />
+                            <campo name="descripcion" />
+                        </tabla>
+
+                        <!--DETALLES PÓLIZA PARA CARGOS --> 
+                        <nivel id="nlBarreDetPolizaBvCDep" nombre="Barre Detalle de la Póliza Contable Depósitos" interactivo="false" ejecutar="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.ur%!=null AND %barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.depositos%&gt;0">
+                            <componente id="cpBarreDetPolizaBvCDep" nombre="Barre Detalle de la Póliza Contable Depósitos" tipo="cursor">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                                    <campo name="clave_cuenta_contable" filtroCampo="clave_cuenta_contable" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.cuenta_contable%"/>
+                                    <campo name="id_movimiento_auxiliar" filtroCampo="id_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlBarrePolizaBvC.cpBarrePolizaBvC.folio_movimiento_auxiliar%"/>
+                                    <campo name="id_detalle_movimiento_auxiliar" />
+                                    <campo name="fecha_registro" /> 
+                                    <campo name="importe_cargo" filtroCampo="importe_cargo" filtroOperador="=" filtroValor="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.depositos%"/>
+                                    <campo name="referencia" filtroCampo="referencia" filtroOperador="=" filtroValor="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.descripcion%"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+
+                        <!--DETALLES PÓLIZA PARA ABONOS -->
+                        <nivel id="nlBarreDetPolizaBvC" nombre="Barre Detalle de la Póliza Contable Retiros" interactivo="false" ejecutar="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.ur%!=null AND %barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.retiros%&gt;0">
+                            <componente id="cpBarreDetPolizaBvC" nombre="Barre Detalle de la Póliza Contable" tipo="cursor">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%"/>
+                                    <campo name="clave_cuenta_contable" filtroCampo="clave_cuenta_contable" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.cuenta_contable%"/>
+                                    <campo name="id_movimiento_auxiliar" filtroCampo="id_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlBarrePolizaBvC.cpBarrePolizaBvC.folio_movimiento_auxiliar%"/>
+                                    <campo name="id_detalle_movimiento_auxiliar" />
+                                    <campo name="fecha_registro" /> 
+                                    <campo name="importe_abono" filtroCampo="importe_abono" filtroOperador="=" filtroValor="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.retiros%"/>
+                                    <campo name="referencia" filtroCampo="referencia" filtroOperador="=" filtroValor="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.descripcion%"/>
+                                </tabla> 
+                            </componente>
+                        </nivel>
+                        
+                        <!-- OBTENER EL TIPO DE PÓLIZA -->
+                        <nivel id="nlObTipPoliza" nombre="Obtener el tipo de póliza" interactivo="false">
+                            <componente id="cpObTipPoliza" nombre="Obtener el tipo de póliza" tipo="cursor">
+                                <tabla schema="catalog" nombre="tipo_poliza">
+                                    <campo name="id_tipo_poliza" filtroCampo="id_tipo_poliza" filtroOperador="=" filtroValor="%nlBarrePolizaBvC.cpBarrePolizaBvC.tipo_poliza%"/>
+                                    <campo name="descripcion" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- OBTENER EL MES DE LA CONCILIACIÓN -->
+                        <nivel id="nlObMes" nombre="Obtener Mes" interactivo="false">
+                            <componente id="cpObMes" nombre="Obtener Mes" tipo="cursor">
+                                <tabla schema="catalog" nombre="periodo_mensual">
+                                    <campo name="id_periodo_mensual"  filtroCampo="id_periodo_mensual" filtroOperador="=" filtroValor="%nlBarrePolizaBvC.cpBarrePolizaBvC.periodo_mensual%"/>
+                                    <campo name="nombre" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                
+                                                                        
+                        <!-- AGREGA PÓLIZA CARGO Y PÓLIZA ABONO -->
+                        <nivel id="nlActualizaEdoCuenta" nombre="Actualiza el Estado de Cuenta" interactivo="false">
+                            <componente id="cpActualizaEdoCuenta" nombre="Actualiza el Estado de Cuenta" tipo="cursor">
+                                <tabla schema="operation" nombre="estado_cuenta_det">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%" /> 
+                                    <campo name="banco"  filtroCampo="banco" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.banco%"/> 
+                                    <campo name="id_estado_cuenta" filtroCampo="id_estado_cuenta" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.id_estado_cuenta%"/> 
+                                    <campo name="id_estado_cuenta_det" filtroCampo="id_estado_cuenta_det" filtroOperador="=" filtroValor="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.id_estado_cuenta_det%"/>
+                                    <campo name="poliza_cargo" calc="@ifThenElse(%nlBarreDetPolizaBvCDep.cpBarreDetPolizaBvCDep.ur%==null,'',@concatenar(%nlObTipPoliza.cpObTipPoliza.descripcion%+' '+%nlBarrePolizaBvC.cpBarrePolizaBvC.folio_movimiento_auxiliar%+' '+%nlObMes.cpObMes.nombre%))"/>
+                                    <campo name="poliza_abono" calc="@ifThenElse(%nlBarreDetPolizaBvC.cpBarreDetPolizaBvC.ur%==null,'',@concatenar(%nlObTipPoliza.cpObTipPoliza.descripcion%+' '+%nlBarrePolizaBvC.cpBarrePolizaBvC.folio_movimiento_auxiliar%+' '+%nlObMes.cpObMes.nombre%))"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                                                
+                        
+                        
+                        <!-- MARCA LOS DETALLES DEL ESTADO DE CUENTA DE LAS PÓLIZAS PARA CARGO -->
+                        <nivel id="nlRegEnconBvCDep" nombre="Registro Encontrado" ejecutar="%nlBarreDetPolizaBvCDep.cpBarreDetPolizaBvCDep.ur%!=null  AND %barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.depositos%&gt;0">
+                            <componente id="cpRegEnconBvCDep" nombre="Registro Encontrado" tipo="cursor">
+                                <tabla schema="operation" nombre="estado_cuenta_det">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%" /> 
+                                    <campo name="banco"  filtroCampo="banco" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.banco%"/> 
+                                    <campo name="id_estado_cuenta" filtroCampo="id_estado_cuenta" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.id_estado_cuenta%"/> 
+                                    <campo name="id_estado_cuenta_det" filtroCampo="id_estado_cuenta_det" filtroOperador="=" filtroValor="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.id_estado_cuenta_det%"/>
+                                    <campo name="enc_conciliacion" calc="true"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- MARCA LOS DETALLES DEL ESTADO DE CUENTA EN LAS PÓLIZAS PARA ABONO-->
+                        <nivel id="nlRegEnconBvC" nombre="Registro Encontrado" ejecutar="%nlBarreDetPolizaBvC.cpBarreDetPolizaBvC.ur%!=null AND %barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.retiros%&gt;0">
+                            <componente id="cpRegEnconBvC" nombre="Registro Encontrado" tipo="cursor">
+                                <tabla schema="operation" nombre="estado_cuenta_det">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%" /> 
+                                    <campo name="banco"  filtroCampo="banco" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.banco%"/> 
+                                    <campo name="id_estado_cuenta" filtroCampo="id_estado_cuenta" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.id_estado_cuenta%"/> 
+                                    <campo name="id_estado_cuenta_det" filtroCampo="id_estado_cuenta_det" filtroOperador="=" filtroValor="%barreEstadoDeCuentaBvC.barreEstadoDeCuentaBvC.id_estado_cuenta_det%"/>
+                                    <campo name="enc_conciliacion" calc="true"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        
+                        <!-- ALTA DE LOS EGRESOS CONTABLES RECONOCIDOS POR LA CONTABILIDAD (ABONO)-->
+                        <nivel id="nlAltaDetalleConciliacionAbono" nombre="Alta Detalle Conciliación Abono" interactivo="false" ejecutar="%nlBarreDetPolizaBvC.cpBarreDetPolizaBvC.ur%!=null AND %nlBarreDetPolizaBvC.cpBarreDetPolizaBvC.importe_abono%&gt;0">
+                            <componente id="cpAltaDetalleConciliacionAbono" nombre="Alta Detalle Conciliación Abono" tipo="altaDirect">
+                                <tabla schema="operation" nombre="conciliacion_det">
+                                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                                    <campo name="periodo" calc="%barrePeriodo.barrePeriodo.id_periodo%" />
+                                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                                    <campo name="tipo_detalle_conciliacion" calc="8" />
+                                    <campo name="id_conciliacion_det" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="fecha" calc="@fechaSistema()" />
+                                    <campo name="concepto" calc="%nlBarreDetPolizaBvC.cpBarreDetPolizaBvC.referencia%" />
+                                    <campo name="importe" calc="%nlBarreDetPolizaBvC.cpBarreDetPolizaBvC.importe_abono%" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                    <campo name="tipo_importe" calc="2"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- ALTA DE LOS DEPOSITOS CONTABLES RECONOCIDOS POR LA CONTABILIDAD (CARGOS) -->
+                        <nivel id="nlAltaDetalleConciliacionCargoConta" nombre="Alta Detalle Conciliación Cargo" interactivo="false" ejecutar="%nlBarreDetPolizaBvCDep.cpBarreDetPolizaBvCDep.ur%!=null AND %nlBarreDetPolizaBvCDep.cpBarreDetPolizaBvCDep.importe_cargo%&gt;0">
+                            <componente id="cpAltaDetalleConciliacionCargo" nombre="Alta Detalle Conciliación Cargo" tipo="altaDirect">
+                                <tabla schema="operation" nombre="conciliacion_det">
+                                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                                    <campo name="periodo" calc="%barrePeriodo.barrePeriodo.id_periodo%" />
+                                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                                    <campo name="tipo_detalle_conciliacion" calc="7" />
+                                    <campo name="id_conciliacion_det" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="fecha" calc="@fechaSistema()" />
+                                    <campo name="concepto" calc="%nlBarreDetPolizaBvCDep.cpBarreDetPolizaBvCDep.referencia%" />
+                                    <campo name="importe" calc="%nlBarreDetPolizaBvCDep.cpBarreDetPolizaBvCDep.importe_cargo%" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                    <campo name="tipo_importe" calc="2"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                    </componente>
+                </nivel>
+                
+                <!-- BARRE DETALLES ENCONTRADOS DEL ESTADO DE CUENTA -->
+                <nivel id="nlBarreEdoCuentaBvC" nombre="Barre Estado de Cuenta" interactivo="false">
+                    <componente id="cpBarreEdoCuentaBvC" nombre="Barre Estado de Cuenta" tipo="cursor">
+                        <tabla schema="operation" nombre="estado_cuenta_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrePeriodo.barrePeriodo.id_periodo%" /> 
+                            <campo name="banco"  filtroCampo="banco" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.banco%"/> 
+                            <campo name="id_estado_cuenta" filtroCampo="id_estado_cuenta" filtroOperador="=" filtroValor="%nlRegCalcConBan.cpSelecMes.id_estado_cuenta%"/> 
+                            <campo name="id_estado_cuenta_det"/>
+                            <campo name="enc_conciliacion" filtroCampo="enc_conciliacion" filtroOperador="=" filtroValor="false"/>
+                            <campo name="fecha"/>
+                            <campo name="retiros"/>
+                            <campo name="depositos"/>
+                            <campo name="descripcion"/>
+                        </tabla>
+                        <!-- CARGO -->
+                        <nivel id="nlAltaIngConNoRecConta" nombre="Alta Detalle Ingresos No reconocidos por la contabilidad" interactivo="false" ejecutar="%nlBarreEdoCuentaBvC.cpBarreEdoCuentaBvC.depositos%&gt;0">
+                            <componente id="cpAltaIngConNoRecConta" nombre="Alta Detalle Ingresos No reconocidos por la contabilidad" tipo="altaDirect">
+                                <tabla schema="operation" nombre="conciliacion_det">
+                                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                                    <campo name="periodo" calc="%barrePeriodo.barrePeriodo.id_periodo%" />
+                                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                                    <campo name="tipo_detalle_conciliacion" calc="2" />
+                                    <campo name="id_conciliacion_det" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="fecha" calc="%nlBarreEdoCuentaBvC.cpBarreEdoCuentaBvC.fecha%" />
+                                    <campo name="concepto" calc="%nlBarreEdoCuentaBvC.cpBarreEdoCuentaBvC.descripcion%" />
+                                    <campo name="importe" calc="%nlBarreEdoCuentaBvC.cpBarreEdoCuentaBvC.depositos%" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                    <!--<campo name="tipo_importe" calc="2"/>-->
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        
+                        <!-- ABONO-->
+                        <nivel id="nlAltaRetiConNoRecConta" nombre="Alta Detalle de Retiros No reconocidos por la contabilidad" interactivo="false" ejecutar="%nlBarreEdoCuentaBvC.cpBarreEdoCuentaBvC.retiros%&gt;0">
+                            <componente id="cpAltaRetiConNoRecConta" nombre="Alta Detalle de Retiros No reconocidos por la contabilidad" tipo="altaDirect">
+                                <tabla schema="operation" nombre="conciliacion_det">
+                                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                                    <campo name="periodo" calc="%barrePeriodo.barrePeriodo.id_periodo%" />
+                                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" />
+                                    <campo name="tipo_detalle_conciliacion" calc="4" />
+                                    <campo name="id_conciliacion_det" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="fecha" calc="%nlBarreEdoCuentaBvC.cpBarreEdoCuentaBvC.fecha%" />
+                                    <campo name="concepto" calc="%nlBarreEdoCuentaBvC.cpBarreEdoCuentaBvC.descripcion%" />
+                                    <campo name="importe" calc="%nlBarreEdoCuentaBvC.cpBarreEdoCuentaBvC.retiros%" />
+                                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                    <!--<campo name="tipo_importe" calc="2"/>-->
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRepRegCalcConBan" nombre="Registro Cálculo de Conciliación Bancaria">
+            <componente id="cpRepEdoCuentaCon" nombre="Estado de Cuenta Conciliado" tipo="reporte">
+                <reporte nombre="repor_Edo_Cuenta_con_jsus"  expediente="Expediente Concilacion Bancaria/Calculo de Concilacion Bancaria" nombreDocumento="'Calculo de Concilacion Bancaria'" grupo="$inParam.id_estado_cuenta$" url="$config.repository_upload_file$" update="true">
+                    <campo name="banco" type="long" local="true" calc="%inParam.inParam.id_banco%"/>
+                    <campo name="id_estado_cuenta" type="long" local="true" calc="%inParam.inParam.id_estado_cuenta%"/>
+                    <campo name="periodo" type="long" local="true" calc="%inParam.inParam.periodo%"/>
+                    <campo name="ur" type="long" local="true" calc="%inParam.inParam.ur%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$"/>
+                </reporte> 
+            </componente>
+            
+            <componente id="cpRepDetCon" nombre="Detalle de Conciliación" tipo="reporte">
+                <reporte nombre="R_Detalle_Conciliacion_Jo">
+                    <campo name="ur" type="long" local="true" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%inParam.inParam.periodo%" />
+                    <campo name="id_conciliacion" type="long" local="true" calc="%inParam.inParam.id_conciliacion%" />
+                    <campo name="mes" type="long" local="true" calc="%nlObNumMes.cpObNumMes.id_periodo_mensual%" />
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

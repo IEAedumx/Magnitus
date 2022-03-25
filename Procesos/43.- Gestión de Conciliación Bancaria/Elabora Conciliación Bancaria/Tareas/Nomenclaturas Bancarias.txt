@@ -1,0 +1,59 @@
+<tarea nombre="Nomencalturas Bancarias" version="1.0.0" fechaModificacion="12/07/2019" autor="Alejandra Ibarra" modificacionEfectuada="" requisitosInstalacion="">
+    <pagina id="1" nombre="Nomenclaturas Bancarias">
+        
+        <!--FROMULARIO DE NOMENCLATURAS BANCARIAS-->
+        <nivel nombre="Selección de Institución Bancaria" id="nlSelInstBanc" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Selección de Institución Bancaria" id="cpSelInstBanc" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="nomenclaturas_bancarias">
+                    <campo name="banco" text="Institución Bancaria" marcador="Seleccione una Institución bancaria" descripcionForanea="nombre" margen-izquierdo="3" columnas="4" height="200" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+<!--TABLA DE NOMENCLATURAS BANCARIAS-->
+        <nivel nombre="Nomenclaturas Bancarias" id="nlNomBancNac" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="tabla" nombre="Nomenclatura bancaria de Banco Nacional del Norte, S.A." id="cpNomBancNac" mostrarAgregar="true" mostrarEliminar="true" mostrarEditar="true" exportarPDF="true" exportarExcel="false">
+                <tabla schema="operation" nombre="nomenclaturas_bancarias">
+                    <campo name="banco" columna-visible="false" visible="false" calc="%nlSelInstBanc.cpSelInstBanc.banco%"/>
+                    <campo name="codigo" text="Código" columnas="3" marcador="Ingrese código de la nomenclatura" validacion="%codigo%==null" validacionMensaje="Indique un código para continuar."/>
+                    <campo name="descripcion" text="Descripción de la nomenclatura" columnas="3" marcador="Ingrese una descripción" validacion="%descripcion%==null" validacionMensaje="Indique una descripción para continuar."/>
+                    <campo name="tipo_movimiento" text="Tipo de movimiento" columnas="3" marcador="Seleccione un tipo de movimiento" validacion="%tipo_movimiento%==null" validacionMensaje="Indique un tipo de movimiento para continuar."/>
+                    <campo name="tipo_poliza" text="Tipo de póliza" columnas="3" marcador="Seleccione un tipo de póliza" validacion="%tipo_poliza%==null" validacionMensaje="Seleccione un tipo de póliza para continuar."/>
+                    <campo name="fecha_registro" columna-visible="false" calc="@fechaSistema()" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" columna-visible="false" calc="" visible="false"/>
+                    <campo name="validacion_codigo" visible="false" columna-visible="false" local="true" type="string" 
+                        validacion="@consultaDirec('SELECT COUNT(codigo) > 0 existe FROM operation.nomenclaturas_bancarias
+                        WHERE banco = '+'\\''+%nlSelInstBanc.cpSelInstBanc.banco%+'\\' AND codigo = '+'\\''+%codigo%+'\\'','existe','bool','MAGNITUS')"
+                        validacionMensaje="El código de la nomenclatura para este banco, ya se encuentra en uso."/>
+                </tabla>
+                <estilos>
+                    <boton nombre="formulario" texto="GUARDAR" margen-derecho="4" margen-izquierdo="4" columnas="2"/>
+                    <boton nombre="grabar" texto="Continuar" margen-izquierdo="4" columnas="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <validaciones>
+                    <validacion tipo="borrar" validacion="@consultaDirec('SELECT COUNT(codigo) > 0 existe FROM operation.estado_cuenta_det
+                        WHERE codigo = '+'\\''+%codigo%+'\\'','existe','bool','MAGNITUS')" validacionMensaje="La nomenclatura que se desea eliminar se está usando en un estado de cuenta."/>
+                </validaciones>
+            </componente>
+        </nivel>
+        <!--REPORTE DE NOMENCLATURAS BANCARIAS-->
+        <nivel nombre="Nomenclaturas bancarias" id="nlNomBanc" mostrarProximoNivel="true">
+            <componente tipo="reporte" nombre="Nomenclaturas bancarias" id="cpNomBanc">
+                <reporte nombre="R_Nomenclatura_Bancaria"  expediente="Expediente Concilacion Bancaria/Nomenclatura Bancaria" nombreDocumento="'Nomenclatura Bancaria'" grupo="$inParam.id_estado_cuenta$" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_banco" type="long" local="true" calc="%nlSelInstBanc.cpSelInstBanc.banco%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$"/>    
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

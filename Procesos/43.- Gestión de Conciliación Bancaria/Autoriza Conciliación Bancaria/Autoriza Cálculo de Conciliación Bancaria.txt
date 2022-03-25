@@ -1,0 +1,115 @@
+<tarea id="ConsultaDeCalculoDeConciliacionBancaria" nombre="Consulta de Cálculo de Conciliación Bancaria">
+    <pagina id="uno">
+        
+         <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="id_estado_cuenta" local="true" type="string" calc="$inParam.id_estado_cuenta$"  />
+                    <campo name="id_conciliacion" local="true" type="string" calc="$inParam.id_conciliacion$" />
+                    <campo name="id_banco" local="true" type="string" calc="$inParam.id_banco$" />
+                    <campo name="cuenta_bancaria" local="true" type="string" calc="$inParam.cuenta_bancaria$" />
+                    <campo name="mes_conciliacion" local="true" type="string" calc="$inParam.mes_conciliacion$" />
+                    <campo name="institucion_bancaria" local="true" type="string" calc="$inParam.institucion_bancaria$" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlObNumMes" nombre="Obtener Número del Mes" interactivo="false">
+            <componente id="cpObNumMes" nombre="Obtener Número del Mes" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo_mensual">
+                    <campo name="id_periodo_mensual"  />
+                    <campo name="nombre" filtroCampo="nombre" filtroOperador="=" filtroValor="%inParam.inParam.mes_conciliacion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRepRegCalcConBan" nombre="Registro Cálculo de Conciliación Bancaria" mostrarNivelAnterior="false">
+            <componente id="cpRepEdoCuentaCon" nombre="Estado de Cuenta Conciliado" tipo="reporte">
+                <reporte nombre="repor_Edo_Cuenta_con_jsus">
+                    <campo name="banco" type="long" local="true" calc="%inParam.inParam.id_banco%"/>
+                    <campo name="id_estado_cuenta" type="long" local="true" calc="%inParam.inParam.id_estado_cuenta%"/>
+                    <campo name="periodo" type="long" local="true" calc="%inParam.inParam.periodo%"/>
+                    <campo name="ur" type="long" local="true" calc="%inParam.inParam.ur%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$"/>
+                </reporte> 
+            </componente>
+            
+           <componente id="cpRepDetCon" nombre="Detalle de Conciliación" tipo="reporte">
+                <reporte nombre="R_Detalle_Conciliacion_Jo">
+                    <campo name="ur" type="long" local="true" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%inParam.inParam.periodo%" />
+                    <campo name="id_conciliacion" type="long" local="true" calc="%inParam.inParam.id_conciliacion%" />
+                    <campo name="mes" type="long" local="true" calc="%nlObNumMes.cpObNumMes.id_periodo_mensual%" />
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlAtzCalcConBanc" nombre="Autoriza Cálculo de Conciliación Bancaria" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <!--COMPONENTE PARA AUTORIZAR-->
+            <componente id="cpAtzCalcConBanc" nombre="Autoriza Cálculo de Conciliación Bancaria" tipo="formulario" accionDefault="seleccionar" >
+                <tabla schema="operation" nombre="conciliacion">
+                    <campo name="ur" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="id_conciliacion" calc="%inParam.inParam.id_conciliacion%" visible="false" />
+                    <campo name="observaciones" text="Motivo de rechazo" interaccion="%autoriza%==false" margen-izquierdo="2" columnas="6" height="200"/>
+                    <campo name="autoriza" text="Autoriza" margen-izquierdo="2" columnas="6"/>
+                    <campo name="estatus" calcCliente="@ifThenElse(%autoriza%==true, 2, 1)" mascara="C" visible="false" validacion="%observaciones%==null AND %autoriza%==false" validacionMensaje="Favor de ingresar observaciones para continuar."/>  <!--  -->
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="GUARDAR" margen-izquierdo="4" columnas="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- COMPONENTES SOLICITUD PARA NEGOCIAR LA INSTANCIA Y MANDAR MENSAJE DE RETROALIMENTACIÓN -->
+        <nivel id="nlNegociarInstancia" nombre="Enlace con Dynamo" interactivo="false" ejecutar="%nlAtzCalcConBanc.cpAtzCalcConBanc.autoriza%==false" >
+            <componente id="cpNegociarInstancia" nombre="Enlace con Dynamo" tipo="solicitud" >
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!--MENSAJES-->
+        <nivel id="nlRetroalimentarMensaje" nombre="Envio de Parámetros Dynamo" interactivo="false" ejecutar="%nlAtzCalcConBanc.cpAtzCalcConBanc.autoriza%==false" >
+           <componente id="cpRetroalimentarMensaje" nombre="Envio de Parámetros Dynamo" tipo="solicitud" >  
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAtzCalcConBanc.cpAtzCalcConBanc.observaciones%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+       
+        <!--TERMINAR INSTANCIA -->
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" ejecutar="%nlAtzCalcConBanc.cpAtzCalcConBanc.autoriza%==true" >
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>

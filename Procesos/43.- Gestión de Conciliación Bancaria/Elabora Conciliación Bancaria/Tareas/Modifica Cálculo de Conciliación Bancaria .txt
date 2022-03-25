@@ -1,0 +1,90 @@
+<tarea id="modCalConBan" nombre="Modifica Cálculo de Conciliación Bancaria"  autor="Francisco">
+    <pagina id="1">
+    
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="id_estado_cuenta" local="true" type="string" calc="$inParam.id_estado_cuenta$"  />
+                    <campo name="id_conciliacion" local="true" type="string" calc="$inParam.id_conciliacion$" />
+                    <campo name="id_banco" local="true" type="string" calc="$inParam.id_banco$" />
+                    <campo name="cuenta_bancaria" local="true" type="string" calc="$inParam.cuenta_bancaria$" />
+                    <campo name="mes_conciliacion" local="true" type="string" calc="$inParam.mes_conciliacion$" />
+                    <campo name="institucion_bancaria" local="true" type="string" calc="$inParam.institucion_bancaria$" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreConciliacion" nombre="Barre Conciliación" interactivo="false">
+            <componente id="cpBarreConciliacion" nombre="Barre Conciliación" tipo="cursor">
+                <tabla schema="operation" nombre="conciliacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_conciliacion" filtroCampo="id_conciliacion" filtroOperador="=" filtroValor="%inParam.inParam.id_conciliacion%"/>
+                    <campo name="cuenta_bancaria" />
+                    <campo name="cuenta_contable" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--MODIFICA CÁLCULO DE CONCILIACIÓN BANCARIA-->
+        <nivel id="modCalConBan" nombre="Modifica Cálculo de Conciliación Bancaria" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <!--CONCILIACIÓN MANUAL-->
+            <componente id="conMan" nombre="Conciliación Manual" tipo="tabla" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="estado_cuenta_det">
+                    <campo name="ur" text="UR" visible="false" calc="%inParam.inParam.ur%" columna-visible="false" />
+                    <campo name="periodo" text="Periodo" visible="false" calc="%inParam.inParam.periodo%" columna-visible="false" />
+                    <campo name="banco" text="Banco" visible="false" calc="%inParam.inParam.id_banco%" columna-visible="false" />
+                    <campo name="id_estado_cuenta" text="Id Estado Cuenta" visible="false" calc="%inParam.inParam.id_estado_cuenta%" columna-visible="false" />
+                    <campo name="id_estado_cuenta_det" text="Id Estado Cuenta Detalle" visible="false" columna-visible="false" />
+                    <campo name="fecha" text="Fecha" habilitado="false" />
+                    <campo name="referencia" text="Referencia" habilitado="false" />
+                    <campo name="codigo" text="Código" habilitado="false" />
+                    <campo name="descripcion" text="Descripción" habilitado="false" />
+                    <campo name="retiros" text="Retiros" habilitado="false" />
+                    <campo name="depositos" text="Depositos" habilitado="false" />
+                    <campo name="saldo" text="Saldo" habilitado="false" />
+                    <campo name="estatus" text="Estatus" habilitado="false" />
+                    <campo name="ultimo_usuario_modificador" text="Usuario Modificador" visible="false" columna-visible="false" />
+                    <campo name="clave_contable" local="true" type="string" columna-visible="false" calc="%nlBarreConciliacion.cpBarreConciliacion.cuenta_contable%"/>
+                    <campo name="id_conciliacion" local="true" visible="false" columna-visible="false" type="string" calc="%inParam.inParam.id_conciliacion%" />
+                    <tareas>
+                        <tarea nombre="Conciliar" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_conciliacion,ultimo_usuario_modificador,id_conciliacion,id_estado_cuenta,id_estado_cuenta_det,clave_contable,banco,retiros,depositos" ref="task=82aa7d84-8641-4893-90d5-df003b3085bc"/>
+                    </tareas>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlObNumMes" nombre="Obtener Número del Mes" interactivo="false">
+            <componente id="cpObNumMes" nombre="Obtener Número del Mes" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo_mensual">
+                    <campo name="id_periodo_mensual"  />
+                    <campo name="nombre" filtroCampo="nombre" filtroOperador="=" filtroValor="%inParam.inParam.mes_conciliacion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--MODIFICA CÁLCULO DE CONCILIACIÓN BANCARIA-->
+        <nivel id="modCalConBanRep"  nombre="Modifica Cálculo de Conciliación Bancaria">
+            <!--REPORTE DE ESTADO DE CUENTA CONCILIADO-->
+            <componente id="repEdoCuentaCon" nombre="Estado de Cuenta Conciliado" tipo="reporte">
+                <reporte nombre="repor_Edo_Cuenta_con_jsus"  expediente="Expediente Concilacion Bancaria/Calculo de Concilacion Bancaria" nombreDocumento="'Calculo de Concilacion Bancaria'" grupo="$inParam.id_estado_cuenta$" url="$config.repository_upload_file$" update="true">
+                    <campo name="banco" type="long" local="true" calc="%inParam.inParam.id_banco%"/>
+                    <campo name="id_estado_cuenta" type="long" local="true" calc="%inParam.inParam.id_estado_cuenta%"/>
+                    <campo name="periodo" type="long" local="true" calc="%inParam.inParam.periodo%"/>
+                    <campo name="ur" type="long" local="true" calc="%inParam.inParam.ur%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$"/>
+                </reporte> 
+            </componente>
+            <!--REPORTE DE DETALLE DE CONCILIACIÓN-->
+            <componente id="cpRepDetCon" nombre="Detalle de Conciliación" tipo="reporte">
+                <reporte nombre="R_Detalle_Conciliacion_Jo" expediente="Expediente Concilacion Bancaria/Detalle de Concilacion" nombreDocumento="'Detalle de Concilacion'" grupo="$inParam.id_estado_cuenta$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" local="true" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%inParam.inParam.periodo%" />
+                    <campo name="id_conciliacion" type="long" local="true" calc="%inParam.inParam.id_conciliacion%" />
+                    <campo name="mes" type="long" local="true" calc="%nlObNumMes.cpObNumMes.id_periodo_mensual%" />
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
