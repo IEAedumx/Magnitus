@@ -1,0 +1,230 @@
+<tarea id="regCanIngreApro" nombre="Registra Cancelación de Ingreso Recaudado" autor="Pedro De La Cruz" fechaModificacion="2019-06-10" version="1.0.0">
+    <pagina id="1">
+        <!--
+        <nivel id="inParam" nombre="inParam" interactivo="false" >
+            <componente id="inParam" nombre="inParam" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="1" />--> <!--$inParam.ur -->
+                    <!--<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="2019" />--> <!--$inParam.periodo -->
+                   <!-- <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="1" />--> <!--$inParam.folio_devengado_ingreso$ -->
+                <!--</tabla>
+            </componente>
+        </nivel>-->
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- BARRE PERIODO -->
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo"/> 
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/> <!--filtroCampo="estatus" filtroOperador="=" filtroValor="true" -->
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/><!--filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" -->
+				</tabla>
+			</componente>
+		</nivel>
+
+		<nivel id="barreDevenIngresoFiltro" nombre="barreDevenIngresoFiltro" interactivo="false">
+		    <componente tipo="cursor" id="barreDevenIngresoFiltro" nombre="barreDevenIngreso" >
+		        <tabla schema="operation" nombre="devengado_ingreso"> 
+		            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_devengado_ingreso" />
+                    <campo name="seleccionar" calc="false"/> 
+		        </tabla>
+		    </componente>
+		</nivel>
+	    
+        <nivel id="recauda_ingresos" nombre="Recaudación de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="recauda_ingresos" nombre="Ingresos Recaudados" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                   <campo name="ur" text="ur" visible="false" columna-visible="false" filtrarConCalc="true" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/> 
+                   <campo name="periodo" text="Ejercicio Fiscal" visible="false" columna-visible="true" filtrarConCalc="true" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" width="50"/>
+                   <campo name="folio_devengado_ingreso" text="Folio" width="80" cellsalign="center"/>
+                   <campo name="estatus" columna-visible="false"  filtroCampo="estatus" filtroOperador="=" filtroValor="2"/>
+                    <campo name="fecha_registro" text="Fecha" columnas="2" margen-izquierdo="1" width="105"/>
+                    <campo name="beneficiario" text="Beneficiario" descripcionForaneaTabla="razon_social" columnas="2" margen-izquierdo="1" width="150"/>
+                    <campo name="concepto" text="Concepto" columnas="2" margen-izquierdo="1" width="150"/>
+                    <campo name="importe_total" text="Importe Recaudado" formatoMoneda="true" cellsalign="right" columna-visible="true" columnas="2" margen-izquierdo="1" width="150" filtroCampo="importe_total" filtroOperador="!=" filtroValor="0"/><!-- filtroCampo="importe_total" filtroOperador="!=" filtroValor="0" -->
+                    <campo name="forma_cobro" text="forma cobro" columna-visible="false" /> 
+                    <campo name="autoriza" text="autoriza" columna-visible="false" filtroCampo="autoriza" filtroOperador="=" filtroValor="true"/>
+                    <campo name="autoriza_can_ingre" text="autoriza" columna-visible="false" filtroCampo="autoriza_can_ingre" filtroOperador="=" filtroValor="false"/>
+                    <!-- filtroCampo="forma_cobro" filtroOperador="=" filtroValor="2" -->
+                    <!-- filtroCampo="saldo_recaudar" filtroOperador="!=" filtroValor="0" -->
+                    <campo name="seleccionar" text="Selecciona" columnas="2" margen-izquierdo="1"  editable="true"/> 
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" margen-izquierdo="4" margen-derecho="4" columnas="2"/>
+                </estilos>
+                 <acciones>
+                    <accion nombre="grabar"  hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+               <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) &gt; 1 as resultado from operation.devengado_ingreso WHERE seleccionar=true','resultado','bool','MAGNITUS')" validacionMensaje="'Debes seleccionar solo un registro'"/>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) = 0 as resultado_uno from operation.devengado_ingreso WHERE seleccionar=true','resultado_uno','bool','MAGNITUS')" validacionMensaje="'Debe seleccionar un registro'"/>
+                    <!--<validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) = 1 as res FROM operation.devengado_ingreso WHERE seleccionar=true and estatus=5','res','bool','MAGNITUS')" validacionMensaje="'El saldo por recaudar está en proceso de cancelación'"/>-->
+                </validaciones>
+        </nivel>
+
+       <nivel id="buscaSeleccion" nombre="buscaSeleccion" interactivo="false">
+		    <componente tipo="cursor" id="buscaSeleccion" nombre="buscaSeleccion" >
+		        <tabla schema="operation" nombre="devengado_ingreso"> 
+		            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="%recauda_ingresos.recauda_ingresos.folio_devengado_ingreso%"/>
+                    <campo name="seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="estatus" calc="1"/>
+		        </tabla>
+		    </componente>
+	    </nivel>
+	    <nivel id="barreDevIngresoDet" nombre="barreDevIngresoDet" interactivo="false">
+	        <componente tipo="cursor" id="barreDevIngresoDet" nombre="barreDevIngreso">
+	            <tabla schema="operation" nombre="devengado_ingreso_detalle">
+	                <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+	                <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+	                <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="%buscaSeleccion.buscaSeleccion.folio_devengado_ingreso%"/>
+	                <campo name="folio_devengado_ingreso_det" />
+	                <campo name="saldo_recaudar" />
+	            </tabla>
+	        </componente>
+	    </nivel>
+
+        <nivel id="tbDetalles" nombre="Detalle de Renglones Recaudados" mostrarNivelAnterior="false">
+            <componente id="tbDetalles" nombre="Detalle de Renglones Recaudados" tipo="tabla" filtro="true" accionDefault="editar" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="devengado_ingreso_detalle">
+                    <campo name="ur" text="ur" visible="false" columna-visible="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" visible="false" columna-visible="true" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" width="50"/>
+                    <campo name="folio_devengado_ingreso" visible="false" columna-visible="false" calc="%buscaSeleccion.buscaSeleccion.folio_devengado_ingreso%"/>
+                    <campo name="folio_devengado_ingreso_det" text="Renglón" generacion="@prox()+1" autogenerado="true" visible="true" width="130"/>
+                    <campo name="id_cat_clasificador_rubro_ingreso" text="id cat cri" llaveForanea="false" columna-visible="false"/>
+                    <campo name="clasificado_rubro_ingreso" text="Clasificador por Rubro del Ingreso" width="100" descripcionForaneaTabla="id_cat,descripcion" columna-visible="false"/>
+                    <campo name="id_cat_fondo_contable" calc="3" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_fondo_contable" text="Fondo contable" width="150" descripcionForaneaTabla="id_cat,descripcion"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto" text="id_catUE" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" width="100" descripcionForaneaTabla="id_cat,descripcion" columna-visible="false"/>
+                    <campo name="mes_cve_ingreso" text="mes" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" columnas="3" margen-derecho="2" width="200" llaveForanea="false"/>
+                    <campo name="cantidad" text="Cantidad" width="100" cellsalign="center"/>
+                    <campo name="importe" text="Importe" width="100" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="descuento" text="Descuento" width="100" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="iva" text="IVA" width="100" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="total" text="Total" muestraAcumulado="true" formatoMoneda="true" width="100" cellsalign="right"/>
+                    <campo name="saldo_recaudar" text="Importe Recaudado" width="100" columna-visible="false"/> 
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="seleccionaRegistro" nombre="Seleccion de Registro" interactivo="false">
+            <componente id="seleccionaRegistro" nombre="Selección de Registro" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/> 
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/> 
+                    <campo name="seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="folio_devengado_ingreso"/>
+                    <campo name="motivo_cance_ing_recau"/>
+                    <campo name="exp_ingreso" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- formulario para cancelar -->
+        <nivel id="forCanIngreReca" nombre="Cancelación de Ingreso Recaudado" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="forCanIngreReca" nombre="Cancelación de Ingreso Recaudado" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" visible="false" calc="%seleccionaRegistro.seleccionaRegistro.ur%"/>
+                    <campo name="periodo" visible="false" calc="%seleccionaRegistro.seleccionaRegistro.periodo%"/>
+                    <campo name="seleccionar" visible="false" calc="%seleccionaRegistro.seleccionaRegistro.seleccionar%" />
+                    <campo name="folio_asociado" text="Folio Asociado" visible="true" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                    <campo name="folio_devengado_ingreso" text="Folio" visible="true" columnas="2" margen-izquierdo="1"  calc="%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%"/>
+                    <campo name="adjunta_doc" local="true" type="file" text="Adjuntar Documentación" fileType="normal" 
+                         archivosAceptados="application/pdf" columnas="2" margen-izquierdo="1" />
+                    <campo name="importe_total" text="Importe Total a Cancelar" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                    <campo name="sele_cance_ing_recau" text="Solicitar Cancelación" columnas="2" margen-izquierdo="1"/>
+                    <campo name="motivo_cance_ing_recau" text="Justificación de la Cancelación" columnas="6" margen-izquierdo="2"
+                    validacion="%seleccionaRegistro.seleccionaRegistro.motivo_cance_ing_recau%==null AND %seleccionaRegistro.seleccionaRegistro.sele_cance_ing_recau%==true" interaccion="%sele_cance_ing_recau%!=false" habilitado="false"
+                    validacionMensaje="Por favor, debes agregar un motivo" height="200"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+
+        <!-- estatus para cancelar -->
+        <nivel id="cambiaEstatus" nombre="cambiaEstatus" interactivo="false" ejecutar="%seleccionaRegistro.seleccionaRegistro.sele_cance_ing_recau%==true">
+            <componente id="cambiaEstatus" nombre="cambiaEstatus" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%seleccionaRegistro.seleccionaRegistro.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%seleccionaRegistro.seleccionaRegistro.periodo%"/>
+                    <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%"/>
+                    <campo name="folio_asociado" calc="%forCanIngreReca.forCanIngreReca.folio_asociado%"/> <!--  -->
+                    <campo name="seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="estatus" calc="5"/>
+                    <campo name="folio_asociado" calc="@concatenar('DURI-R-'+
+					@ifThenElse(%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%&lt;10,'00000',
+					@ifThenElse(%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%&lt;100,'0000',
+					@ifThenElse(%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%&lt;1000,'000',
+					@ifThenElse(%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%&lt;10000,'00',
+					@ifThenElse(%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%&lt;100000,'','')))))+%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%)"/>
+                    <campo name="sele_cance_ing_recau" calc="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- reporte folio de cancelacion de ingresos -->
+        <nivel id="repFolioCanIngre" nombre="Cancelación de Ingresos Recaudado" mostrarNivelAnterior="false">
+            <componente id="repFolioCanIngre" nombre="Cancelación de Ingresos Recaudado" tipo="reporte">
+                <reporte nombre="R_Cancel_Ing_AL" expediente="Expediente de Ingresos/Cancelación de Ingreso" nombreDocumento="'Cancelación de Ingresos'" grupo="%seleccionaRegistro.seleccionaRegistro.exp_ingreso%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" llaveForanea="false" calc="%seleccionaRegistro.seleccionaRegistro.ur%"/>
+                    <campo name="periodo" type="long" llaveForanea="false" calc="%seleccionaRegistro.seleccionaRegistro.periodo%"/>
+                    <campo name="folio_devengado" type="long" calc="%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+
+        <!-- GENERA INSTANCIA -->
+        <nivel id="agregaInstancia" nombre="Registro Solicitud de Cancelación de Ingreso" interactivo="false">
+            <componente id="agregaInstancia" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'787abced-f431-4f14-8ec2-82af21b2b56e'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_folio_devengado_ingreso" calc="%seleccionaRegistro.seleccionaRegistro.folio_devengado_ingreso%" mostrarEsc="true"/>
+                    <parametro name="out_folio_ingreso" calc="%seleccionaRegistro.seleccionaRegistro.exp_ingreso%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!-- AGREGA MENSAJE A LA INSTANCIA -->
+        <!--<nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%nlAutoReq.cpAutoReq42.autoriza_req%==false"> 
+               <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+                   <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                       <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                       <parametro name="process" calc="$protocolarios.process$"/>    
+                       <parametro name="version" calc="$protocolarios.version$"/> 
+                       <parametro name="user" calc="$protocolarios.user$"/>  
+                       <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                       <parametro name="message" calc="%nlAutoReq.cpAutoReq4.observaciones%"/>
+                       <parametro name="type" calc="'1'"/> 
+                   </parametros> 
+               </componente>
+            </nivel>-->
+    </pagina>
+</tarea>

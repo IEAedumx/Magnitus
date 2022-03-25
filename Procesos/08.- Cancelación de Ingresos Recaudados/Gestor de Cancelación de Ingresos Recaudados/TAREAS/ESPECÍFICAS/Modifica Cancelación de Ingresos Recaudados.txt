@@ -1,0 +1,113 @@
+<tarea nombre="Modifica Solicitud de Cancelación de Ingreso Recaudado" version="1.0.0">
+    <pagina id="1" nombre="Modifica Solicitud de Cancelación de Ingreso Recaudado">
+        <!-- Obtener el ultimo usuario-->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- Periodo actual-->
+       <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+					<campo name="estatus"/>
+					<campo name="id_estatus"/>
+					<campo name="folio_devengado" local="true" type="long" calc="$inParam.folio_devengado_ingreso$" />
+				</tabla>
+			</componente>
+		</nivel> 
+        <!-- Pantalla 1: Tabla Detalle de bloques recaudados-->
+       <nivel nombre="Detalle de Bloques Recaudados" id="rModSol" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+            <componente tipo="tabla" nombre="Detalle de Renglones Recaudados" id="red_In" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" filtro="true">
+                <tabla schema="operation" nombre="devengado_ingreso_detalle">
+                    <campo name="ur" text="ur" columna-visible="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" columnas="3" margen-izquierdo="2"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" columna-visible="true" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" columnas="3" margen-derecho="2" width="100"/>
+                    <campo name="folio_devengado_ingreso" columna-visible="false" calc="$inParam.folio_devengado_ingreso$" columnas="3" margen-izquierdo="2"/>
+                    <campo name="folio_devengado_ingreso_det" text="Renglón" columnas="3" margen-derecho="2" width="80" cellsalign="center"/>
+                    
+                    <campo name="clasificado_rubro_ingreso" text="Clasificador por Rubro del Ingreso" columnas="3" margen-izquierdo="2" width="100" columna-visible="false"/>
+                    <campo name="id_cat_fondo_contable" calc="3" visible="false" columna-visible="false" llaveForanea="false" columnas="3" margen-derecho="2"/>
+                    <campo name="id_fondo_contable" text="Fondo contable" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" columnas="3" margen-derecho="2" width="130"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto" calc="2" visible="false" llaveForanea="false" columna-visible="false" columnas="3" margen-derecho="2" />
+                    <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" columnas="3" margen-izquierdo="2"  width="130" columna-visible="false"/>
+                    <campo name="mes_cve_ingreso" text="mes" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" columnas="3" margen-derecho="2" width="200" llaveForanea="false"/>
+                    <campo name="cantidad" text="Cantidad" columnas="3" margen-izquierdo="2" width="100" cellsalign="center"/>
+                    <campo name="importe" text="Importe" columnas="3" margen-derecho="2" width="120" cellsalign="right" formatoMoneda="true"/>
+                    <campo name="descuento" text="Descuento" columnas="3" margen-izquierdo="2" width="100" cellsalign="right" formatoMoneda="true"/>
+                    <campo name="iva" text="IVA" columnas="3" margen-derecho="2" width="100" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="total" text="Total" muestraAcumulado="true" cellsalign="right" formatoMoneda="true" width="120"  />
+                    
+                    <campo name="saldo_recaudar" text="Importe Recaudado" columnas="3" margen-izquierdo="2" width="100" columna-visible="false" cellsalign="right"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="seleccionaRegistro" nombre="Seleccion de Registro" interactivo="false">
+            <componente id="seleccionaRegistro" nombre="Selección de Registro" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/> 
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/> 
+                    <campo name="seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="folio_devengado_ingreso"/>
+                    <campo name="motivo_cance_ing_recau"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- Pantalla 2: Formulario Cancelación de Ingresos Pendientes por Recaudar-->
+        <nivel nombre="Cancelación de Ingreso Recaudado" id="canIngRec" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+           <componente tipo="formulario" nombre="Cancelación de Ingreso Recaudado" id="can_In_Rec_F" accionDefault="editar">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" visible="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" visible="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    
+                    <campo name="folio_asociado" text="Folio Asociado" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="folio_devengado_ingreso" text="Folio" habilitado="false" columnas="2" margen-izquierdo="1" calc="%buscaPeriodo.buscaPeriodo.folio_devengado%"/>
+                    <campo name="adjDoc" text="Adjuntar Documentación" local="true" type="file" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                    <campo name="importe_total" text="Importe total a cancelar" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="sele_cance_ing_recau" text="Solicitar Cancelación" columnas="2" margen-izquierdo="1"/>
+                    <campo name="motivo_cance_ing_recau" text="Justificación de la Cancelación" 
+                    validacion="%seleccionaRegistro.seleccionaRegistro.motivo_cance_ing_recau%==null AND %seleccionaRegistro.seleccionaRegistro.sele_cance_ing_recau%==true" interaccion="%sele_cance_ing_recau%!=false" habilitado="false"
+                    validacionMensaje="Por favor, debes agregar un motivo" columnas="6" margen-izquierdo="2" height="200"/>
+                    <campo name="estatus" visible="false" calc="1"/>
+                </tabla>
+                   <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+         
+        </nivel> 
+        
+        <!--Reporte pantalla 2-->
+        <nivel id="R_Cancel_Ing_AL" nombre="Cancelación de Ingreso Recaudado">
+          <componente tipo="reporte" nombre="Cancelación de Ingresos Recaudado" id="R_Cancel_Ing_AL">
+                <reporte nombre="R_Cancel_Ing_AL" expediente="Expediente de Ingresos/Cancelación de Ingreso" nombreDocumento="'Cancelación de Ingresos'" grupo="$inParam.folio_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                    <campo name="folio_devengado" type="long" calc="$inParam.folio_ingreso$"/>
+                </reporte>
+            </componente>
+        </nivel>
+
+          <!-- Actualizar Estatus-->
+          <!--<nivel id="cambiaEstatus" nombre="Cambia Estatus a Cancelado" interactivo="false">
+                <componente tipo="cursor" id="cambiaEstatus" nombre="Cambia Estatus a Cancelado">
+                    <tabla schema="operation" nombre="devengado_ingreso">
+                        <campo name="estatus" visible="false" calc="1"/>
+                    </tabla>
+                </componente>    
+          </nivel>-->
+    </pagina>
+</tarea>
+

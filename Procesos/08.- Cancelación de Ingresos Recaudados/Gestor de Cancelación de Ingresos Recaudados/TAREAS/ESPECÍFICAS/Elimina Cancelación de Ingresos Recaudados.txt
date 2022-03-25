@@ -1,0 +1,174 @@
+<tarea nombre="Eliminar solicitud de cancelación de ingreso recaudado" id="Elimina_solicitud_canc_ing_rec" version="1.0.0"
+    fechaModificacion="10/06/2019" autor="Isabel Castillo">
+    <pagina id="1" nombre="Eliminar solicitud de cancelación de ingreso recaudado">
+       
+       <!--Tabla dummy, sirve para traer los parametros de la tarea general -->
+     <nivel id="inParams" nombre="inParams" interactivo="false">
+         <componente id="inParams" nombre="inParams" tipo="cursor">
+             <tabla schema="catalog" nombre="dummy">
+                 <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                 <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                 <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                 <campo name="folio_devengado_ingreso" local="true" type="long" calc="$inParam.folio_devengado_ingreso$"/>
+             </tabla>
+         </componente>
+     </nivel>
+     
+     <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- Periodo actual-->
+       <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+					<campo name="estatus"/>
+					<campo name="id_estatus"/>
+					<campo name="folio_devengado" local="true" type="long" calc="$inParam.folio_devengado_ingreso$" />
+				</tabla>
+			</componente>
+		</nivel> 
+     
+        <!-- Pantalla 1-->
+       <nivel nombre="Recaudación de Ingresos" id="rec_ing" mostrarNivelAnterior="false" mostrarProximoNivel="true" interactivo="false">
+            <componente tipo="tabla" nombre="Recaudación de Ingresos" id="rec_ing" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" filtro="true">
+                <tabla schema="operation" nombre="devengado_ingreso_detalle">
+                    <campo name="ur" text="ur" visible="false" columna-visible="false" calc="$inParam.ur$"/>
+                    <campo name="periodo" text="Año" visible="false" columna-visible="true" calc="$inParam.periodo$" llaveForanea="false" width="50"/>
+                    <campo name="folio_devengado_ingreso" visible="false" columna-visible="false" calc="$inParam.folio_devengado_ingreso$"/>
+                    <campo name="folio_devengado_ingreso_det" text="Número de Bloque" visible="true" width="100"/>
+                    <campo name="clasificado_rubro_ingreso" text="Clasificador por Rubro del Ingreso" width="100"/>
+                    <campo name="id_cat_fondo_contable" calc="3" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_fondo_contable" text="Fondo contable" width="100"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto" calc="2" visible="false" columna-visible="false" />
+                    <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" width="100"/>
+                    <campo name="clave_presupuestal_ingreso" text="Clave Presupuestal" width="100" llaveForanea="false"/>
+                    <campo name="cantidad" text="Cantidad" width="100"/>
+                    <campo name="importe" text="Importe" width="100" />
+                    <campo name="descuento" text="Descuento" width="100"/>
+                    <campo name="iva" text="IVA" width="100"/>
+                    <campo name="total" text="Total" muestraAcumulado="true" width="100"/>
+                    <campo name="saldo_recaudar" text="Importe Recaudado" width="100" columna-visible="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel nombre="Cancelación de Ingreso Recaudado" id="can_In_Rec_F" mostrarProximoNivel="false" mostrarNivelAnterior="false" interactivo="false">
+            <componente tipo="formulario" nombre="Cancelación de Ingreso Recaudado" id="can_In_Rec_F">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" calc="%inParams.inParams.ur%" visible="false"/>
+                    <campo name="periodo" calc="%inParams.inParams.periodo%" descripcionForanea="id_periodo" visible="false"/>
+                    <campo name="folio_devengado_ingreso" calc="%inParams.inParams.folio_devengado_ingreso%" visible="false"/>
+                    <campo name="folio_asociado" text="Folio Asociado" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="folio_devengado_ingreso" text="Folio" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="ad_doc" text="Adjuntar Documentación" local="true" type="file" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                    <campo name="importe_total" text="Importe total a cancelar" habilitado="false" columnas="2" margen-izquierdo="1" />
+                    <campo name="sele_cance_ing_recau" text="Solicitar cancelación" width="250" columnas="2" margen-izquierdo="1" margen-derecho="2" habilitado="false"/>
+                    <campo name="motivo_cance_ing_recau" text="Motivo de la Cancelación" habilitado="false" 
+                        columnas="6" margen-izquierdo="2" height="200"/>
+                </tabla>
+                
+                 <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="cambiaEstatusCancelado" nombre="cambiaEstatusCancelado" interactivo="false">
+            <componente tipo="cursor" id="cambiaEstatusCancelado" nombre="cambiaEstatusCancelado">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="=" filtroValor="$inParam.folio_devengado_ingreso$"/>
+                    <campo name="estatus" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="can_In_Rec_R" nombre="Cancelación de Ingreso Recaudado" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+            <componente tipo="reporte" nombre="Cancelación de Ingreso Recaudado" id="can_In_Rec_R" >      
+                <reporte nombre="R_Cancel_Ing_AL" expediente="Expediente de Solicitud de Cancelación de Ingreso Recaudado" nombreDocumento="'Cancelación de Ingresos'" grupo="$inParam.folio_devengado_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" calc="$inParam.ur$" type="long" />
+                    <campo name="periodo" calc="$inParam.periodo$"  type="long"/>
+                    <campo name="folio_devengado" type="long" calc="$inParam.folio_devengado_ingreso$"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="seleccionaRegistro" nombre="Seleccion de Registro" interactivo="false">
+            <componente id="seleccionaRegistro" nombre="Selección de Registro" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/> 
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> 
+                    <campo name="seleccionar" filtroCampo="seleccionar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="folio_devengado_ingreso"/>
+                    <campo name="motivo_cance_ing_recau"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <!--Pantalla 3-->
+           <nivel nombre="Eliminar Cancelación de Ingresos Recaudado" id="eli_Can_Ing_Rec" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="formulario" nombre="Eliminar Cancelación de Ingresos Recaudado" id="eli_Can_Ing_Rec">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" calc="%inParams.inParams.ur%" visible="false"/>
+                    <campo name="periodo" calc="%inParams.inParams.periodo%" visible="false"/>
+                    <campo name="folio_devengado_ingreso" calc="%inParams.inParams.folio_devengado_ingreso%" visible="false"/>
+                    <!--<campo name="elimina" text="Elimina" local="true" type="bool" visible="true" margen-izquierdo="4" columnas="2" margen-derecho="4" validacion="%elimina%==false" validacionMensaje="Por favor, debes seleccionar el boton elimina"-->
+                    
+                    <!--/>-->
+                    <campo name="elimina" text="Elimina" validacion="%elimina%==false" validacionMensaje="Se debe de seleccionar el botón de Eliminar" columnas="6" margen-izquierdo="2"/>
+                    <!--<campo name="observaciones" text="Observaciones" validacion="!@matchRegEx(%observaciones%,'^[A-Z 0-9]*$')" validacionMensaje="Solo letras mayusculas y números" -->
+                    <!--    visible="true" columnas="6" margen-izquierdo="2" height="200" interaccion="%elimina%==false" habilitado="false"/>-->
+                </tabla>
+                
+                 <estilos>
+                        <boton nombre="Grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                
+            </componente>
+        </nivel>
+        
+        <!--Cursor que nos permite cambiar el estatus a cancelado -->
+        <nivel nombre="Estatus Elimina" id="est_Eli" interactivo="false" ejecutar="%eli_Can_Ing_Rec.eli_Can_Ing_Rec.elimina%==true">
+            <componente nombre="Estatus Elimina" id="est_Eli" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" />
+                    <campo name="folio_devengado_ingreso" filtroCampo="folio_devengado_ingreso" filtroOperador="="
+                    filtroValor="$inParam.folio_devengado_ingreso$"/>
+                    <campo name="estatus" calc="2"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" ejecutar="%eli_Can_Ing_Rec.eli_Can_Ing_Rec.elimina%==true" >
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>
