@@ -1,0 +1,348 @@
+<tarea id="uno" nombre="Registra Compromisos Anuales" >
+    <pagina id="1">
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="string" calc="$inParam.id_periodo$"/>
+                    <campo name="id_compromiso" local="true" type="string" calc="$inParam.id_compromiso$"/>
+                    <campo name="id_tipo_compromiso" local="true" type="string" calc="$inParam.id_tipo_compromiso$"/>
+                    
+                </tabla>
+            </componente>
+        </nivel>
+       <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.id_periodo$"/>
+                    <campo name="estatus" />
+                    <campo name="id_estatus" />
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="obSeparador" nombre="obSeparador" interactivo="false">
+            <componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido" id="baa" interactivo="false">
+            <componente tipo="cursor" nombre="barrido" id="baa" >
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="id_compromiso" local="true" type="long" calc="$inParam.id_compromiso$"/>
+                    <campo name="id_tipo_compromiso" local="true" type="long" calc="$inParam.id_tipo_compromiso$"/>
+ <campo name="validacion1" visible="true" calc="@ifThenElse(@consultaDirec('SELECT CASE WHEN (SUM(asignado+presupuesto_ampliacion)-SUM(presupuesto_precomprometido+presupuesto_comprometido))&lt;0.00 THEN 0.00 ELSE (SUM(asignado+presupuesto_ampliacion)-SUM(presupuesto_precomprometido+presupuesto_comprometido)) END AS res
+FROM operation.presupuesto_egresos_mes_det 
+WHERE id_unidad_responsable='+$inParam.ur$+' AND id_periodo='+$inParam.id_periodo$+' AND 
+clave_presupuestal IN (SELECT clave_presupuestal FROM operation.compromisos_anual_det WHERE
+ ur='+$inParam.ur$+' AND id_periodo='+$inParam.id_periodo$+' AND id_compromiso='+$inParam.id_compromiso$+')','res','decimal','MAGNITUS')==0.00,1,@ifThenElse(@consultaDirec('SELECT CASE WHEN (SUM(asignado+presupuesto_ampliacion)-SUM(presupuesto_precomprometido+presupuesto_comprometido))&lt;0.00 THEN 0.00 ELSE (SUM(asignado+presupuesto_ampliacion)-SUM(presupuesto_precomprometido+presupuesto_comprometido)) END AS res
+FROM operation.presupuesto_egresos_mes_det 
+WHERE id_unidad_responsable='+$inParam.ur$+' AND id_periodo='+$inParam.id_periodo$+' AND 
+clave_presupuestal IN (SELECT clave_presupuestal FROM operation.compromisos_anual_det WHERE
+ ur='+$inParam.ur$+' AND id_periodo='+$inParam.id_periodo$+' AND id_compromiso='+$inParam.id_compromiso$+')','res','decimal','MAGNITUS')&lt;@consultaDirec('SELECT SUM(cad.importe_total) res FROM operation.compromisos_anual_det cad WHERE cad.ur = '+$inParam.ur$+' AND cad.id_periodo = '+$inParam.id_periodo$+' AND cad.id_compromiso = '+$inParam.id_compromiso$,'res','decimal','MAGNITUS'),1,2))" local="true" type="long"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte Gestión de Compromisos Anuales" id="rCAR" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%baa.baa.id_tipo_compromiso%!=2">
+            <componente tipo="reporte" nombre="Reporte de Compromisos Anuales" id="rCAR">
+                <reporte nombre="repor_compromisos_an_jsus" >
+                    <campo name="ur" type="long" calc="%baa.baa.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%baa.baa.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%baa.baa.id_compromiso%"/>
+                    <campo name="usuario" type="long" calc="%bU.bU.id_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Documento de Compromiso Candelarizado de Servicios Personales" id="rCASP" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%baa.baa.id_tipo_compromiso%==2">
+            <componente tipo="reporte" nombre="Documento de Compromiso Candelarizado de Servicios Personales" id="rCASP">
+                <reporte nombre="repor_comprServicios_jsus">
+                    <campo name="ur" type="long" calc="%baa.baa.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%baa.baa.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%baa.baa.id_compromiso%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="aCA" nombre="Autoriza Compromiso Candelarizado" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="aCA" nombre="Autoriza Compromiso Candelarizado" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" llaveForanea="false" calc="$inParam.id_periodo$" visible="false"/>
+                    <campo name="id_compromiso" calc="$inParam.id_compromiso$" llaveForanea="false" visible="false"/>
+                    <campo name="observaciones_autorizador" text="Observaciones" columnas="10" height="250" interaccion-visible="%autoriza_compromiso_anual%==false" visible="false" validacion="%autoriza_compromiso_anual%==false AND %observaciones_autorizador%==null" validacionMensaje="Favor de ingresar una observación valida para continuar, solo se aceptan mayúsculas y números."/>
+                    
+                    <campo name="autoriza_compromiso_anual" text="Autorizar" columnas="2" margen-izquierdo="1" /><!--validacion="%baa.baa.validacion1%!=2" validacionMensaje="AUTORIZACION INVÁLIDA, IMPORTE MAYOR AL PRESUPUESTO"-->
+                    <campo name="id_cat_fuente" calc="5" llaveForanea="false" visible="false"/>
+                    <campo name="fuente_financiamiento" visible="false" descripcionForanea="id_cat,descripcion"/>
+                    <campo name="id_cat_fondo_contable" calc="3" llaveForanea="false" visible="false"/>
+                    <campo name="id_fondo_contable" visible="false" descripcionForanea="id_cat,descripcion"/>
+                    <campo name="estatus" visible="false" calcCliente="@ifThenElse(%autoriza_compromiso_anual%==true,'AUTORIZADA','GENERADA')"/>
+                     <campo name="id_beneficiario" text="Beneficiario" width="250" habilitado="false" descripcionForaneaTabla="razon_social" descripcionForanea="razon_social" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="bCAd" nombre="barrido_Compromisos Anuales Detalle" interactivo="false" ejecutar="%aCA.aCA.autoriza_compromiso_anual%==true "><!--AND %baa.baa.validacion1%==2-->
+            <componente id="bCAd" nombre="bCAd" tipo="cursor">
+                <tabla schema="operation" nombre="compromisos_anual_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.id_periodo$" llaveForanea="false"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="$inParam.id_compromiso$" llaveForanea="false"/>
+                    <campo name="id_detalle_compromiso"/>
+                    <campo name="importe_total"/>
+                    <campo name="acumulado" local="true" type="double" calc="$sumatoria.importe_total$"/>
+                    <campo name="importe_por_devengar"/> 
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="bCA_" nombre="barrido_Compromisos Anuales" interactivo="false" ejecutar="%aCA.aCA.autoriza_compromiso_anual%==true "><!--AND %baa.baa.validacion1%==2-->
+            <componente id="bCA_" nombre="bCA_" tipo="cursor">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.id_periodo$" llaveForanea="false"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="$inParam.id_compromiso$" llaveForanea="false"/>
+                    <campo name="total_comprometido" calc="@consultaDirec('SELECT SUM(importe_total) AS acum FROM operation.compromisos_anual_det WHERE id_periodo='+$inParam.id_periodo$+' AND id_compromiso='+$inParam.id_compromiso$,'acum','numeric','MAGNITUS')"/>
+                    <campo name="comprometido_no_devengado" calc="@consultaDirec('SELECT SUM(importe_total) AS acum FROM operation.compromisos_anual_det WHERE id_periodo='+$inParam.id_periodo$+' AND id_compromiso='+$inParam.id_compromiso$,'acum','numeric','MAGNITUS')"/>
+                    <campo name="usuario_autoriza_compromiso_anual" calc="%bU.bU.id_usuario%"/>
+                    <campo name="id_duep" />
+                </tabla>
+            </componente>
+        </nivel>
+
+
+        <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%aCA.aCA.autoriza_compromiso_anual%==true "><!--AND %baa.baa.validacion1%==2-->
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="$inParam.ur$"/> 
+                   <campo name="periodo" calc="$inParam.id_periodo$" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                   <campo name="id_catalogo" calc="3"/>
+                   <campo name="fondo_contable" calc="%aCA.aCA.id_fondo_contable%"/>
+                   <campo name="duep_origen"/>
+                   <campo name="momento_contable" calc="4"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="id_beneficiario_ganador" calc="%aCA.aCA.id_beneficiario%"/>
+                   <campo name="concepto_general" calc="@concatenar('Póliza del Compromiso Candelarizado'+' '+%bCA_.bCA_.id_duep%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+       
+        <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles" interactivo="false" ejecutar="%aCA.aCA.autoriza_compromiso_anual%==true"><!-- AND %baa.baa.validacion1%==2-->
+            <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles" tipo="cursor">
+                <tabla schema="operation" nombre="compromisos_anual_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bU.bU.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bU.bU.id_periodo%"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%bU.bU.id_compromiso%"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="enero"/>
+                    <campo name="febrero"/>
+                    <campo name="marzo"/>
+                    <campo name="abril"/>
+                    <campo name="mayo"/>
+                    <campo name="junio"/>
+                    <campo name="julio"/>
+                    <campo name="agosto"/>
+                    <campo name="septiembre"/>
+                    <campo name="octubre"/>
+                    <campo name="noviembre"/>
+                    <campo name="diciembre"/>
+                    <campo name="importe_total"/>
+                </tabla>
+                <nivel id="FCP" nombre="Filtra Clave Presupuestal"  interactivo="false" ejecutar="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%!=null">
+                    <componente id="FCP" nombre="Filtra Clave Presupuestal" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.ur%"/> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.periodo%"/> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="mes"/>
+                        </tabla>
+                        <nivel id="ACP" nombre="Afectación a Clave Presupuestal"  interactivo="false" ejecutar="%FCP.FCP.clave_presupuestal%!=null">
+                            <componente id="ACP" nombre="Afectacion a Clave Presupuestal" tipo="cursor">
+                                <tabla schema="operation" nombre="presupuesto_egresos_mes_det" >
+                                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%FCP.FCP.id_unidad_responsable%"/>
+                                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%FCP.FCP.id_periodo%"/>
+                                    <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%FCP.FCP.clave_presupuestal%"/>
+                                    <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%FCP.FCP.mes%"/>
+                                    <campo name="presupuesto_comprometido" 
+                                        calc="@consultaDirec('SELECT '+%ACP.ACP.presupuesto_comprometido%+'+'+
+@ifThenElse(%FCP.FCP.mes%==1,
+@ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.enero%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.enero%),
+@ifThenElse(%FCP.FCP.mes%==2, 
+@ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.febrero%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.febrero%),
+@ifThenElse(%FCP.FCP.mes%==3,
+@ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.marzo%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.marzo%),
+ @ifThenElse(%FCP.FCP.mes%==4,
+ @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.abril%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.abril%),
+  @ifThenElse(%FCP.FCP.mes%==5,
+  @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.mayo%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.mayo%),
+ @ifThenElse(%FCP.FCP.mes%==6,
+ @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.junio%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.junio%),
+  @ifThenElse(%FCP.FCP.mes%==7,
+   @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.julio%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.julio%),
+    @ifThenElse(%FCP.FCP.mes%==8,
+    @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.agosto%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.agosto%),
+     @ifThenElse(%FCP.FCP.mes%==9,
+     @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.septiembre%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.septiembre%),
+     @ifThenElse(%FCP.FCP.mes%==10,
+     @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.octubre%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.octubre%),
+      @ifThenElse(%FCP.FCP.mes%==11,
+      @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.noviembre%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.noviembre%),
+      @ifThenElse(%FCP.FCP.mes%==12,
+      @ifThenElse( %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.diciembre%==null,0, %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.diciembre%),
+      0))))))))))))
++' AS suma','suma','numeric','MAGNITUS')"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+                
+                
+                
+                
+                <!--
+                <nivel id="ACP" nombre="Afectación a clave presupuestal" interactivo="false" ejecutar="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%!=null"> 
+                    <componente id="ACP" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.ur%"/> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.periodo%"/> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/> 
+                            <campo name="presupuesto_comprometido" calc="%ACP.ACP.presupuesto_comprometido% + %nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                -->
+                
+                <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%" />
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '4'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '01')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%"/>
+                            <campo name="concepto_bloque" calc="'Póliza del Presupuesto de Egresos Comprometido'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                            <campo name="ultimo_usuario_modificador" calc="%bU.bU.nombre_usuario%"/>
+                            <campo name="tipo_detalle" calc="1" llaveForanea="false"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '01')"/>
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe_total%"/>
+                            <campo name="concepto_bloque" calc="'Póliza del Presupuesto de Egresos Comprometido'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                            <campo name="ultimo_usuario_modificador" calc="%bU.bU.nombre_usuario%"/>
+                            <campo name="tipo_detalle" calc="1" llaveForanea="false"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Documento Digital del Ejercicio del Presupuesto" id="aaa" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%aCA.aCA.autoriza_compromiso_anual%==true"><!-- AND %baa.baa.validacion1%==2-->
+            <componente tipo="reporte" nombre="Póliza del Compromiso Candelarizado" id="aaa">
+                <reporte nombre="poliza_contable" nombreDocumento="'Póliza de Compromiso Candelarizado'" expediente="Expediente Compromiso Candelarizado" grupo="$inParam.expediente_compromiso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%aCA.aCA.autoriza_compromiso_anual%==true "><!-- AND %baa.baa.validacion1%==2-->
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido" id="bPE" interactivo="false">
+            <componente tipo="cursor" nombre="bPE" id="bPE">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%baa.baa.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%baa.baa.id_periodo%"/>
+                    <campo name="id_presupuesto_egresos"/>
+                    <campo name="id_presupuesto_egresos_det"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- 
+         <nivel nombre="crearNuevaInstancia" id="cI" interactivo="false" ejecutar="%aCA.aCA.autoriza_compromiso_anual%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cI" >
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'d1cdee41-3ab9-4a63-b737-350083429bec'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%bU.bU.ur%" mostrarEsc="true"/>
+                    <parametro name="out_id_periodo" calc="%bU.bU.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_compromiso_" calc="%bU.bU.id_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_tipo_compromiso" calc="%bU.bU.id_tipo_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_fuente_financiamiento" calc="%aCA.aCA.fuente_financiamiento%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel> 
+        -->
+    <!--    <nivel nombre="Detalle de Disponibles Presupuestales" id="dDP" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente tipo="tabla" nombre="Detalle de Disponibles Presupuestales" id="dDP">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" text="" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%baa.baa.ur%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%baa.baa.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_presupuesto_egresos" text="Presupuestos Egresos" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="%bPE.bPE.id_presupuesto_egresos%" llaveForanea="false" visible="false"/>
+                    <campo name="id_presupuesto_egresos_det" text="" filtroCampo="id_presupuesto_egresos_det" filtroOperador="=" filtroValor="%bPE.bPE.id_presupuesto_egresos_det%" llaveForanea="false" visible="false" />
+                    <campo name="id_clave_egreso" text="Identificador" columnas="2" margen-izquierdo="3"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" columnas="2" margen-derecho="3"/>
+                    <campo name="disponible_actual" local="true" type="decimal" text="Disponible Actual" calc="%bCAd.bCAd.importe_por_devengar%"  columnas="2" margen-derecho="3"/>
+                    <campo name="aaa" text="Importe Requerido" local="true" type="decimal" calc="%bCAd.bCAd.importe_total%" columnas="2" margen-izquierdo="3" formatoMoneda="true"/>
+                   
+                </tabla>
+            </componente>
+        </nivel>-->
+        
+        
+                
+     
+    </pagina>
+</tarea>

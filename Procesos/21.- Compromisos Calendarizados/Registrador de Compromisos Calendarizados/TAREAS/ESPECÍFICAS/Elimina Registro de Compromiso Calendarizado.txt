@@ -1,0 +1,86 @@
+<tarea nombre="valComAnu" version="1.0.0" fechaModificacion="2019-03-25" autor="Francisco" modificacionEfectuada="Versión Inicial" requisitosInstalacion="No">
+    <pagina id="1" nombre="Valida Compromisos Anuales">
+        <nivel nombre="barreUsuarios" id="barreUsuarios" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="barreUsuarios">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="id_compromiso" local="true" type="long" calc="$inParam.id_compromiso$"/>
+                    <campo name="id_tipo_compromiso" local="true" type="long" calc="$inParam.id_tipo_compromiso$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido" id="baa" interactivo="false">
+            <componente tipo="cursor" nombre="barrido" id="baa" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="id_compromiso" local="true" type="long" calc="$inParam.id_compromiso$"/>
+                    <campo name="id_tipo_compromiso" local="true" type="long" calc="$inParam.id_tipo_compromiso$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%baa.baa.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Documento de Compromiso Candelarizado de Servicios Personales" id="baaSP" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%baa.baa.id_tipo_compromiso%==2">
+            <componente tipo="reporte" nombre="Documento de Compromiso Candelarizado de Servicios Personales" id="baaSP">
+                <reporte nombre="repor_comprServicios_jsus">
+                    <campo name="ur" type="long" calc="%baa.baa.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%baa.baa.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%baa.baa.id_compromiso%"/>
+                    <campo name="id_compromiso_imp" type="long" calc="1"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Documento de Compromiso Candelarizado de Servicios Personales" id="rCAR" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%baa.baa.id_tipo_compromiso%==1 OR %baa.baa.id_tipo_compromiso%==3">
+            <componente tipo="reporte" nombre="Documento de Compromiso Candelarizado de Servicios Personales" id="rCAR">
+                <reporte nombre="repor_compromisos_an_jsus">
+                    <campo name="ur" type="long" calc="%baa.baa.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%baa.baa.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%baa.baa.id_compromiso%"/>
+                    <campo name="usuario" type="long" calc="%bU.bU.id_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Elimina Compromiso Candelarizado de Servicios Personales" id="eComAnu" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Elimina Compromiso Candelarizado de Servicios Personales" id="eComAnu" accionDefault="editar">
+                <tabla schema="operation" nombre="compromisos_anual" id="gCA">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="%baa.baa.ur%" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" llaveForanea="false" calc="%baa.baa.id_periodo%" visible="false"/>
+                    <campo name="id_compromiso" text="id_compromiso" calc="%baa.baa.id_compromiso%" llaveForanea="false" visible="false"/>
+                    <campo name="compromiso_eliminado" text="Eliminar" columnas="1" margen-izquierdo="5" margen-derecho="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <confirmaciones>
+                <confirmacion confirmacionInteraccion="%compromiso_eliminado%==true" confirmacionTitulo="'Alerta'" confirmacionMensaje="'Esta seguro de eliminar el folio'" tipo="avanzar"/>
+            </confirmaciones>
+        </nivel>
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%eComAnu.eComAnu.compromiso_eliminado%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

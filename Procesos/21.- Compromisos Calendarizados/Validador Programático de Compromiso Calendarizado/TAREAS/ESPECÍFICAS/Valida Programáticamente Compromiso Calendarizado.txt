@@ -1,0 +1,103 @@
+<tarea id="tar_Val_Prog_Comp_Anual" nombre="Valida Programaticamente Compromisos Anuales" autor="Sergio Armando Guzman Avila" version="1">
+    <pagina id="pag_Val_Prog_Comp_Anual">
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="id_compromiso" local="true" type="long" calc="$inParam.id_compromiso$"/>
+                    <campo name="id_tipo_compromiso" local="true" type="long" calc="$inParam.id_tipo_compromiso$"/>
+                     <campo name="id_usuario"/>
+                     <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido" id="baa" interactivo="false">
+            <componente tipo="cursor" nombre="barrido" id="baa" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="id_compromiso" local="true" type="long" calc="$inParam.id_compromiso$"/>
+                    <campo name="id_tipo_compromiso" local="true" type="long" calc="$inParam.id_tipo_compromiso$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Documento de Compromiso Anuales de Servicios Personales" id="rCAR" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%baa.baa.id_tipo_compromiso%==1 OR %baa.baa.id_tipo_compromiso%==3">
+            <componente tipo="reporte" nombre="Documento de Compromiso Anuales de Servicios Personales" id="rCAR">
+                <reporte nombre="repor_compromisos_an_jsus">
+                    <campo name="ur" type="long" calc="%baa.baa.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%baa.baa.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%baa.baa.id_compromiso%"/>
+                    <campo name="usuario" type="long" calc="%bU.bU.id_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Documento de Compromiso Candelarizado de Servicios Personales" id="rCASP" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%baa.baa.id_tipo_compromiso%==2">
+            <componente tipo="reporte" nombre="Documento de Compromiso Candelarizado de Servicios Personales" id="rCASP">
+                <reporte nombre="repor_comprServicios_jsus" >
+                    <campo name="ur" type="long" calc="%baa.baa.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%baa.baa.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%baa.baa.id_compromiso%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="vPCA" nombre="Valida Compromiso Calendarizado" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="vPCA" nombre="Valida Compromiso Calendarizado" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" llaveForanea="false" calc="$inParam.id_periodo$" visible="false"/>
+                    <campo name="id_compromiso" calc="$inParam.id_compromiso$" visible="false"/>
+                    <campo name="validap_compromiso_anual" text="Validar Programáticamente" columnas="2" margen-izquierdo="4"/>
+                    <campo name="observacionesp_compromiso_anual" text="Observaciones" columnas="10" height="250" interaccion-visible="%validap_compromiso_anual%==false" visible="false" validacion="%validap_compromiso_anual%==false AND %observacionesp_compromiso_anual%==null" validacionMensaje="Favor de ingresar una observación valida para continuar, solo se aceptan mayúsculas y números."/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%vPCA.vPCA.validap_compromiso_anual%==false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                    <parametro name="process" calc="$protocolarios.process$"/>    
+                    <parametro name="version" calc="$protocolarios.version$"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>  
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                    <parametro name="message" calc="%vPCA.vPCA.observacionesp_compromiso_anual%"/>
+                    <parametro name="type" calc="'1'"/> 
+                </parametros> 
+            </componente>
+        </nivel>
+        <nivel nombre="negociaInstancia" id="negociaInstancia" interactivo="false" ejecutar="%vPCA.vPCA.validap_compromiso_anual%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%vPCA.vPCA.validap_compromiso_anual%==true">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
