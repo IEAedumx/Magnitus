@@ -1,0 +1,110 @@
+<tarea id="Registro_y_Envio_Solicitud" nombre="Registro_y_Envio_Solicitud" version="1.0.0">  
+    <pagina id="1" > 
+
+    <nivel id="FGN" nombre="FGN" interactivo="false">
+            <componente id="FGN" nombre="FGN" tipo="cursor">
+                <tabla schema="operation" nombre="clasificacion_archivistica">
+                    <campo name="id_clasificacion_archivistica" ordenar="asc"/> <!-- filtroCampo="id_clasificacion_archivistica" filtroOperador="=" filtroValor="$inParam.clasificacion_archivistica$"-->
+                    <campo name="clasificacion_expediente"  /> 
+                    
+                  
+                </tabla>
+            </componente>
+        </nivel>
+        
+
+        <nivel nombre="" id="NG_RSCC" mostrarProximoNivel="false"> 
+                <componente tipo="reporte" nombre="" id="ImpHojaDiaria" colapsado="si">
+                    <reporte nombre="clasificacion">
+                            
+                        </reporte>
+                    </componente>
+               
+           			
+            <componente tipo="formulario" id="ASDPPD_AS" nombre="Autoriza/Rechaza Solución" accionDefault="editar">
+                <tabla schema="operation" nombre="clasificacion_archivistica"> 
+                    <campo name="id_clasificacion_archivistica" text="Numero de Clasificacion" calc="%FGN.FGN.id_clasificacion_archivistica%" llaveForanea="false"  columnas="2" margen-izquierdo="2" visible="false"/> 
+                     <campo name="clasificacion_seccion" text="Seccion"   width="350" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                    <campo name="abreviatura_seccion" text="Abreviatura Seccion"   width="350" columnas="3" margen-derecho="2" habilitado="false" />
+                    <campo name="clasificacion_serie" text="Serie"   width="350" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                    <campo name="abreviatura_serie" text="Abreviatura Serie"   width="350" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="clasificacion_subserie" text="Subserie"  width="350" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                    <campo name="abreviatura_subserie" text="Abreviatura Subserie"  width="350" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="clasificacion_expediente" text="Expediente/Tema" width="350" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                    <campo name="fecha_autoriza" text="Fecha de Autorización/Rechazo" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columnas="3" margen-derecho="2" habilitado="false"/>    
+                    <campo name="estatus" text="Estatus" columnas="3" margen-izquierdo="2" habilitado="true">
+                        <opciones>
+                            <opcion texto="AUTORIZADA" valor="AUTORIZADA"/> 
+                            <opcion texto="RECHAZADA" valor="RECHAZADA"/> 
+                        </opciones>
+                    </campo>     
+                    <campo name="anotaciones" text="Observaciones" visible="false" interaccion-visible="%estatus%=='RECHAZADA'" columnas="8" margen-izquierdo="1" margen-derecho="1" height="200"/>  
+               
+
+                   
+                </tabla>
+                  <estilos>
+                    <boton nombre="grabar" texto="Continuar"  columnas="3" margen-izquierdo="3" margen-derecho="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                
+                
+                
+            </componente>
+        </nivel> 
+        <nivel nombre="TurnarInstancia" id="turnar_instancia" interactivo="false" ejecutar="%NG_RSCC.ASDPPD_AS.estatus%=='AUTORIZADA'">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>  
+        
+        
+        <nivel nombre="Negocia Instancia" id="NegociaInstancia" interactivo="false" ejecutar="%NG_RSCC.ASDPPD_AS.estatus%=='RECHAZADA'">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="NegociaInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="MensajeNegociar" id="MensajeNegociar" interactivo="false" ejecutar="%NG_RSCC.ASDPPD_AS.estatus%=='RECHAZADA'"> 
+                 <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNegociar"> 
+                     <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                         <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                         <parametro name="process" calc="$protocolarios.process$"/>    
+                         <parametro name="version" calc="$protocolarios.version$"/> 
+                         <parametro name="user" calc="$protocolarios.user$"/>  
+                         <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                         <parametro name="message" calc="%NG_RSCC.ASDPPD_AS.anotaciones%"/>
+                         <parametro name="type" calc="'1'"/> 
+                     </parametros> 
+                 </componente>
+             </nivel>
+      
+       <!-- <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%NG_RSCC.NG_RSCC.autoriza%=='SI'">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>-->
+    </pagina>
+</tarea>
