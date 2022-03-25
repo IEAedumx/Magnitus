@@ -1,0 +1,135 @@
+<tarea id="Autoriza_CContables" nombre="Autoriza Listado de Cuentas  Contables" autor="Juan Alberto" version="1">
+    <pagina id="1" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+        <nivel id="nlAutoriza_CContables" nombre="Cuentas Contables por Autorizar" mostrarProximoNivel="false">
+            <componente id="cpReporteCtasFS_" nombre="Cuentas Contables por Autorizar" tipo="reporte">
+                <reporte nombre="Cons_ctas1" expediente="Expediente de Listado de Cuentas" nombreDocumento="'Listado de Cuentas'" grupo="$inParam.periodo$" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" text="Periodo Contable" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nivel" text="Nivel" local="true" type="long" calc="0"/>
+                    <campo name="tipo_cuenta" text="Tipo Cuenta" local="true" type="long" calc="0"/>
+                    <campo name="clasificacion_cuenta" text="Clasificacion Cuenta" local="true" type="long" calc="0"/>
+                    <campo name="tipo_transaccion" text="Tipo Transaccion" local="true" type="long" calc="0"/>
+                    <campo name="tabla" text="Tipo Estatus" local="true" type="long" calc="0"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="tipo_reporte" text="Tipo Reporte" local="true" type="long" calc="2"/>
+                    <campo name="folio_operacion" local="true" type="long" text="Folio" calc="$inParam.folio_operacion$"/>
+                </reporte>
+            </componente>
+            <componente id="cpAutoriza_CContables" nombre="Autoriza Cuentas Contables" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Ejercicio Fiscal" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="observaciones_cuenta_contable" text="Motivo de Rechazo" height="250" columnas="6" margen-izquierdo="2"/>
+                    <campo name="autorizar_cuenta" text="Autorizar" local="true" type="bool" visible="true" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="ListadoCtasAUX" nombre="Listado Cuentas AUX" interactivo="false" ejecutar="%nlAutoriza_CContables.cpAutoriza_CContables.autorizar_cuenta%==true">
+           <componente  tipo="cursor" id="ListadoCtasAUX">
+                <tabla schema="catalog" nombre="cuentas_contables_aux">
+                    <campo name="ur" text="Unidad Responsable" descripcionForanea="descripcion" filtroCampo="ur" filtroOperador="=" filtroValor="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="clave_cuenta" text="Clave de Cuenta"/>
+                    <campo name="folio_operacion" text="Folio" generacion="@prox()+1" autogenerado="true"/> 
+                    <campo name="descripcion" text="Descripción"/>
+                    <campo name="nivel" text="Nivel"/>
+                    <campo name="naturaleza_cuenta" text="Naturaleza Cuenta"/>
+                    <campo name="tipo_cuenta" text="Tipo Cuenta"/>
+                    <campo name="clasificacion_cuenta" text="Clasificacion Cuenta"/>
+                    <campo name="tipo_transaccion" text="Tipo Transaccion"/>
+                    <campo name="fecha_registro" text="Fecha"/>
+                    <campo name="vigente" text="Vigente"/>
+                    <campo name="estatus_cuenta" text="Estatus Cuenta" calc="2"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario"/>
+                    <campo name="folio_operacion_instancia" text="Folio Instancia" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="$inParam.folio_operacion$"/>
+                </tabla>
+                <nivel id="ListadoCtas" nombre="Listado Cuentas" interactivo="false" ejecutar="$inParam.opcion$=='Agregar'">
+                    <componente  tipo="altaDirect" id="ListadoCtas">
+                        <tabla schema="catalog" nombre="cuentas_contables">
+                            <campo name="ur" text="Unidad Responsable" calc="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                            <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                            <campo name="clave_cuenta" text="Clave de Cuenta" calc="%ListadoCtasAUX.ListadoCtasAUX.clave_cuenta%"/>
+                            <campo name="descripcion" text="Descripción" calc="%ListadoCtasAUX.ListadoCtasAUX.descripcion%"/>
+                            <campo name="nivel" text="Nivel" calc="%ListadoCtasAUX.ListadoCtasAUX.nivel%"/>
+                            <campo name="naturaleza_cuenta" text="Naturaleza Cuenta" calc="%ListadoCtasAUX.ListadoCtasAUX.naturaleza_cuenta%"/>
+                            <campo name="tipo_cuenta" text="Tipo Cuenta" calc="%ListadoCtasAUX.ListadoCtasAUX.tipo_cuenta%"/>
+                            <campo name="clasificacion_cuenta" text="Clasificacion Cuenta" calc="%ListadoCtasAUX.ListadoCtasAUX.clasificacion_cuenta%"/>
+                            <campo name="tipo_transaccion" text="Naturaleza Cuenta" calc="%ListadoCtasAUX.ListadoCtasAUX.tipo_transaccion%"/>
+                            <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                            <campo name="ultimo_usuario_modificador" text="Usuario" calc="%ListadoCtasAUX.ListadoCtasAUX.ultimo_usuario_modificador%"/>
+                            <campo name="vigente" text="Vigente" calc="%ListadoCtasAUX.ListadoCtasAUX.vigente%"/>
+                            <campo name="estatus" text="Estatus" calc="1"/>
+                            <campo name="estatus_cuenta" text="Estatus Cuenta" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="ListadoCtasB" nombre="Listado Cuentas" interactivo="false" ejecutar="$inParam.opcion$=='Eliminar' AND %nlAutoriza_CContables.cpAutoriza_CContables.autorizar_cuenta%==true">
+                    <componente  tipo="bajaDirect" id="ListadoCtasB">
+                        <tabla schema="catalog" nombre="cuentas_contables">
+                            <campo name="ur" text="Unidad Responsable" calc="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                            <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                            <campo name="clave_cuenta" text="Clave de Cuenta" calc="%ListadoCtasAUX.ListadoCtasAUX.clave_cuenta%"/>
+                            <campo name="estatus" text="Estatus" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="ListadoCtasBe" nombre="Listado Cuentas" interactivo="false" ejecutar="$inParam.opcion$=='Eliminar' AND %nlAutoriza_CContables.cpAutoriza_CContables.autorizar_cuenta%==true">
+            <componente  tipo="cursor" id="ListadoCtasBe">
+                <tabla schema="catalog" nombre="cuentas_contables_aux">
+                    <campo name="ur" text="Unidad Responsable" calc="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="clave_cuenta" text="Clave de Cuenta" calc="%ListadoCtasAUX.ListadoCtasAUX.clave_cuenta%"/>
+                    <campo name="folio_operacion" text="Folio" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="$inParam.folio_operacion$"/>
+                    <campo name="estatus" text="Estatus" calc="2"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%nlAutoriza_CContables.cpAutoriza_CContables.autorizar_cuenta%==false"> 
+             <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado"> 
+                 <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                     <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                     <parametro name="process" calc="$protocolarios.process$"/>    
+                     <parametro name="version" calc="$protocolarios.version$"/> 
+                     <parametro name="user" calc="$protocolarios.user$"/>  
+                     <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                     <parametro name="message" calc="%nlAutoriza_CContables.cpAutoriza_CContables.observaciones_cuenta_contable%"/>
+                     <parametro name="type" calc="'1'"/> 
+                 </parametros> 
+             </componente>
+         </nivel>
+        <nivel nombre="negociacionInstancia" id="negociacionInstancia" interactivo="false" ejecutar="%nlAutoriza_CContables.cpAutoriza_CContables.autorizar_cuenta%==false">
+            <componente tipo="solicitud" nombre="negociacionInstancia" id="negociaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="out_observaciones" calc="%nlAutoriza_CContables.cpAutoriza_CContables.observaciones_cuenta_contable%" mostrarEsc="true"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlAutoriza_CContables.cpAutoriza_CContables.autorizar_cuenta%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
