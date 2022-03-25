@@ -1,0 +1,114 @@
+<tarea nombre="Consulta Compromisos Anuales" version="1.0.0" fechaModificacion="10/04/2019" autor="Froylán Alanís" modificacionEfectuada="Version inicial" requisitosInstalacion="No">
+    <pagina nombre="Consulta Compromisos Anuales" id="1">
+        <nivel id="bPer" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="bPer" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreCompA" id="barreCompA" interactivo="false">
+            <componente tipo="cursor" nombre="barreCompA" id="barreCompA">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="seleccion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Consulta Compromisos Anuales" id="consCA" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" nombre="Consulta Compromisos Anuales" id="tabCCA" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" filtro="true">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%" columna-visible="false"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%" columna-visible="false"/>
+                    <campo name="id_compromiso" text="Compromiso" columna-visible="false"/>
+                    <campo name="id_duep" text="Folio" width="95"/>
+                    <campo name="id_beneficiario" text="Beneficiario" descripcionForaneaTabla="razon_social" width="440"/>
+                    <campo name="id_tipo_compromiso" text="Tipo de Compromiso" descripcionForaneaTabla="tipo_compromiso" width="160"/>
+                    <campo name="fecha_elaboracion" text="Fecha" width="165"/>
+                    <campo name="id_centro_registro" text="Centro Registro" descripcionForaneaTabla="descripcion" width="450"/>
+                    <campo name="total_comprometido" text="Total Comprometido" formatoMoneda="true" cellalign="right" width="155"/>
+                    <campo name="autoriza_compromiso_anual" text="Autoriza" visible="false" columna-visible="false" filtroCampo="autoriza_compromiso_anual" filtroOperador="=" filtroValor="true"/>
+                    <campo name="seleccion" text="Selección" editable="true" width="75"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreComp" id="barreComp" interactivo="false">
+            <componente tipo="cursor" nombre="barreComp" id="barreComp">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_compromiso"/>
+                    <campo name="id_tipo_compromiso"/>
+                    <campo name="id_duep"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="bUe" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bUe">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+       <nivel nombre="Reporte de Compromisos Anuales de Servicios Personales" id="baaSP" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%barreComp.barreComp.id_tipo_compromiso%==2">
+            <componente tipo="reporte" nombre="Reporte de Compromisos Anuales de Servicios Personales" id="baaSP">
+                <reporte nombre="repor_comprServicios_jsus" update="true" nombreDocumento="'Compromisos Anuales'" expediente="Expediente Compromisos Anuales de Servicios Personales"  grupo="$inParam.periodo$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%barreComp.barreComp.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%barreComp.barreComp.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%barreComp.barreComp.id_compromiso%"/>
+                    <campo name="id_compromiso_imp" type="long" calc="1"/>
+                    <campo name="usuario" type="string" calc="%bU.bU.nombre_usuario%"/>
+                </reporte>
+            </componente>
+            <componente id="reporteSP" nombre="Reporte Estado de Cuenta Detallado del Folio" tipo="reporte" colapsado="SI">
+                <reporte nombre="Edo_cta_can" update="true" nombreDocumento="'Estado de cuenta'" expediente="Expediente Compromisos Anuales de Servicios Personales"  grupo="$inParam.periodo$" url="$config.repository_upload_file$"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="%barreComp.barreComp.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%barreComp.barreComp.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_compromiso" type="long" calc="%barreComp.barreComp.id_compromiso%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte Gestión de Compromisos Anuales" id="baaR" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%barreComp.barreComp.id_tipo_compromiso%==1 OR %barreComp.barreComp.id_tipo_compromiso%==3">
+            <componente tipo="reporte" nombre="Reporte de Compromisos Anuales" id="baaR">
+                <reporte nombre="repor_compromisos_an_jsus" update="true" nombreDocumento="'Compromisos Anuales'" expediente="Expediente Compromisos Anuales de Servicios Personales"  grupo="$inParam.periodo$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%barreComp.barreComp.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%barreComp.barreComp.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%barreComp.barreComp.id_compromiso%"/>
+                    <campo name="usuario" type="string" calc="%bU.bU.id_usuario%"/>
+                </reporte>
+            </componente>
+            <componente id="reporte1" nombre="Reporte Estado de Cuenta Detallado del Folio" tipo="reporte">
+                <reporte nombre="Edo_cta_can_CA" update="true" nombreDocumento="'Estado de cuenta'" expediente="Expediente Compromisos Anuales de Servicios Personales"  grupo="$inParam.periodo$" url="$config.repository_upload_file$"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="%barreComp.barreComp.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%barreComp.barreComp.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_compromiso" type="long" calc="%barreComp.barreComp.id_compromiso%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

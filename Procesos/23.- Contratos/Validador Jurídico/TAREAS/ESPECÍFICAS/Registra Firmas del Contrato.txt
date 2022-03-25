@@ -1,0 +1,151 @@
+<tarea nombre="regFirCon" id="1" version="1.0.0" autor="Froylán Alanís" requisitosInstalacion="No" fechaModificacion="2019-03-20" modificacionEfectuada="Versión Inicial">
+    <pagina id="1" nombre="regFirCon">
+        <nivel id="inParam" nombre="inParam" interactivo="false">
+            <componente id="inParam" nombre="inParam" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" llaveForanea="false"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_duep_contrato_pedido" id="bDCP" interactivo="false">
+            <componente tipo="cursor" nombre="bDCP" id="bDCP">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="tipo_documento" filtroCampo="tipo_documento" filtroOperador="=" filtroValor="1" visible="false"/>
+                    <campo name="id_duep_contrato_pedido" ordenar="asc"/>
+                    <campo name="folio_con_ordecom"/>
+                    <campo name="fecha_contrato_pedido"/>
+                    <campo name="total"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_duep_contrato_pedido_det" id="bDCPD" interactivo="false">
+            <componente tipo="cursor" nombre="bDCP" id="bDCPD">
+                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%bDCP.bDCP.id_duep_contrato_pedido%"/>
+                    <campo name="importe_total"/>
+                </tabla>
+            </componente>
+        </nivel>
+       <nivel id="rCon" mostrarNivelAnterior="false" mostrarProximoNivel="false" nombre="Validación Contrato Juridicamente">
+            <!--Maestro detalle de Contrato-->
+            <componente id="rCon" nombre="Registra Firmas del Contrato" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" text="" calc="%bDCP.bDCP.ur%" llaveForanea="false" visible="false"/>
+                        <campo name="periodo" text="" calc="%bDCP.bDCP.periodo%" llaveForanea="false" visible="false"/> 
+                        <campo name="id_duep_contrato_pedido" text="" calc="%bDCP.bDCP.id_duep_contrato_pedido%" llaveForanea="false" visible="false"/> 
+                        <campo name="tipo_documento" text="" visible="false"/>
+                        <campo name="contrato" text="Contrato" habilitado="false" columnas="3" />
+                        <campo name="proveedor" text="Proveedor" descripcionForanea="folio_beneficiario,razon_social,nombre,primer_apellido,segundo_apellido" habilitado="false" columnas="3" />
+                        <campo name="folio_con_ordecom" text="Folio" habilitado="false" columnas="3" />
+                        <campo name="nombre_comercial" text="Nombre Comercial" habilitado="false" columnas="3" />
+                        <campo name="proyecto_compra" text="Proyecto Compra" habilitado="false" visible="false" columnas="3" />
+                        <campo name="direccion_prov" text="Dirección" columnas="3" habilitado="false"/>
+                        <campo name="proceso_origen" text="Proceso Origen" visible="false"/>
+                        <campo name="proc_or" local="true" text="Proceso Origen" type="string" habilitado="false" calc="$inParam.folio_add$" columnas="3" />
+                        <campo name="id_pais" text="id_pais" descripcionForanea="nombre" visible="false"/>
+                        <campo name="estado_prov" text="Estado" descripcionForanea="nombre" habilitado="false" columnas="3" />
+                        <campo name="id_cat_fondo" text="ID Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable *" habilitado="false" marcador="Fondo Contable" llavesFijas="afectable='true'" descripcionForaneaTabla="id_cat,descripcion" validacion="%id_fondo_contable%==null" validacionMensaje="Debe Capturarse Fondo Contable" visible="true" columna-visible="false" columnas="3" />
+                        <campo name="tel_prov" text="Teléfono" marcador="Teléfono" habilitado="false" columnas="3" />
+                        <campo name="fecha_contrato_pedido" text="Fecha *" calc="@fechaSistema()" validacion="@after(%fecha_contrato_pedido%,@fechaSistema())==true" validacionMensaje="No se puede asignar fechas posteriores" habilitado="false" columnas="3" />
+                        <campo name="representante_prov" text="Representante Legal" habilitado="false" marcador="Representante Legal" columnas="3" />
+                        <campo name="estatus" text="Estatus" calc="1" habilitado="false" columnas="3" />
+                        <campo name="lugar_entrega" text="Lugar Entrega" habilitado="false" columnas="3" />
+                        <campo name="contacto_recepcion" text="Contacto de Recepción *" habilitado="false" marcador="Contacto de Recepción" validacion="%contacto_recepcion%==null" validacionMensaje="Contacto de Recepción es requerido" columnas="3" />
+                        <campo name="tiempo_entrega" text="Tiempo de Entrega" habilitado="false" columnas="3" />
+                        <campo name="id_cat_area_requiriente" text="id_cat_area_requiriente" calc="2" llaveForanea="false" visible="false" columnas="3" />
+                        <campo name="area_requiriente" text="Área Requirente" habilitado="false" marcador="Área Requirente" descripcionForanea="descripcion" columnas="3" />
+                        <campo name="condiciones_pago" text="Condiciones de Pago" habilitado="false" columnas="3" />
+                        <campo name="requiere_anticipo" text="Requiere anticipo" habilitado="false" columnas="3" />
+                        <campo name="anticipo" text="Anticipo" mascara="##" habilitado="false" columnas="3" />
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" columnas="2" margen-izquierdo="6"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det" id="dCon" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_duep_contrato_pedido_det" text="Renglón" width="60" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="clave_articulo" text="Clave Artículo" habilitado="false" descripcionForanea="clave_articulo" descripcionForaneaTabla="clave_articulo" columnas="3" margen-derecho="2"/>
+                        <campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="clasificador_objeto_gasto" text="Clasificador por Objeto del Gasto" descripcionForanea="descripcion" width="350" columnas="3" margen-izquierdo="2"/>
+                        <campo name="caracteristica" text="Características Específicas" columnas="3" margen-derecho="2"/>
+                        <campo name="id_cat_programa_presupuestal" text="" columna-visible="false" visible="false"/>
+                        <campo name="programa_presupuestal" text="Clave Presupuestal" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_centro_registro" text="" columna-visible="false" visible="false"/>
+                        <campo name="centro_registro" text="Centro de Registro" columna-visible="false" columnas="3" margen-derecho="2"/>
+                        <campo name="clave_presup" text="Clave Presupuestal" columnas="3" margen-derecho="2"/>
+                        <campo name="cantidad" text="Cantidad" columna-visible="true" columnas="3" margen-izquierdo="2"/>
+                        <campo name="unidad_medida" text="Unidad de Medida" columnas="3" margen-derecho="2"/>
+                        <campo name="importe_unitario" text="Precio Unitario" columnas="3" margen-izquierdo="2"/>
+                        <campo name="descuento" text="Descuento" columnas="3" margen-derecho="2"/>
+                        <campo name="imp_valor_agregado" text="Impuesto al Valor Agregado" columnas="3" margen-izquierdo="2"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos" columnas="3" margen-derecho="2"/>
+                        <!-- <campo name="importe_unitario" text="Importe Unitario" columnas="3" margen-izquierdo="2"/> -->
+                        <campo name="importe_total" text="Total" width="100" columnas="3" margen-derecho="2" muestraAcumulado="true"/>
+                        <!--  -->
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Guardar Contrato"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </detalles>
+            </componente>
+            <componente tipo="reporte" nombre="Consulta Contrato" id="conCont">
+                <reporte nombre="consulta_contrato_AL">
+                    <campo name="ur" type="long" calc="%rCon.rCon.ur%"/>
+                    <campo name="periodo" type="long" calc="%rCon.rCon.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%rCon.rCon.id_duep_contrato_pedido%"/>
+                </reporte>
+            </componente>
+            <componente tipo="formulario" id="condD" nombre="Registra Firmas del Contrato">
+                <tabla schema="operation" nombre="gestion_firmas_con" id="condD" tituloDetalle="">
+                    <campo name="ur" text="ur" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="periodo" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_contrato" text="Id contrato" calc="1" llaveForanea="false"  visible="false"/>
+                    <campo name="id_gestion" text="Gestión" visible="false" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="contrato" text="Contrato" calc="%bDCP.bDCP.folio_con_ordecom%" habilitado="false" columnas="3"  />
+                    <campo name="fecha_elaboracion" text="Fecha" calc="%bDCP.bDCP.fecha_contrato_pedido%" columnas="3" />
+                    <campo name="importe_total" text="Importe" calc="%bDCP.bDCP.total%" habilitado="false" columnas="3" />
+                    <campo name="firma_proveedor" text="Firma Proveedor" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Firmas Proveedor'" grupo="$inParam.adquisicion$" expediente="Expediente Adquisiciones/Contrato" columnas="3" /> 
+                    <campo name="firma_utags" text="Firma Institucional" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Firma Institucional'" grupo="$inParam.adquisicion$" expediente="Expediente Adquisiciones/Contrato" columnas="6" />
+                    <campo name="fecha" text="Fecha" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" visible="false"/>
+                    <campo name="observacion" text="Observaciones" mascara="C" height="250" columnas="6" margen-izquierdo="2"/>
+                    <!-- <campo name="importe_total" text="Importe" calc="@consultaDirec('SELECT (importe_total) as importe FROM operation.detalle_contrato WHERE id_contrato='+'\\''+%conD.detCont.id_contrato%+'\\''+'\','importe','long','MAGNITUS')*1.16" habilitado="false" columnas="3" margen-izquierdo="2"/> --><!-- IMPORTE TOTAL CON IVA ¿? -->
+                    <!--  CAMPO DE FIRMA DEL PROVEEDOR SE ADJUNTA PDF O IMAGEN (ATRIBUTO NO LIBERADO DESARROLLO)
+                    <campo name="firma_utags" text="Firma Institucional" local="true" type="file" update="true" fileType="normal" url="$$" nombreDocumento="FirmaInstitucional" grupo="%%" expediente="" />CAMPO DE FIRMA DE LA INSTITUCION SE ADJUNTA PDF O IMAGEN (ATRIBUTO NO LIBERADO DESARROLLO) -->
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="turnar_instancia" interactivo="false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

@@ -1,0 +1,516 @@
+<tarea nombre="Registra Compromisos Anuales Tarea" version="1.0.1" fechaModificacion="04/12/2019" autor="JulioCDH" modificacionEfectuada="RQs" requisitosInstalacion="">
+    <pagina id="1" nombre="Registra Compromisos Anuales Pagina">
+        <nivel id="bPer" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="bPer" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                    <campo name="id_separador"/>
+                    <campo name="id_cat_fondo_contable" local="true" type="long" calc="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido" id="bPE" interactivo="false">
+            <componente tipo="cursor" nombre="bPE" id="bPE">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bU.bU.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bU.bU.id_periodo%"/>
+                    <campo name="id_presupuesto_egresos"/>
+                    <campo name="total"/>
+                </tabla>
+            </componente>
+        </nivel>
+         <nivel id="elimina" nombre="queryBaja" interactivo="false" ejecutar="%bPer.bPer.id_periodo%!=null">
+            <componente id="elimina" nombre="queryBaja" tipo="cursor">
+                <tabla schema="operation" nombre="importa_compromisos_anual_sp">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_compromiso"/>
+                </tabla>
+                <nivel id="eliminacion" nombre="bajaImporta" interactivo="false" ejecutar="%elimina.elimina.id_compromiso%!=null" >
+                    <componente id="eliminacion" nombre="bajaImporta" tipo="bajaDirect">
+                        <tabla schema="operation" nombre="importa_compromisos_anual_sp">
+                            <campo name="ur" calc="%elimina.elimina.ur%"/>
+                            <campo name="id_periodo" calc="%elimina.elimina.id_periodo%"/>
+                            <campo name="id_compromiso" calc="%elimina.elimina.id_compromiso%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel nombre="Registra Compromisos Calendarizado" id="aCA" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Registra Compromiso Calendarizado" id="aCA" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false"/>
+                    <campo name="id_periodo" text="Ejercicio Fiscal" llaveForanea="false" calc="%bPer.bPer.id_periodo%" columnas="3" local="true" type="long"/>
+                    <campo name="id_tipo_compromiso" text="Tipo de Compromiso" columnas="3" validacion="%id_tipo_compromiso%==null" validacionMensaje="Tipo de Compromiso es requerido" local="true" type="long">
+                        <opciones>
+                            <opcion texto="Servicios Básicos" valor="1"/>
+                            <opcion texto="Servicios Personales" valor="2"/>
+                            <opcion texto="Otros Compromisos Anuales" valor="3"/>
+                        </opciones>
+                    </campo>
+                    <campo name="fecha_compromiso" text="Fecha" marcador="Fecha" columnas="3" calcCliente="@ifThenElse(%id_tipo_compromiso%==2,@concatenar(%id_periodo%+'/01/01'),@fechaSistema('YYYY/MM/dd'))" validacion="@after(%fecha_compromiso%,@fechaSistema('YYYY/MM/dd'))" validacionMensaje="No puede seleccionar fechas futuras" local="true" type="date"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+         <!-- GENERA FOLIO  DE EXPEDIENTE -->                    
+        <nivel id="GFE" nombre="GFE" interactivo="false">
+            <componente id="GFE" nombre="GFE" tipo="altaDirect">
+                <tabla schema="entity" nombre="adquisiciones">
+                    <campo name="ur" calc="%bPer.bPer.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false"/>
+                    <campo name="folio_adquisicion" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/> 
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="altaDirect_Compromisos Anuales" id="rCA" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==1 OR %aCA.aCA.id_tipo_compromiso%==3">
+            <componente tipo="altaDirect" nombre="rCA" id="rCA">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo" llaveForanea="false" calc="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_compromiso" text="id_compromiso" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    <campo name="id_duep" text="Folio" calc="@concatenar('CA-'+@consultaDirec('SELECT LPAD((COUNT(*)+1)::text,5,\\'0\\') AS result FROM operation.compromisos_anual WHERE id_tipo_compromiso!=2','result','string','MAGNITUS'))"/>
+                    <campo name="tramite" calc="@ifThenElse(%aCA.aCA.id_tipo_compromiso%==1,'COMPROMISOS ANUALES SERVICIOS BÁSICOS',@ifThenElse(%aCA.aCA.id_tipo_compromiso%==2,'COMPRIMISOS ANUALES SERVICIOS PERSONALES',@ifThenElse(%aCA.aCA.id_tipo_compromiso%==3,'OTROS COMPROMISOS ANUALES','')))"/>
+                    <campo name="fecha_elaboracion" text="" calc="@fechaSistema()" visible="false"/>
+                    <campo name="id_tipo_compromiso" calc="%aCA.aCA.id_tipo_compromiso%"/>
+                    <campo name="fecha_compromiso" calc="%aCA.aCA.fecha_compromiso%"/>
+                    <campo name="exp_compromiso" calc="%GFE.GFE.folio_adquisicion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+       
+        
+        <!-- SERVICIOS BÁSICOS U OTROS COMPROMISOS -->
+        <nivel nombre="Gestión de Compromisos Anuales" id="gCA" ejecutar="%aCA.aCA.id_tipo_compromiso%==1 OR %aCA.aCA.id_tipo_compromiso%==3" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente tipo="maestroDetalle" nombre="Gestión de Compromisos Anuales" id="gCA">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="compromisos_anual" id="gCA" tituloDetalle="Gestión de Compromisos Anuales">
+                        <campo name="ur" text="UR" calc="%rCA.rCA.ur%" llaveForanea="false" visible="false"/>
+                        <campo name="id_periodo" text="Periodo" calc="%rCA.rCA.id_periodo%" llaveForanea="false" visible="false"/>
+                        <campo name="id_compromiso" text="id_compromiso" calc="%rCA.rCA.id_compromiso%" llaveForanea="false" visible="false"/>
+                        
+                        <campo name="id_duep" text="Folio" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="fecha_compromiso" text="Fecha" calc="%rCA.rCA.fecha_compromiso%" habilitado="true" columnas="3"/>
+                        <campo name="id_tipo_compromiso" text="Tipo de Compromiso" calc="%rCA.rCA.id_tipo_compromiso%" habilitado="false" descripcionForanea="tipo_compromiso" columnas="3" />
+                        
+                        <campo name="id_cat_fondo_contable" text="id_cat_fondo_contable" llaveForanea="false" visible="false" calc="3"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable *" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" columnas="3" margen-izquierdo="1" descripcionForanea="id_cat,descripcion" validacion="%id_fondo_contable%==null" validacionMensaje="Seleccione Fondo Contable" llavesFijas="afectable=true"/>
+                        <campo name="tramite" text="Trámite" columnas="3" habilitado="false"/>
+                        <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_fuente" text="id_cat_fuente" calcCliente="%id_catalogo_foraneo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="fuente_financiamiento" text="Fuente de Financiamiento *" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" validacion="%fuente_financiamiento%==null" validacionMensaje="Debe Capturarse Fuente de Fianciamiento" columnas="3" calcCliente="%id_cat_foraneo%" habilitado="false" llavesFijas="afectable=true" autoFiltrado="true"/>
+                       <campo name="id_beneficiario" text="Beneficiario *"  columnas="3"  margen-izquierdo="1" autoFiltrado="true" autoFiltradoDescripcion="folio_beneficiario,razon_social" llavesFijas="id_estatus_beneficiario=1" validacion="%id_beneficiario%==null OR %id_beneficiario%==''" validacionMensaje="Campo 'Beneficiario' es requerido" habilitado="true" calc=""/>
+                        <campo name="periodicidad" text="Periodicidad *" columnas="3" validacion="%periodicidad%==null" validacionMensaje="Indique periodicidad">
+                            <opciones>
+                                <opcion texto="Mensual" valor="Mensual"/>
+                                <opcion texto="Abierto" valor="Abierto"/>
+                            </opciones>
+                        </campo>
+                        <campo name="id_centro_registro" text="id_cat_centro_registro" llaveForanea="false" calc="2" visible="false" columna-visible="false"/>
+                        <campo name="centro_registro" text="Centro Registro *" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" descripcionForanea="id_cat,descripcion" columnas="3" validacion="%centro_registro%==null" validacionMensaje="Seleccione Centro de Registro" llavesFijas="afectable=true" marcador="Selecciona un Centro de Registro"/>
+                        <campo name="concepto" text="Concepto *" width="720" height="150" columnas="9" margen-izquierdo="1" validacion="%concepto%==null" validacionMensaje="Capture Concepto"/>
+                        <campo name="estatus" calc="'GENERADA'" visible="false"/>
+                        <campo name="ultimo_usuario_modificador" calc="%bU.bU.id_usuario%" llaveForanea="false" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla schema="operation" nombre="compromisos_anual_det" id="aBl" tituloDetalle="Renglón">
+                        <campo name="ur" text="UR" calc="%rCA.rCA.ur%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_periodo" text="Periodo" calc="%rCA.rCA.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_compromiso" text="id_compromiso" calc="%rCA.rCA.id_compromiso%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_detalle_compromiso" text="Renglón" habilitado="false" autogenerado="true" generacion="@prox()+1" columnas="3" width="75"/>
+                        <campo name="articulo" text="Artículo" width="150" autoFiltradoDescripcion="clave_articulo,descripcion_articulo" autoFiltrado="true" descripcionForanea="clave_articulo,descripcion_articulo" descripcionForaneaTabla="clave_articulo,descripcion_articulo" columnas="3" validacion="%articulo%==null" validacionMensaje="Seleccione un 'Artículo'" llavesFijas="afectable=true"/>
+                        <campo name="id_cat_cog" text="ID COG" calc="4" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_cog" text="COG" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" columnas="3" calcCliente="@consultaDirec('SELECT (id_cat_clasificacion_objeto_gasto) AS result FROM catalog.articulos WHERE ur='+%rCA.rCA.ur%+' AND'+' periodo='+'\\''+%rCA.rCA.id_periodo%+'\\''+' AND'+' clave_articulo='+'\\''+%articulo%+'\\'','result','string','MAGNITUS')" habilitado="false" llavesFijas="afectable=true" width="150"/>
+                        <campo name="des_especifica" text="Descripción Específica" width="200" mascara="C" validacion="%des_especifica%==null" validacionMensaje="Descripción Específica es requerido" columnas="3" />
+                        <campo name="id_programa_presupuestal" llaveForanea="false" calc="10" visible="false" columna-visible="false"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" columnas="3" validacion="%programa_presupuestal%==null" validacionMensaje="Seleccione un 'Programa Presupuestal'" llavesFijas="afectable=true" width="200"/>
+                        <campo name="id_cat_eje_pide" text="Objetivo Estratégico" calc="13" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="eje_pide" text="Objetivo Estrategico" validacion="%eje_pide%==null" validacionMensaje="Debe Capturarse el Objetivo Estratégico" visible="true" columna-visible="false" columnas="3" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true" />
+                        <campo name="id_cat_proceso_proyecto" text="Estrategia" calc="14" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="proceso_proyecto" text="Estrategia" validacion="%proceso_proyecto%==null" validacionMensaje="Debe Capturarse la Estrategia" visible="true" columna-visible="false" columnas="3"  autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                        <campo name="id_cat_proceso_proyecto_detalle" text="ID Proceso Proyecto Detalle" calc="15" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="detalle_proceso_proyecto" text="Actividad Acción" validacion="%detalle_proceso_proyecto%==null" validacionMensaje="Debe Capturarse la Actividad Acción" visible="true" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" columnas="3" llavesFijas="afectable=true"/>
+                        <!--<campo name="indicador" text="Indicador" columnas="3" margen-izquierdo="2" calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')" habilitado="false" width="150" columna-visible="false"/>-->
+                        <campo name="id_unidad_medida" text="Unidad de Medida" columnas="3" celdaForanea="unidad_medida" referenciaForanea="articulo" autocompletar="true" descripcionForanea="descripcion" columna-visible="false"/> 
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" habilitado="false" calcCliente="@concatenar(@ifThenElse(%gCA.gCA.centro_registro%==null,'',%gCA.gCA.centro_registro%)+' '+@ifThenElse(%gCA.gCA.id_fondo_contable%==null,'',%gCA.gCA.id_fondo_contable%)+' '+@ifThenElse(%id_cog%==null,'',%id_cog%)+' '+@ifThenElse(%gCA.gCA.fuente_financiamiento%==null,'',%gCA.gCA.fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestal%==null,'',%programa_presupuestal%)+' '+@ifThenElse(%eje_pide%==null,'',%eje_pide%)+' '+@ifThenElse(%proceso_proyecto%==null,'',%proceso_proyecto%)+' '+@ifThenElse(%detalle_proceso_proyecto%==null,'',%detalle_proceso_proyecto%))" llaveForanea="false" columnas="3" width="200" validacion="@consultaDirec('SELECT COUNT(*) AS conteo FROM operation.presupuesto_egresos_mes_det WHERE clave_presupuestal='+'\\''+%clave_presupuestal%+'\\''+' AND
+id_periodo='+%rCA.rCA.id_periodo%,'conteo','long','MAGNITUS')==0" validacionMensaje="Verifique que la clave presupuestal existe"/>
+                        <campo name="per" text="per" local="true" type="string" calc="%gCA.gCA.periodicidad%" visible="false" columna-visible="false"/> 
+                        <campo name="importe_total" text="Importe Total" width="160" validacion="%importe_total%==null" validacionMensaje="Importe Total es requerido" columnas="3" formatoMoneda="true"/>
+                        <campo name="enero" text="Enero" columnas="3" validacion="%enero%=='0.00' AND %per%=='Mensual'" validacionMensaje="Enero no puede ser CERO" calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%enero%==null,'0.00',%enero%))" width="100" columna-visible="false" />
+                        <campo name="febrero" text="Febrero" columnas="3"  validacion="%febrero%=='0.00' AND %per%=='Mensual'" validacionMensaje="Febrero no puede ser CERO" calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%febrero%==null,'0.00',%febrero%))" columna-visible="false"/>
+                        <campo name="marzo" text="Marzo" width="110" calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%marzo%==null,'0.00',%marzo%))" validacion="%marzo%=='0.00' AND %per%=='Mensual'" validacionMensaje="Marzo no puede ser CERO" columnas="3" columna-visible="false"/>
+                        <campo name="abril" text="Abril"  calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%abril%==null,'0.00',%abril%))" validacion="%abril%=='0.00' AND %per%=='Mensual'" validacionMensaje="Abril no puede ser CERO" columnas="3" columna-visible="false"/>
+                        <campo name="mayo" text="Mayo"  calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%mayo%==null,'0.00',%mayo%))" validacion="%mayo%=='0.00' AND %per%=='Mensual'" validacionMensaje="Mayo no puede ser CERO" columnas="3" columna-visible="false"/>
+                        <campo name="junio" text="Junio"  calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%junio%==null,'0.00',%junio%))" validacion="%junio%=='0.00' AND %per%=='Mensual'" validacionMensaje="Junio no puede ser CERO" columnas="3" columna-visible="false"/>
+                        <campo name="julio" text="Julio"  calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%julio%==null,'0.00',%julio%))" validacion="%julio%=='0.00' AND %per%=='Mensual'" validacionMensaje="Julio no puede ser CERO" columnas="3" columna-visible="false"/>
+                        <campo name="agosto" text="Agosto"  calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%agosto%==null,'0.00',%agosto%))" validacion="%agosto%=='0.00' AND %per%=='Mensual'" validacionMensaje="Agosto no puede ser CERO" columnas="3"  columna-visible="false"/>
+                        <campo name="septiembre" text="Septiembre"  calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%septiembre%==null,'0.00',%septiembre%))" validacion="%septiembre%=='0.00' AND %per%=='Mensual'" validacionMensaje="Septiembre no puede ser CERO" columnas="3" columna-visible="false"/>
+                        <campo name="octubre" text="Octubre"  calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%octubre%==null,'0.00',%octubre%))" validacion="%octubre%=='0.00' AND %per%=='Mensual'" validacionMensaje="Octubre no puede ser CERO" columnas="3" columna-visible="false"/>
+                        <campo name="noviembre" text="Noviembre" calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%noviembre%==null,'0.00',%noviembre%))" validacion="%noviembre%=='0.00' AND %per%=='Mensual'" validacionMensaje="Noviembre no puede ser CERO" columnas="3" columna-visible="false"/>
+                        <campo name="diciembre" text="Diciembre" calcCliente="@ifThenElse(%gCA.gCA.periodicidad%=='Mensual',@ifThenElse(%importe_total%==null,0,((%importe_total%)/12)),@ifThenElse(%diciembre%==null,'0.00',%diciembre%))" validacion="%diciembre%=='0.00' AND %per%=='Mensual'" validacionMensaje="Diciembre no puede ser CERO" columnas="3" columna-visible="false"/>
+                        
+                        <campo name="por_distribuir" text="Por Distribuir" width="160" columnas="3" habilitado="false" calcCliente="(%importe_total%-%enero%-%febrero%-%marzo%-%abril%-%mayo%-%junio%-%julio%-%agosto%-%septiembre%-%octubre%-%noviembre%-%diciembre%)" validacion="%por_distribuir%!=0.00" validacionMensaje="El valor 'Por Distribuir' debe ser igual a 0.00" columna-visible="false"/>
+                        <campo name="adjunta" text="Adjuntar Soporte Documental" width="200" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Documento Adjunto'"  grupo="%GFE.GFE.folio_adquisicion%" expediente="Expediente Compromiso Candelarizado" columnas="6"/>
+                        <campo name="mes" text="" calc="@fechaSistema('MM')" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="fecha_elaboracion" text="fecha_elaboracion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false" visible="false"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="acumula" id="acumula" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==1 OR %aCA.aCA.id_tipo_compromiso%==3">
+            <componente tipo="cursor" nombre="acumula" id="acumula">
+                <tabla schema="operation" nombre="compromisos_anual_det" id="aBl" tituloDetalle="Alta de Renglón">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%rCA.rCA.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%rCA.rCA.id_periodo%"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%rCA.rCA.id_compromiso%"/>
+                    <campo name="id_detalle_compromiso"/>
+                    <campo name="importe_total"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="acumulaS" id="acumulaS" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==1 OR %aCA.aCA.id_tipo_compromiso%==3">
+            <componente tipo="cursor" nombre="acumulaS" id="acumulaS">
+                <tabla schema="operation" nombre="compromisos_anual" id="aBl">
+                    <campo name="acumulado" local="true" type="decimal" calc="@consultaDirec('SELECT SUM(importe_total) AS acumulado FROM operation.compromisos_anual_det WHERE ur='+%rCA.rCA.ur%+' AND id_periodo='+%rCA.rCA.id_periodo%+' AND id_compromiso='+%rCA.rCA.id_compromiso%,'acumulado','decimal','MAGNITUS')"/>
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%rCA.rCA.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%rCA.rCA.id_periodo%"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%rCA.rCA.id_compromiso%"/>
+                    <campo name="total_comprometido" calc="%acumulado%"/>
+                    <campo name="comprometido_no_devengado" calc="%acumulado%"/>
+                     <campo name="total_letra" calc="@numeroAletra(@consultaDirec('SELECT CASE WHEN SUM(importe_total) IS NULL THEN 0 ELSE SUM(importe_total) END AS importe_total FROM operation.compromisos_anual_det WHERE ur='+%bPer.bPer.id_unidad_responsable%+' AND id_periodo='+%bPer.bPer.id_periodo%+' AND id_compromiso='+%rCA.rCA.id_compromiso%+'','importe_total','decimal','MAGNITUS'),' pesos M.N.')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel nombre="crearNuevaInstanciaOne" id="cI1" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==1 OR %aCA.aCA.id_tipo_compromiso%==3">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cI1">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'7892dc1c-3043-45de-b4f4-8057a2d814d4'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%rCA.rCA.ur%" mostrarEsc="true"/>
+                    <parametro name="out_id_periodo" calc="%rCA.rCA.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_compromiso" calc="%rCA.rCA.id_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_id_tipo_compromiso" calc="%rCA.rCA.id_tipo_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_expediente_compromiso" calc="%GFE.GFE.folio_adquisicion%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Reporte Gestión de Compromisos Anuales" id="rCAR" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==1 OR %aCA.aCA.id_tipo_compromiso%==3">
+            <componente tipo="reporte" nombre="Reporte de Compromisos Anuales" id="rCAR">
+                <reporte nombre="repor_compromisos_an_jsus" nombreDocumento="'Compromiso Candelarizado'" expediente="Expediente Compromiso Candelarizado" grupo="%GFE.GFE.folio_adquisicion%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" type="long" calc="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%rCA.rCA.id_compromiso%"/>
+                    <campo name="usuario" type="long" calc="%bU.bU.id_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+    
+        <nivel id="NCASP" nombre="Compromiso Calendarizado de Servicios Personales" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            <componente id="CCASP" nombre="Compromiso Calendarizado de Servicios Personales" tipo="formulario">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" text="UR" visible="false" llaveForanea="false" calc="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo" visible="false" llaveForanea="false" calc="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_compromiso" text="Folio Compromiso" visible="true" llaveForanea="false" autogenerado="true" generacion="@prox()+1"  columnas="3" />
+                    <campo name="id_duep" text="Folio" visible="false" habilitado="false"/>
+                    <campo name="fecha_compromiso" text="Fecha" columnas="3"  habilitado="true" calc="%aCA.aCA.fecha_compromiso%"/>
+                    <campo name="id_tipo_compromiso" text="Tipo de Compromiso" descripcionForanea="tipo_compromiso" columnas="3" habilitado="false" calc="2"/>
+                    <campo name="id_cat_fondo_contable" text="id_cat_fondo_contable" llaveForanea="false" visible="false" calc="3"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable " autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3"  validacion="%id_fondo_contable%==null" validacionMensaje="Seleccione Fondo Contable" llavesFijas="afectable=true" />
+                    <campo name="tramite" text="Trámite" columnas="3" habilitado="false" calc="'COMPROMISO CALENDARIZADO DE SERVICIOS PERSONALES'"/>
+                    <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_cat_fuente" text="id_cat_fuente" calcCliente="%id_catalogo_foraneo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento *" descripcionForanea="id_cat,descripcion" columnas="3"  calcCliente="%id_cat_foraneo%" habilitado="false" />
+                    <campo name="id_beneficiario" text="Beneficiario *"  columnas="3" llavesFijas="id_estatus_beneficiario=1" autoFiltrado="true" autoFiltradoDescripcion="folio_beneficiario,razon_social" validacion="%id_beneficiario%==null" validacionMensaje="Campo 'Beneficiario' es requerido" habilitado="true"/>
+                    <campo name="concepto" text="Descripción" columnas="6" margen-izquierdo="2" margen-derecho="2" height="200" calc="'PAGO DE NOMINA'"  habilitado="true"/>
+                    <campo name="ultimo_usuario_modificador" calc="%bU.bU.id_usuario%" llaveForanea="false" visible="false"/>
+                    <campo name="fecha_elaboracion" visible="false" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')"/>
+                    <campo name="periodicidad" calc="'Mensual'" visible="false"/>
+                     <campo name="estatus" calc="'GENERADA'" visible="false"/>
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Grabar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            </nivel>
+        
+    
+        <nivel id="NCASP2" nombre="Compromiso Calendarizado de Servicios Personales" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            
+            <componente id="mPCN" nombre="Compromiso Calendarizado de Servicios Personales" tipo="tabla" mostrarImportacion="true" mostrarEliminar="true" mostrarEditar="false" mostrarAgregar="true">
+                <tabla schema="operation" nombre="importa_compromisos_anual_sp">
+                    <campo name="ur" text="UR" importacion="true" columnaImportacion="UR" validacionImportacion="@ifThenElse(%ur%=='',true,false)" columna-visible="false" visible="false" llaveForanea="false" calc="$config.ur$"/>
+                    <campo name="id_periodo" text="Ejercicio Fiscal" importacion="true" columnaImportacion="Ejercicio Fiscal" validacionImportacion="@ifThenElse(%id_periodo%=='',true,false)" columna-visible="false" visible="false" llaveForanea="false" calc="%bPer.bPer.id_periodo%"/>
+                     <campo name="id_compromiso" text="Id Compromiso" autogenerado="true" generacion="@prox()+1" importacion="true" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" llaveForanea="false" importacion="true" columnaImportacion="Clave Presupuestal" validacionImportacion="@ifThenElse(%clave_presupuestal%=='',true,false)" columnas="2" margen-izquierdo="1" width="200" calcCliente="@concatenar(@ifThenElse(%centro_registro%==null,'',%centro_registro%)+' '+@ifThenElse(%id_fondo_contable%==null,'',%id_fondo_contable%)+' '+@ifThenElse(%id_cog%==null,'',%id_cog%)+' '+@ifThenElse(%fuente_financiamiento%==null,'',%fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestal%==null,'',%programa_presupuestal%)+' '+@ifThenElse(%eje_pide%==null,'',%eje_pide%)+' '+@ifThenElse(%proceso_proyecto%==null,'',%proceso_proyecto%)+' '+@ifThenElse(%detalle_proceso_proyecto%==null,'',%detalle_proceso_proyecto%))" habilitado="false"/>
+                    <campo name="id_centro_registro" text="id_cat_centro_registro" llaveForanea="false" calc="2" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="centro_registro" text="Centro Registro" importacion="true" columnaImportacion="Centro Registro" validacionImportacion="@ifThenElse(%centro_registro%=='',true,false)" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" llavesFijas="afectable=true" columnas="2" margen-izquierdo="1" validacion="%centro_registro%==null" validacionMensaje="Seleccione Centro de Registro"/>
+                    <campo name="id_cat_fondo_contable" text="id_cat_fondo_contable" llaveForanea="false" columna-visible="false" visible="false" calc="3" importacion="true"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" importacion="true" columnaImportacion="Fondo Contable" validacionImportacion="@ifThenElse(%id_fondo_contable%=='',true,false)" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" llavesFijas="afectable=true" columnas="2" margen-izquierdo="1" validacion="%id_fondo_contable%==null" validacionMensaje="Seleccione Fondo Contable"/>
+                     <campo name="articulo" text="Artículo" importacion="true" llaveForanea="false" descripcionForaneaTabla="clave_articulo,descripcion_articulo" columnaImportacion="Artículo" validacionImportacion="@ifThenElse(%articulo%=='',true,false)"/>
+                    <campo name="id_cat_cog" text="Id COG" calc="4" llaveForanea="false" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="id_cog" text="COG" importacion="true" columnaImportacion="COG" validacionImportacion="@ifThenElse(%id_cog%=='',true,false)" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" llavesFijas="afectable=true" columnas="2" margen-izquierdo="1" validacion="%id_cog%==null" validacionMensaje="Seleccione 'COG'"/>
+                    <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_cat_fuente" text="id_cat_fuente" llaveForanea="false"  visible="false" columna-visible="false" importacion="true" llavesFijas="afectable=true" calc="5"/><!-- calcCliente="%id_catalogo_foraneo%" -->
+                   <campo name="fuente_financiamiento" text="Fuente de Financiamiento" importacion="true" columnaImportacion="Fuente de Financiamiento" validacionImportacion="@ifThenElse(%fuente_financiamiento%=='',true,false)" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" calcCliente="%id_cat_foraneo%" columna-visible="false" llavesFijas="afectable=true" columnas="2" margen-izquierdo="1" validacion="%fuente_financiamiento%==null" validacionMensaje="Debe Capturarse Fuente de Fianciamiento"/>
+                    <campo name="id_programa_presupuestal" llaveForanea="false" calc="10" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="programa_presupuestal" text="Programa Presupuestal" importacion="true" columnaImportacion="Programa Presupuestal" validacionImportacion="@ifThenElse(%programa_presupuestal%=='',true,false)" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true" columna-visible="false" columnas="2" margen-izquierdo="1" validacion="%programa_presupuestal%==null" validacionMensaje="Seleccione un 'Programa Presupuestal'"/>
+                    <campo name="id_cat_eje_pide" llaveForanea="false" calc="13" visible="false" importacion="true" columna-visible="false"/>
+                    <campo name="eje_pide" text="Objetivo Estratégico" importacion="true" columnaImportacion="Objetivo Estratégico" validacionImportacion="@ifThenElse(%eje_pide%=='',true,false)" columna-visible="false" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="true" columnas="2" margen-izquierdo="1" validacion="%eje_pide%==null" validacionMensaje="Debe Capturarse el Objetivo Estratégico"/>
+                    <campo name="id_cat_proceso_proyecto" calc="14" llaveForanea="false" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="proceso_proyecto" text="Estrategia" importacion="true" columnaImportacion="Estrategia" validacionImportacion="@ifThenElse(%proceso_proyecto%=='',true,false)" columna-visible="false" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="true" columnas="2" margen-izquierdo="1" validacion="%proceso_proyecto%==null" validacionMensaje="Debe Capturarse la Estrategia"/>
+                    <campo name="id_cat_proceso_proyecto_detalle" calc="15" llaveForanea="false" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="detalle_proceso_proyecto" text="Actividad Acción" importacion="true" columnaImportacion="Actividad Acción" validacionImportacion="@ifThenElse(%detalle_proceso_proyecto%=='',true,false)" columna-visible="false" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="true" columnas="2" margen-izquierdo="1" validacion="%detalle_proceso_proyecto%==null" validacionMensaje="Debe Capturarse el campo Actividad Acción"/>
+                    <campo name="presupuesto_p_ejercer" text="Presupuesto por Ejercer" columna-visible="false" importacion="true" columnaImportacion="Presupuesto por Ejercer" validacionImportacion="@ifThenElse(%presupuesto_p_ejercer%=='',true,false)" columnas="2" margen-izquierdo="1" width="200" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) AS por_ejercer FROM operation.presupuesto_egresos_mes_det WHERE id_unidad_responsable='+%ur%+' AND id_periodo='+%id_periodo%+' AND clave_presupuestal=\\''+%clave_presupuestal%+'\\'  GROUP BY clave_presupuestal','por_ejercer','decimal','MAGNITUS')" habilitado="false"/>
+                    <campo name="presupuesto_comprometer" text="Presupuesto a Comprometer" importacion="true" columnaImportacion="Presupuesto a Comprometer" validacion="%presupuesto_comprometer%&gt;%presupuesto_p_ejercer%" validacionMensaje="El 'Presupuesto por Comprometer' 'NO' debe ser mayor al 'Presupuesto por Ejercer'" validacionImportacion="@ifThenElse(%presupuesto_comprometer%=='',true,false)" columnas="2" margen-izquierdo="1" width="250"/>
+                    <campo name="por_distribuir" text="Por Distribuir"  columna-visible="false" importacion="true" columnaImportacion="Por Distribuir" validacionImportacion="@ifThenElse(%por_distribuir%=='',true,false)" validacion="%por_distribuir%!=0.00" validacionMensaje="El valor 'Por Distribuir' debe ser igual a 0.00" columnas="2" margen-izquierdo="1" width="175" calcCliente="(%presupuesto_comprometer%-%enero%-%febrero%-%marzo%-%abril%-%mayo%-%junio%-%julio%-%agosto%-%septiembre%-%octubre%-%noviembre%-%diciembre%)"/>
+                    <campo name="enero" text="Enero" importacion="true" columnaImportacion="Enero" validacionImportacion="@ifThenElse(%enero%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%enero%=='0'" validacionMensaje="Enero no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="febrero" text="Febrero" importacion="true" columnaImportacion="Febrero" validacionImportacion="@ifThenElse(%febrero%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%febrero%=='0'" validacionMensaje="Febrero no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="marzo" text="Marzo" importacion="true" columnaImportacion="Marzo" validacionImportacion="@ifThenElse(%marzo%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%marzo%=='0'" validacionMensaje="Marzo no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="abril" text="Abril" importacion="true" columnaImportacion="Abril" validacionImportacion="@ifThenElse(%abril%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%abril%=='0'" validacionMensaje="Abril no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="mayo" text="Mayo" importacion="true" columnaImportacion="Mayo" validacionImportacion="@ifThenElse(%mayo%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%mayo%=='0'" validacionMensaje="Mayo no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="junio" text="Junio" importacion="true" columnaImportacion="Junio" validacionImportacion="@ifThenElse(%junio%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%junio%=='0'" validacionMensaje="Junio no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="julio" text="Julio" importacion="true" columnaImportacion="Julio" validacionImportacion="@ifThenElse(%julio%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%julio%=='0'" validacionMensaje="Julio no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="agosto" text="Agosto" importacion="true" columnaImportacion="Agosto" validacionImportacion="@ifThenElse(%agosto%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%agosto%=='0'" validacionMensaje="Agosto no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="septiembre" text="Septiembre" importacion="true" columnaImportacion="Septiembre" validacionImportacion="@ifThenElse(%septiembre%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%septiembre%=='0'" validacionMensaje="Septiembre no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="octubre" text="Octubre" importacion="true" columnaImportacion="Octubre" validacionImportacion="@ifThenElse(%octubre%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%octubre%=='0'" validacionMensaje="Octubre no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="noviembre" text="Noviembre" importacion="true" columnaImportacion="Noviembre" validacionImportacion="@ifThenElse(%noviembre%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%noviembre%=='0'" validacionMensaje="Noviembre no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="diciembre" text="Diciembre" importacion="true" columnaImportacion="Diciembre" validacionImportacion="@ifThenElse(%diciembre%=='',true,false)" columnas="2" margen-izquierdo="1" width="100" calcCliente="@ifThenElse(%presupuesto_comprometer%==null,0,((%presupuesto_comprometer%)/12))" validacion="%diciembre%=='0'" validacionMensaje="Diciembre no puede ser CERO" formatoMoneda="true"/>
+                    <campo name="fecha_elaboracion" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:MM:ss&quot;)" importacion="true" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT SUM(presupuesto_comprometer) AS resultado FROM operation.importa_compromisos_anual_sp WHERE ur='+$config.ur$+' AND id_periodo='+%bPer.bPer.id_periodo%,'resultado','decimal','MAGNITUS')&gt; @consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) AS por_ejercer FROM operation.presupuesto_egresos_mes_det WHERE id_unidad_responsable='+$config.ur$+' AND id_periodo='+%bPer.bPer.id_periodo%+' AND clave_presupuestal IN (SELECT clave_presupuestal FROM operation.importa_compromisos_anual_sp WHERE ur='+$config.ur$+' AND id_periodo='+%bPer.bPer.id_periodo%+')','por_ejercer','decimal','MAGNITUS')" validacionMensaje="'El presupuesto a comprometer supera el presupuesto asignado'"/>
+            </validaciones>
+        </nivel>
+        
+        <nivel nombre="GeneraFolio" id="GFSP" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            <componente tipo="cursor" nombre="GeneraFolio" id="GFSP">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_compromiso" text="Folio Compromiso"  filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%NCASP.CCASP.id_compromiso%"/>
+                    <campo name="id_duep" calc="@concatenar('CA-'+
+                   @ifThenElse(%NCASP.CCASP.id_compromiso% &lt; 10,'00000',
+                   @ifThenElse(%NCASP.CCASP.id_compromiso% &lt; 100,'0000',
+                   @ifThenElse(%NCASP.CCASP.id_compromiso% &lt; 1000,'000',
+                   @ifThenElse(%NCASP.CCASP.id_compromiso% &lt; 10000,'00',
+                   @ifThenElse(%NCASP.CCASP.id_compromiso% &lt; 100000,'0',null)))))+%NCASP.CCASP.id_compromiso%)"/>
+                   <campo name="exp_compromiso" calc="%GFE.GFE.folio_adquisicion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!-- BARRE TABLA PARA SERVICIOS PERSONALES-->
+        <nivel id="bImpCSP" nombre="barre_importa_compromisos_anual_sp" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            <componente id="bImpCSP" nombre="bImpCSP" tipo="cursor">
+                <tabla schema="operation" nombre="importa_compromisos_anual_sp">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_compromiso"/><!-- id compromiso temporal de importación o manual -->
+                    <campo name="articulo"/>
+                    <campo name="id_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="id_cat_fondo_contable"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="id_cat_fuente"/>
+                    <campo name="fuente_financiamiento"/>
+                    <campo name="id_cat_cog"/>
+                    <campo name="id_cog"/>
+                    <campo name="id_programa_presupuestal"/>
+                    <campo name="programa_presupuestal"/>
+                    <campo name="id_cat_eje_pide"/>
+                    <campo name="eje_pide"/>
+                    <campo name="id_cat_proceso_proyecto"/>
+                    <campo name="proceso_proyecto"/>
+                    <campo name="id_cat_proceso_proyecto_detalle"/>
+                    <campo name="detalle_proceso_proyecto"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="enero"/>
+                    <campo name="febrero"/>
+                    <campo name="marzo"/>
+                    <campo name="abril"/>
+                    <campo name="mayo"/>
+                    <campo name="junio"/>
+                    <campo name="julio"/>
+                    <campo name="agosto"/>
+                    <campo name="septiembre"/>
+                    <campo name="octubre"/>
+                    <campo name="noviembre"/>
+                    <campo name="diciembre"/>
+                    <campo name="presupuesto_p_ejercer"/>
+                    <campo name="presupuesto_comprometer"/>
+                    <campo name="por_distribuir"/>
+                </tabla>
+                        
+                <nivel id="aCAD" nombre="Alta Detalles Compromisos Anuales" interactivo="false">
+                    <componente id="aCAD" nombre="aCAD" tipo="altaDirect">
+                        <tabla schema="operation" nombre="compromisos_anual_det">
+                            <campo name="ur" calc="%bPer.bPer.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="id_periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_compromiso" calc="%NCASP.CCASP.id_compromiso%" />
+                            <campo name="id_compromiso_imp" calc="%bImpCSP.bImpCSP.id_compromiso%" />
+                            <campo name="id_detalle_compromiso" autogenerado="true" generacion="@prox()+1"/>
+                            <campo name="articulo" calc="%bImpCSP.bImpCSP.articulo%"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')"/>
+                            <campo name="id_cat_fondo_contable" llaveForanea="false" calc="3"/>
+                            <campo name="id_fondo_contable" calc="%bImpCSP.bImpCSP.id_fondo_contable%"/>
+                            <campo name="id_cat_fuente" llaveForanea="false" calc="5"/>
+                            <campo name="fuente_financiamiento" calc="%bImpCSP.bImpCSP.fuente_financiamiento%"/>
+                            <campo name="id_centro_registro" llaveForanea="false" calc="2"/>
+                            <campo name="centro_registro" calc="%bImpCSP.bImpCSP.centro_registro%"/>
+                            <campo name="id_cat_cog" calc="4" llaveForanea="false"/>
+                            <campo name="id_cog" calc="%bImpCSP.bImpCSP.id_cog%"/>
+                            <campo name="id_programa_presupuestal" llaveForanea="false" calc="10"/>
+                            <campo name="programa_presupuestal" calc="%bImpCSP.bImpCSP.programa_presupuestal%"/>
+                            <campo name="id_cat_eje_pide" llaveForanea="false" calc="13"/>
+                            <campo name="eje_pide" calc="%bImpCSP.bImpCSP.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" llaveForanea="false" calc="14"/>
+                            <campo name="proceso_proyecto" calc="%bImpCSP.bImpCSP.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_detalle" llaveForanea="false" calc="15"/>
+                            <campo name="detalle_proceso_proyecto" calc="%bImpCSP.bImpCSP.detalle_proceso_proyecto%"/>
+                            <campo name="id_unidad_medida" calc="1"/>
+                            <campo name="mes" text="" calc="@fechaSistema('MM')" llaveForanea="false"/>
+                            <campo name="clave_presupuestal" calc="%bImpCSP.bImpCSP.clave_presupuestal%"/>
+                            <campo name="enero" calc="%bImpCSP.bImpCSP.enero%"/>
+                            <campo name="febrero" calc="%bImpCSP.bImpCSP.febrero%"/>
+                            <campo name="marzo" calc="%bImpCSP.bImpCSP.marzo%"/>
+                            <campo name="abril" calc="%bImpCSP.bImpCSP.abril%"/>
+                            <campo name="mayo" calc="%bImpCSP.bImpCSP.mayo%"/>
+                            <campo name="junio" calc="%bImpCSP.bImpCSP.junio%"/>
+                            <campo name="julio" calc="%bImpCSP.bImpCSP.julio%"/>
+                            <campo name="agosto" calc="%bImpCSP.bImpCSP.agosto%"/>
+                            <campo name="septiembre" calc="%bImpCSP.bImpCSP.septiembre%"/>
+                            <campo name="octubre" calc="%bImpCSP.bImpCSP.octubre%"/>
+                            <campo name="noviembre" calc="%bImpCSP.bImpCSP.noviembre%"/>
+                            <campo name="diciembre" calc="%bImpCSP.bImpCSP.diciembre%"/>
+                            <campo name="presupuesto_p_ejercer" calc="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) AS por_ejercer FROM operation.presupuesto_egresos_mes_det WHERE id_unidad_responsable='+%ur%+' AND id_periodo='+%id_periodo%+' AND clave_presupuestal=\\''+%bImpCSP.bImpCSP.clave_presupuestal%+'\\'  GROUP BY clave_presupuestal','por_ejercer','decimal','MAGNITUS')"/>
+                            <campo name="presupuesto_comprometer" calc="%bImpCSP.bImpCSP.presupuesto_comprometer%"/>
+                            <campo name="por_distribuir" calc="%bImpCSP.bImpCSP.por_distribuir%"/>
+                            <campo name="importe_total" calc="%bImpCSP.bImpCSP.enero%+%bImpCSP.bImpCSP.febrero%+%bImpCSP.bImpCSP.marzo%+%bImpCSP.bImpCSP.abril%+%bImpCSP.bImpCSP.mayo%+%bImpCSP.bImpCSP.junio%+%bImpCSP.bImpCSP.julio%+%bImpCSP.bImpCSP.agosto%+%bImpCSP.bImpCSP.septiembre%+%bImpCSP.bImpCSP.octubre%+%bImpCSP.bImpCSP.noviembre%+%bImpCSP.bImpCSP.diciembre%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="ACASP" nombre="Actuliza Compromiso Anual Servicios Personales"  interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            <componente id="ACASP" nombre="ACASP" tipo="cursor" accionDefault="editar">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%NCASP.CCASP.id_compromiso%" />
+                    <campo name="total_comprometido" calc="@consultaDirec('SELECT CASE WHEN SUM(presupuesto_comprometer) IS NULL THEN 0 ELSE SUM(presupuesto_comprometer) END AS total_comprometido FROM operation.compromisos_anual_det WHERE ur='+%bPer.bPer.id_unidad_responsable%+' AND id_periodo='+%bPer.bPer.id_periodo%+' AND id_compromiso='+%NCASP.CCASP.id_compromiso%+'','total_comprometido','decimal','MAGNITUS')"/>
+                    <campo name="comprometido_no_devengado" calc="@consultaDirec('SELECT CASE WHEN SUM(presupuesto_comprometer) IS NULL THEN 0 ELSE SUM(presupuesto_comprometer) END AS total_comprometido FROM operation.compromisos_anual_det WHERE ur='+%bPer.bPer.id_unidad_responsable%+' AND id_periodo='+%bPer.bPer.id_periodo%+' AND id_compromiso='+%NCASP.CCASP.id_compromiso%+'','total_comprometido','decimal','MAGNITUS')"/>
+                    <campo name="total_letra" calc="@numeroAletra(@consultaDirec('SELECT CASE WHEN SUM(importe_total) IS NULL THEN 0 ELSE SUM(importe_total) END AS importe_total FROM operation.compromisos_anual_det WHERE ur='+%bPer.bPer.id_unidad_responsable%+' AND id_periodo='+%bPer.bPer.id_periodo%+' AND id_compromiso='+%NCASP.CCASP.id_compromiso%+'','importe_total','decimal','MAGNITUS'),' pesos M.N.')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="queryBaja" nombre="queryBaja" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            <componente id="queryBaja" nombre="queryBaja" tipo="cursor">
+                <tabla schema="operation" nombre="importa_compromisos_anual_sp">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_compromiso"/>
+                </tabla>
+                <nivel id="bajaImporta" nombre="bajaImporta" interactivo="false">
+                    <componente id="bajaImporta" nombre="bajaImporta" tipo="bajaDirect">
+                        <tabla schema="operation" nombre="importa_compromisos_anual_sp">
+                            <campo name="ur" calc="%bPer.bPer.id_unidad_responsable%"/>
+                            <campo name="id_periodo" calc="%bPer.bPer.id_periodo%"/>
+                            <campo name="id_compromiso" calc="%queryBaja.queryBaja.id_compromiso%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+                       
+        <!-- <nivel nombre="crearNuevaInstanciaOne" id="cI2" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cI2">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'7892dc1c-3043-45de-b4f4-8057a2d814d4'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%rCA.rCA.ur%" mostrarEsc="true"/>
+                    <parametro name="out_id_periodo" calc="%rCA.rCA.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_compromiso" calc="%rCA.rCA.id_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_id_tipo_compromiso" calc="2" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel> -->
+        
+        <nivel nombre="crearNuevaInstanciaOne" id="cI3" interactivo="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cI">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'7892dc1c-3043-45de-b4f4-8057a2d814d4'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%NCASP.CCASP.ur%" mostrarEsc="true"/>
+                    <parametro name="out_id_periodo" calc="%NCASP.CCASP.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_compromiso" calc="%NCASP.CCASP.id_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_id_tipo_compromiso" calc="2" mostrarEsc="true"/>
+                    <parametro name="out_expediente_compromiso" calc="%GFE.GFE.folio_adquisicion%"/>
+                </parametros>
+            </componente>
+        </nivel>
+                       
+        <nivel nombre="Documento de Compromisos Candelarizado de Servicios Personales" id="rCASP" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%aCA.aCA.id_tipo_compromiso%==2">
+            <componente tipo="reporte" nombre="Documento de Compromisos Candelarizado de Servicios Personales" id="rCASP">
+                <reporte nombre="repor_comprServicios_jsus" nombreDocumento="'Compromiso Candelarizado'" expediente="Expediente Compromiso Candelarizado" grupo="%GFE.GFE.folio_adquisicion%" url="$config.repository_upload_file$" update="true">
+                        <campo name="ur" type="long" calc="%bPer.bPer.id_unidad_responsable%"/>
+                        <campo name="id_periodo" type="long" calc="%bPer.bPer.id_periodo%"/>
+                        <campo name="id_compromiso" type="long" calc="%NCASP.CCASP.id_compromiso%"/>
+                        <campo name="id_compromiso_imp" type="long" calc="1"/>
+                        <campo name="usuario" type="string" calc="%bU.bU.nombre_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

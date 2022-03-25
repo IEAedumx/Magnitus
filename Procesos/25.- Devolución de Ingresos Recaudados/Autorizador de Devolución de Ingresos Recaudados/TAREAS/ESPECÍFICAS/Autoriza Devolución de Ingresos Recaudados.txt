@@ -1,0 +1,442 @@
+<tarea id="autorizaSolDevIng" nombre="Autoriza Solicitud de Devolución de Ingresos" autor="Alejandra" version="1.0.0" fechaModificacion="06/07/2019">
+    <pagina id="uno">
+        
+        <!--RECIBE PARAMETROS-->
+        <nivel id="inParam" nombre="dummy" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor" >
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false"/>
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="id_devolucion" local="true" type="string" calc="$inParam.id_devolucion$"/>
+                    <campo name="folio" local="true" type="string" calc="$inParam.folio$"/>
+                    <campo name="fecha" local="true" type="string" calc="$inParam.fecha$"/>
+                    <campo name="beneficiario" local="true" type="string" calc="$inParam.beneficiario$"/>
+                    <campo name="importe" local="true" type="string" calc="$inParam.importe$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="BB" nombre="Barre Beneficiario" interactivo="false">
+            <componente id="BB" nombre="Barre Beneficiario" tipo="cursor">
+                <tabla schema="operation" nombre="devolucion_recaudacion_ingreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_devol_rec_ing" filtroCampo="id_devol_rec_ing" filtroOperador="=" filtroValor="%inParam.inParam.id_devolucion%"/>
+                    <campo name="beneficiario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--FORMULARIO ELIMINA DEVOLUCIÓN DE INGRESOS-->
+      <!--  <nivel id="ConelimDevIng" nombre="Elimina Devolución de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="datCompDev" nombre="Datos Complementarios de la Devolución" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="devolucion_recaudacion_ingreso">
+                    <campo name="ur" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="id_devol_rec_ing" calc="%inParam.inParam.id_devolucion%" visible="false"/>
+                    <campo name="folio" text="Folio Asociado" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                    <campo name="id_recaudacion_ingreso" text="Folio DURI Origen" descripcionForanea="folio_asociado" habilitado="false" columnas="2" margen-izquierdo="1" marcador="Seleccione folio DURI Origen"/>
+                    <campo name="fecha_devolucion" text="Fecha Devolución"  habilitado="false" columnas="2" margen-izquierdo="1" validacion="%fecha_devolucion%==null" validacionMensaje="Favor de ingresar la fecha devolución para continuar"/>
+                    <campo name="beneficiario" text="Beneficiario" habilitado="false" columnas="2" margen-izquierdo="1" descripcionForanea="razon_social" marcador="Seleccione una beneficiario"/>
+                   <campo name="cuenta_bancaria_beneficiario" text="Cuenta Bancaria Beneficiario" local="true" type="string"  columnas="2" margen-izquierdo="1" habilitado="false"
+                        calc="@ifThenElse(@consultaDirec('SELECT cuenta_bancaria FROM entity.beneficiario_cuenta_bancaria
+                        WHERE id_beneficiario ='+%BB.BB.beneficiario%+'','cuenta_bancaria','string','MAGNITUS')==null,'No existe cuenta bancaria asociada al beneficiario',@consultaDirec('SELECT cuenta_bancaria FROM entity.beneficiario_cuenta_bancaria
+                        WHERE id_beneficiario = '+%BB.BB.beneficiario%+'','cuenta_bancaria','string','MAGNITUS'))"/>
+                    <campo name="tipo_cuenta" visible="true" text="Tipo Cuenta Pagadora" habilitado="false" columnas="2" margen-izquierdo="1" marcador="Seleccione tipo de cuenta pagadora" />
+                    <campo name="cuenta_pagadora" text="Cuenta Pagadora" descripcionForanea="cuenta_bancaria" habilitado="false" columnas="2" margen-izquierdo="1" marcador="Seleccione Cuenta Bancaria" />
+                    <campo name="importe_total" text="Importe Total a Pagar" habilitado="false" columnas="2" margen-izquierdo="1" marcador="Ingrese el importe total"/>
+                    <campo name="estatus" text="Estatus" columnas="2" margen-izquierdo="1" marcador="Seleccione un estatus" habilitado="false"/>
+                    <campo name="concepto_devolucion" text="Concepto Devolución" habilitado="false" columnas="2" margen-izquierdo="1" marcador="Ingrese el concepto de la devolución" />
+                    <campo name="adjunta_documentacion" text="Adjunta Documentación" habilitado="false" local="true" type="file" columnas="2" margen-izquierdo="1"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>-->
+        
+        <!--REPORTE RECIBO DE DEVOLUCIÓN DE INGRESOS-->
+        <nivel id="repRecDevIng" nombre="Reporte Recibo de Devolución de Ingresos" mostrarNivelAnterior="false">
+            <componente id="repRecDevIng" nombre="Recibo de Devolución de Ingresos Recaudados" tipo="reporte">
+                <reporte nombre="repor_RDevolIng_jsus">
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_devol_rec_ing" type="long" calc="%inParam.inParam.id_devolucion%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlAtzDevIng" nombre="Autoriza Devolución de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpAtzDevIng" nombre="Autoriza Devolución de Ingresos Recaudados" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="devolucion_recaudacion_ingreso">
+                    <campo name="ur" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="id_devol_rec_ing" calc="%inParam.inParam.id_devolucion%" visible="false"/>
+                    <campo name="observaciones" text="Observaciones" margen-izquierdo="2" columnas="6" height="200" interaccion="%autoriza%==false" validacion="%autoriza%==false AND %observaciones%==null" validacionMensaje="Ingrese observaciones por el cual no se autoriza."/>
+                    <campo name="autoriza" text="Autorizar" margen-izquierdo="2" columnas="6"/>
+                    <campo name="estatus" visible="false" calcCliente="@ifThenElse(%autoriza%==true,2,1)"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="GUARDAR" margen-izquierdo="4" columnas="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- COMPONENTES SOLICITUD PARA NEGOCIAR LA INSTANCIA Y MANDAR MENSAJE DE RETROALIMENTACIÓN -->
+        <nivel id="nlNegociarInstancia" nombre="Enlace con Dynamo" interactivo="false" ejecutar="%nlAtzDevIng.cpAtzDevIng.autoriza%==false">
+            <componente id="cpNegociarInstancia" nombre="Enlace con Dynamo" tipo="solicitud" >
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!--MENSAJES-->
+        <nivel id="nlRetroalimentarMensaje" nombre="Envio de Parámetros Dynamo" interactivo="false" ejecutar="%nlAtzDevIng.cpAtzDevIng.autoriza%==false">
+           <componente id="cpRetroalimentarMensaje" nombre="Envio de Parámetros Dynamo" tipo="solicitud" >  
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAtzDevIng.cpAtzDevIng.observaciones%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+       
+       <nivel id="nlBarreDevolRecIngDet" nombre="Barre Devolución de Recaudación de Ingresos" interactivo="false" ejecutar="%nlAtzDevIng.cpAtzDevIng.autoriza%==true">
+           <componente id="cpBarreDevolRecIngDet" nombre="Barre Devolución de Recaudación de Ingresos" tipo="cursor">
+               <tabla schema="operation" nombre="devolucion_recaudacion_ingreso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_devol_rec_ing" filtroCampo="id_devol_rec_ing" filtroOperador="=" filtroValor="%inParam.inParam.id_devolucion%"/>
+                    <campo name="id_devol_rec_ing_det"/>
+                    <campo name="id_cat_fondo_contable"/>
+                    <campo name="id_fondo_contable"/>
+               </tabla>
+           </componente>
+       </nivel>
+       
+        <!--GENERACIÓN DE PÓLIZA DEL PRESUPUESTO DE INGRESOS DEVENGADO -->
+        <nivel id="nlGenEncabezadoPoliza" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAtzDevIng.cpAtzDevIng.autoriza%==true">
+            <componente id="cpGenEncabezadoPoliza" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%inParam.inParam.ur%"/> 
+                   <campo name="periodo" calc="%inParam.inParam.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%nlBarreDevolRecIngDet.cpBarreDevolRecIngDet.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%nlBarreDevolRecIngDet.cpBarreDevolRecIngDet.id_fondo_contable%"/>
+                   <campo name="momento_contable" calc="13"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="id_beneficiario_ganador" calc="%BB.BB.beneficiario%"/>
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                   <campo name="concepto_general" calc="@concatenar('Devolución de Ingresos Recaudados'+$inParam.folio$)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="afp" id="afp" interactivo="false" ejecutar="%nlAtzDevIng.cpAtzDevIng.autoriza%==true">
+            <componente tipo="cursor" nombre="afp" id="afp">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%inParam.inParam.periodo%+'-'+
+                   @ifThenElse(%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%)" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--OBTENER EL SEPARADOR POR PERIODO -->
+        <nivel id="obIdSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false">
+            <componente id="obIdSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="obSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false">
+            <componente id="obSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%obIdSeparador.obIdSeparador.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarridoDetalle" nombre="Barrido de los Detalles" interactivo="false" ejecutar="%nlAtzDevIng.cpAtzDevIng.autoriza%==true">
+            <componente id="cpBarridoDetalle" nombre="Barrido de los Detalles de la Adecuación Presupuestal" tipo="cursor">
+                <tabla schema="operation" nombre="devolucion_recaudacion_ingreso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_devol_rec_ing" filtroCampo="id_devol_rec_ing" filtroOperador="=" filtroValor="%inParam.inParam.id_devolucion%"/>
+                    <campo name="id_devol_rec_ing_det"/>
+                    <campo name="total"/>
+                    <campo name="mes"/>
+                    <campo name="clave_presupuestal"/>
+                </tabla>
+                
+                <!-- INGRESA EL CARGO A LA PÓLIZA (AFECTACIÓN PRESUPUESTAL)-->
+                <nivel id="nlAltaDirectDetalleCargo" nombre="Alta Detalle Cargo Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleCargo" nombre="Alta Detalle Cargo Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalle.cpBarridoDetalle.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" 
+                            calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalle.cpBarridoDetalle.total%*-1"/>
+                            <campo name="concepto_bloque" calc="@concatenar('Devolución de Ingresos Recaudados'+$inParam.folio$)"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL ABONO A LA PÓLIZA (AFECTACIÓN PRESUPUESTAL)-->
+                <nivel id="nlAltaDirectDetalleAbono" nombre="Alta Detalle Abono Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleAbono" nombre="Alta Detalle Abono Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalle.cpBarridoDetalle.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" 
+                            calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '5'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalle.cpBarridoDetalle.total%*-1"/>
+                            <campo name="concepto_bloque" calc="@concatenar('Devolución de Ingresos Recaudados'+$inParam.folio$)"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '5'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                
+                <!-- INGRESA EL CARGO2 A LA PÓLIZA (AFECTACIÓN PRESUPUESTAL)-->
+                <nivel id="nlAltaDirectDetalleCargo2" nombre="Alta Detalle Cargo Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleCargo2" nombre="Alta Detalle Cargo Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalle.cpBarridoDetalle.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" 
+                            calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalle.cpBarridoDetalle.total%*-1"/>
+                            <campo name="concepto_bloque" calc="@concatenar('Devolución de Ingresos Recaudados'+$inParam.folio$)"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL ABONO A LA PÓLIZA (AFECTACIÓN PRESUPUESTAL)-->
+                <nivel id="nlAltaDirectDetalleAbono2" nombre="Alta Detalle Abono Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleAbono2" nombre="Alta Detalle Abono Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalle.cpBarridoDetalle.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" 
+                            calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalle.cpBarridoDetalle.total%*-1"/>
+                            <campo name="concepto_bloque" calc="@concatenar('Devolución de Ingresos Recaudados'+$inParam.folio$)"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL CARGO A LA PÓLIZA (AFECTACIÓN PATRIMONIAL)-->
+                <nivel id="nlAltaDirectDetalleCargo1" nombre="Alta Detalle Cargo Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleCargo" nombre="Alta Detalle Cargo Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalle.cpBarridoDetalle.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" 
+                            calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '003'+%obSeparador.obSeparador.caracter%+
+                            '02'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalle.cpBarridoDetalle.total%*-1"/>
+                            <campo name="concepto_bloque" calc="@concatenar('Devolución de Ingresos Recaudados'+$inParam.folio$)"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL ABONO A LA PÓLIZA (AFECTACIÓN PATRIMONIAL)-->
+                <nivel id="nlAltaDirectDetalleAbono1" nombre="Alta Detalle Abono Adecuación" interactivo="false">
+                    <componente id="cpAltaDirectDetalleAbono" nombre="Alta Detalle Abono Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalle.cpBarridoDetalle.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('4'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '7'+%obSeparador.obSeparador.caracter%+
+                            '3'+%obSeparador.obSeparador.caracter%+'0')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalle.cpBarridoDetalle.total%*-1"/>
+                            <campo name="concepto_bloque" calc="@concatenar('Devolución de Ingresos Recaudados'+$inParam.folio$)"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('4'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '7'+%obSeparador.obSeparador.caracter%+
+                                '3'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- REPORTE DE LA PÓLIZA CONTABLE -->
+        <nivel id="nlRepRecSimDeudaPub" nombre="Autoriza Recaudación Simultánea de Deuda Pública" mostrarNivelAnterior="false" ejecutar="%nlAtzDevIng.cpAtzDevIng.autoriza%==true">
+            <componente id="nlPlzRecSimDeudaPub" nombre="Póliza de Devolución de ingresos Recaudados" tipo="reporte">
+                <reporte nombre="poliza_contable" expediente="Expediente de Ingresos/Devolución de Ingresos Solo Recaudado" nombreDocumento="'Póliza'" grupo="$inParam.folio_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPoliza.cpGenEncabezadoPoliza.folio_movimiento_auxiliar%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            
+            <componente tipo="reporte" nombre="Folio de Cancelacion de Ingreso" id="cpFolCancel">
+                <reporte nombre="repor_RDevolIng_jsus" expediente="Expediente de Ingresos/Devolución de Ingresos Solo Recaudado" nombreDocumento="'Documento'" grupo="$inParam.folio_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_devol_rec_ing" type="long" calc="%inParam.inParam.id_devolucion%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <!--TURNAR INSTANCIA -->
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" ejecutar="%nlAtzDevIng.cpAtzDevIng.autoriza%==true">>
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

@@ -1,0 +1,207 @@
+<tarea id="RegVerificacion" nombre="Registra Verificación de Documentación de Licitación Pública" autor="Monserrat Gerardo">
+    <pagina id="1">
+        
+        <nivel id="inParam" nombre="Párametros" interactivo="false">
+            <componente id="inParam" nombre="Párametros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_add" local="true" type="long" calc="$inParam.folio_add$"/>
+                    <campo name="id_compras" local="true" type="string" calc="$inParam.id_compras$"/>
+                    <campo name="tipo_adjudicacion" local="true" type="long" calc="$inParam.adjudicacion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+         
+        <nivel id="FU" nombre="Filtrar Usuario" interactivo="false">
+            <componente id="FU" nombre="Filtrar Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--<nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">-->
+        <!--    <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">-->
+        <!--        <tabla schema="entity" nombre="usuario">-->
+        <!--            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>-->
+        <!--            <campo name="id_usuario"/>-->
+        <!--            <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>-->
+        <!--            <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>-->
+        <!--            <campo name="folio_add" text="FolioAdd" local="true" type="string" calc="$inParam.adjudicacion$"/>-->
+        <!--        </tabla>-->
+        <!--    </componente>-->
+        <!--</nivel>-->
+        <nivel id="nlRegVDSLP" nombre="Registra Verificación de Documentación de Licitación Pública" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpRegVDSLP" nombre="Verificación Cualitativa de la Documentación" tipo="tabla" mostrarAgregar="false" mostrarEditar="true" mostrarEliminar="false">
+                <tabla schema="operation" nombre="proc_add_licitantes_recep_verif">
+                    <campo name="ur" text="UR" calc="%inParam.inParam.ur%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="%inParam.inParam.periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicacion" calc="%inParam.inParam.tipo_adjudicacion%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio ADD" calc="%inParam.inParam.folio_add%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="numero_consecutivo" text="Número" visible="false" columna-visible="false" />
+                    <campo name="id_beneficiario" text="Nombre o Razón Social" habilitado="false" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1"/>
+                    <campo name="verificacion_doc_legal" text="Documentación Legal" columnas="3" validacionModificacion="%verificacion_doc_legal%==null" validacionModificacionMensaje="Debe Capturarse Documentación Legal y Administrativa">
+                        <opciones>
+                            <opcion texto="SI" valor="SI"/>
+                            <opcion texto="NO" valor="NO"/>
+                        </opciones>
+                    </campo>
+                    <campo name="verificacion_propuesta_tecnica" text="Propuesta Técnica" columnas="3" validacionModificacion="%verificacion_propuesta_tecnica%==null" validacionModificacionMensaje="Debe Capturarse Propuesta Técnica">
+                        <opciones>
+                            <opcion texto="SI" valor="SI"/>
+                            <opcion texto="NO" valor="NO"/>
+                        </opciones>
+                    </campo>
+                    <campo name="verificacion_doc_economica" text="Propuesta Económica" columnas="3" margen-izquierdo="1" validacionModificacion="%verificacion_doc_economica%==null" validacionModificacionMensaje="Debe Capturarse Propuesta Económica">
+                        <opciones>
+                            <opcion texto="SI" valor="SI"/>
+                            <opcion texto="NO" valor="NO"/>
+                        </opciones>
+                    </campo>
+                    <campo name="verificacion_obs" text="Observaciones" columnas="9" margen-izquierdo="1" height="100" validacionModificacion="%verificacion_obs%==null" validacionModificacionMensaje="Debe Capturarse Observaciones"/>
+                    <campo name="fecha_registro_verificacion" text="Fecha" visible="false" calc="@fechaSistema()" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador_verificacion" text="Fecha" visible="false" calc="%FU.FU.id_usuario%" columna-visible="false"/>
+                </tabla>
+                <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('select count (*) AS result from operation.proc_add_licitantes_recep_verif where folio_add='+%inParam.inParam.folio_add% +' AND  verificacion_doc_legal is null','result','long','MAGNITUS')&gt;0 " validacionMensaje="'Se deben de llenar todos los datos'"/>
+                 </validaciones>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar"/>
+                    <boton nombre="formulario" visible="true" texto="Guardar" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo -->
+        
+        <nivel id="buscaFondo" nombre="buscaFondo" interactivo="false">
+            <componente id="buscaFondo" nombre="buscaFondo" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccion" nombre="buscaSeccion" interactivo="false">
+            <componente id="buscaSeccion" nombre="buscaSeccion" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerie" nombre="buscaSerie" interactivo="false">
+            <componente id="buscaSerie" nombre="buscaSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerie" nombre="buscaSubSerie" interactivo="false">
+            <componente id="buscaSubSerie" nombre="buscaSubSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="3"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpediente" nombre="concatenaExpediente" interactivo="false">
+            <componente id="concatenaExpediente" nombre="concatenaExpediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondo.buscaFondo.abreviatura%+'/'+%buscaSeccion.buscaSeccion.abreviatura%+'/'+%buscaSerie.buscaSerie.abreviatura%+'/'+%buscaSubSerie.buscaSubSerie.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo-->
+        <nivel id="nlVerificacion" nombre="Registra Verificación de Documentación de Licitación Pública" mostrarProximoNivel="false" mostrarNivelAnterior="tue"> 
+            <componente id="cpVerificacion" nombre="Validación Cualitativa de la Documentación" tipo="reporte">
+                <reporte nombre="Verif_doc_lpn" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Verificación de Documentación Licitación Pública'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="%inParam.inParam.tipo_adjudicacion%"/>
+                    <campo name="folio_add" type="long" calc="%inParam.inParam.folio_add%"/>
+                </reporte>
+            </componente>
+           <componente id="cpRegVDSLP1" nombre="Autoriza Verificación" tipo="formulario" accionDefault="editar" colapsado="NO">
+                <tabla schema="operation" nombre="proc_add">
+                    <campo name="ur" calc="%inParam.inParam.ur%" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%" visible="false" llaveForanea="false"/>
+                    <campo name="folio_add" text="Folio Adjudicación" calc="%inParam.inParam.folio_add%" visible="false"/>
+                    <campo name="cancela_licitacion" text="Verifica" visible="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="motivo_cancelacion_lp" text="Observaciones" height="250" interaccion="%cancela_licitacion%==false" validacion="%motivo_cancelacion_lp%==null AND %cancela_licitacion%==false" validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%cancela_licitacion%==true,'',%cancela_licitacion%)" columnas="6" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>      
+        </nivel>
+        <!--Acción Agregar Mensaje-->
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%nlVerificacion.cpRegVDSLP1.cancela_licitacion%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlVerificacion.cpRegVDSLP1.motivo_cancelacion_lp%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+        </nivel>
+        <!--Acción Negocia Instancia-->
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%nlVerificacion.cpRegVDSLP1.cancela_licitacion%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                    <parametro name="out_observaciones" calc="%nlVerificacion.cpRegVDSLP1.motivo_cancelacion_lp%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--Acción Turnar Instancia-->
+        <nivel nombre="TurnarInstancia" id="turnar_instancia" interactivo="false" ejecutar="%nlVerificacion.cpRegVDSLP1.cancela_licitacion%==true">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

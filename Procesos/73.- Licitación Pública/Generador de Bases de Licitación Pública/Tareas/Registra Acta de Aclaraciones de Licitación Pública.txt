@@ -1,0 +1,440 @@
+<tarea nombre="Registra Aclaración de Licitación Pública" autor="Puebla">
+    <pagina id="1" nombre="Registra Aclaración de Licitación Pública">
+       
+        <nivel id="inParam" nombre="Párametros" interactivo="false">
+            <componente id="inParam" nombre="Párametros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_add" local="true" type="long" calc="$inParam.folio_add$"/>
+                    <campo name="id_compras" local="true" type="string" calc="$inParam.id_compras$"/>
+                    <campo name="tipo_adjudicacion" local="true" type="long" calc="$inParam.adjudicacion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="FU" nombre="Filtrar Usuario" interactivo="false">
+            <componente id="FU" nombre="Filtrar Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="AALP" nombre="Alta Alta Aclaración de Licitación Pública" interactivo="false" ejecutar="@consultaDirec('SELECT COUNT(*) AS result FROM operation.proc_add_licitacion_aclaracion WHERE ur='+%inParam.inParam.ur%+' AND periodo='+%inParam.inParam.periodo%+' AND id_tipo_adjudicacion='+%inParam.inParam.tipo_adjudicacion%+' AND folio_add='+%inParam.inParam.folio_add%+'','result','int','MAGNITUS')==0">
+            <componente id="AALP" nombre="Alta Convocatoria" tipo="altaDirect">
+                <tabla schema="operation" nombre="proc_add_licitacion_aclaracion">
+                    <campo name="ur" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%"/>
+                    <campo name="id_tipo_adjudicacion" calc="%inParam.inParam.tipo_adjudicacion%"/>
+                    <campo name="folio_add" calc="%inParam.inParam.folio_add%"/>
+                   
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="FC" nombre="Filtra Convocatoria"  interactivo="false">
+            <componente id="FC" nombre="Filtra Convocatoria" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add_convocatoria">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_tipo_adjudicacion" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="%inParam.inParam.tipo_adjudicacion%"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="%inParam.inParam.folio_add%"/>
+                    <campo name="folio_add_concatenado"/>
+                    <campo name="folio_convocatoria" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+          <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo -->
+        
+        <nivel id="buscaFondo" nombre="buscaFondo" interactivo="false">
+            <componente id="buscaFondo" nombre="buscaFondo" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccion" nombre="buscaSeccion" interactivo="false">
+            <componente id="buscaSeccion" nombre="buscaSeccion" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerie" nombre="buscaSerie" interactivo="false">
+            <componente id="buscaSerie" nombre="buscaSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerie" nombre="buscaSubSerie" interactivo="false">
+            <componente id="buscaSubSerie" nombre="buscaSubSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="3"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpediente" nombre="concatenaExpediente" interactivo="false">
+            <componente id="concatenaExpediente" nombre="concatenaExpediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondo.buscaFondo.abreviatura%+'/'+%buscaSeccion.buscaSeccion.abreviatura%+'/'+%buscaSerie.buscaSerie.abreviatura%+'/'+%buscaSubSerie.buscaSubSerie.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="RALP" nombre="Registra Aclaración de Licitación Pública" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="RALP" nombre="Registra Aclaración de Licitación Pública" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="proc_add_licitacion_aclaracion">
+                    <campo name="ur" text="UR" llaveForanea="false" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" llaveForanea="false" calc="%inParam.inParam.tipo_adjudicacion%" visible="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" calc="%inParam.inParam.folio_add%"  visible="false"/>
+                    <campo name="folio_add_concatenado"  text="Folio de Licitación Pública"  calc="%FC.FC.folio_add_concatenado%" local="true" type="string" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="folio_convocatoria" text="Folio Convocatoria" local="true" type="string" calc="%FC.FC.folio_convocatoria%" columnas="3"/>
+                    
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" columnas="3"/>
+                    <campo name="adjunta" text="Adjuntar Acta de Aclaraciones" local="true" type="file" update="true" fileType="normal" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Acta de Aclaraciones'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" archivosAceptados="application/pdf" columnas="9" margen-izquierdo="1"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" calc="%FU.FU.id_usuario%" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="RA" nombre="Recepción de Aclaraciones" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="RA" nombre="Recepción de Aclaraciones" tipo="tabla">
+                    <tabla schema="operation" nombre="proc_add_licitantes_aclaracion">
+                    <campo name="ur" text="UR" calc="%inParam.inParam.ur%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="%inParam.inParam.periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Adjudicación" calc="%inParam.inParam.tipo_adjudicacion%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="FADD" calc="%inParam.inParam.folio_add%"  visible="false" columna-visible="false"/>
+                    <campo name="numero_consecutivo" text="No." generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="false"/>
+                    <campo name="id_beneficiario" text="Razón o Denominación Social" autoFiltrado="true" autoFiltradoDescripcion="razon_social" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" validacion="%id_beneficiario%==null" validacionMensaje="Verificar Beneficiario" validacionModificacion="%id_beneficiario%==null" validacionModificacionMensaje="Debe Capturarse Nombre, Razón o Denominación Social" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1" llavesFijas="id_clasificacion_beneficiario=1"/>
+                    <campo name="aclaracion_forma_presentacion" text="Forma de Presentación" validacion="%aclaracion_forma_presentacion%==null" validacionMensaje="Debe Capturarse Forma de Presentación" validacionModificacion="%aclaracion_forma_presentacion%==null" validacionModificacionMensaje="Debe Capturarse Forma de Presentación" visible="true" columna-visible="true" columnas="3" llavesFijas="forma_presentacion=1 OR forma_presentacion=2"/>
+                    <campo name="aclaracion_numero_preguntas" text="No. de Preguntas" validacion="%aclaracion_numero_preguntas%==null" validacionMensaje="Debe Capturarse No. de Preguntas" validacionModificacion="%aclaracion_numero_preguntas%==null" validacionModificacionMensaje="Debe Capturarse No. de Preguntas" visible="true" columna-visible="true" columnas="3"/>
+                    <campo name="aclaracion_numero_hojas" text="No. de Hojas" validacion="%aclaracion_numero_hojas%==null" validacionMensaje="Debe Capturarse No. de Hojas" validacionModificacion="%aclaracion_numero_hojas%==null" validacionModificacionMensaje="Debe Capturarse No. de Hojas" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1"/>
+                    <campo name="observaciones" text="Observaciones" columnas="9" margen-izquierdo="1" height="100"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <!--
+                    <campo name="adjunta" text="Adjuntar Respuestas" local="true" type="file" update="true" fileType="normal" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Respuesta Aclaraciones'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" archivosAceptados="application/pdf" columnas="9" margen-izquierdo="1"/>
+                    -->
+                    <campo name="ultimo_usuario_modificador" text="Usuario" calc="%FU.FU.id_usuario%" visible="false" columna-visible="false"/>
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                        <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+            </componente>
+        </nivel>
+        
+        
+         <nivel nombre="TSR" id="TSR" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Turnar Siguiente Rol" id="TSR" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" visible="false" calc="1"/>
+                    <campo name="turnar" text="¿Desea Turnar?" local="true" type="long" calc="1" habilitado="true" columnas="3" margen-izquierdo="4">
+                        <opciones>
+                            <opcion texto="SI" valor="1"/>
+                            <opcion texto="NO" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="3" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+            
+        <nivel nombre="turnarInstancia" id="tI" interactivo="false" ejecutar="%TSR.TSR.turnar%==1">
+            <componente tipo="solicitud" nombre="" id="tI">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+            
+        <nivel nombre="CT" id="CT" interactivo="false">
+            <componente tipo="cursor" nombre="CT" id="CT">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!--<nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">-->
+        <!--    <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">-->
+        <!--        <tabla schema="entity" nombre="usuario">-->
+        <!--            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>-->
+        <!--            <campo name="id_usuario"/>-->
+        <!--            <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>-->
+        <!--            <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>-->
+        <!--        </tabla>-->
+        <!--    </componente>-->
+        <!--</nivel>-->
+        <!--
+        <nivel nombre="periodo" id="periodo" interactivo="false">   
+            <componente nombre="periodo" id="periodo" tipo="cursor">
+                <tabla nombre="periodo" schema="catalog">
+                    <campo filtroValor="$config.ur$" filtroOperador="=" filtroCampo="id_unidad_responsable" name="id_unidad_responsable" llaveForanea="false"/>
+                    <campo name="id_periodo" llaveForanea="false"/>
+                    <campo filtroValor="true" filtroOperador="=" filtroCampo="estatus" name="estatus"/>
+                    <campo filtroValor="3" filtroOperador="=" filtroCampo="id_estatus" name="id_estatus"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="ValFAclaracion" nombre="ValFAclaracion" interactivo="false">
+            <componente id="ValFAclaracion" nombre="ValFAclaracion" tipo="cursor">
+                <tabla schema="operation" nombre="proc_add_licitacion_aclaracion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_tipo_adjudicacion" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="$inParam.adjudicacion$" llaveForanea="false"/>
+                    <campo name="folio_add" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')" llaveForanea="false"/>
+                    <campo name="fecha_registro" text="Fecha Registro"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlRegistraALPI" nombre="Acta de Aclaración de Licitación Pública" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%ValFAclaracion.ValFAclaracion.fecha_registro%==null">
+            <componente id="cpRegistraALPI" nombre="Acta Aclaración de Licitación Pública" tipo="formulario" accionDefault="insertar">
+                <tabla schema="operation" nombre="proc_add_licitacion_aclaracion">
+                    <campo name="ur" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"  visible="false"/>
+                    <campo name="folio_add_concatenado"  text="Folio de Licitación Pública"  calc="@concatenar('LPN-'+@ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10,'00000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100,'0000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;1000,'000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10000,'00',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100000,'0','')))))+
+                    @consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS'))" local="true" type="string" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="aclaracion_antecedentes" text="Antecedentes" validacion="%aclaracion_antecedentes%==null" validacionMensaje="Debe Capturarse Antecedentes" visible="true" height="100" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="aclaracion_inicio" text="Inicio" visible="true" height="100" columnas="8" margen-izquierdo="1" margen-derecho="1" 
+                    validacion="%aclaracion_inicio%==null OR %aclaracion_inicio%== ' '" validacionMensaje="Registrar Inicio"/>
+                    <campo name="aclaracion_comentarios_solicitudes" text="Comentarios sobre la entrega de solicitudes de Aclaración" validacion="%aclaracion_comentarios_solicitudes%==null" validacionMensaje="Debe Capturarse Comentarios sobre la entrega de solicitudes de Aclaración" visible="true" height="100" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlRegistraALPE" nombre="Acta de Aclaración de Licitación Pública" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%ValFAclaracion.ValFAclaracion.fecha_registro%!=null">
+            <componente id="cpRegistraALPE" nombre="Acta de Aclaración de Licitación Pública" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="proc_add_licitacion_aclaracion">
+                    <campo name="ur" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"  visible="false"/>
+                    <campo name="folio_add_concatenado"  text="Folio de Licitación Pública"  calc="@concatenar('LPN-'+@ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10,'00000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100,'0000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;1000,'000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10000,'00',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100000,'0','')))))+
+                    @consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS'))" local="true" type="string" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="aclaracion_antecedentes" text="Antecedentes" validacion="%aclaracion_antecedentes%==null" validacionMensaje="Debe Capturarse Antecedentes" visible="true" height="100" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="aclaracion_inicio" text="Inicio" validacion="%aclaracion_inicio%==null" validacionMensaje="Debe Capturarse Inicio" visible="true" height="100" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="aclaracion_comentarios_solicitudes" text="Comentarios sobre la entrega de solicitudes de Aclaración" validacion="%aclaracion_comentarios_solicitudes%==null" validacionMensaje="Debe Capturarse Comentarios sobre la entrega de solicitudes de Aclaración" visible="true" height="100" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+         <nivel id="nlPreguntasRLP" nombre="Recepción de Aclaraciones" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" id="cpPreguntasRLP" nombre="Recepción de Aclaraciones" mostrarEditar="true" mostrarAgregar="true" mostrarEliminar="true">        
+                    <tabla schema="operation" nombre="proc_add_licitantes_aclaracion">
+                    <campo name="ur" text="UR" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Adjudicación" calc="$inParam.adjudicacion$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Proyecto Compra" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"  visible="false" columna-visible="false"/>
+                    <campo name="folio_add_concatenado"  text="Folio de Licitación Pública"  calc="@concatenar('LPN-'+@ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10,'00000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100,'0000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;1000,'000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10000,'00',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100000,'0','')))))+
+                    @consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS'))" local="true" type="string" columnas="3" margen-izquierdo="2" columna-visible="false" visible="false"/> 
+                    <campo name="numero_consecutivo" text="No." generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="false"/>
+                    <campo name="id_beneficiario" text="Razón o Denominación Social" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" validacion="%id_beneficiario%==null" validacionMensaje="Verificar Beneficiario" validacionModificacion="%id_beneficiario%==null" validacionModificacionMensaje="Debe Capturarse Nombre, Razón o Denominación Social" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1" llavesFijas="id_clasificacion_beneficiario=1"/>
+                    <campo name="aclaracion_forma_presentacion" text="Forma de Presentación" validacion="%aclaracion_forma_presentacion%==null" validacionMensaje="Debe Capturarse Forma de Presentación" validacionModificacion="%aclaracion_forma_presentacion%==null" validacionModificacionMensaje="Debe Capturarse Forma de Presentación" visible="true" columna-visible="true" columnas="2" llavesFijas="forma_presentacion=1 OR forma_presentacion=2"/>
+                    <campo name="aclaracion_numero_preguntas" text="No. de Preguntas" validacion="%aclaracion_numero_preguntas%==null" validacionMensaje="Debe Capturarse No. de Preguntas" validacionModificacion="%aclaracion_numero_preguntas%==null" validacionModificacionMensaje="Debe Capturarse No. de Preguntas" visible="true" columna-visible="true" columnas="3" margen-derecho="1"/>
+                    <campo name="aclaracion_numero_hojas" text="No. de Hojas" validacion="%aclaracion_numero_hojas%==null" validacionMensaje="Debe Capturarse No. de Hojas" validacionModificacion="%aclaracion_numero_hojas%==null" validacionModificacionMensaje="Debe Capturarse No. de Hojas" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                   
+                    <campo name="ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false"/>
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                        <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+            </componente>
+        </nivel>
+        <nivel id="nlRegistraALPE1" nombre="Preguntas recibidas y su respuesta" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpRegistraALPE1" nombre="Preguntas recibidas y su respuesta" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="proc_add_licitacion_aclaracion">
+                    <campo name="ur" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_tipo_adjudicacion" llaveForanea="false" calc="$inParam.adjudicacion$" visible="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"  visible="false"/>
+                    <campo name="folio_add_concatenado"  text="Folio de Licitación Pública"  calc="@concatenar('LPN-'+@ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10,'00000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100,'0000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;1000,'000',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')&lt;10000,'00',
+                    @ifThenElse(@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS') &lt;100000,'0','')))))+
+                    @consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS'))" local="true" type="string" columnas="4" margen-izquierdo="1"/> 
+                    <campo name="aclaracion_preguntas_recibidas" text="Preguntas realizadas por los Licitantes y sus respuestas" height="100" columnas="8" margen-izquierdo="1" margen-derecho="1" visible="true" validacion="%aclaracion_preguntas_recibidas%==null OR %aclaracion_preguntas_recibidas%== ' '" validacionMensaje="Debe capturar las preguntas realizadas por los Licitantes y sus respuestas"/>
+                    <campo name="aclaracion_notas_posteriores" text="Notas posteriores a las preguntas y respuestas" height="100" columnas="8" margen-izquierdo="1" margen-derecho="1" visible="true" validacion="%aclaracion_notas_posteriores%==null OR %aclaracion_notas_posteriores%== ' '" validacionMensaje="Debe capturar las notas posteriores"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+         <nivel id="nlFuncionariosLP" nombre="Lista de Asistencia de Funcionarios" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" id="cpFuncionariosLP" nombre="Funcionarios Presentes" mostrarEditar="true" mostrarAgregar="true" mostrarEliminar="true">        
+                    <tabla schema="operation" nombre="add_funcionarios_eventos">
+                    <campo name="ur" text="UR" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Adjudicación" calc="$inParam.adjudicacion$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')" visible="false" columna-visible="false"/>
+                    <campo name="tipo_evento" text="Tipo Evento" llaveForanea="false" calc="2" visible="false" columna-visible="false"/>
+                    <campo name="folio_funcionario" text="Folio" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="nombre" text="Nombre de Funcionario" validacion="%nombre%==null" validacionMensaje="Debe Capturarse Nombre de Funcionario" validacionModificacion="%nombre%==null" validacionModificacionMensaje="Debe Capturarse Nombre de Funcionario" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="puesto" text="Puesto" validacion="%puesto%==null" validacionMensaje="Debe Capturarse Cargo" validacionModificacion="%puesto%==null" validacionModificacionMensaje="Debe Capturarse Cargo" visible="true" columna-visible="true" columnas="3" margen-derecho="2"/>
+                    <campo name="fecha_elaboracion" text="Fecha Registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false"/>
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                        <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+            </componente>
+        </nivel>
+        <nivel id="nlFuncionariosOICLP" nombre="Lista de Asistencia del Organo Interno de Control" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" id="cpFuncionariosOICLP" nombre="Funcionarios del Organo Interno de Control" mostrarEditar="true" mostrarAgregar="true" mostrarEliminar="true">        
+                    <tabla schema="operation" nombre="add_funcionarios_eventos">
+                    <campo name="ur" text="UR" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Adjudicación" calc="$inParam.adjudicacion$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')" visible="false" columna-visible="false"/>
+                     <campo name="tipo_evento" text="Tipo Evento" llaveForanea="false" calc="3" visible="false" columna-visible="false"/>
+                    <campo name="folio_funcionario" text="Folio" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="nombre" text="Nombre del Funcionario" validacion="%nombre%==null" validacionMensaje="Debe Capturarse Nombre de Funcionario" validacionModificacion="%nombre%==null" validacionModificacionMensaje="Debe Capturarse Nombre de Funcionario" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="puesto" text="Puesto" validacion="%puesto%==null" validacionMensaje="Debe Capturarse Cargo" validacionModificacion="%puesto%==null" validacionModificacionMensaje="Debe Capturarse Cargo" visible="true" columna-visible="true" columnas="3" margen-derecho="2"/>
+                    <campo name="fecha_elaboracion" text="Fecha Registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false"/>
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                        <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlPreguntasRLP1" nombre="Lista de Asistencia de Licitantes" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" id="cpPreguntasRLP1" nombre="Licitantes Presentes" mostrarEditar="true" mostrarAgregar="false" mostrarEliminar="false">        
+                    <tabla schema="operation" nombre="proc_add_licitantes_aclaracion">
+                    <campo name="ur" text="UR" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Adjudicación" calc="$inParam.adjudicacion$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="numero_consecutivo" text="No." autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="id_beneficiario" text="Razón o Denominación Social" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" validacion="%id_beneficiario%==null" validacionMensaje="Debe Capturarse Nombre, Razón o Denominación Social" validacionModificacion="%id_beneficiario%==null" validacionModificacionMensaje="Debe Capturarse Nombre, Razón o Denominación Social" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1"/>
+                    <campo name="aclaracion_representante" text="Nombre del Representante" validacion="%aclaracion_representante%==null" validacionMensaje="Debe Capturarse Nombre del Representante" validacionModificacion="%aclaracion_representante%==null" validacionModificacionMensaje="Debe Capturarse Nombre del Representante" visible="true" columna-visible="true" columnas="3" />
+                    <campo name="aclaracion_presente" text="Presente" visible="true" validacion="%aclaracion_presente%==null" validacionMensaje="Debe Capturarse Presente" validacionModificacion="%aclaracion_presente%==null" validacionModificacionMensaje="Debe Capturarse Presente" columna-visible="true" columnas="2" margen-derecho="1">
+                        <opciones>
+                            <opcion texto="SI" valor="SI"/>
+                            <opcion texto="NO" valor="NO"/>
+                        </opciones>
+                    </campo>
+                    
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false"/>
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                        <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+            </componente>
+        </nivel>
+        -->
+        
+        
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo
+        <nivel id="nlAclaracionLP" nombre="Acta de Junta de Aclaraciones" mostrarProximoNivel="false" mostrarNivelAnterior="tue"> 
+            <componente id="cpAclaracionLP" nombre="Acta de Junta de Aclaraciones" tipo="reporte">
+                <reporte nombre="Aclara_lpn" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Acta de Aclaraciones de Licitación Pública'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="$inParam.adjudicacion$"/>
+                    <campo name="folio_add" type="long" calc="%barreUsuarios.barreUsuarios.folio%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        -->
+    </pagina>
+</tarea>
