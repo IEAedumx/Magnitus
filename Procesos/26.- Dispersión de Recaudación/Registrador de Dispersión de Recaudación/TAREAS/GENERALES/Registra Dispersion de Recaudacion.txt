@@ -1,0 +1,379 @@
+<tarea id="regDisRec" nombre="Registra Dispersión de Recaudación" fechaModificacion="10/06/2019" autor="Froylán Alanís">
+    <pagina id="1" nombre="Registra Dispersión de Recaudación">
+        <nivel id="per" nombre="Busca periodo" interactivo="false">
+            <componente id="per" nombre="Busca periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable"  filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" text="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" text="Id estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo" text="Periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="usuario" nombre="Busca usuario" interactivo="false">
+            <componente id="usuario" nombre="Busca usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" text="UR" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%per.per.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="RS" nombre="Restablece Seleccion"  interactivo="false">
+            <componente id="RS" nombre="Restable Seleccion" tipo="cursor">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur"/>
+                    <campo name="id_periodo"/>
+                     <campo name="id_corte_caja"/>
+                    <campo name="seleccion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="RSFD1" nombre="Restablecer Seleccion Falso Dispersion"  interactivo="false">
+            <componente id="RSFD1" nombre="Restablecer Seleccion Dispersion" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%per.per.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_dispersion_recaudacion"/>
+                    <campo name="id_corte_caja"/>
+                    <campo name="seleccion_dispersion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="datRec" nombre="Dato de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="tabCorCajDis" nombre="Cortes de Caja por Dispersar" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false" filtro="true"> 
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%per.per.id_unidad_responsable%" llaveForanea="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" llaveForanea="false" columna-visible="false"/>
+                    <campo name="id_corte_caja" text="id" columna-visible="false"/>
+                    <campo name="folio_corte_caja" text="Folio Recaudación" width="140"/>
+                    <campo name="fecha_elaboracion" text="Fecha" width="95"/>
+                    <campo name="cobro_efectivo" text="Cobros en Efectivo" formatoMoneda="true" width="145"/>
+                    <campo name="cobro_t_e" text="Cobros en Transferencia Electrónica" formatoMoneda="true" width="260"/>
+                    <campo name="cobro_cheque_n" text="Cobros en Cheque Nominativo" formatoMoneda="true" width="225"/>
+                    <campo name="cobro_tarjeta_c" text="Cobros con Tarjeta de Crédito" formatoMoneda="true" width="220"/>
+                    <campo name="cobro_tarjeta_d" text="Cobros con Tarjeta de Débito" formatoMoneda="true" width="215"/>
+                    <campo name="cobro_donacion_p" text="Cobros con Donación en Pago" formatoMoneda="true" width="220"/>
+                    <campo name="cobro_tf" text="Cobros con Transferencia de Fondos" formatoMoneda="true" width="265"/>
+                    <campo name="seleccion" text="Campo de Selección" editable="true"  /><!-- filtroCampo="seleccion" filtroOperador="!=" filtroValor="true" -->
+                    <campo name="usuario_dispersion" text="usuario" columna-visible="false" calcCliente="@ifThenElse(%seleccion%==true,%usuario.usuario.id_usuario%,null)" filtroCampo="usuario_dispersion" filtroOperador="=" filtroValor="null"/>
+                    <campo name="autoriza_corte_caja" text="corte de caja autorizado" filtroCampo="autoriza_corte_caja" filtroOperador="="  filtroValor="true" columna-visible="false" width="155"/>
+               
+                    <campo name="dispersion" text="obs" columna-visible="false" filtroCampo="dispersion" filtroOperador="=" filtroValor="false"/>
+                    
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+          <!--  <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) AS res FROM operation.corte_caja WHERE ur='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND seleccion=true','res','int','MAGNITUS')==0 OR @consultaDirec('SELECT COUNT(*) AS res FROM operation.corte_caja WHERE ur='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND seleccion=true','res','int','MAGNITUS')&gt;1" validacionMensaje="'Se debe seleccionar un registro'"/>
+            </validaciones>-->
+        </nivel>
+        <!---->
+       
+        <!---->
+        <nivel nombre="Alta Folio" id="AF" interactivo="false">
+            <componente tipo="altaDirect" nombre="Alta Folio" id="AF">
+                <tabla schema="operation" nombre="dispersion_folio">
+                    <campo name="ur" calc="%per.per.id_unidad_responsable%"/>
+                    <campo name="periodo" calc="%per.per.id_periodo%"/>
+                    <campo name="folio_dispersion" autogenerado="true" generacion="@prox()+1"/>
+                    <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="obtTrue" nombre="Obtener True" interactivo="false">
+            <componente id="obtTrue" nombre="Obtener true" tipo="cursor">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%per.per.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_corte_caja"/>
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                    <campo name="usuario_dispersion" filtroCampo="usuario_dispersion" filtroOperador="=" filtroValor="%usuario.usuario.id_usuario%"/>
+                    <campo name="cobro_efectivo"/>
+                    <campo name="cobro_t_e"/>
+                    <campo name="cobro_cheque_n"/>
+                    <campo name="cobro_tarjeta_c"/>
+                    <campo name="cobro_tarjeta_d"/>
+                    <campo name="cobro_donacion_p"/>
+                    <campo name="cobro_tf"/>
+                    <campo name="cuenta_b_efectivo"/>
+                    <campo name="cuenta_b_te"/>
+                    <campo name="cuenta_b_cheque"/>
+                    <campo name="cuenta_b_tc"/>
+                    <campo name="cuenta_b_td"/>
+                    <campo name="cuenta_b_donacion"/>
+                    <campo name="cuenta_b_tf"/>
+                </tabla>
+                <nivel id="regEfe" nombre="Registra Efectivo" interactivo="false" ejecutar="@consultaDirec('select count (*) >0 as resultado from operation.dispersion_recaudacion where ur='+%per.per.id_unidad_responsable%+' and periodo='+%per.per.id_periodo%+' and id_corte_caja='+%obtTrue.obtTrue.id_corte_caja%+' and forma_cobro='+'\\''+'Efectivo'+'\\''+' AND ultimo_usuario_modificador='+%usuario.usuario.id_usuario%,'resultado','bool','MAGNITUS')==false">
+                    <componente id="regEfe" nombre="Registra Efectivo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="dispersion_recaudacion">
+                            <campo name="ur" calc="%per.per.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%per.per.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_dispersion_recaudacion" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" llaveForanea="false"/>
+                            <campo name="forma_cobro" calc="'Efectivo'"/>
+                            <campo name="importe" calc="%obtTrue.obtTrue.cobro_efectivo%"/>
+                            <campo name="cuenta_bancaria" calc="@consultaDirec('SELECT cuenta_bancaria AS cc FROM entity.cuenta_bancaria WHERE id_unidad_responsable='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND cuenta_contable='+'\\''+%obtTrue.obtTrue.cuenta_b_efectivo%+'\\'','cc','string','MAGNITUS')"/>
+                            <campo name="cuenta_contable" calc="%obtTrue.obtTrue.cuenta_b_efectivo%"/>
+                            <campo name="estatus" calc="'EN PROCESO'"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%"/>
+                            <campo name="folio" calc="%AF.AF.folio_dispersion%"/>
+                            <campo name="seleccion_dispersion" calc="true"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="regChe" nombre="Registra Cheque" interactivo="false" ejecutar="@consultaDirec('select count (*) >0 as resultado from operation.dispersion_recaudacion where ur='+%per.per.id_unidad_responsable%+' and periodo='+%per.per.id_periodo%+' and id_corte_caja='+%obtTrue.obtTrue.id_corte_caja%+' and forma_cobro='+'\\''+'Cheque Nominativo'+'\\''+' AND ultimo_usuario_modificador='+%usuario.usuario.id_usuario%,'resultado','bool','MAGNITUS')==false">
+                    <componente id="regChe" nombre="Registra Cheque" tipo="altaDirect">
+                        <tabla schema="operation" nombre="dispersion_recaudacion">
+                            <campo name="ur" calc="%per.per.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%per.per.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_dispersion_recaudacion" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" llaveForanea="false"/>
+                            <campo name="forma_cobro" calc="'Cheque Nominativo'"/>
+                            <campo name="importe" calc="%obtTrue.obtTrue.cobro_cheque_n%"/>
+                            <campo name="cuenta_bancaria" calc="@consultaDirec('SELECT cuenta_bancaria AS cc FROM entity.cuenta_bancaria WHERE id_unidad_responsable='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND cuenta_contable='+'\\''+%obtTrue.obtTrue.cuenta_b_cheque%+'\\'','cc','string','MAGNITUS')"/>
+                            <campo name="cuenta_contable" calc="%obtTrue.obtTrue.cuenta_b_cheque%"/>
+                            <campo name="estatus" calc="'EN PROCESO'"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%"/>
+                            <campo name="folio" calc="%AF.AF.folio_dispersion%"/>
+                            <campo name="seleccion_dispersion" calc="true"/>
+                            
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="regTE" nombre="Registra Transferencia Electrónica" interactivo="false" ejecutar="@consultaDirec('select count (*) >0 as resultado from operation.dispersion_recaudacion where ur='+%per.per.id_unidad_responsable%+' and periodo='+%per.per.id_periodo%+' and id_corte_caja='+%obtTrue.obtTrue.id_corte_caja%+' and forma_cobro='+'\\''+'Transferencia Electrónica'+'\\''+' AND ultimo_usuario_modificador='+%usuario.usuario.id_usuario%,'resultado','bool','MAGNITUS')==false">
+                    <componente id="regTE" nombre="Registra Transferencia Electrónica" tipo="altaDirect">
+                        <tabla schema="operation" nombre="dispersion_recaudacion">
+                            <campo name="ur" calc="%per.per.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%per.per.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_dispersion_recaudacion" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" llaveForanea="false"/>
+                            <campo name="forma_cobro" calc="'Transferencia Electrónica'"/>
+                            <campo name="importe" calc="%obtTrue.obtTrue.cobro_t_e%"/>
+                            <campo name="cuenta_bancaria" calc="@consultaDirec('SELECT cuenta_bancaria AS cc FROM entity.cuenta_bancaria WHERE id_unidad_responsable='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND cuenta_contable='+'\\''+%obtTrue.obtTrue.cuenta_b_te%+'\\'','cc','string','MAGNITUS')"/>
+                            <campo name="cuenta_contable" calc="%obtTrue.obtTrue.cuenta_b_te%"/>
+                            <campo name="estatus" calc="'EN PROCESO'"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%"/>
+                            <campo name="seleccion_dispersion" calc="true"/>
+                            <campo name="folio" calc="%AF.AF.folio_dispersion%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="regTarCre" nombre="Registra Tarjeta Crédito" interactivo="false" ejecutar="@consultaDirec('select count (*) >0 as resultado from operation.dispersion_recaudacion where ur='+%per.per.id_unidad_responsable%+' and periodo='+%per.per.id_periodo%+' and id_corte_caja='+%obtTrue.obtTrue.id_corte_caja%+' and forma_cobro='+'\\''+'Tarjeta de Crédito'+'\\''+' AND ultimo_usuario_modificador='+%usuario.usuario.id_usuario%,'resultado','bool','MAGNITUS')==false">
+                    <componente id="regTarCre" nombre="Registra Tarjeta Crédito" tipo="altaDirect">
+                        <tabla schema="operation" nombre="dispersion_recaudacion">
+                            <campo name="ur" calc="%per.per.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%per.per.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_dispersion_recaudacion" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" llaveForanea="false"/>
+                            <campo name="forma_cobro" calc="'Tarjeta de Crédito'"/>
+                            <campo name="importe" calc="%obtTrue.obtTrue.cobro_tarjeta_c%"/>
+                            <campo name="cuenta_bancaria" calc="@consultaDirec('SELECT cuenta_bancaria AS cc FROM entity.cuenta_bancaria WHERE id_unidad_responsable='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND cuenta_contable='+'\\''+%obtTrue.obtTrue.cuenta_b_tc%+'\\'','cc','string','MAGNITUS')"/>
+                            <campo name="cuenta_contable" calc="%obtTrue.obtTrue.cuenta_b_tc%"/>
+                            <campo name="estatus" calc="'EN PROCESO'"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%"/>
+                            <campo name="folio" calc="%AF.AF.folio_dispersion%"/>
+                            <campo name="seleccion_dispersion" calc="true"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="regTarDeb" nombre="Registra Tarjeta Debito" interactivo="false" ejecutar="@consultaDirec('select count (*) >0 as resultado from operation.dispersion_recaudacion where ur='+%per.per.id_unidad_responsable%+' and periodo='+%per.per.id_periodo%+' and id_corte_caja='+%obtTrue.obtTrue.id_corte_caja%+' and forma_cobro='+'\\''+'Tarjeta de Debito'+'\\''+' AND ultimo_usuario_modificador='+%usuario.usuario.id_usuario%,'resultado','bool','MAGNITUS')==false">
+                    <componente id="regTarDeb" nombre="Registra Tarjeta Debito" tipo="altaDirect">
+                        <tabla schema="operation" nombre="dispersion_recaudacion">
+                            <campo name="ur" calc="%per.per.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%per.per.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_dispersion_recaudacion" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" llaveForanea="false"/>
+                            <campo name="forma_cobro" calc="'Tarjeta de Debito'"/>
+                            <campo name="importe" calc="%obtTrue.obtTrue.cobro_tarjeta_d%"/>
+                            <campo name="cuenta_bancaria" calc="@consultaDirec('SELECT cuenta_bancaria AS cc FROM entity.cuenta_bancaria WHERE id_unidad_responsable='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND cuenta_contable='+'\\''+%obtTrue.obtTrue.cuenta_b_td%+'\\'','cc','string','MAGNITUS')"/>
+                            <campo name="cuenta_contable" calc="%obtTrue.obtTrue.cuenta_b_td%"/>
+                            <campo name="estatus" calc="'EN PROCESO'"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%"/>
+                            <campo name="folio" calc="%AF.AF.folio_dispersion%"/>
+                            <campo name="seleccion_dispersion" calc="true"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                 <nivel id="regDonPag" nombre="Registra Donación Pago" interactivo="false" ejecutar="@consultaDirec('select count (*) >0 as resultado from operation.dispersion_recaudacion where ur='+%per.per.id_unidad_responsable%+' and periodo='+%per.per.id_periodo%+' and id_corte_caja='+%obtTrue.obtTrue.id_corte_caja%+' and forma_cobro='+'\\''+'Donación de Pago'+'\\''+' AND ultimo_usuario_modificador='+%usuario.usuario.id_usuario%,'resultado','bool','MAGNITUS')==false">
+                    <componente id="regDonPag" nombre="Registra Donación Pago" tipo="altaDirect">
+                        <tabla schema="operation" nombre="dispersion_recaudacion">
+                            <campo name="ur" calc="%per.per.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%per.per.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_dispersion_recaudacion" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" llaveForanea="false"/>
+                            <campo name="forma_cobro" calc="'Donación de Pago'"/>
+                            <campo name="importe" calc="%obtTrue.obtTrue.cobro_donacion_p%"/>
+                            <campo name="cuenta_bancaria" calc="@consultaDirec('SELECT cuenta_bancaria AS cc FROM entity.cuenta_bancaria WHERE id_unidad_responsable='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND cuenta_contable='+'\\''+%obtTrue.obtTrue.cuenta_b_donacion%+'\\'','cc','string','MAGNITUS')"/>
+                            <campo name="cuenta_contable" calc="%obtTrue.obtTrue.cuenta_b_donacion%"/>
+                            <campo name="estatus" calc="'EN PROCESO'"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%"/>
+                            
+                            <campo name="folio" calc="%AF.AF.folio_dispersion%"/>
+                            <campo name="seleccion_dispersion" calc="true"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="regTransFon" nombre="Registra Transferencia Fondos" interactivo="false" ejecutar="@consultaDirec('select count (*) >0 as resultado from operation.dispersion_recaudacion where ur='+%per.per.id_unidad_responsable%+' and periodo='+%per.per.id_periodo%+' and id_corte_caja='+%obtTrue.obtTrue.id_corte_caja%+' and forma_cobro='+'\\''+'Transferencia de Fondos'+'\\''+' AND ultimo_usuario_modificador='+%usuario.usuario.id_usuario%,'resultado','bool','MAGNITUS')==false">
+                    <componente id="regTransFon" nombre="Registra Transferencia Fondos" tipo="altaDirect">
+                        <tabla schema="operation" nombre="dispersion_recaudacion">
+                            <campo name="ur" calc="%per.per.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%per.per.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_dispersion_recaudacion" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" llaveForanea="false"/>
+                            <campo name="forma_cobro" calc="'Transferencia de Fondos'"/>
+                            <campo name="importe" calc="%obtTrue.obtTrue.cobro_tf%"/>
+                            <campo name="cuenta_bancaria" calc="@consultaDirec('SELECT cuenta_bancaria AS cc FROM entity.cuenta_bancaria WHERE id_unidad_responsable='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND cuenta_contable='+'\\''+%obtTrue.obtTrue.cuenta_b_tf%+'\\'','cc','string','MAGNITUS')"/>
+                            <campo name="cuenta_contable" calc="%obtTrue.obtTrue.cuenta_b_tf%"/>
+                            <campo name="estatus" calc="'EN PROCESO'"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%"/>
+                            
+                            <campo name="folio" calc="%AF.AF.folio_dispersion%"/>
+                            <campo name="seleccion_dispersion" calc="true"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+    <!--<nivel id="regEfe1" nombre="Registra Efectivo" interactivo="true" ejecutar="@consultaDirec('select count (*) >0 as resultado from operation.dispersion_recaudacion where ur='+%per.per.id_unidad_responsable%+' and periodo='+%per.per.id_periodo%+' and id_corte_caja='+%obtTrue.obtTrue.id_corte_caja%+' and forma_cobro='+'\\''+'Efectivo'+'\\''+' AND ultimo_usuario_modificador='+%usuario.usuario.id_usuario%,'resultado','bool','MAGNITUS')==false">
+                    <componente id="regEfe1" nombre="Registra Efectivo" tipo="formulario">
+                        <tabla schema="operation" nombre="dispersion_recaudacion">
+                            <campo name="ur" calc="%per.per.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%per.per.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_dispersion_recaudacion" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" llaveForanea="false"/>
+                            <campo name="forma_cobro" calc="'Efectivo'"/>
+                            <campo name="importe" calc="%obtTrue.obtTrue.cobro_efectivo%"/>
+                            <campo name="cuenta_bancaria" calc="@consultaDirec('SELECT cuenta_bancaria AS cc FROM entity.cuenta_bancaria WHERE id_unidad_responsable='+%per.per.id_unidad_responsable%+' AND id_periodo='+%per.per.id_periodo%+' AND cuenta_contable='+'\\''+%obtTrue.obtTrue.cuenta_b_efectivo%+'\\'','cc','string','MAGNITUS')"/>
+                            <campo name="cuenta_contable" calc="%obtTrue.obtTrue.cuenta_b_efectivo%"/>
+                            <campo name="estatus" calc="'EN PROCESO'"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" llaveForanea="false"/>
+                            <campo name="folio" calc="%AF.AF.folio_dispersion%"/>
+                            <campo name="seleccion_dispersion" calc="true"/>
+                        </tabla>
+                    </componente>
+                </nivel>-->
+       
+        <nivel id="RSFCC" nombre="Restablecer Seleccion Falso"  interactivo="false">
+            <componente id="RSFCC" nombre="Restablecer Seleccion Falso" tipo="cursor">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%per.per.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_corte_caja" filtroCampo="id_corte_caja" filtroOperador="=" filtroValor="%obtTrue.obtTrue.id_corte_caja%"/>
+                    <campo name="seleccion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="regDisRec" nombre="Registra Dispersión de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="tabRegDisRec" nombre="Registra Dispersión de Recaudación" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" text="ur" columna-visible="false" calc="%per.per.id_unidad_responsable%"  FiltarConCalc="true" llaveForanea="false"/>
+                    <campo name="periodo" text="periodo" columna-visible="false" calc="%per.per.id_periodo%"  FiltarConCalc="true" llaveForanea="false"/>
+                    <campo name="id_dispersion_recaudacion" text="id_dispersion" columna-visible="false"/>
+                    <campo name="id_corte_caja" text="Corte de Caja" columna-visible="true" llaveForanea="false" width="115"/> 
+                    
+                    <campo name="forma_cobro" text="Forma de Cobro" width="205"/>
+                    <campo name="importe" text="Importe" formatoMoneda="true" width="155"/>
+                    <campo name="cuenta_bancaria" text="Cuenta Bancaria" columna-visible="false" visible="false" width="290"/>
+                    <campo name="cuenta_contable" text="Cuenta Contable"/> <!-- filtroCampo="cuenta_contable" filtroOperador="!=" filtroValor="null"-->
+                    <campo name="seleccion_dispersion" text="Selección Dispersiones" filtroCampo="seleccion_dispersion" filtroOperador="=" filtroValor="true" />
+                    <campo name="ultimo_usuario_modificador" text="usuario" filtroCampo="ultimo_usuario_modificador" filtroOperador="=" filtroValor="%usuario.usuario.id_usuario%" columna-visible="false" llaveForanea="false"/>
+                    <campo name="folio" text="folio" columna-visible="false" visible="false"/>
+                    <tareas>
+                     <tarea nombre="Dispersión de Recaudación" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_corte_caja,id_dispersion_recaudacion,cuenta_contable,forma_cobro,ur,periodo,importe,folio" ref="task=0f88cea0-961b-447d-a0da-87afdf27fe05"/>                
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="RSFD2" nombre="Restablecer Seleccion Falso Dispersion"  interactivo="false">
+            <componente id="RSFD2" nombre="Restablecer Seleccion Dispersion" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%per.per.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_dispersion_recaudacion"/>
+                    <campo name="id_corte_caja" filtroCampo="id_corte_caja" filtroOperador="=" filtroValor="%obtTrue.obtTrue.id_corte_caja%"/>
+                    <campo name="importe" filtroCampo="importe" filtroOperador="=" filtroValor="0.00"/>
+                    <campo name="seleccion_dispersion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Carga Evidencia" id="carEv" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+           <componente tipo="formulario" nombre="Carga Evidencia" id="carEv" accionDefault="editar">
+                    <tabla schema="operation" nombre="corte_caja">
+                        <campo name="ur" calc="%per.per.id_unidad_responsable%" visible="false" llaveForanea="false"/>
+                        <campo name="id_periodo" calc="%per.per.id_periodo%" visible="false" llaveForanea="false"/>
+                        <campo name="id_corte_caja" calc="%obtTrue.obtTrue.id_corte_caja%" visible="false"/>
+                        <campo name="seleccion" calc="false" visible="false"/>
+                        <campo name="uno" text="Evidencia Efectivo" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Efectivo'" grupo="%obtTrue.obtTrue.id_corte_caja%" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="dos" text="Evidencia Cheque Nominativo" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Cheque Nominativo'" grupo="%obtTrue.obtTrue.id_corte_caja%" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="tres" text="Evidencia Transferencia Electrónica" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Transferencia Electrónica'" grupo="%obtTrue.obtTrue.id_corte_caja%" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="cuatro" text="Evidencia Tarjeta Crédito" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Tarjeta de Crédito'" grupo="%obtTrue.obtTrue.id_corte_caja%" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="cinco" text="Evidencia Tarjeta Debito" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Tarjeta de Debito'" grupo="%obtTrue.obtTrue.id_corte_caja%" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="seis" text="Evidencia Donación Pago" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Donación de Pago'" grupo="%obtTrue.obtTrue.id_corte_caja%" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="Guardar" columnas="4" margen-izquierdo="3"/>
+                    </estilos>
+                    <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="crearNuevaInstancia" nombre="crearNuevaInstancia" interactivo="false">
+            <componente id="crearNuevaInstancia" nombre="crearNuevaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'7bca71d9-2275-48f1-8550-84cc5bf5c9b7'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%per.per.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%per.per.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_corte" calc="%AF.AF.folio_dispersion%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte de dispersión de recaudación" id="el_rec" mostrarNivelAnterior="false" mostrarProximoNivel="false"> <!--interactivo="false"-->
+            <componente tipo="reporte" nombre="Reporte de recaudaciones" id="el_rec">
+                <reporte nombre="repor_dispRec_jsus" update="true" nombreDocumento="'Reporte de recaudaciones'" expediente="Dispersión de Recaudación"  grupo="%obtTrue.obtTrue.id_corte_caja%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" local="true" calc="%per.per.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%per.per.id_periodo%" />
+                    <campo name="id_corte_caja" type="long" local="true" calc="%AF.AF.folio_dispersion%" />
+                    <campo name="usuario" type="string" local="true" calc="%usuario.usuario.nombre_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>

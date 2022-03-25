@@ -1,0 +1,915 @@
+<tarea nombre="AUTORIZA DISPERSIÓN DE RECAUDACIÓN" version="1.0.0" fechaModificacion="11/06/2019" autor="Diana Jacqueline Lopez Martinez" modificacionEfectuada="" requisitosInstalacion="">
+    
+    <pagina id="1" nombre="AUTORIZA DISPERSIÓN DE RECAUDACIÓN">
+        <nivel interactivo="false" id="params" nombre="parametros">
+            <componente tipo="cursor" id="params" nombre="parametros">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id"  filtroCampo="id" filtroOperador="=" filtroValor="1" llaveForanea="false"/> <!-- -->
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="id_corte_caja" local="true" type="string" calc="$inParam.corte$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="usuario" nombre="Busca usuario" interactivo="false">
+            <componente id="usuario" nombre="Busca usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" text="UR" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%params.params.id_unidad_responsable%" />
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                    <campo name="id_usuario" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="RSFD1" nombre="Restablecer Seleccion Falso Dispersion"  interactivo="false">
+            <componente id="RSFD1" nombre="Restablecer Seleccion Dispersion" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_dispersion_recaudacion"/>
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%"/>
+                    <campo name="seleccion_dispersion" calc="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="regDisRec" nombre="Registra Dispersión de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="tabRegDisRec" nombre="Registra Dispersión de Recaudación" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" text="ur" calc="%params.params.ur%"  columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%params.params.periodo%"  columna-visible="false"/>
+                    <campo name="id_dispersion_recaudacion" columna-visible="false" />
+                    <campo name="id_corte_caja" text="id_corte" columna-visible="false" llaveForanea="false"/>
+                    <campo name="forma_cobro" text="Forma de Cobro" />
+                    <campo name="importe" text="Importe" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="cuenta_bancaria" text="Cuenta Bancaria" columna-visible="false" visible="false" />
+                    <campo name="cuenta_contable" text="Cuenta Contable" cellsalign="right" />
+                    <campo name="seleccion_dispersion" text="Seleccion Dispersiones" filtroCampo="seleccion_dispersion" filtroOperador="=" filtroValor="true" columna-visible="false"/>
+                     <campo name="folio" text="Seleccion Dispersiones"  columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Dispersión de Recaudación" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_dispersion_recaudacion,cuenta_contable,forma_cobro,ur,periodo,folio" ref="task=0bee15af-1e52-4104-a920-d5f5996ec16b" />
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="RSFD2" nombre="Restablecer Seleccion Falso Dispersion"  interactivo="false">
+            <componente id="RSFD2" nombre="Restablecer Seleccion Dispersion" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_dispersion_recaudacion"/>
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%"/>
+                    <campo name="importe" filtroCampo="importe" filtroOperador="=" filtroValor="0.00"/>
+                    <campo name="seleccion_dispersion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--Reporte del proceso -->
+       <nivel nombre="Reporte de Dispersión de Recaudación" id="RepD" mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Reporte de Dispersión de Recaudación" id="RepD">
+                <reporte nombre="repor_dispRec_jsus">
+                    <campo name="ur" calc="%params.params.ur%" type="long" />
+                    <campo name="periodo" calc="%params.params.periodo%" type="long" />
+                    <campo name="usuario" calc="$protocolarios.user$" type="string" />
+                    <campo name="id_corte_caja" calc="%params.params.id_corte_caja%" type="long"/> 
+                </reporte>
+            </componente>
+        </nivel>
+        <!--Formulario de autorizacion -->
+        <nivel nombre="Autoriza Dispersión de Recaudación" id="A_Disp" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Autoriza Dispersión de Recaudación" id="A_Disp" accionDefault="editar">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" calc="%params.params.ur%" visible="false" llaveForanea="false" />
+                    <campo name="id_periodo" calc="%params.params.periodo%" visible="false" llaveForanea="false" />
+                    <campo name="id_corte_caja" calc="@consultaDirec('SELECT MAX(id_corte_caja) as cc FROM operation.dispersion_recaudacion WHERE ur ='+%params.params.ur%+' AND periodo='+%params.params.periodo%+' AND folio='+%params.params.id_corte_caja%,'cc','long','MAGNITUS')" visible="false" llaveForanea="false" />
+                    <campo name="autoriza" text="Autoriza" columnas="4" margen-izquierdo="3" margen-derecho="3" type="bool" local="true" />
+                    <campo name="observaciones_aut_dispersion" text="Observaciones" validacion="%autoriza%==false AND %observaciones_aut_dispersion%==null" validacionMensaje="Se necesitan observaciones" interaccion-visible="%autoriza%==false" columnas="6" margen-izquierdo="2" margen-derecho="2" height="200" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" columnas="4" margen-izquierdo="3" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        <!-- Actualizacion tipo for -->
+        <nivel interactivo="false" id="actualizacion" nombre="Actualizacion" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente tipo="cursor" id="actualizacion" nombre="Actualizacion">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="id_corte_caja"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="estatus" calc="'Autorizado'" />
+                </tabla>
+                <nivel interactivo="false" id="terActualizacion" nombre="Actualizacion Terminada">
+                    <componente id="terActualizacion" nombre="Actualizacion Terminada" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%actualizacion.actualizacion.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%actualizacion.actualizacion.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%actualizacion.actualizacion.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="estatus" calc="'Autorizado'" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="actCorteC" nombre="Actualiza Corte de Caja" interactivo="false" >
+                    <componente id="actCorteC" nombre="Actualiza Corte de Caja" tipo="cursor">
+                        <tabla schema="operation" nombre="corte_caja">
+                            <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%actualizacion.actualizacion.ur%"/>
+                            <campo name="id_periodo" text="periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%actualizacion.actualizacion.periodo%"/>
+                            <campo name="id_corte_caja" text="corte" filtroCampo="id_corte_caja" filtroOperador="=" filtroValor="%actualizacion.actualizacion.id_corte_caja%"/>
+                            <campo name="dispersion" calc="true" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+       
+        <!--Encabezado póliza-->
+        <nivel nombre="Generar poliza" id="genPol" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente tipo="altaDirect" nombre="Generar poliza" id="genPol">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="%params.params.ur%" />
+                    <campo name="periodo" calc="%params.params.periodo%" />
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="fecha_poliza" calc="@fechaSistema()" />
+                    <campo name="fondo_contable" calc="
+                    @consultaDirec('SELECT id_fondo_contable AS fc FROM operation.corte_caja 
+                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' 
+                    AND id_corte_caja='+%params.params.id_corte_caja%,'fc','string','MAGNITUS')" />
+                    <campo name="momento_contable" calc="" />
+                    <campo name="estatus_poliza" calc="2" />
+                    <campo name="origen_poliza" calc="1" />
+                    <campo name="tipo_poliza" calc="1" />
+                    <campo name="folio_reporte" calc="@concatenar(%params.params.periodo%+'-'
+                    +@ifThenElse(%genPol.genPol.folio_movimiento_auxiliar%&lt;10,'00000',
+                    @ifThenElse(%genPol.genPol.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%genPol.genPol.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%genPol.genPol.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%genPol.genPol.folio_movimiento_auxiliar%&lt;100000,'0',null)))))+%genPol.genPol.folio_movimiento_auxiliar%)" />
+                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                    <campo name="concepto_general" calc="@concatenar('DISPERSION DE RECAUDACIÓN DEL CORTE DE CAJA '+
+                    @consultaDirec('SELECT STRING_AGG(folio_corte_caja,'+'\\''+', '+'\\''+') AS fcc1 FROM operation.corte_caja 
+                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja IN 
+                    (SELECT id_corte_caja FROM operation.dispersion_recaudacion where ur ='+%params.params.ur%+' AND periodo='+%params.params.periodo%+' AND folio='+%params.params.id_corte_caja%+')',
+                    'fcc1','string','MAGNITUS'))" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!--Cargo de póliza -->
+        <nivel id="obtSep" nombre="Obtener Separador" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="obtSep" tipo="cursor" nombre="Obtener Separador">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="id_separador" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="obtCar" nombre="Obtener Caracter" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="obtCar" nombre="Obtener Caracter" tipo="cursor">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%obtSep.obtSep.id_separador%" />
+                    <campo name="caracter" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!--EFECTIVO-->
+        <nivel id="EFAbPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="EFAbPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Efectivo'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="EF1AbPol" nombre="Póliza" interactivo="false">
+                    <componente id="EF1AbPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%EFAbPol.EFAbPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%EFAbPol.EFAbPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%EFAbPol.EFAbPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="EF2AbPol" nombre="Abono de Póliza" interactivo="false" ejecutar="%EFAbPol.EFAbPol.seleccion_dispersion%==true">
+                            <componente id="EF2AbPol" nombre="Abono Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="%EF1AbPol.EF1AbPol.cuenta_contable%" />
+                                    <campo name="importe_cargo" calc="%EF1AbPol.EF1AbPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%EF1AbPol.EF1AbPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="EFCarPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="EFCarPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Efectivo'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="EF1CarPol" nombre="Póliza" interactivo="false">
+                    <componente id="EF1CarPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%EFCarPol.EFCarPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%EFCarPol.EFCarPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%EFCarPol.EFCarPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="EF2CarPol" nombre="Cargo de la Póliza" interactivo="false" ejecutar="%EFCarPol.EFCarPol.seleccion_dispersion%==true">
+                            <componente id="EF2CarPol" nombre="Cargo de la Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                     <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT clave_cuenta AS cc FROM operation.caja_recaudacion
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND clave_caja_recaudacion =(SELECT folio_duri FROM operation.corte_caja 
+                                    WHERE ur = '+%params.params.ur%+' AND id_periodo = '+%params.params.periodo%+' AND id_corte_caja=(SELECT MAX(id_corte_caja) FROM operation.dispersion_recaudacion 
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND folio = '+%params.params.id_corte_caja%+'))','cc','string','MAGNITUS')" />
+                                    <!-- 
+                                    @concatenar('1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'0'+%obtCar.obtCar.caracter%+'02'+%obtCar.obtCar.caracter%+'00001'+%obtCar.obtCar.caracter%+@consultaDirec('SELECT id_fondo_contable AS fc FROM operation.corte_caja WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja=(SELECT MAX(id_corte_caja) FROM operation.dispersion_recaudacion WHERE ur ='+%params.params.ur%+' AND periodo='+%params.params.periodo%+' AND folio='+%params.params.id_corte_caja%+')','fc','string','MAGNITUS'))
+                                    -->
+                                    <campo name="importe_abono" calc="%EF1CarPol.EF1CarPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%EF1CarPol.EF1CarPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--CHEQUE NOMINATIVO-->
+        <nivel id="CNAbPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="CNAbPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Cheque Nominativo'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="CN1AbPol" nombre="Póliza" interactivo="false">
+                    <componente id="CN1AbPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%CNAbPol.CNAbPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%CNAbPol.CNAbPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%CNAbPol.CNAbPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="CN2AbPol" nombre="Abono de Póliza" interactivo="false" ejecutar="%CNAbPol.CNAbPol.seleccion_dispersion%==true">
+                            <componente id="CN2AbPol" nombre="Abono Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="%CN1AbPol.CN1AbPol.cuenta_contable%" />
+                                    <campo name="importe_cargo" calc="%CN1AbPol.CN1AbPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%CN1AbPol.CN1AbPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="CNCarPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="CNCarPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" filtroCampo="importe" filtroOperador="!=" filtroValor="null"/>
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Cheque Nominativo'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="CN1CarPol" nombre="Póliza" interactivo="false">
+                    <componente id="CN1CarPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%CNCarPol.CNCarPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%CNCarPol.CNCarPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%CNCarPol.CNCarPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="CN2CarPol" nombre="Cargo de la Póliza" interactivo="false" ejecutar="%CNCarPol.CNCarPol.seleccion_dispersion%==true">
+                            <componente id="CN2CarPol" nombre="Cargo de la Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                     <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT clave_cuenta AS cc FROM operation.caja_recaudacion
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND clave_caja_recaudacion =(SELECT folio_duri FROM operation.corte_caja 
+                                    WHERE ur = '+%params.params.ur%+' AND id_periodo = '+%params.params.periodo%+' AND id_corte_caja=(SELECT MAX(id_corte_caja) FROM operation.dispersion_recaudacion 
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND folio = '+%params.params.id_corte_caja%+'))','cc','string','MAGNITUS')" />
+                                    <!-- @concatenar('1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'2'+%obtCar.obtCar.caracter%+'0'+%obtCar.obtCar.caracter%+'003'+%obtCar.obtCar.caracter%+'01')-->
+                                    <campo name="importe_abono" calc="%CN1CarPol.CN1CarPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%CN1CarPol.CN1CarPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--TRANSFERENCIA ELECTRÓNICA-->
+        <nivel id="TEAbPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="TEAbPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Transferencia Electrónica'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="TE1AbPol" nombre="Póliza" interactivo="false">
+                    <componente id="TE1AbPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%TEAbPol.TEAbPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%TEAbPol.TEAbPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%TEAbPol.TEAbPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="TE2AbPol" nombre="Abono de Póliza" interactivo="false" ejecutar="%TEAbPol.TEAbPol.seleccion_dispersion%==true">
+                            <componente id="TE2AbPol" nombre="Abono Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="%TE1AbPol.TE1AbPol.cuenta_contable%" />
+                                    <campo name="importe_cargo" calc="%TE1AbPol.TE1AbPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%TE1AbPol.TE1AbPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="TECarPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="TECarPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Transferencia Electrónica'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="TE1CarPol" nombre="Póliza" interactivo="false">
+                    <componente id="TE1CarPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%TECarPol.TECarPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%TECarPol.TECarPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%TECarPol.TECarPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="TE2CarPol" nombre="Cargo de la Póliza" interactivo="false" ejecutar="%TECarPol.TECarPol.seleccion_dispersion%==true">
+                            <componente id="TE2CarPol" nombre="Cargo de la Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                     <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT clave_cuenta AS cc FROM operation.caja_recaudacion
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND clave_caja_recaudacion =(SELECT folio_duri FROM operation.corte_caja 
+                                    WHERE ur = '+%params.params.ur%+' AND id_periodo = '+%params.params.periodo%+' AND id_corte_caja=(SELECT MAX(id_corte_caja) FROM operation.dispersion_recaudacion 
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND folio = '+%params.params.id_corte_caja%+'))','cc','string','MAGNITUS')" />
+                                    <!-- @concatenar('1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'2'+%obtCar.obtCar.caracter%+'0'+%obtCar.obtCar.caracter%+'003'+%obtCar.obtCar.caracter%+'01')-->
+                                    <campo name="importe_abono" calc="%TE1CarPol.TE1CarPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%TE1CarPol.TE1CarPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--TARJETA DE CRÉDITO-->
+        <nivel id="TCAbPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="TCAbPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Tarjeta de Crédito'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="TC1AbPol" nombre="Póliza" interactivo="false">
+                    <componente id="TC1AbPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%TCAbPol.TCAbPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%TCAbPol.TCAbPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%TCAbPol.TCAbPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="TC2AbPol" nombre="Abono de Póliza" interactivo="false" ejecutar="%TCAbPol.TCAbPol.seleccion_dispersion%==true">
+                            <componente id="TC2AbPol" nombre="Abono Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="%TC1AbPol.TC1AbPol.cuenta_contable%" />
+                                    <campo name="importe_cargo" calc="%TC1AbPol.TC1AbPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%TC1AbPol.TC1AbPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="TCCarPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="TCCarPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Tarjeta de Crédito'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="TC1CarPol" nombre="Póliza" interactivo="false">
+                    <componente id="TC1CarPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%TCCarPol.TCCarPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%TCCarPol.TCCarPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%TCCarPol.TCCarPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="TC2CarPol" nombre="Cargo de la Póliza" interactivo="false" ejecutar="%TCCarPol.TCCarPol.seleccion_dispersion%==true">
+                            <componente id="TC2CarPol" nombre="Cargo de la Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                     <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT clave_cuenta AS cc FROM operation.caja_recaudacion
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND clave_caja_recaudacion =(SELECT folio_duri FROM operation.corte_caja 
+                                    WHERE ur = '+%params.params.ur%+' AND id_periodo = '+%params.params.periodo%+' AND id_corte_caja=(SELECT MAX(id_corte_caja) FROM operation.dispersion_recaudacion 
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND folio = '+%params.params.id_corte_caja%+'))','cc','string','MAGNITUS')" />
+                                    <!-- @concatenar('1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'2'+%obtCar.obtCar.caracter%+'0'+%obtCar.obtCar.caracter%+'003'+%obtCar.obtCar.caracter%+'01')-->
+                                    <campo name="importe_abono" calc="%TC1CarPol.TC1CarPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%TC1CarPol.TC1CarPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--TARJETA DE DEBITO-->
+        <nivel id="TDAbPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="TDAbPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Tarjeta de Debito'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="TD1AbPol" nombre="Póliza" interactivo="false">
+                    <componente id="TD1AbPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%TDAbPol.TDAbPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%TDAbPol.TDAbPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%TDAbPol.TDAbPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="TD2AbPol" nombre="Abono de Póliza" interactivo="false" ejecutar="%TDAbPol.TDAbPol.seleccion_dispersion%==true">
+                            <componente id="TD2AbPol" nombre="Abono Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="%TD1AbPol.TD1AbPol.cuenta_contable%" />
+                                    <campo name="importe_cargo" calc="%TD1AbPol.TD1AbPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%TD1AbPol.TD1AbPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="TDCarPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="TDCarPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Tarjeta de Debito'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="TD1CarPol" nombre="Póliza" interactivo="false">
+                    <componente id="TD1CarPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%TDCarPol.TDCarPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%TDCarPol.TDCarPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%TDCarPol.TDCarPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="TD2CarPol" nombre="Cargo de la Póliza" interactivo="false" ejecutar="%TDCarPol.TDCarPol.seleccion_dispersion%==true">
+                            <componente id="TD2CarPol" nombre="Cargo de la Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                     <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT clave_cuenta AS cc FROM operation.caja_recaudacion
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND clave_caja_recaudacion =(SELECT folio_duri FROM operation.corte_caja 
+                                    WHERE ur = '+%params.params.ur%+' AND id_periodo = '+%params.params.periodo%+' AND id_corte_caja=(SELECT MAX(id_corte_caja) FROM operation.dispersion_recaudacion 
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND folio = '+%params.params.id_corte_caja%+'))','cc','string','MAGNITUS')" />
+                                    <!-- @concatenar('1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'2'+%obtCar.obtCar.caracter%+'0'+%obtCar.obtCar.caracter%+'003'+%obtCar.obtCar.caracter%+'01')-->
+                                    <campo name="importe_abono" calc="%TD1CarPol.TD1CarPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%TD1CarPol.TD1CarPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--DONACIÓN DE PAGO-->
+        <nivel id="DPAbPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="DPAbPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Donación de Pago'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="DP1AbPol" nombre="Póliza" interactivo="false">
+                    <componente id="DP1AbPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%DPAbPol.DPAbPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%DPAbPol.DPAbPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%DPAbPol.DPAbPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="DP2AbPol" nombre="Abono de Póliza" interactivo="false" ejecutar="%DPAbPol.DPAbPol.seleccion_dispersion%==true">
+                            <componente id="DP2AbPol" nombre="Abono Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="%DP1AbPol.DP1AbPol.cuenta_contable%" />
+                                    <campo name="importe_cargo" calc="%DP1AbPol.DP1AbPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%DP1AbPol.DP1AbPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="DPCarPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="DPCarPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Donación de Pago'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="DP1CarPol" nombre="Póliza" interactivo="false">
+                    <componente id="DP1CarPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%DPCarPol.DPCarPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%DPCarPol.DPCarPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%DPCarPol.DPCarPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="DP2CarPol" nombre="Cargo de la Póliza" interactivo="false" ejecutar="%DPCarPol.DPCarPol.seleccion_dispersion%==true">
+                            <componente id="DP2CarPol" nombre="Cargo de la Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                     <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT clave_cuenta AS cc FROM operation.caja_recaudacion
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND clave_caja_recaudacion =(SELECT folio_duri FROM operation.corte_caja 
+                                    WHERE ur = '+%params.params.ur%+' AND id_periodo = '+%params.params.periodo%+' AND id_corte_caja=(SELECT MAX(id_corte_caja) FROM operation.dispersion_recaudacion 
+                                    WHERE ur = '+%params.params.ur%+' AND periodo = '+%params.params.periodo%+' AND folio = '+%params.params.id_corte_caja%+'))','cc','string','MAGNITUS')" />
+                                    <!-- @concatenar('1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'2'+%obtCar.obtCar.caracter%+'0'+%obtCar.obtCar.caracter%+'003'+%obtCar.obtCar.caracter%+'01')-->
+                                    <campo name="importe_abono" calc="%DP1CarPol.DP1CarPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%DP1CarPol.DP1CarPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <!--%forCarPol.forCarPol.id_dispersion_recaudacion%+-->
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--TRANSFERENCIA DE FONDOS
+        <nivel id="TFAbPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="TFAbPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Transferencia de Fondos'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="TF1AbPol" nombre="Póliza" interactivo="false">
+                    <componente id="TF1AbPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%TFAbPol.TFAbPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%TFAbPol.TFAbPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%TFAbPol.TFAbPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="TF2AbPol" nombre="Abono de Póliza" interactivo="false" ejecutar="%TFAbPol.TFAbPol.seleccion_dispersion%==true">
+                            <componente id="TF2AbPol" nombre="Abono Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                    <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="%TF1AbPol.TF1AbPol.cuenta_contable%" />
+                                    <campo name="importe_cargo" calc="%TF1AbPol.TF1AbPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%TF1AbPol.TF1AbPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="TFCarPol" nombre="Póliza" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente id="TFCarPol" nombre="Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="%params.params.id_corte_caja%" />
+                    <campo name="cuenta_contable" />
+                    <campo name="importe" />
+                    <campo name="forma_cobro" filtroCampo="forma_cobro" filtroOperador="=" filtroValor="'Transferencia de Fondos'"/>
+                    <campo name="id_dispersion_recaudacion" />
+                    <campo name="seleccion_dispersion"/>
+                </tabla>
+                <nivel id="TF1CarPol" nombre="Póliza" interactivo="false">
+                    <componente id="TF1CarPol" nombre="Póliza" tipo="cursor">
+                        <tabla schema="operation" nombre="dispersion_recaudacion_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%TFCarPol.TFCarPol.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%TFCarPol.TFCarPol.periodo%" />
+                            <campo name="id_dispersion_recaudacion" filtroCampo="id_dispersion_recaudacion" filtroOperador="=" filtroValor="%TFCarPol.TFCarPol.id_dispersion_recaudacion%" />
+                            <campo name="id_dispersion_recaudacion_det" />
+                            <campo name="importe_recaudado" />
+                            <campo name="cuenta_bancaria" />
+                            <campo name="cuenta_contable" />
+                            <campo name="id_corte_caja" />
+                        </tabla>
+                        <nivel id="TF2CarPol" nombre="Cargo de la Póliza" interactivo="false" ejecutar="%TFCarPol.TFCarPol.seleccion_dispersion%==true">
+                            <componente id="TF2CarPol" nombre="Cargo de la Póliza" tipo="altaDirect">
+                                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                     <campo name="ur" calc="%params.params.ur%" />
+                                    <campo name="id_periodo" calc="%params.params.periodo%" />
+                                    <campo name="id_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" />
+                                    <campo name="id_detalle_movimiento_auxiliar" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'1'+%obtCar.obtCar.caracter%+'0'+%obtCar.obtCar.caracter%+'02'+%obtCar.obtCar.caracter%+'00001'+%obtCar.obtCar.caracter%+@consultaDirec('SELECT id_fondo_contable AS fc FROM operation.corte_caja WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja=(SELECT MAX(id_corte_caja) FROM operation.dispersion_recaudacion WHERE ur ='+%params.params.ur%+' AND periodo='+%params.params.periodo%+' AND folio='+%params.params.id_corte_caja%+')','fc','string','MAGNITUS'))" />
+                                    
+                                    <campo name="importe_abono" calc="%TF1CarPol.TF1CarPol.importe_recaudado%" />
+                                    <campo name="concepto_bloque" calc="@concatenar(' '+@consultaDirec('SELECT folio_corte_caja AS fcc2 FROM operation.corte_caja 
+                                    WHERE ur ='+%params.params.ur%+' AND id_periodo='+%params.params.periodo%+' AND id_corte_caja='+%TF1CarPol.TF1CarPol.id_corte_caja%,'fcc2','string','MAGNITUS')+' ')" />
+                                    <campo name="ultimo_usuario_modificador" calc="%usuario.usuario.id_usuario%" />
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="tipo_detalle" calc="2" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>-->
+        <!--Turnar instancia -->
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                    <parametro name="process" calc="$protocolarios.process$" />
+                    <parametro name="version" calc="$protocolarios.version$" />
+                    <parametro name="instance" calc="$protocolarios.instance$" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="url" calc="$protocolarios.url$" />
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <!--Agrega mensaje-->
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal">
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                    <parametro name="process" calc="$protocolarios.process$" />
+                    <parametro name="version" calc="$protocolarios.version$" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="instanceId" calc="$protocolarios.instance$" />
+                    <parametro name="message" calc="%A_Disp.A_Disp.observaciones_aut_dispersion%" />
+                    <parametro name="type" calc="'1'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%A_Disp.A_Disp.autoriza%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                    <parametro name="process" calc="$protocolarios.process$" />
+                    <parametro name="version" calc="$protocolarios.version$" />
+                    <parametro name="instance" calc="$protocolarios.instance$" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!--Reporte Póliza -->
+        <nivel id="PCdD" nombre="Reporte de la Póliza" ejecutar="%A_Disp.A_Disp.autoriza%==true" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="reporte" nombre="Poliza Contable de Dispersión" id="PCdD">
+                <reporte nombre="poliza_contable" update="true" nombreDocumento="'Póliza Contable de Dispersión'" expediente="Dispersión de Recaudación"  grupo="$inParam.corte$" url="$config.repository_upload_file$">
+                    <campo name="ur" calc="%params.params.ur%" type="long" />
+                    <campo name="periodo" calc="%params.params.periodo%" type="long" />
+                    <campo name="folio_movimiento_auxiliar" calc="%genPol.genPol.folio_movimiento_auxiliar%" type="long" />
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
