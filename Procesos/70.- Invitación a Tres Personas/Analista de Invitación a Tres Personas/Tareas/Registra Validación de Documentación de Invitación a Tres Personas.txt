@@ -1,0 +1,136 @@
+<tarea id="ValidaITP" nombre="Registra Validación de Documentación de Invitación a Tres Proveedores" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreBeneficiarios" nombre="barreBeneficiarios" interactivo="false">
+            <componente id="barreBeneficiarios" nombre="barreBeneficiarios" tipo="cursor">
+                <tabla schema="operation" nombre="add_oferentes">
+                    <campo name="ur" text="UR" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Adjudicación" filtroCampo="id_tipo_adjudicacion" filtroOperador="=" filtroValor="$inParam.adjudicacion$" llaveForanea="false"/>
+                    <campo name="folio_add" text="Folio de Licitación Pública" filtroCampo="folio_add" filtroOperador="=" filtroValor="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                    <campo name="id_beneficiario" text="Nombre, Razón o Denominación Social" llaveForanea="false"/>
+                </tabla>
+                <nivel id="grabaBeneficiarios" nombre="grabaBeneficiarios" interactivo="false">
+                    <componente id="grabaBeneficiarios" nombre="grabaBeneficiarios" tipo="altaDirect">
+                        <tabla schema="operation" nombre="proc_add_participantes">
+                            <campo name="ur" text="UR" calc="$inParam.ur$" llaveForanea="false"/>
+                            <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                            <campo name="id_tipo_adjudicacion" text="Adjudicación" calc="$inParam.adjudicacion$" llaveForanea="false"/>
+                            <campo name="folio_add" text="Folio de Licitación Pública" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                            <campo name="id_beneficiario" text="Beneficiario" calc="%barreBeneficiarios.barreBeneficiarios.id_beneficiario%"/>
+                            <campo name="nivel" text="nivel" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="nlRegVDSITP" nombre="Validación de Documentación de Invitación a Tres Personas" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpRegVDSITP" nombre="Validación de Documentación de Invitación a Tres Personas (incluye acción de Click Derecho)" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="proc_add_participantes">
+                    <campo name="ur" text="UR" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adjudicacion" calc="$inParam.adjudicacion$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio ITP" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_beneficiario" text="Nombre o Razón Social" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_compras" text="Proyecto Compras" local="true" type="string" calc="$inParam.id_compras$" visible="false" columna-visible="false"/>
+                    <campo name="usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$" visible="false" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Valida Documentos" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_tipo_adjudicacion,folio_add,id_beneficiario,id_compras,usuario" ref="task=e7eb411c-6463-4ce3-9895-19788ab1b447"/>
+                        <!--Tarea Click Derecho Registra Validación Documentación ITP-->
+                    </tareas>
+                    <validaciones>
+                        <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(id_beneficiario) AS result FROM operation.proc_add_licitantes_doc WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' AND id_beneficiario='+@consultaDirec('SELECT id_beneficiario AS result FROM operation.add_oferentes WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' LIMIT 1 OFFSET 0','result','long','MAGNITUS'),'result','long','MAGNITUS')&lt;1" validacionMensaje="'La opción Validación Documentación debe consultarse para cada Proveedor 1'"/>
+                        <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(id_beneficiario) AS result FROM operation.proc_add_licitantes_doc WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' AND id_beneficiario='+@consultaDirec('SELECT id_beneficiario AS result FROM operation.add_oferentes WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' LIMIT 1 OFFSET 1','result','long','MAGNITUS'),'result','long','MAGNITUS')&lt;1" validacionMensaje="'La opción Validación Documentación debe consultarse para cada Proveedor 2'"/>
+                        <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(id_beneficiario) AS result FROM operation.proc_add_licitantes_doc WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' AND id_beneficiario='+@consultaDirec('SELECT id_beneficiario AS result FROM operation.add_oferentes WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$+' AND folio_add='+@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')+' LIMIT 1 OFFSET 2','result','long','MAGNITUS'),'result','long','MAGNITUS')&lt;1" validacionMensaje="'La opción Validación Documentación debe consultarse para cada Proveedor 3'"/>
+                    </validaciones>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar"/>
+                    <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo -->
+        
+        <nivel id="buscaFondo" nombre="buscaFondo" interactivo="false">
+            <componente id="buscaFondo" nombre="buscaFondo" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccion" nombre="buscaSeccion" interactivo="false">
+            <componente id="buscaSeccion" nombre="buscaSeccion" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerie" nombre="buscaSerie" interactivo="false">
+            <componente id="buscaSerie" nombre="buscaSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerie" nombre="buscaSubSerie" interactivo="false">
+            <componente id="buscaSubSerie" nombre="buscaSubSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="3"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpediente" nombre="concatenaExpediente" interactivo="false">
+            <componente id="concatenaExpediente" nombre="concatenaExpediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondo.buscaFondo.abreviatura%+'/'+%buscaSeccion.buscaSeccion.abreviatura%+'/'+%buscaSerie.buscaSerie.abreviatura%+'/'+%buscaSubSerie.buscaSubSerie.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo-->
+        <nivel id="nlRepDVLP" nombre="Validación de la Documentación de Invitación a Tres Personas" mostrarProximoNivel="false" mostrarNivelAnterior="tue"> 
+            <componente id="cpRepDVLP" nombre="Validación de la Documentación de Invitación a Tres Personas" tipo="reporte">
+                <reporte nombre="Val_doc_lpn" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Validación de Documentación'" 
+                         grupo="$inParam.adquisicion$" url="$config.repository_upload_file$"> 
+                    <campo name="id_unidad_responsable" text="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" local="true" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_tipo_adquisicion" local="true" type="long" calc="$inParam.adjudicacion$"/>
+                    <campo name="folio_add" type="long" local="true" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

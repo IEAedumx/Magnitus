@@ -1,0 +1,87 @@
+<tarea id="estCueDocUniRegIng" nombre="Estado de Cuenta Documento Único de Registro de Ingesos (DURI)" fechaModificacion="28/05/2019" autor="Froylán Alanís">
+    <pagina id="1" nombre="Registra Devengado de Ingresos de Aportaciones por Ministrar">
+         <nivel nombre="buscaPeriodo" id="bPer" interactivo="false">
+            <componente tipo="cursor" nombre="buscaPeriodo" id="bPer">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barrerTrue" nombre="barrerTrue" interactivo="false">
+            <componente id="barrerTrue" nombre="barrerTrue" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso_aport_min">
+                    <campo name="periodo" calc="%bPer.bPer.id_periodo%" />
+                    <campo name="ur" calc="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_devengado_ing" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="camSel" nombre="cambiar seleccion" interactivo="false">
+            <componente id="camSel" nombre="cambiar seleccion" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso_aport_min">
+                    <campo name="id_devengado_ing" filtroCampo="id_devengado_ing" filtroOperador="=" filtroValor="%barrerTrue.barrerTrue.id_devengado_ing%"/>
+                    <campo name="seleccion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="gesRegRecIngAptMin" nombre="Gestión de Recaudación de Ingresos de Aportaciones por Ministrar" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="tabSelRegGesRec" nombre="Selección Folio a Recaudar" tipo="tabla" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="devengado_ingreso_aport_min">
+                    <campo name="ur" text="UR" calc="%bPer.bPer.id_unidad_responsable%" llaveForanea="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false" columna-visible="false"/>
+                    <campo name="id_devengado_ing" text="ID" columna-visible="false"/>
+                    <campo name="numero_ministraciones" text="numero ministacion" columna-visible="false" />
+                    <campo name="folio" text="Folio"/>
+                    <campo name="fecha_registro" text="Fecha"/>
+                    <campo name="ramo" text="Ramo"/>
+                    <campo name="fondo_aportacion" text="Fondo de Aportación"/>
+                    <campo name="beneficiario" text="Cliente/Proveedor" descripcionForaneaTabla="nombre,primer_apellido,segundo_apellido,razon_social"/>
+                    <campo name="importe_total" text="Importe Total"/>
+                    <campo name="concepto" text="Concepto"/>
+                    <campo name="estatus" text="Estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="4" />
+                    <campo name="seleccion" text="Campo de selección" editable="true"/>
+                    <campo name="ultimo_usuario_modificador" text="usuario" calc="%bU.bU.id_usuario%" llaveForanea="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="barrerID" nombre="barrerID" interactivo="false">
+            <componente id="barrerID" nombre="barrerID" tipo="cursor">
+                <tabla schema="operation" nombre="devengado_ingreso_aport_min">
+                    <campo name="periodo" calc="%bPer.bPer.id_periodo%" />
+                    <campo name="ur" calc="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_devengado_ing" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="repEstCueRegIngAptMin" nombre="Estado de Cuenta de Registro de Ingresos de Aportaciones por Ministar">
+            <componente id="repEstCueRegIngAptMin" nombre="Estado de Cuenta de Registro de Ingresos de Aportaciones por Ministar" tipo="reporte">
+                <reporte nombre="repor_edo_cta_ingreso_jsus">
+                    <campo name="id_devengado_ing" type="long" calc="%barrerID.barrerID.id_devengado_ing%"/>
+                    <campo name="periodo" type="long" calc="%bPer.bPer.id_periodo%"/>
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
