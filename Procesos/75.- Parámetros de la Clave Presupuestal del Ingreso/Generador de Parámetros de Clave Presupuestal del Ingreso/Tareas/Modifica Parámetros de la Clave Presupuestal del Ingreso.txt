@@ -1,0 +1,86 @@
+<tarea id="clavePresuestalIngreso" nombre="Gestión de Estructura de Clave Presupuestal de Ingreso" autor="Cecilia Mata">
+    <pagina id="1">
+        
+    <!-- INICIO DEL NIVEL DUMMY -->
+        <nivel id="inParam" nombre="Paso de parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="asunto" local="true" type="string" calc="$inParam.asunto$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--BARRER EL PERIODO-->
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/> 
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+					<campo name="autoriza_estructura_programatica"/>
+					<campo name="autoriza_estructura_presupuestal"/>
+					<campo name="auto_estruct_cve_presupuestal_e"/>
+					<campo name="id_separador"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+        <nivel id="clavePresuestalIngresoniv" nombre="Gestión de Parámetros de Clave Presupuestal de Ingreso."  mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="clavePresuestalIngresocom" nombre="Datos Generales de la Clave" tipo="formulario" accionDefault="seleccionar" >
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" llaveForanea="false" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="id_periodo"  text="Ejercicio Fiscal" llaveForanea="false" calc="%inParam.inParam.id_periodo%" margen-izquierdo="3" columnas="4" margen-derecho="3" habilitado="false"/>
+                    <campo name="id_separador" text="Separación de la Clave" margen-izquierdo="3" columnas="4" margen-derecho="3" habilitado="false"/>
+                </tabla>
+		    <estilos>
+		        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+		    </estilos>
+		    <acciones>
+                <accion nombre="grabar" hacer="saltar siguiente componente"/>
+            </acciones>>
+		</componente>
+		<componente id="cat_admin" nombre="Configura Sección de Clave Presupuestal del Ingreso" tipo="tabla" filtro="false" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false" ejecutarComponente="%clavePresuestalIngresoniv.clavePresuestalIngresocom.id_unidad_responsable%!=null" >
+                <tabla schema="catalog" nombre="catalogos_presupuestales">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" visible="true" columna-visible="false"/>
+                    <campo name="id_periodo" text="Periodo Contable" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="true" columna-visible="false"/>
+                    <campo name="id_catalogo" text="ID Catalogo" visible="true" columna-visible="true" width="150"/> <!-- calc="@ifThenElse(%id_catalogo%==1 AND %id_catalogo%==2 AND %id_catalogo%==3,true,false)"-->
+                    <campo name="nombre" text="nombre" visible="true" columna-visible="true" width="350"/>
+                    <campo name="fecha_registro" text="fecha_registro" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_completa_ingreso" text="Clave completa" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_operativa_ingreso" text="Clave operativa" visible="true" columna-visible="true" width="200"/>
+                    <!--<campo name="visible" text="Visible" visible="true" columna-visible="true" width="100" editable="true"/>-->
+                    <campo name="id_seccion" text="Tipo de Clasificador" visible="false" columna-visible="false"/> <!-- filtroCampo="id_seccion" filtroOperador="=" filtroValor="1" width="512"-->
+                    <campo name="ingresos" text="Ingresos" visible="false" columna-visible="false" filtroCampo="ingresos" filtroOperador="=" filtroValor="true"/> <!-- -->
+                    <tareas>
+						<tarea nombre="Detalle del Parámetro" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_catalogo,nombre" ref="task=b2087932-533c-4215-a171-9dc494f5cdc0"/> <!-- --> <!-- Anterior 67eb0874-572e-4978-8979-2d0c7fdf1670-->
+					</tareas>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar"  margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <validaciones>
+                             <validacion tipo="editar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser editado'"/>
+                             <validacion tipo="borrar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser borrado'"/>
+                </validaciones>
+            </componente>
+        </nivel>
+        
+        <!--REPORTE-->
+        <nivel id="reporteEstructuraIngreso" nombre="Documento de los Parámetros de la Clave Presupuestal del Ingreso">
+            <componente id="reporteEstructuraIngreso" nombre="Documento de los Parámetros de la Clave Presupuestal del Ingreso" tipo="reporte">
+                <reporte nombre="estr_pres_ingreso_jsus" expediente="Expediente Parámetros Clave P Del Ingreso" nombreDocumento="'Parámetros Clave P Ingreso'" grupo="$inParam.periodo$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="usuario" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
