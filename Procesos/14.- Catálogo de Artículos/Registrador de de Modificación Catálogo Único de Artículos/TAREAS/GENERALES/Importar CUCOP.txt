@@ -1,0 +1,73 @@
+<tarea id="ICT " nombre="importar_catalogo_bienes_armonizado">
+    <pagina id="ICP" nombre="Gestión de Modificaciones del Catálogo Único de Artículos"> <!--Impotar Catálogo de Bienes Armonizado-->
+         <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+          </nivel>
+             <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="letras" local="true" type="string" calc="'2-9-6-5'"/>
+                    <campo name="sin" local="true" type="string" calc="@reemplazarTexto('2110','','-')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="ICN" nombre="Importar Catálogo de Bienes Armonizado" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                <componente id="ICC" nombre="Importar CUCOP" tipo="tabla" mostrarAgregar="true" mostrarEditar="true"  mostrarEliminar="true" mostrarImportacion="true" mostrarNivelAnterior="false"  mostrarProximoNivel="false" >
+                    <tabla schema="catalog" nombre="articulos_aux">
+                            <campo name="ur" text="UR" columnaImportacion="UR" columna-visible="false" visible="false" importacion="true" calc="$config.ur$"/> 
+                            <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" columnaImportacion="Periodo" validacionImportacion="@ifThenElse(%periodo%==' ', true, false)"  calc="%per.per.id_periodo%" columna-visible="false" importacion="true" llaveForanea="false" visible="false"/>
+                            <campo name="clave_articulo" text="Clave Artículo" columnaImportacion="Clave del Artículo" columna-visible="true" visible="true" importacion="true" columnas="3"/> 
+                            <campo name="folio_operacion" text="Folio Operacion" generacion="@prox()+1" autogenerado="true" habilitado="false" visible="false" columna-visible="false" importacion="true"/> 
+                            <campo name="fecha_elaboracion" text="Fecha de Elaboración" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" visible="false" habilitado="false" columna-visible="false" importacion="true"/> 
+                            
+                            <campo name="clave_nivel" text="Clave de Nivel" columnaImportacion="Clave de Nivel" validacionImportacion="%clave_nivel%!=1 AND %clave_nivel%!=2 AND %clave_nivel%!=3 AND %clave_nivel%!=4 AND %clave_nivel%!=''" columna-visible="true" importacion="true" columnas="3"  /> 
+                            <campo name="descripcion_nivel" text="Nombre del Nivel" columnaImportacion="Nombre del Nivel" editarHabilitado="true" importacion="true" columnas="3"  /> 
+                            <campo name="clave_acumulada" text="Clave Agrupadora" editarHabilitado="true" columnaImportacion="Clave Agrupadora"  importacion="true" columnas="3" />
+                            <campo name="clave_registro" text="Clave del Artículo" columnaImportacion="Clave del Artículo" importacion="true" columnas="3"/>
+                            <campo name="descripcion_registro" text="Nombre del Artículo" columnaImportacion="Nombre del Artículo" columnas="3" importacion="true" />
+                         <!--<campo name="cuenta_contable" text="Cuenta Contable" columnaImportacion="Cuenta Contable" columnas="3" importacion="true"/>
+                            <campo name="descripcion_cuenta_contable" text="Nombre Cuenta Contable" columnaImportacion="Nombre Cuenta Contable" columnas="3" importacion="true" />
+                            Se agregaron las lineas de codigo para comprobar que si cargara la informacion en las tablas
+                            Modificacion 03/03/2022
+                            Ivan Uvalle
+                            -->
+                            <campo name="estatus" text="Estatus" columnas="3" calc="'Registrado en CUCOP'" importacion="true" filtroCampo="estatus" filtroOperador="=" filtroValor="'Registrado en CUCOP'"/>
+                            <campo name="ultimo_usuario_modificador" text="Ultimo Usuario Modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false"/>
+                    </tabla>
+                     
+                 <estilos>
+                        <boton nombre="grabar" visible="true" texto="Guardar" /> 
+                    </estilos>
+                   <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                </componente>
+              
+        </nivel> 
+   
+     <!--ACTIVAR EL REPORTE CUANDO ESTEN LISTOS -->
+     
+    <nivel nombre="Reporte de Bienes Armonizados" id="CRBAF" mostrarNivelAnterior="false" >
+              <componente tipo="reporte" nombre="Reporte de Bienes Armonizados" id="CRBAFC">
+                 <reporte nombre="repor_agre_catArt_jsus"><!-- expediente="" nombreDocumento="" grupo="" url="$config.repository_upload_file$"-->
+                        <campo name="ur" text="ur" type="long" calc="$config.ur$"/><!--calc="%per.per.id_unidad_responsable%"-->
+                        <campo name="periodo" text="periodo" type="long" calc="%per.per.id_periodo%"/><!--calc="%nlConsultaPoliza.cpConsultaPoliza.periodo%"-->
+                        <campo name="id_instance" text="Id instance" type="long" calc="0"/>
+                        <campo name="usuario" text="Usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                    </reporte>
+                </componente>
+            </nivel>  
+    </pagina>
+</tarea> 
+    
