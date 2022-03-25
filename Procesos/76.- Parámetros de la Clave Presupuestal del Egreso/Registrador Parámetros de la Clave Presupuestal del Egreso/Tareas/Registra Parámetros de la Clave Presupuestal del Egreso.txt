@@ -1,0 +1,334 @@
+<tarea id="registra_estruct_cve_pres" nombre="Registra Parámetros de clave presupuestal de egreso" autor="Erick Maya" version="1">
+    <pagina id="reg_ecvp" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/> 
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN LEGO TIPO CURSOR -->
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$" /> <!-- filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"-->
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+					<campo name="autoriza_estructura_programatica"/>
+					<campo name="autoriza_estructura_presupuestal"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="validacion" nombre="Parámetros de la Estructura de la Clave Presupuestal del Egreso" ejecutar="@ifThenElse(%buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==false OR %buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==false,true,false)" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+		    <componente id="validacion" nombre="Parámetros de la Estructura de la Clave Presupuestal del Egreso" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" visible="false" filtroCampo="id" filtroOperador="=" filtoValor="1"/>
+                    <etiqueta nombre="administrativa" texto="ATENCIÓN: La estructura de catálogos aún no ha sido autorizada" color="black" bold="normal" tamaño="25px" alineacion="left" interlineado="25px" width="500px"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="false"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+		<nivel id="nlEstCatProg" nombre="Parámetros de la Estructura de la Clave Presupuestal del Egreso" ejecutar="@ifThenElse(%buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==true AND %buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==true,true,false)" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+		    <componente id="autoriza_comp" nombre="Parámetros de la Estructura de la Clave Presupuestal del Egreso" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false"/> <!--calc="$config.ur$" -->
+                    <campo name="id_periodo" text="Ejercicio Fiscal" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="true" columnas="4" margen-izquierdo="3"/> <!-- calc="$inParam.periodo$"-->
+                    <campo name="id_separador" text="Separador" habilitado="false" descripcionForanea="caracter" columnas="4" margen-izquierdo="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="false"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <!--<componente id="cpAgregarCatPresupuestal_" nombre="Secciones de Catálogos Presupuestales" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="catalogos_presupuestales">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="Periodo Contable" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo" text="ID Catalogo"  visible="false" columna-visible="false"/>
+                    <campo name="id_seccion" text="Tipo de Clasificador" width="512"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>-->
+            <componente id="cat_admin" nombre="CLASIFICACIÓN ADMINISTRATIVA" tipo="tabla" filtro="false" colapsado="si" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="catalog" nombre="catalogos_presupuestales">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="Periodo Contable" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo" text="ID Catalogo" visible="true" columna-visible="true" width="150"/> <!-- calc="@ifThenElse(%id_catalogo%==1 AND %id_catalogo%==2 AND %id_catalogo%==3,true,false)"-->
+                    <campo name="nombre" text="Nombre Catálogo" visible="true" columna-visible="true" width="350"/>
+                    <campo name="fecha_registro" text="Fecha" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_completa_egreso" text="Clave Completa" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_operativa_egreso" text="Clave Operativa" visible="true" columna-visible="true" width="200"/>
+                    <!--<campo name="visible" text="Visible" visible="true" columna-visible="true" width="100" editable="true"/>-->
+                    <campo name="id_seccion" text="Tipo de Clasificador" visible="false" columna-visible="false" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1" width="512"/>
+                    <tareas>
+						<tarea nombre="Detalle" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_catalogo,nombre" ref="task=69898f03-f5cf-434f-b5b4-018c4a445c1f"/>
+					</tareas>
+                </tabla>
+                <validaciones>
+                             <validacion tipo="editar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser editado'"/>
+                             <validacion tipo="borrar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser borrado'"/>
+                </validaciones>
+            </componente>
+            <componente id="cat_prog" nombre="CLASIFICACIÓN PROGRAMÁTICA" tipo="tabla" filtro="false" colapsado="si" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="catalog" nombre="catalogos_presupuestales">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="Periodo Contable" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo" text="ID Catalogo" visible="true" columna-visible="true" width="150"/>
+                    <campo name="nombre" text="Nombre Catálogo" visible="true" columna-visible="true" width="350"/>
+                    <campo name="fecha_registro" text="Fecha" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_completa_egreso" text="Clave completa" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_operativa_egreso" text="Clave operativa" visible="true" columna-visible="true" width="200"/>
+                    <!--<campo name="visible" text="Visible" visible="true" columna-visible="true" width="100" editable="true"/>-->
+                    <campo name="id_seccion" text="Tipo de Clasificador" visible="false" columna-visible="false" filtroCampo="id_seccion" filtroOperador="=" filtroValor="5"/>
+                    <tareas>
+						<tarea nombre="Detalle" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_catalogo,nombre" ref="task=69898f03-f5cf-434f-b5b4-018c4a445c1f"/>
+					</tareas>
+                </tabla>
+                <validaciones>
+                             <validacion tipo="editar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser editado'"/>
+                             <validacion tipo="borrar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser borrado'"/>
+                </validaciones>
+            </componente>
+            <componente id="cat_econ" nombre="CLASIFICACIÓN ECONÓMICA" tipo="tabla" filtro="false" colapsado="si" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="catalog" nombre="catalogos_presupuestales">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="Periodo Contable" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo" text="ID Catalogo" visible="true" columna-visible="true" width="150"/>
+                    <campo name="nombre" text="Nombre Catálogo" visible="true" columna-visible="true" width="350"/>
+                    <campo name="fecha_registro" text="Fecha" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_completa_egreso" text="Clave completa" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_operativa_egreso" text="Clave operativa" visible="true" columna-visible="true" width="200"/>
+                    <!--<campo name="visible" text="Visible" visible="true" columna-visible="true" width="100" editable="true"/>-->
+                    <campo name="id_seccion" text="Tipo de Clasificador" visible="false" columna-visible="false" filtroCampo="id_seccion" filtroOperador="=" filtroValor="2"/>
+                    <tareas>
+						<tarea nombre="Detalle" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_catalogo,nombre" ref="task=69898f03-f5cf-434f-b5b4-018c4a445c1f"/>
+					</tareas>
+                </tabla>
+                <validaciones>
+                             <validacion tipo="editar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser editado'"/>
+                             <validacion tipo="borrar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser borrado'"/>
+                </validaciones>
+            </componente>
+            <componente id="cat_geog" nombre="CLASIFICACIÓN GEOGRÁFICA" tipo="tabla" filtro="false" colapsado="si" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="catalog" nombre="catalogos_presupuestales">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="Periodo Contable" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_catalogo" text="ID Catalogo" visible="true" columna-visible="true" width="150"/>
+                    <campo name="nombre" text="Nombre Catálogo" visible="true" columna-visible="true" width="350"/>
+                    <campo name="fecha_registro" text="Fecha" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_completa_egreso" text="Clave completa" visible="true" columna-visible="true" width="200"/>
+                    <campo name="estructura_operativa_egreso" text="Clave operativa" visible="true" columna-visible="true" width="200"/>
+                    <!--<campo name="visible" text="Visible" visible="true" columna-visible="true" width="100" editable="true"/>-->
+                    <campo name="id_seccion" text="Tipo de Clasificador" visible="false" columna-visible="false" filtroCampo="id_seccion" filtroOperador="=" filtroValor="3"/>
+                    <tareas>
+						<tarea nombre="Detalle" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_catalogo,nombre" ref="task=69898f03-f5cf-434f-b5b4-018c4a445c1f"/>
+					</tareas>
+                </tabla>
+                <validaciones>
+                             <validacion tipo="editar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser editado'"/>
+                             <validacion tipo="borrar" validacion="%bloqueo%==true" validacionMensaje="'El nivel no pueden ser borrado'"/>
+                </validaciones>
+            </componente>
+        </nivel>
+        <!--<nivel id="revisaAfectable" nombre="Revisa Afectable" mostrarProximoNivel="false" interactivo="false">
+            <componente id="revisaAfectable" nombre="Revisa Afectable" tipo="cursor">
+                <tabla schema="catalog" nombre="segmento_mascara">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="2019"/>
+					<campo name="id_catalogo"  filtroCampo="id_catalogo" filtroOperador="=" filtroValor="1"/>
+					<campo name="id_segmento" ordenar="ASC"/>
+					<campo name="num_caracteres"/>
+					<campo name="afectable" filtroCampo="afectable" filtroOperador="=" filtroValor="true"/>
+					<campo name="visible"/>
+                </tabla>
+           </componente>
+        </nivel>
+		
+		<nivel id="actualizaVisible" nombre="Actualiza Afectable" mostrarProximoNivel="false" interactivo="false">
+            <componente id="actualizaVisible" nombre="Actualiza Afectable" tipo="cursor">
+                <tabla schema="catalog" nombre="segmento_mascara">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="2019"/>
+					<campo name="id_catalogo"  filtroCampo="id_catalogo" filtroOperador="=" filtroValor="1"/>
+					<campo name="id_segmento" filtroCampo="id_segmento" filtroOperador="&lt;" filtroValor="%revisaAfectable.revisaAfectable.id_segmento%"/>
+					<campo name="num_caracteres"/>
+					<campo name="afectable"/>
+					<campo name="visible" calc="%revisaAfectable.revisaAfectable.visible%"/>
+                </tabla>
+           </componente>
+        </nivel>-->
+        
+        
+        <nivel nombre="Barre Cve Egreso" id="set_cve_e" interactivo="false" ejecutar="@ifThenElse(%buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==true AND %buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==true,true,false)">
+    		<componente tipo="cursor" id="set_cve_e">
+    			<tabla schema="catalog" nombre="catalogos_presupuestales">
+    				<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+    				<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+    				<campo name="id_catalogo"/>
+    				<campo name="num_caracteres_comp" calc="null"/>
+    				<campo name="num_caracteres_oper" calc="null"/>
+    			</tabla>
+    		</componente>
+    	</nivel>
+        <nivel nombre="Barre Segmento" id="barre_seg_1" interactivo="false" ejecutar="@ifThenElse(%buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==true AND %buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==true,true,false)">
+			<componente tipo="cursor" id="barre_seg_1">
+				<tabla schema="catalog" nombre="segmento_mascara">
+				<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+				<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+				<campo name="id_catalogo"/>
+				<campo name="id_segmento"/>
+				<campo name="num_caracteres"/>
+				<campo name="nivel"/>
+				<campo name="visible"/>
+				</tabla>
+				<nivel nombre="Barre Cve Egreso" id="barre_cve_e" interactivo="false">
+					<componente tipo="cursor" id="barre_cve_e">
+						<tabla schema="catalog" nombre="catalogos_presupuestales">
+							<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+            				<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+            				<campo name="id_catalogo" filtroCampo="id_catalogo" filtroOperador="=" filtroValor="%barre_seg_1.barre_seg_1.id_catalogo%"/>
+    						<campo name="num_caracteres_comp" calc="@ifThenElse(%barre_cve_e.barre_cve_e.num_caracteres_comp%==null,0,%barre_cve_e.barre_cve_e.num_caracteres_comp%)+%barre_seg_1.barre_seg_1.num_caracteres%"/>
+    						<campo name="num_caracteres_oper" calc="@ifThenElse(%barre_cve_e.barre_cve_e.num_caracteres_oper%==null,0,%barre_cve_e.barre_cve_e.num_caracteres_oper%)+@ifThenElse(%barre_seg_1.barre_seg_1.visible%==true,%barre_seg_1.barre_seg_1.num_caracteres%,0)"/>
+						</tabla>
+					</componente>
+				</nivel>
+			</componente>
+        </nivel>
+       <!-- <nivel nombre="Barre Segmento" id="barre_seg" interactivo="false">
+			<componente tipo="cursor" id="barre_seg">
+				<tabla schema="catalog" nombre="segmento_mascara">
+				<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+				<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+				<campo name="id_catalogo" filtroCampo="id_catalogo" filtroOperador="=" filtroValor="1"/>
+				<campo name="id_segmento"/>
+				<campo name="num_caracteres"/>
+				<campo name="nivel"/>
+				<campo name="visible" />
+				</tabla>
+				<nivel nombre="Barre catalog pres" id="barre_cat_presup" interactivo="false">
+					<componente tipo="cursor" id="barre_cat_presup">
+						<tabla schema="catalog" nombre="catalogos_presupuestales">
+						<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+						<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+						<campo name="id_catalogo" filtroCampo="id_catalogo" filtroOperador="=" filtroValor="1"/>
+						<campo name="estructura_completa_egreso"  calc="@concatenar(@ifThenElse(%barre_cat_presup.barre_cat_presup.estructura_completa_egreso%==null,
+						'',%barre_cat_presup.barre_cat_presup.estructura_completa_egreso%) + 
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==5,'XXXXX',
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==4,'XXXX',
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==3,'XXX',
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==2,'XX',
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==1,'X',''))))))"/>
+						<campo name="estructura_operativa_egreso" calc="@concatenar(@ifThenElse(%barre_cat_presup.barre_cat_presup.estructura_operativa_egreso%==null,'',
+						%barre_cat_presup.barre_cat_presup.estructura_operativa_egreso%) + 
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==5 AND %barre_seg.barre_seg.visible%==true,'XXXXX',
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==4  AND %barre_seg.barre_seg.visible%==true,'XXXX',
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==3  AND %barre_seg.barre_seg.visible%==true,'XXX',
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==2  AND %barre_seg.barre_seg.visible%==true,'XX',
+						@ifThenElse(%barre_seg.barre_seg.num_caracteres%==1  AND %barre_seg.barre_seg.visible%==true,'X',''))))))"/>
+						</tabla>
+					</componente>
+				</nivel>
+			</componente>
+        </nivel>-->
+        <nivel id="muestra_claves" nombre="Parámetros de la Clave Presupuestal de Egreso" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="@ifThenElse(%buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==true AND %buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==true,true,false)">
+		    <componente id="muestra_claves" nombre="Parámetros de la Clave Presupuestal de Egreso" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false"/> <!--calc="$config.ur$" -->
+                    <campo name="id_periodo" text="Ejercicio FIscal" columnas="4" margen-izquierdo="3" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="true"/> <!-- calc="$inParam.periodo$"-->
+                    <campo name="id_separador" text="Separador" columnas="4" margen-izquierdo="3" habilitado="false" descripcionForanea="caracter"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="false"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+    		</componente>
+    		<componente id="estructura_admin" nombre="Parámetros de Clasificación Administrativa" colapsado="si" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" calc="1" visible="false"/>
+                    <!--<etiqueta nombre="administrativa" texto="ESTRUCTURA CLASIFICACIÓN ADMINISTRATIVA" color="black" bold="normal" tamaño="20px" alineacion="left" interlineado="25px" width="500px"/>-->
+                    <campo name="cve_completa" text="Clave Completa" local="true" type="string" columnas="4" margen-izquierdo="3" calc="@consultaDirec('SELECT string_agg(\\'\\' || rpad(\\'\\',CAST(num_caracteres_comp AS integer),\\'X\\') , (SELECT caracter FROM catalog.separador WHERE id_separador='+%nlEstCatProg.autoriza_comp.id_separador%+') ORDER BY id_catalogo) as result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_seccion=1 AND num_caracteres_comp!=0','result','string','MAGNITUS')"/>
+                    <campo name="cve_operativa" text="Clave Operativa" local="true" type="string" columnas="4" margen-izquierdo="3" calc="@consultaDirec('SELECT string_agg(\\'\\' || rpad(\\'\\',CAST(num_caracteres_oper AS integer),\\'X\\') , (SELECT caracter FROM catalog.separador WHERE id_separador='+%nlEstCatProg.autoriza_comp.id_separador%+') ORDER BY id_catalogo) as result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_seccion=1 AND num_caracteres_oper!=0','result','string','MAGNITUS')"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="false"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+    		</componente>
+    		<componente id="estructura_program" nombre="Parámetros de Clasificación Programática" colapsado="si" tipo="formulario" accionDefault="seleccionar">
+    		    <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" calc="1" visible="false"/>
+                    <!--<etiqueta nombre="administrativa" texto="ESTRUCTURA CLASIFICACIÓN PROGRAMÁTICA" color="black" bold="normal" tamaño="20px" alineacion="left" interlineado="25px" width="500px"/>-->
+                    <campo name="cve_completa_prog" text="Clave Completa" local="true" type="string" columnas="4" margen-izquierdo="3" calc="@consultaDirec('SELECT string_agg(\\'\\' || rpad(\\'\\',CAST(num_caracteres_comp AS integer),\\'X\\') , (SELECT caracter FROM catalog.separador WHERE id_separador='+%nlEstCatProg.autoriza_comp.id_separador%+') ORDER BY id_catalogo) as result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_seccion=5 AND num_caracteres_comp!=0','result','string','MAGNITUS')"/>
+                    <campo name="cve_operativa_prog" text="Clave Operativa" local="true" type="string" columnas="4" margen-izquierdo="3" calc="@consultaDirec('SELECT string_agg(\\'\\' || rpad(\\'\\',CAST(num_caracteres_oper AS integer),\\'X\\') , (SELECT caracter FROM catalog.separador WHERE id_separador='+%nlEstCatProg.autoriza_comp.id_separador%+') ORDER BY id_catalogo) as result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_seccion=5 AND num_caracteres_oper!=0','result','string','MAGNITUS')"/>
+                    </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="false"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+    		</componente>
+            <componente id="estructura_econ" nombre="Parámetros de Clasificación Económica" colapsado="si" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" calc="1" visible="false"/>
+                    <!--<etiqueta nombre="administrativa" texto="ESTRUCTURA CLASIFICACIÓN ECONÓMICA" color="black" bold="normal" tamaño="20px" alineacion="left" interlineado="25px" width="500px"/>-->
+                    <campo name="cve_completa_econ" text="Clave Completa" local="true" type="string" columnas="4" margen-izquierdo="3" calc="@consultaDirec('SELECT string_agg(\\'\\' || rpad(\\'\\',CAST(num_caracteres_comp AS integer),\\'X\\') , (SELECT caracter FROM catalog.separador WHERE id_separador='+%nlEstCatProg.autoriza_comp.id_separador%+') ORDER BY id_catalogo) as result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_seccion=2 AND num_caracteres_comp!=0','result','string','MAGNITUS')"/>
+                    <campo name="cve_operativa_econ" text="Clave Operativa" local="true" type="string" columnas="4" margen-izquierdo="3" calc="@consultaDirec('SELECT string_agg(\\'\\' || rpad(\\'\\',CAST(num_caracteres_oper AS integer),\\'X\\') , (SELECT caracter FROM catalog.separador WHERE id_separador='+%nlEstCatProg.autoriza_comp.id_separador%+') ORDER BY id_catalogo) as result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_seccion=2 AND num_caracteres_oper!=0','result','string','MAGNITUS')"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="false"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+    		</componente>
+            <componente id="estructura_geo" nombre="Parámetros de Clasificación Geográfica" colapsado="si" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" calc="1" visible="false"/>
+                    <!--<etiqueta nombre="administrativa" texto="ESTRUCTURA CLASIFICACIÓN GEOGRÁFICA" color="black" bold="normal" tamaño="20px" alineacion="left" interlineado="25px" width="500px"/>-->
+                    <campo name="cve_completa_geo" text="Clave Completa" local="true" type="string" columnas="4" margen-izquierdo="3" calc="@consultaDirec('SELECT string_agg(\\'\\' || rpad(\\'\\',CAST(num_caracteres_comp AS integer),\\'X\\') , (SELECT caracter FROM catalog.separador WHERE id_separador='+%nlEstCatProg.autoriza_comp.id_separador%+') ORDER BY id_catalogo) as result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_seccion=3 AND num_caracteres_comp!=0','result','string','MAGNITUS')"/>
+                    <campo name="cve_operativa_geo" text="Clave Operativa" local="true" type="string" columnas="4" margen-izquierdo="3" calc="@consultaDirec('SELECT string_agg(\\'\\' || rpad(\\'\\',CAST(num_caracteres_oper AS integer),\\'X\\') , (SELECT caracter FROM catalog.separador WHERE id_separador='+%nlEstCatProg.autoriza_comp.id_separador%+') ORDER BY id_catalogo) as result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_seccion=3 AND num_caracteres_oper!=0','result','string','MAGNITUS')"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="false"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

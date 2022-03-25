@@ -1,0 +1,360 @@
+<tarea nombre="alta_usuario" id="BuscaResultado" autor="Marisela">
+    <pagina id="1" nombre="Registro">
+       
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="permisos_especiales"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--
+       <nivel id="re" nombre="Reg_Usr"  mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="re"  tipo="formulario" nombre="Datos Generales del Tipo de Movimiento">
+                <tabla schema="operation" nombre="activo_fijo_aux">
+                    <campo name="ur" text="ur" calc="$inParam.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" text="periodo" calc="%per.per.id_periodo%" visible="false" llaveForanea="false"/>
+                    <campo name="id_activo_fijo" text="id_activo_fijo" calc="$inParam.id_activo_fijo$" visible="false" columna-visible="false"/>
+                    <campo name="fecha_elaboracion" text="Fecha de Alta"  habilitado="false" visible="false"/>
+                   
+                    <campo name="tipo_movimiento" text="Tipo de Movimiento *" descripcionForanea="descripcion" validacion="%tipo_movimiento%==null" validacionMensaje="El campo Tipo de Movimiento no puede ir vacio." columnas="2" margen-izquierdo="3"/>
+                    <campo name="transaccion" text="Transacción *" descripcionForanea="transaccion"  validacion="%transaccion%==null" validacionMensaje="Debe de Capturar Transacción" columnas="2" margen-derecho="3"/>
+                    <campo name="justificacion" text="Justificación *" validacion="%justificacion%==null" validacionMensaje="Seleccione Transacción" columnas="2" margen-izquierdo="3"/>
+                    <campo name="estatus" text="Estatus" calc="'En proceso'" columnas="2"  margen-derecho="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Grabar" hacer="saltar siguiente nivel"  columnas="2" margen-izquierdo="4"/>
+                    
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        -->
+        <nivel  id="inParam" nombre="Modifica"  mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="inParam" tipo="formulario" nombre="Modifica"  accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="movimiento" text="Tipo Movimiento" calc="$inParam.tipo_movimiento$" local="true" type="long" visible="false" />
+                    <campo name="mov" text="Tipo Movimiento" local="true" type="string" calc="@consultaDirec('select descripcion from catalog.tipo_movimiento where id_tipo_movimiento='+$inParam.tipo_movimiento$+'','descripcion','string','MAGNITUS')" columnas="3" margen-izquierdo="2"/>
+                    <campo name="af" text="Folio Activo Fijo" calc="$inParam.id_activo_fijo$" local="true" type="string" columnas="3" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" columnas="4" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+       
+        <!--ALTA -->
+        
+        <nivel id="ipcmd" nombre="Registra Recepción de Bienes" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%inParam.inParam.movimiento%==1 OR %inParam.inParam.movimiento%==4"> 
+                <componente tipo="maestroDetalle" id="ipcmd" nombre="Modifica Recepción de Bienes"> 
+                    <encabezado accionDefault="editar">
+                        <tabla schema="operation" nombre="activo_fijo_aux">
+                            <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$inParam.ur$" habilitado="false"/>
+                            <campo name="periodo" text="Periodo" visible="false" calc="$inParam.periodo$" habilitado="false" llaveForanea="false"/>
+                            <campo name="id_activo_fijo" text="Folio" calc="%inParam.inParam.af%" columnas="2" margen-izquierdo="3"/>
+                            <campo name="clave_almacen" text="Clave de Almacén" descripcionForanea="clave_alamcen" columnas="2" margen-derecho="3"/>
+                            <campo name="fecha_elaboracion" text="Fecha" habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true" columnas="2" margen-izquierdo="3"/>
+                             <campo name="descripcion_almacen" text="Descripción de Almacén" referenciaForanea="clave_almacen" celdaForanea="nombre" autocompletar="true" columnas="2" margen-derecho="3"/>
+                            <campo name="tipo_movimiento" text="Tipo de Movimiento" descripcionForanea="descripcion" columnas="2" margen-izquierdo="3" habilitado="false"/>
+                            <campo name="excel" type="file" text="Adjunta Excel" cellsalign="left" width="110" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Excel'" grupo="%inParam.inParam.af%" expediente="Expediente Solicitud de Modificación al Patrimonio/Adjuntos" update="true" columnas="2" margen-derecho="3"/>
+                            <campo name="transaccion" text="Transacción" descripcionForanea="transaccion" columnas="2" margen-izquierdo="3" habilitado="false"/>
+                            <campo name="documentacion" type="file" text="Adjuntar Documentación" cellsalign="left" width="110" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Documentación'" grupo="%inParam.inParam.af%" expediente="Expediente Solicitud de Modificación al Patrimonio/Adjuntos" update="true" columnas="2" margen-derecho="3"/>
+                            <campo name="justificacion" text="Justificación" width="110" height="200" columnas="4" margen-izquierdo="3"/>
+                        </tabla>
+                            <estilos>
+                                <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4"/>
+                            </estilos>
+                            <acciones>
+                                <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                            </acciones>
+                    </encabezado>
+                    <detalles>
+                        <tabla schema="operation" nombre="activo_fijo_det_aux" tituloDetalle="Renglones" id="detalle_uno" mostrarEliminar="false">
+                            <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" calc="$inParam.ur$"/>
+                            <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false" calc="$inParam.periodo$"/>
+                            <campo name="id_activo_fijo" text="id_activo_fijo" calc="%inParam.inParam.af%" llaveForanea="false" visible="false" columna-visible="false"/>
+                            <campo name="id_activo_fijo_det_aux" text="Renglón" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="false"/>
+                            <campo name="clave_articulo" text="Clave Artículo" marcador="Clave Artículo" validacion="%clave_articulo%==null" validacionMensaje="Captura Clave Artículo" autoFiltradoDescripcion="clave_articulo,descripcion_articulo" autoFiltrado="true" descripcionForanea="clave_articulo,descripcion_articulo" width="130" columnas="3" margen-izquierdo="2"/>
+                            <campo name="serie" text="Serie" marcador="Captura Número de Serie" validacion="%serie%==null" validacionMensaje="Captura Número de Serie" columnas="3" margen-derecho="2" width="100"/>
+                            <campo name="descripcion_especifica" text="Captura Descripción Específica" width="110" height="100" columnas="6" margen-izquierdo="2" columna-visible="false" calcCliente="@consultaDirec('SELECT descripcion_articulo AS result FROM catalog.articulos WHERE ur='+%ur%+' AND'+' periodo='+'\\''+%periodo%+'\\''+' AND'+' clave_articulo='+'\\''+%clave_articulo%+'\\'','result','string','MAGNITUS')"/>
+                            <campo name="color" text="Color" marcador="Captura Color" mascara="C" columnas="3" margen-izquierdo="2" width="100"/>
+                            <campo name="factura" text="Factura" marcador="Captura Factura" columnas="3" margen-derecho="2" width="100"/>
+                            <campo name="um" text="UM" local="true" type="string" visible="false" columna-visible="false" referenciaForanea="clave_articulo" celdaForanea="unidad_medida" autocompletar="true"/>
+                            <campo name="unidad_medida" text="Unidad de Medida" habilitado="false" columnas="3" margen-izquierdo="2" width="100" calcCliente="%um%" />
+                            <campo name="fecha_factura" text="Fecha Factura" columnas="3" margen-derecho="2" validacion="@after(%fecha_factura%,@fechaSistema())" validacionMensaje="La fecha no puede ser mayor a hoy" width="150"/>
+                            <campo name="cantidad" text="Cantidad" marcador="Capture Cantidad" calc="1" habilitado="true" columnas="3" margen-izquierdo="2" width="100"/>
+                            <campo name="ano_adquisicion" text="Año Adquisición" calcCliente="@subCadena(%fecha_factura%,0,4)" columnas="3" margen-derecho="2" habilitado="false" width="150"/>
+                            <campo name="costo_unitario" text="Costo Unitario" validacion="%costo_unitario%==null" validacionMensaje="Captura Costo Unitario" columnas="3" margen-izquierdo="2" formatoMoneda="true" width="150"/>
+                            <campo name="id_cat_clasificacion_objeto_gasto" text="ID COG" calc="4" visible="false" columna-visible="false"/>
+                            <campo name="clasificacion_objeto_gasto" text="COG" descripcionForanea="id_cat" descripcionForaneaTabla="id_cat" habilitado="false" columnas="3" margen-derecho="2" calcCliente="@consultaDirec('SELECT id_cat_clasificacion_objeto_gasto AS result FROM catalog.articulos WHERE ur='+%ipcmd.ipcmd.ur%+' AND'+' periodo='+'\\''+%ipcmd.ipcmd.periodo%+'\\''+' AND'+' clave_articulo='+'\\''+%clave_articulo%+'\\'','result','string','MAGNITUS')" width="100"/>
+                            <campo name="cuenta_amortizacion" text="Cuenta Armonizada" marcador="Selecciona Cuenta" validacion="%cuenta_amortizacion%==null" validacionMensaje="Selecciona Cuenta Armonizada" autoFiltradoDescripcion="cuenta_amortizacion" autoFiltrado="true" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" columnas="3" margen-izquierdo="2" llavesFijas="nivel=8" width="150"/>
+                            <campo name="marca" text="Marca" marcador="Captura Marca del Artículo" validacion="%marca%==null" validacionMensaje="Captura Marca del Artículo" columnas="3" margen-derecho="2" width="100"/>
+                            <!--<campo name="aplica_depreciacion" text="Aplica Depreciación" columnas="3" margen-izquierdo="2">
+                                	<opciones>
+                            		<opcion texto="Si" valor="Si"/>
+                            		<opcion texto="No" valor="No"/>
+                            	</opciones>
+                            </campo> -->
+                            <campo name="modelo" text="Modelo"  marcador="Captura Modelo del Artículo" validacion="%marca%==null" validacionMensaje="Captura Marca del Artículo" columnas="3" margen-izquierdo="2" width="100"/>
+                            <!--<campo name="depreciacion" text="% Depreciación" columnas="3" margen-izquierdo="2"/>-->
+                            <campo name="almacen" text="almacen" calc="%ipcmd.ipcmd.descripcion_almacen%" visible="false" columna-visible="false" width="100"/>
+                            <campo name="total" text="total" calcCliente="@ifThenElse(%costo_unitario%==null,0,%costo_unitario%)*@ifThenElse(%cantidad%==null,0,%cantidad%)" visible="false" columna-visible="false" width="100"/>
+                        </tabla>
+                    </detalles>
+                       <!--SUMATORIA-->
+                    <!--<pie>
+                        <tabla schema="operation" nombre="trans_extrapresupuestal" tituloPie="Titulo de Detalle de movimiento Pie">
+                            <campo name="importe" text="Importe Total"/>
+                            <campo name="importe_total_abono" text="Importe Total de Abono"/>
+                            <campo name="folio_movimiento_auxiliar" text="Folio de Póliza"/>
+                        </tabla>
+                    </pie>-->
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="avanzar a nivel"/>
+                </estilos>
+                </componente>
+            </nivel>
+        
+
+             <nivel nombre="CONSULTA DE ALTAS DE PATRIMONIO" id="alta" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%inParam.inParam.movimiento%==1 OR %inParam.inParam.movimiento%==4">
+                <componente tipo="reporte" nombre="CONSULTA DE ALTAS DE PATRIMONIO" id="alta">
+                    <reporte id="ra" nombre="R_Alta_Patrimonio_IJ" expediente="Expediente Solicitud de Modificación al Patrimonio/Alta de Patrimonio" nombreDocumento="'Alta de Patrimonio'" grupo="%inParam.inParam.af%" url="$config.repository_upload_file$" update="true">
+                        <campo name="ur" type="long"  calc="$inParam.ur$"/>
+                        <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                        <campo name="activo_fijo" type="string" calc="%inParam.inParam.af%"/>
+                        <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                    </reporte>
+                </componente>
+            </nivel>    
+        <!--ALTA -->
+        <!--BAJA -->
+            
+        <nivel id="ipcmd2" nombre="Registra Baja de Patrimonio" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%inParam.inParam.movimiento%==2 OR %inParam.inParam.movimiento%==5"> 
+            <componente tipo="maestroDetalle" id="ipcmd2" nombre="Registra Baja de Patrimonio"> 
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="activo_fijo_aux">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$inParam.ur$" habilitado="false"/>
+                        <campo name="periodo" text="Periodo" visible="false" calc="$inParam.periodo$" habilitado="false" llaveForanea="false"/>
+                        <campo name="id_cat_area_requiriente" text="Centro de Registro" calc="2" visible="false"/>
+                        <campo name="area_requiriente" text="Centro de Registro" columnas="3" margen-izquierdo="2"/>
+                        <campo name="clave_almacen" text="Clave de Almacén" descripcionForanea="clave_alamcen" columnas="3" margen-derecho="2"/>
+                        <campo name="id_activo_fijo" text="Folio" calc="%inParam.inParam.af%" columnas="3" margen-izquierdo="2"/>
+                        <campo name="descripcion_almacen" text="Descripción de Almacén" referenciaForanea="clave_almacen" celdaForanea="nombre" autocompletar="true" columnas="3" margen-derecho="2"/>
+                        <campo name="fecha_elaboracion" text="Fecha" columnas="3" margen-izquierdo="2"/>
+                        <campo name="tipo_movimiento" text="Tipo de Movimiento" calc="%inParam.inParam.movimiento%" descripcionForanea="descripcion" columnas="3" margen-derecho="2"/>
+                        
+                        <campo name="excel" type="file" text="Adjunta Excel" cellsalign="left" width="110" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Excel'" grupo="%inParam.inParam.af%" expediente="Expediente Solicitud de Modificación al Patrimonio/Adjuntos" update="true" columnas="3" margen-izquierdo="2"/>
+                        
+                        <campo name="transaccion" text="Transacción" descripcionForanea="transaccion" columnas="3" margen-derecho="2"/>
+                        
+                        <campo name="documentacion" type="file" text="Adjuntar Documentación" cellsalign="left" width="110" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Documentación'" grupo="%inParam.inParam.af%" expediente="Expediente Solicitud de Modificación al Patrimonio/Adjuntos" update="true" columnas="3" margen-derecho="2"/>
+                        <campo name="justificacion" text="Justificación" columnas="3" margen-derecho="2"/>
+
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="avanzar a nivel" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla schema="operation" nombre="activo_fijo_det_aux" tituloDetalle="Renglones" id="detalle_uno2" mostrarEliminar="false">
+                        <!--Bloque Presupuestal-->
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" calc="$inParam.ur$"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false" calc="$inParam.periodo$"/>
+                        <campo name="id_activo_fijo" text="id_activo_fijo" calc="%inParam.inParam.af%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_activo_fijo_det_aux" text="Activo Fijo" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_clasificacion_objeto_gasto" text="Clasificador por Objeto del Gasto" calc="4" visible="false"/>
+                        <campo name="clave_articulo" text="Clave artículo" autoFiltradoDescripcion="clave_articulo,descripcion_articulo" autoFiltrado="true" descripcionForanea="clave_articulo,descripcion_articulo" columnas="3" margen-izquierdo="2"/>
+                        <campo name="serie" text="Serie " columnas="3" margen-derecho="2"/>
+                        <campo name="descripcion_especifica" text="Descripción Específica" width="110" height="200" referenciaForanea="clave_articulo" celdaForanea="descripcion_articulo" autocompletar="true" columnas="6" margen-izquierdo="2" />
+                        <campo name="color" text="Color" columnas="3" margen-izquierdo="2"/>
+                        <campo name="factura" text="Factura" columnas="3" margen-derecho="2"/>
+                        <campo name="unidad_medida" text="Unidad de Medida"  habilitado="false" referenciaForanea="clave_articulo" celdaForanea="unidad_medida" autocompletar="true" columnas="3" margen-izquierdo="2"/>
+                        <campo name="fecha_factura" text="Fecha Factura" columnas="3" margen-derecho="2"/>
+                        <campo name="cantidad" text="Cantidad" calc="1" habilitado="true" columnas="3" margen-izquierdo="2"/>
+                        <campo name="ano_adquisicion" text="Año Adquisición" calcCliente="@subCadena(%fecha_factura%,0,4)" columnas="3" margen-derecho="2" habilitado="false"/>
+                        <campo name="costo_unitario" text="Costo Unitario" columnas="3" margen-izquierdo="2"/>
+                        <campo name="clasificacion_objeto_gasto" text="Clasificador por Objeto del Gasto" habilitado="false" descripcionForanea="id_cat" referenciaForanea="clave_articulo" celdaForanea="id_cat_clasificacion_objeto_gasto" autocompletar="true" columnas="3" margen-derecho="2"/>
+                        <campo name="cuenta_amortizacion" text="Cuenta Armonizada" autoFiltradoDescripcion="cuenta_amortizacion" autoFiltrado="true" descripcionForanea="clave_cuenta,descripcion" columnas="3" margen-izquierdo="2"/>
+                        <campo name="marca" text="Marca" columnas="3" margen-derecho="2"/>
+                        <campo name="aplica_depreciacion" text="Aplica Depreciación" columnas="3" margen-izquierdo="2">
+                                <opciones>
+                                <opcion texto="Si" valor="Si"/>
+                                <opcion texto="No" valor="No"/>
+                            </opciones>
+                        </campo> 
+                        <campo name="modelo" text="Modelo" columnas="3" margen-derecho="2"/>
+                        <campo name="depreciacion" text="% Depreciación" columnas="3" margen-izquierdo="2"/>
+                        <campo name="almacen" text="Alamacen" calc="%ipcmd2.ipcmd2.descripcion_almacen%" visible="false" columna-visible="false"/>
+                        <campo name="total" text="Total" calcCliente="@ifThenElse(%costo_unitario%==null,0,%costo_unitario%)*@ifThenElse(%cantidad%==null,0,%cantidad%)" visible="false" columna-visible="false"/>
+                    </tabla>
+                    
+                </detalles>
+            <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+            </acciones>
+            <estilos>
+                <boton nombre="grabar" posicion="derecha" visible="true" texto="avanzar a nivel" />
+            </estilos>
+            </componente>
+        </nivel>
+            
+         <nivel nombre="CONSULTA DE BAJA DE PATRIMONIO" id="baja" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%inParam.inParam.movimiento%==2 OR %inParam.inParam.movimiento%==5">
+            <componente tipo="reporte" nombre="CONSULTA DE BAJA DE PATRIMONIO" id="baja">
+                <reporte nombre="R_Baja_Almacen_IJ" id="compras" expediente="Expediente Solicitud de Modificación al Patrimonio/Baja de Patrimonio" nombreDocumento="'Baja de Patrimonio'" grupo="%inParam.inParam.af%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long"  calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_activo_fijo" type="string" calc="%inParam.inParam.af%"/>
+                    <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>    
+        <!--BAJA -->
+        <!--TRASPASO -->
+        <nivel id="dat" nombre="Detalle de Artículos de Traspaso" ejecutar="%inParam.inParam.movimiento%" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="dat" nombre="Detalle de Artículos de Traspaso" tipo="tabla" mostrarEliminar="true" mostarEditar="true" mostrarAgregar="true">
+                <tabla schema="operation" nombre="almacenes">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false" calc="$inParam.periodo$"/>
+                    <campo name="id_almacenes" text="id_almacenes" columna-visible="false" visible="false" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="clave_articulo" text="Clave artículo" autoFiltradoDescripcion="clave_articulo,descripcion_articulo" autoFiltrado="true" descripcionForanea="clave_articulo,descripcion_articulo" columnas="3" margen-izquierdo="2"/>
+            
+                    <campo name="descripcion_especifica" text="Descripción Específica" columnas="3" margen-derecho="2"/>
+                    <campo name="unidad_medida" text="Unidad de Medida"  habilitado="false" referenciaForanea="clave_articulo"  autocompletar="true" columnas="3" margen-izquierdo="2"/> 
+                    <campo name="almacen" text="Almacén" columnas="3" margen-derecho="2"/>
+                    <campo name="existencias" text="Existencia" columnas="3" margen-izquierdo="2"/>
+                    <campo name="cantidad_traspaso" text="Cantidad Traspaso" columnas="3" margen-derecho="2"/>
+                    <campo name="costo_unitario" text="Costo Unitario" columnas="3" margen-izquierdo="2"/>
+                    <campo name="total" text="Costo Total" columnas="3" margen-derecho="2"/>
+                    <campo name="seleccion" text="Selección" filtroCampo="seleccion" filtroOperador="=" filtroValor="true" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                 </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="avanzar a nivel" />
+                </estilos>
+            </componente>
+        </nivel>
+
+        <nivel id="aacf" nombre="Datos Generales del Traspaso" interactivo="false" ejecutar="%inParam.inParam.movimiento%==3">
+            <componente id="aacf" nombre="Datos Generales del Traspaso" tipo="altaDirect">
+                <tabla schema="operation" nombre="activo_fijo_aux">
+                    <campo name="ur" calc="$inParam.ur$"/>
+                    <campo name="periodo" calc="$inParam.periodo$"/>
+                    <campo name="id_activo_fijo" calc="%inParam.inParam.af%"/>
+                    <campo name="tipo_movimiento" calc="%inParam.inParam.movimiento%"/>
+                    <campo name="fecha_elaboracion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="justificacion" calc="$inParam.justificacion$"/>
+                    <campo name="transaccion" calc="$inParam.transaccion$"/>
+                    
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="bta" nombre="barre tarjeta de almacen" interactivo="false" ejecutar="%inParam.inParam.movimiento%==3">
+            <componente id="bta" nombre="Datos Generales del Traspaso" tipo="cursor">
+                <tabla schema="operation" nombre="almacenes">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_almacenes"/>
+                    <campo name="clave_articulo" text="Clave artículo"/> 
+                    <campo name="descripcion_especifica" text="Descripción Específica"/>
+                    <campo name="unidad_medida" text="Unidad de Medida"/>
+                    <campo name="almacen" text="Almacén"/>
+                    <campo name="existencias" text="Existencia"/>
+                    <campo name="cantidad_traspaso" text="Cantidad Traspaso"/>
+                    <campo name="costo_unitario" text="Costo Unitario"/>
+                    <campo name="total" text="Costo Total"/>
+                    <campo name="seleccion" text="Selección" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                <!--    <campo name="folio_af" text="folio_af" filtroCampo="folio_af" filtroOperador="=" filtroValor="%inParam.inParam.af%"/>-->
+                </tabla>
+                <nivel id="aa" nombre="alta en activo fijo detalle" interactivo="false" ejecutar="%inParam.inParam.movimiento%==3">
+                    <componente id="aa" nombre="alta en activo fijo detalle" tipo="altaDirect">
+                        <tabla schema="operation" nombre="activo_fijo_det_aux">
+                            <campo name="ur" calc="$inParam.ur$"/>
+                            <campo name="periodo" calc="%bta.bta.id_periodo%"/>
+                            <campo name="id_activo_fijo" calc="%inParam.inParam.af%"/>
+                            <campo name="id_activo_fijo_det_aux" autogenerado="true" generacion="@prox()+1"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                            <campo name="clave_articulo" calc="%bta.bta.tipo_movimiento%"/>
+                            <campo name="descripcion_especifica" calc="%bta.bta.descripcion_especifica%"/>
+                            <campo name="unidad_medida" calc="%bta.bta.unidad_medida%"/>
+                            <campo name="almacen" calc="%ipcmd2.ipcmd2.clave_almacen%"/>
+                            <campo name="existencias" calc="%bta.bta.existencia%"/>
+                            <campo name="cantidad_traspaso" calc="%bta.bta.catidad_traspaso%"/>
+                            <campo name="costo_unitario" calc="%bta.bta.costo_unitario%"/>
+                            <campo name="total" calc="%bta.bta.total%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="aaf" nombre="Datos Generales del Traspaso" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%inParam.inParam.movimiento%==3">
+            <componente id="aaf" nombre="Datos Generales del Traspaso" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="activo_fijo_aux">
+                    <campo name="ur" calc="$inParam.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" calc="$inParam.periodo$" visible="false" llaveForanea="false"/>
+                    <campo name="id_activo_fijo" calc="%inParam.inParam.af%" visible="false"/>
+                    <campo name="almacen_destino" text="Almacén Destino" columnas="2" margen-izquierdo="3"/>
+                    <campo name="fecha_elaboracion" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columnas="2" margen-derecho="3"/>
+                    <campo name="justificacion" text="Justificación" columnas="2" margen-izquierdo="3"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="avanzar a nivel" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="datb" nombre="Modifica Traspasos de Patrimonio" ejecutar="%inParam.inParam.movimiento%==3" interactivo="false">
+            <componente id="datb" nombre="Detalle de Artículos de Traspaso" tipo="cursor">
+                <tabla schema="operation" nombre="almacenes">
+                    <campo name="ur" text="ur" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" text="id_periodo" columna-visible="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_almacenes" text="id_almacenes"/>
+                    <campo name="seleccion" text="Selección" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                    <campo name="folio_af" text="folio_af" filtroCampo="folio_af" filtroOperador="=" filtroValor="%inParam.inParam.af%"/>
+                </tabla>
+                 <nivel id="datf" nombre="Modifica Traspasos de Patrimonio" ejecutar="%inParam.inParam.movimiento%==3" interactivo="false">
+                    <componente id="datf" nombre="Detalle de Artículos de Traspaso" tipo="cursor">
+                            <tabla schema="operation" nombre="almacenes">
+                                <campo name="ur" text="ur" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                                <campo name="id_periodo" text="id_periodo" columna-visible="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                                <campo name="id_almacenes" text="id_almacenes" filtroCampo="id_almacenes" filtroOperador="=" filtroValor="%datb.datb.id_almacenes%"/>
+                                <campo name="seleccion" text="Selección" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                                <campo name="folio_af" text="folio_af" calc="%inParam.inParam.af%"/>
+                            </tabla>
+                    </componente>
+                </nivel> 
+            </componente>
+        </nivel>  
+        
+        <nivel nombre="REPORTE TRASPASO DE ALMACÉN DE PATRIMONIO" id="TRAS" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%inParam.inParam.movimiento%==3">
+            <componente tipo="reporte" nombre="REPORTE TRASPASO DE ALMACÉN DE PATRIMONIO" id="TRAS">
+                <reporte nombre="R_Traspaso_Almacen_Patrim_IJ" expediente="Expediente Solicitud de Modificación al Patrimonio/Traspaso de Patrimonio" nombreDocumento="'Traspaso de Patrimonio'" grupo="%inParam.inParam.af%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_activo_fijo" type="string" calc="%inParam.inParam.af%"/>
+                    <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>   
+         <!--TRASPASO --> 
+    </pagina>
+</tarea>

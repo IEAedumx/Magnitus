@@ -1,0 +1,101 @@
+<tarea id="autorizaEstructuraClavePresupuestalIngreso" nombre="Autoriza Estructura de la Calve Presupuestal del Ingreso" version="1" autor="Luis Eduardo Castañeda Delgadillo" >
+    <pagina id="uno">
+        
+        <!-- NIVEL PASO PARÁMETROS-->
+        <nivel id="inParam" nombre="Paso de parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="asunto" local="true" type="string" calc="$inParam.asunto$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlAutzEstrucClavePresuIngr" nombre="Documento de los Parámetros de la Clave Presupuestal del Ingreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpRepEstrucClavePresuIngr" nombre="Documento de los Parámetros de la Clave Presupuestal del Ingreso"  tipo="reporte">
+                <reporte nombre="estr_pres_ingreso_jsus" expediente="Expediente Estructura Clave Del Ingreso" nombreDocumento="'Estructura Clave Ingreso'" grupo="$inParam.periodo$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            
+            <componente id="cpAutzEstrucClavePresuIngr" nombre="Autoriza Parámetros de la Clave Presupuestal del Ingreso" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="id_periodo" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="estatus_estructura_cve_pre_ing" text="estatus" calc="2" visible="false"/>
+                    <campo name="obser_aut_estructura_cve_pre_ing" marcador="Observaciones" text=" " mascara="C" columnas="8" height="200" 
+                        interaccion="%autoriza_estructura_cve_pre_ing%==false" 
+                        validacion="%autoriza_estructura_cve_pre_ing%==false AND %obser_aut_estructura_cve_pre_ing%==null"
+                        validacionMensaje="Ingresa una observación por la que no se autorizó para continuar."/>
+                    <campo name="autoriza_estructura_cve_pre_ing" text="autorizar" margen-izquierdo="1"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="GUARDAR" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        <!-- COMPONENTES SOLICITUD PARA NEGOCIAR LA INSTANCIA Y MANDAR MENSAJE DE RETROALIMENTACIÓN -->
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%nlAutzEstrucClavePresuIngr.cpAutzEstrucClavePresuIngr.autoriza_estructura_cve_pre_ing%==false" >
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Instancia Validador" id="InstanciaVal" interactivo="false" ejecutar="%nlAutzEstrucClavePresuIngr.cpAutzEstrucClavePresuIngr.autoriza_estructura_cve_pre_ing%==false" >
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAutzEstrucClavePresuIngr.cpAutzEstrucClavePresuIngr.obser_aut_estructura_cve_pre_ing%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+        
+         <!--PASO DE PARAMETROS PARA TERMINAR LA INSTANCIA EN EL ESCRITORIO VIRTUAL -->
+        <nivel nombre="TurnarInstanciaP" id="turnar_instanciaP" interactivo="false" ejecutar="%nlAutzEstrucClavePresuIngr.cpAutzEstrucClavePresuIngr.autoriza_estructura_cve_pre_ing%==true">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

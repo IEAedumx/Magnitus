@@ -1,0 +1,197 @@
+tarea id=estructuraIngresos nombre=Gestión de Estructura de Clave Presupuestal de Ingreso
+    pagina id=1
+        !--BARRE USUARIOS--
+        nivel id=barreUsuarios nombre=barreUsuarios interactivo=false
+            componente id=barreUsuarios nombre=barreUsuarios tipo=cursor
+                tabla schema=entity nombre=usuario
+                    campo name=id_unidad_responsable filtroCampo=id_unidad_responsable filtroOperador== filtroValor=$config.ur$
+                    campo name=id_usuario
+                    campo name=nombre_usuario filtroCampo=nombre_usuario filtroOperador== filtroValor=$protocolarios.user$
+                tabla
+            componente
+        nivel
+        !-- BARRE PERIODO --
+		nivel id=buscaPeriodo nombre=buscaPeriodo interactivo=false
+			componente tipo=cursor id=buscaPeriodo nombre=buscaPeriodo
+				tabla schema=catalog nombre=periodo
+					campo name=id_unidad_responsable filtroCampo=id_unidad_responsable filtroOperador== filtroValor=$config.ur$
+					campo name=id_periodo 
+					campo name=estatus filtroCampo=estatus filtroOperador== filtroValor=true
+					campo name=id_estatus filtroCampo=id_estatus filtroOperador== filtroValor=3
+					campo name=autoriza_estructura_programatica
+					campo name=autoriza_estructura_presupuestal
+					campo name=auto_estruct_cve_presupuestal_e
+					campo name=autoriza_estructura_cve_pre_ing
+				tabla
+			componente
+		nivel
+		!--nivel id=validacion_generada nombre=Registra Estructura de clave presupuestal de Ingreso ejecutar=@consultaDirec('SELECT count(estructura_completa_ingreso) AS result FROM catalog.catalogos_presupuestales WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND estructura_completa_ingreso IS NOT NULL','result','long','MAGNITUS')&gt;0 mostrarProximoNivel=false mostrarNivelAnterior=false
+		    componente id=validacion_generada nombre=Registra Estructura de clave presupuestal de egreso tipo=formulario accionDefault=seleccionar
+                tabla schema=catalog nombre=dummy
+                    campo name=id visible=false filtroCampo=id filtroOperador== filtoValor=1
+                    etiqueta nombre=administrativa columnas=8 margen-izquierdo=1 texto=ATENCIÓN La estructura de la clave presupuestal de ingresoP ya ha sido generada color=black bold=normal tamaño=25px alineacion=left interlineado=25px width=500px
+                    campo name=periodo text=Periodo columnas=4 local=true type=string calc=%buscaPeriodo.buscaPeriodo.id_periodo% visible=false
+                tabla
+                estilos
+                    boton nombre=grabar texto=Aceptar visible=false
+                estilos
+                acciones
+                    accion nombre=grabar hacer=saltar siguiente nivel
+                acciones
+            componente
+        nivel
+        nivel id=validacion_auto nombre=Registra Estructura de clave presupuestal de ingreso ejecutar=%buscaPeriodo.buscaPeriodo.autoriza_estructura_cve_pre_ing%==true mostrarProximoNivel=false mostrarNivelAnterior=false
+		    componente id=validacion_auto nombre=Registra Estructura de clave presupuestal de ingreso tipo=formulario accionDefault=seleccionar
+                tabla schema=catalog nombre=dummy
+                    campo name=id visible=false filtroCampo=id filtroOperador== filtoValor=1
+                    etiqueta nombre=administrativa columnas=8 margen-izquierdo=1 texto=ATENCIÓN La estructura de la clave presupuestal de ingreso ya ha sido autorizadaP color=black bold=normal tamaño=25px alineacion=left interlineado=25px width=500px
+                    campo name=periodo text=Periodo columnas=4 local=true type=string calc=%buscaPeriodo.buscaPeriodo.id_periodo% visible=false
+                tabla
+                estilos
+                    boton nombre=grabar texto=Aceptar visible=false
+                estilos
+                acciones
+                    accion nombre=grabar hacer=saltar siguiente nivel
+                acciones
+            componente
+        nivel
+		nivel id=validacion nombre=Registra Estructura de clave presupuestal de ingreso ejecutar=@ifThenElse(%buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==false OR %buscaPeriodo.buscaPeriodo.autoriza_estructura_programatica%==false,true,false) mostrarProximoNivel=false mostrarNivelAnterior=false
+		    componente id=validacion nombre=Registra Estructura de clave presupuestal de ingreso tipo=formulario accionDefault=seleccionar
+                tabla schema=catalog nombre=dummy
+                    campo name=id visible=false filtroCampo=id filtroOperador== filtoValor=1
+                    etiqueta nombre=administrativa texto=ATENCIÓN La estructura de catálogos aún no ha sido autorizada color=black bold=normal tamaño=25px alineacion=left interlineado=25px width=500px
+                tabla
+                estilos
+                    boton nombre=grabar texto=Aceptar visible=false
+                estilos
+                acciones
+                    accion nombre=grabar hacer=saltar siguiente nivel
+                acciones
+            componente
+        nivel--
+		!--BARRE INGRESOS--
+		nivel id=barreIngresos1 nombre=barreIngresos interactivo=false
+		    componente id=barreIngresos1 nombre=barreIngresos tipo=cursor
+		        tabla schema=catalog nombre=catalogos_presupuestales
+		            campo name=id_unidad_responsable filtroCampo=id_unidad_responsable filtroOperador== filtroValor=$config.ur$
+                    campo name=id_periodo text=Periodo Contable filtroCampo=id_periodo filtroOperador== filtroValor=%buscaPeriodo.buscaPeriodo.id_periodo%
+                    campo name=id_catalogo text=ID Catalogo filtroCampo=id_catalogo filtroOperador== filtroValor=2
+                    campo name=ingresos calc=true
+		        tabla
+		    componente
+		nivel
+		nivel id=barreIngresos2 nombre=barreIngresos interactivo=false
+		    componente id=barreIngresos2 nombre=barreIngresos tipo=cursor
+		        tabla schema=catalog nombre=catalogos_presupuestales
+		            campo name=id_unidad_responsable filtroCampo=id_unidad_responsable filtroOperador== filtroValor=$config.ur$
+                    campo name=id_periodo text=Periodo Contable filtroCampo=id_periodo filtroOperador== filtroValor=%buscaPeriodo.buscaPeriodo.id_periodo%
+                    campo name=id_catalogo text=ID Catalogo filtroCampo=id_catalogo filtroOperador== filtroValor=3
+                    campo name=ingresos calc=true
+		        tabla
+		    componente
+		nivel
+		nivel id=barreIngresos3 nombre=barreIngresos interactivo=false
+		    componente id=barreIngresos3 nombre=barreIngresos tipo=cursor
+		        tabla schema=catalog nombre=catalogos_presupuestales
+		            campo name=id_unidad_responsable filtroCampo=id_unidad_responsable filtroOperador== filtroValor=$config.ur$
+                    campo name=id_periodo text=Periodo Contable filtroCampo=id_periodo filtroOperador== filtroValor=%buscaPeriodo.buscaPeriodo.id_periodo%
+                    campo name=id_catalogo text=ID Catalogo filtroCampo=id_catalogo filtroOperador== filtroValor=5
+                    campo name=ingresos calc=true
+		        tabla
+		    componente
+		nivel
+		nivel id=barreIngresos4 nombre=barreIngresos interactivo=false
+		    componente id=barreIngresos4 nombre=barreIngresos tipo=cursor
+		        tabla schema=catalog nombre=catalogos_presupuestales
+		            campo name=id_unidad_responsable filtroCampo=id_unidad_responsable filtroOperador== filtroValor=$config.ur$
+                    campo name=id_periodo text=Periodo Contable filtroCampo=id_periodo filtroOperador== filtroValor=%buscaPeriodo.buscaPeriodo.id_periodo%
+                    campo name=id_catalogo text=ID Catalogo filtroCampo=id_catalogo filtroOperador== filtroValor=7
+                    campo name=ingresos calc=true
+		        tabla
+		    componente
+		nivel
+		nivel id=barreIngresos5 nombre=barreIngresos interactivo=false
+		    componente id=barreIngresos5 nombre=barreIngresos tipo=cursor
+		        tabla schema=catalog nombre=catalogos_presupuestales
+		            campo name=id_unidad_responsable filtroCampo=id_unidad_responsable filtroOperador== filtroValor=$config.ur$
+                    campo name=id_periodo text=Periodo Contable filtroCampo=id_periodo filtroOperador== filtroValor=%buscaPeriodo.buscaPeriodo.id_periodo%
+                    campo name=id_catalogo text=ID Catalogo filtroCampo=id_catalogo filtroOperador== filtroValor=11
+                    campo name=ingresos calc=true
+		        tabla
+		    componente
+		nivel
+		nivel id=barreIngresos6 nombre=barreIngresos interactivo=false
+		    componente id=barreIngresos6 nombre=barreIngresos tipo=cursor
+		        tabla schema=catalog nombre=catalogos_presupuestales
+		            campo name=id_unidad_responsable filtroCampo=id_unidad_responsable filtroOperador== filtroValor=$config.ur$
+                    campo name=id_periodo text=Periodo Contable filtroCampo=id_periodo filtroOperador== filtroValor=%buscaPeriodo.buscaPeriodo.id_periodo%
+                    campo name=id_catalogo text=ID Catalogo filtroCampo=id_catalogo filtroOperador== filtroValor=12
+                    campo name=ingresos calc=true
+		        tabla
+		    componente
+		nivel
+		!--INICIO DEL COMPONENTE GESTION DE PAGO tabla  --
+		nivel id=datosGenerales nombre=Datos Generales de la Clave mostrarNivelAnterior=false mostrarProximoNivel=false
+		    componente id=datosGenerales nombre=Datos Generales de la Clave tipo=formulario accionDefault=seleccionar
+		        tabla schema=catalog nombre=periodo
+		            campo name=id_unidad_responsable llaveForanea=false calc=$config.ur$ visible=false 
+		            campo name=id_periodo text=Ejercicio Fiscal llaveForanea=false calc=%buscaPeriodo.buscaPeriodo.id_periodo% columnas=3 margen-izquierdo=2 habilitado=false
+		            campo name=id_separador text=Separación de la Clave columnas=3 margen-derecho=2 habilitado=false
+		        tabla
+		        estilos
+		            boton nombre=grabar visible=true texto=Continuar margen-izquierdo=4 columnas=2 margen-derecho=4
+		        estilos
+		        acciones
+                    accion nombre=grabar hacer=saltar siguiente componente
+                acciones
+		    componente
+		    componente id=cat_admin nombre=Configura Parámetros de Clave Presupuestal del Ingreso tipo=tabla filtro=false mostrarEliminar=false mostrarAgregar=false mostrarEditar=false ejecutarComponente=%datosGenerales.datosGenerales.id_unidad_responsable%!=null
+                tabla schema=catalog nombre=catalogos_presupuestales
+                    campo name=id_unidad_responsable text=Unidad Responsable calc=%buscaPeriodo.buscaPeriodo.id_unidad_responsable% llaveForanea=false visible=false columna-visible=false
+                    campo name=id_periodo text=Periodo Contable calc=%buscaPeriodo.buscaPeriodo.id_periodo% llaveForanea=false visible=false columna-visible=false
+                    campo name=id_catalogo text=ID Catalogo visible=true columna-visible=true width=150
+                    campo name=nombre text=Nombre width=350
+                    campo name=fecha_registro text=Fecha de Registro width=200
+                    campo name=estructura_completa_ingreso text=Clave Completa  width=200
+                    campo name=estructura_operativa_ingreso text=Clave Operativa  width=200
+                    campo name=id_seccion text=Tipo de Clasificador visible=false columna-visible=false
+                    campo name=ingresos text=Ingresos visible=false columna-visible=false filtroCampo=ingresos filtroOperador== filtroValor=true
+                    tareas
+						tarea nombre=Detalle del Parámetro imagen=resourcesimgbutton-default.png imagen-sobre=resourcesimgbutton-default-rollover.png params=id_unidad_responsable,id_periodo,id_catalogo,nombre ref=task=b2087932-533c-4215-a171-9dc494f5cdc0
+					tareas
+                tabla
+                acciones
+                    accion nombre=grabar hacer=saltar siguiente nivel
+                acciones
+                estilos
+                    boton nombre=grabar visible=true texto=Guardar margen-derecho=4 margen-izquierdo=4 columnas=2
+                estilos
+                validaciones
+                             validacion tipo=editar validacion=%bloqueo%==true validacionMensaje='El nivel no pueden ser editado'
+                             validacion tipo=borrar validacion=%bloqueo%==true validacionMensaje='El nivel no pueden ser borrado'
+                validaciones
+            componente
+        nivel
+        nivel nombre=crearNuevaInstancia id=cI interactivo=false
+    componente tipo=solicitud nombre=EnvioParametrosDynamo id=cI 
+        parametros url=$config.request$ metodo=POST accion=crearNuevaInstancia tipo=json
+            parametro name=enterprise calc='MAGNITUS'
+            parametro name=process calc='cfd3b74b-b1d7-48e9-90bd-970c01ba965e'
+            parametro name=user calc=$protocolarios.user$
+                    parametro name=out_ur calc=$config.ur$
+                    parametro name=out_periodo calc=%buscaPeriodo.buscaPeriodo.id_periodo% mostrarEsc=true
+                    parametro name=out_asunto calc='Estructura de Clave Presupuestal del Ingreso' mostrarEsc=true
+        parametros
+    componente
+nivel
+        nivel id=reporteEstructuraIngreso nombre=Documento del Parámetro de la Clave Presupuestal del Ingreso
+            componente id=reporteEstructuraIngreso nombre=Documento del Parámetro de la Clave Presupuestal del Ingreso tipo=reporte
+                reporte nombre=estr_pres_ingreso_jsus expediente=Expediente Parámetros Clave P Del Ingreso nombreDocumento='Parámetros Clave P Ingreso' grupo=%buscaPeriodo.buscaPeriodo.id_periodo% url=$config.repository_upload_file$ update=true
+                    campo name=ur type=long calc=%buscaPeriodo.buscaPeriodo.id_unidad_responsable%
+                    campo name=periodo type=long calc=%buscaPeriodo.buscaPeriodo.id_periodo%
+                    campo name=usuario type=string calc=@castTo($protocolarios.user$,'string')
+                reporte
+            componente
+        nivel
+    pagina
+tarea

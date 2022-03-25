@@ -1,0 +1,73 @@
+<tarea id="Re" nombre="Registra Tipos de Movimientos de Patrimonio" autor="Gustavo Alfonso Escalante">
+    <pagina id="Registra">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+       <nivel nombre="altaFolio" id="altaFolio" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Selección de Gestión" id="altaFolio">
+                <tabla schema="catalog" nombre="tipo_mov_folio">
+                	<campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false"/>
+                	<campo name="id_tipo_mov_folio" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                	<campo name="fecha_registro" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')" visible="false"/>
+                    <campo name="periodo" text="Año *" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" columnas="2" margen-izquierdo="4"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+                <nivel id="regTipMovAlm" nombre="Registra Tipos de Movimientos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="regTipMovAlm" nombre="Registra Tipos de Movimientos" tipo="tabla">
+                <tabla schema="operation" nombre="tipo_movimientos">
+                    <campo name="fecha_elaboracion" text="Fecha" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ur" text="UR" calc="$config.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tipo_mov_folio" text="" columna-visible="false" visible="false" filtroCampo="id_tipo_mov_folio" filtroOperador="=" filtroValor="%altaFolio.altaFolio.id_tipo_mov_folio%" calc="%altaFolio.altaFolio.id_tipo_mov_folio%"/>
+                    <campo name="id_tipo_movimientos" text="Número" generacion="@prox()+1" autogenerado="true" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="tipo_movimiento" text="Tipo de Movimiento" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" validacion="%tipo_movimiento%==null" validacionMensaje="Seleccione Tipo de Movimiento" validacionModificacion="%tipo_movimiento%==null" validacionModificacionMensaje="Seleccione Tipo de Movimiento" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="transaccion" text="Transacción" validacion="%transaccion%==null" validacionMensaje="Ingresa la subclase de movimiento" validacionModificacion="%transaccion%==null" validacionModificacionMensaje="Ingresa la subclase de movimiento" mascara="C" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="c_contable_cargo" text="Cuenta Contable Cargo" autoFiltradoDescripcion="c_contable_cargo" autoFiltrado="true" validacion="%tipo_movimiento%==2 AND %c_contable_cargo%==null" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" validacionMensaje="Seleccione Cuenta Contable" interaccion-visible="%tipo_movimiento%==2" visible="false" validacionModificacion="%tipo_movimiento%==2 AND %c_contable_cargo%==null" validacionModificacionMensaje="Seleccione Cuenta Contable" columnas="4" margen-izquierdo="3" margen-derecho="3" llavesFijas="tipo_transaccion=2" filtradoInteractivo="@ifThenElse(%tipo_movimiento%!='Salida','clave_cuenta LIKE \\'1[37]\\' ',null)"/> <!--filtroCampo="tipo_transaccion" filtroOperador="=" filtroValor="2"-->
+                    <campo name="c_contable_abono" text="Cuenta Contable Abono" autoFiltradoDescripcion="c_contable_abono" autoFiltrado="true" validacion="%tipo_movimiento%==1 AND %c_contable_abono%==null" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" validacionMensaje="Seleccione la cuenta contable del abono" interaccion-visible="%tipo_movimiento%==1" visible="false" validacionModificacion="%tipo_movimiento%==2 AND %c_contable_abono%==null" validacionModificacionMensaje="Seleccione la cuenta contable del abono" columnas="4" margen-izquierdo="3" margen-derecho="3" llavesFijas="tipo_transaccion=2" filtradoInteractivo="@ifThenElse(%tipo_movimiento%!='Salida','clave_cuenta LIKE \\'1[37]\\' ',null)"/><!-- OR clave_cuenta LIKE \\'8[37]\\'  || clave_cuenta LIKE \\'8[37]\\' filtroCampo="tipo_transaccion" filtroOperador="=" filtroValor="2"/>-->
+                    <campo name="usuario_alta" text="Usuario" calc="1" visible="false" columna-visible="false" llaveForanea="false"/>
+                    </tabla>
+                    <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                    
+            </componente>
+        </nivel>
+        <nivel id="repTipMov" nombre="Registra Tipos de Movimientos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="repTipMov" tipo="reporte" nombre="Reporte de Tipos de Movimientos">
+                <reporte nombre="Rep_Tipos_de_Movimientos_IJ">
+                    <campo name="id_tipo_movimientos" type="long" calc="%regTipMovAlm.regTipMovAlm.id_tipo_movimientos%"/>
+                    <campo name="id_registro_act_almacen" type="long" calc="%altaFolio.altaFolio.id_tipo_mov_folio%"/>
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="ur" type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

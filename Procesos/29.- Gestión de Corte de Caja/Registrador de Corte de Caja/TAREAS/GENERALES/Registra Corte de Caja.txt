@@ -1,0 +1,330 @@
+<tarea id="rCC" nombre="Registra Corte de Caja" autor="Julio Demetrio" fechaModificacion="15/09/2021" >
+    <pagina id="rCC" nombre="Registra Corte de Caja">
+        <nivel id="bP" nombre="buscaPeriodo" interactivo="false">
+            <componente id="bP" tipo="cursor" nombre="bP">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="xxx" nombre="valores_en_false" interactivo="false">
+            <componente id="xxx" tipo="cursor" nombre="valores_en_false">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <campo name="id_recaudacion_registro"/>
+                    <campo name="seleccionar_corte_caja" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel nombre="Actualiza Fondo Contable" id="aFC" interactivo="false">
+            <componente tipo="cursor" nombre="Actualiza Fondo Contable" id="aFC">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%" columna-visible="false"/>
+                    <campo name="id_recaudacion_registro" />
+                    <campo name="id_cat_fc" calc="3" />
+                    <campo name="fondo_contable" calc="@consultaDirec('SELECT id_fondo_contable AS fc FROM operation.recaudacion_registro_detalle WHERE periodo='+%bP.bP.id_periodo%+' AND id_recaudacion_registro='+%aFC.aFC.id_recaudacion_registro%,'fc','string','MAGNITUS')"  />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Tipo de Corte" id="tipocorte" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Selecciona Tipo de Corte" id="tipocorte" accionDefault="editar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" calc="1" visible="false"/>
+                    <campo name="proyecto" calc="'IEA'" visible="false"/>
+                    <campo name="tipo" text="Selecciona Tipo de Corte" local="true" type="long" columnas="4" margen-izquierdo="3" margen-derecho="3" marcador="Seleccione el tipo de corte">
+                        <opciones>
+                            <opcion texto="Por Rango" valor="1"/>
+                            <opcion texto="Unitario" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="4" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            </nivel>
+            <nivel nombre="Ingresa Rangos" id="ingran" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%tipocorte.tipocorte.tipo%==1">
+            <componente tipo="formulario" nombre="Ingresa Rangos" id="ingran" accionDefault="editar"  >
+                <tabla schema="catalog" nombre="dummy" >
+                    <campo name="id" text="id" calc="1" visible="false"/>
+                    <campo name="proyecto" calc="'IEA'" visible="false"/>
+                    <campo name="Fecha_Inicio" text="Fecha Inicio" local="true" type="date" columnas="4" margen-derecho="3" margen-izquierdo="3"/>
+                    <campo name="Fecha_Fin" text="Fecha Fin" local="true" type="date" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                    
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="4" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            
+        </nivel>
+        <nivel nombre="ponerTrue" id="ponerTrue" interactivo="false" ejecutar="%tipocorte.tipocorte.tipo%==1">
+            <componente tipo="cursor" id="ponerTrue" nombre="valores_en_false">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <campo name="id_recaudacion_registro"/>
+                    <campo name="fecha_recaudacion" filtroCampo="fecha_recaudacion" filtroOperador="entre" filtroValor="%ingran.ingran.Fecha_Inicio%,%ingran.ingran.Fecha_Fin%"/>
+                    <campo name="seleccionar_corte_caja" calc="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Registra Corte de Caja" id="rCC" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%tipocorte.tipocorte.tipo%==2">
+            <componente tipo="tabla" id="iCC" nombre="Integra Corte de Caja" filtro="true"  mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%" columna-visible="false"/>
+                    <campo name="periodo" text="per" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%" columna-visible="false"/>
+                    <campo name="id_recaudacion_registro" text="registro" columna-visible="false"/>
+                    <campo name="folio_asociado" text="Folio de Recaudación" width="160"/>
+                    <campo name="fecha_recaudacion" text="Fecha" width="170"/>
+                    <campo name="concepto" text="Concepto" width="575" habilitado="false"/>
+                    <!--<campo name="tipo_ingreso" text="Concepto del CRI" width="180"/>
+                    <campo name="beneficiario" text="Beneficiario" width="300" descripcionForaneaTabla="razon_social"/> -->
+                    <campo name="forma_cobro" text="Forma de Cobro" width="260" descripcionForaneaTabla="descripcion" filtroCampo="forma_cobro" filtroOperador="!=" filtroValor="2"/>
+                    <campo name="importe_total" text="Importe Total" width="155" formatoMoneda="true" />
+                    <campo name="fondo_contable" text="Fondo Contable" habilitado="false" descripcionForanea="id_cat,descripcion" columnas="2" margen-derecho="3" width="140"/>
+                    <campo name="seleccionar_corte_caja" text="Selección" width="80" columnas="3" margen-derecho="3" editable="true"/>
+                    <campo name="usuario_corte" text="usaurio" calcCliente="@ifThenElse(%seleccionar_corte_caja%==true,%bU.bU.id_usuario%,null)" filtroCampo="usuario_corte" filtroOperador="=" filtroValor="null" columna-visible="false"/>
+                    <campo name="id_corte_caja" text="Corte" columna-visible="false" filtroCampo="id_corte_caja" filtroOperador="=" filtroValor="null"/>
+                    <campo name="autoriza_rv" text="Corte" columna-visible="false" filtroCampo="autoriza_rv" filtroOperador="!=" filtroValor="false"/>
+                    <!-- filtroCampo="id_corte_caja" filtroOperador="=" filtroValor="null"-->
+                    
+                    <!--<campo name="corte_caja_autorizado" text="autorizado" filtroCampo="corte_caja_autorizado" filtroOperador="!=" filtroValor="true" columna-visible="false"/> -->
+                    
+                    <!--<campo name="autoriza_recaudacion_sim_i" text="" filtroCampo="autoriza_recaudacion_sim_i" filtroOperador="=" filtroValor="true" columna-visible="false"/>
+                    <campo name="autoriza_recaudacion_sim_i" text="" filtroCampo="autoriza_recaudacion_sim_i" filtroOperador="=" filtroValor="true" columna-visible="false"/>
+                    <campo name="autoriza_recaudacion_sim_dp" text="" filtroCampo="autoriza_recaudacion_sim_dp" filtroOperador="=" filtroValor="true" columna-visible="false"/>-->
+                    
+                    <!--<campo name="cajero" text="Nombre del Cajero" columnas="2" margen-izquierdo="3" validacion="%cajero%==null" validacionMensaje=" es requerido"/>-->
+                    <campo name="id_cat_fc" text="id_cat" llaveForanea="false" visible="false" columna-visible="false"/>
+                    
+                   <!-- <campo name="id_cat_fuente" calc="5" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" habilitado="false" llavesFijas="afectable='true'" descripcionForaneaTabla="id_cat,descripcion" columnas="2" margen-izquierdo="3" validacion="%fuente_financiamiento%==null" validacionMensaje="Fuente Fianciamiento es reuqerido"/>-->
+                </tabla>
+                    <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        <nivel nombre="valores_en_false" id="barrido_recaudacion_registro" interactivo="false">
+            <componente tipo="cursor" id="barrido_recaudacion_registro" nombre="valores_en_false">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <campo name="seleccionar_corte_caja" filtroCampo="seleccionar_corte_caja" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_recaudacion_registro"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="tomar_ultimofondo" id="tomar_ultimofondo" interactivo="false">
+            <componente tipo="cursor" id="tomar_ultimofondo" nombre="tomar_ultimofondo">
+                <tabla schema="operation" nombre="recaudacion_registro_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%barrido_recaudacion_registro.barrido_recaudacion_registro.id_recaudacion_registro%"/>
+                    <campo name="id_recaudacion_registro_det"/>
+                    <campo name="id_cat_fondo_contable"/>
+                    <campo name="id_fondo_contable"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="alta_corte_caja" id="alta_corte_caja" interactivo="false">
+            <componente tipo="altaDirect" nombre="Datos Generales del Corte de Caja" id="alta_corte_caja">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" calc="%bP.bP.id_unidad_responsable%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" calc="%bP.bP.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="id_corte_caja" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    <campo name="folio_corte_caja" calc="@concatenar('CC-'+@fechaSistema('YYYY')+'-'+@consultaDirec('SELECT LPAD((COUNT(*)+1)::text,5,\\'0\\') AS result FROM operation.corte_caja WHERE id_periodo='+%bP.bP.id_periodo%,'result','string','MAGNITUS'))"/>
+                    <campo name="folio_duri" calc="1" visible="false"/>
+                    <campo name="id_cat_fondo_contable" calc="%tomar_ultimofondo.tomar_ultimofondo.id_cat_fondo_contable%" visible="false"/>
+                    <campo name="id_fondo_contable" calc="%tomar_ultimofondo.tomar_ultimofondo.id_fondo_contable%" visible="false"/>
+                 </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="valores_en_true" id="barrido_recaudacion_registro1" interactivo="false">
+            <componente tipo="cursor" id="barrido_recaudacion_registro1" nombre="valores_en_true">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <campo name="seleccionar_corte_caja" filtroCampo="seleccionar_corte_caja" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_recaudacion_registro"/>
+                    <campo name="id_corte_caja" calc="%alta_corte_caja.alta_corte_caja.id_corte_caja%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Registra Corte de Caja" id="suma" interactivo="false">
+            <componente tipo="cursor" id="suma" nombre="Integra Corte de Caja">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <campo name="seleccionar_corte_caja" filtroCampo="seleccionar_corte_caja" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_recaudacion_registro"/>
+                    <campo name="importe_efectivo"/>
+                    <campo name="importe_otra_forma_pago"/>
+                    <campo name="importe_cheque"/>
+                    <campo name="importe_total"/>
+                    <campo name="importe_tarjeta"/>
+                    <campo name="caja_recaudacion"/>
+                    <campo name="forma_cobro"/>
+                    <campo name="cuenta_bancaria"/>
+                    <campo name="beneficiario"/>
+                </tabla>
+                <nivel nombre="alta_corte_caja_det" id="alta_corte_caja_det">
+                    <componente tipo="altaDirect" nombre="alta_corte_caja_det" id="alta_corte_caja_det">
+                        <tabla schema="operation" nombre="corte_caja_det">
+                          <campo name="ur" calc="%bP.bP.id_unidad_responsable%"/>
+                          <campo name="id_periodo" calc="%bP.bP.id_periodo%" />
+                          <campo name="id_corte_caja" calc="%alta_corte_caja.alta_corte_caja.id_corte_caja%"/>
+                          <campo name="id_corte_caja_det" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                          <campo name="id_beneficiario" calc="%suma.suma.beneficiario%"/>
+                          <campo name="forma_cobro" calc="%suma.suma.forma_cobro%"/>
+                          <campo name="cuenta_bancaria_tarjeta" calc="%suma.suma.cuenta_bancaria%"/>
+                          <campo name="importe_total" calc="%suma.suma.importe_total%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel> 
+        <nivel nombre="Datos Generales del Corte de Caja" id="dCorteCaja" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Datos Generales del Corte de Caja" id="dCorteCaja" accionDefault="editar">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" calc="%bP.bP.id_unidad_responsable%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" calc="%bP.bP.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="id_corte_caja" calc="%alta_corte_caja.alta_corte_caja.id_corte_caja%" visible="false"/>
+                    <campo name="id_beneficiario" calc="3" llaveForanea="false" visible="false"/>
+                    <campo name="numero_caja" calc="%suma.suma.caja_recaudacion%" llaveForanea="false" visible="false"/>
+                    
+                    <campo name="folio_corte_caja" text="Folio Corte de Caja" habilitado="false" columnas="3" margen-izquierdo="1" />
+                    <!-- <campo name="fecha_registro" text="Fecha Elaboración" calc="@fechaSistema()" habilitado="false" columnas="3" margen-izquierdo="1" margen-derecho="1"/> -->
+                    
+                    <campo name="fecha_elaboracion" text="Fecha Elaboración" calc="@fechaSistema()" visible="true" habilitado="false" columnas="3" margen-izquierdo="1" margen-derecho="1"/>
+                    
+                    <campo name="cobro_efectivo" text="Cobros en Efectivo" calc="@consultaDirec('SELECT SUM(importe_total) as tot FROM operation.recaudacion_registro WHERE ur='+%bP.bP.id_unidad_responsable%+' AND periodo='+%bP.bP.id_periodo%+' AND  forma_cobro=1 AND seleccionar_corte_caja=true AND usuario_corte='+%bU.bU.id_usuario%,'tot','decimal','MAGNITUS')" habilitado="false" columnas="3" margen-izquierdo="1"/> <!--  -->
+                    <campo name="cuenta_b_efectivo" text="Cuenta Bancaria *" columnas="3" margen-izquierdo="1" margen-derecho="1" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion" busquedaAutomatica="true"/>
+
+                    <campo name="cobro_t_e" text="Cobros por transferencia electrónica" calc="@consultaDirec('SELECT SUM(importe_total) as tot FROM operation.recaudacion_registro WHERE ur='+%bP.bP.id_unidad_responsable%+' AND periodo='+%bP.bP.id_periodo%+' AND  forma_cobro=2 AND seleccionar_corte_caja=true AND usuario_corte='+%bU.bU.id_usuario%,'tot','decimal','MAGNITUS')" habilitado="false" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="cuenta_b_te" text="Cuenta Bancaria *" columnas="3" margen-izquierdo="1" margen-derecho="1" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion" busquedaAutomatica="true"/>
+                    
+                    <campo name="cobro_tf" text="Cobros por transferencia de Fondos" calc="@consultaDirec('SELECT SUM(importe_total) as tot FROM operation.recaudacion_registro WHERE ur='+%bP.bP.id_unidad_responsable%+' AND periodo='+%bP.bP.id_periodo%+' AND  forma_cobro=3 AND seleccionar_corte_caja=true AND usuario_corte='+%bU.bU.id_usuario%,'tot','decimal','MAGNITUS')" habilitado="false" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="cuenta_b_tf" text="Cuenta Bancaria *" columnas="3" margen-izquierdo="1" margen-derecho="1" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion" busquedaAutomatica="true"/>
+                    
+                    <campo name="cobro_cheque_n" text="Cobros por cheque nominativo" habilitado="false" calc="@consultaDirec('SELECT SUM(importe_total) as tot FROM operation.recaudacion_registro WHERE ur='+%bP.bP.id_unidad_responsable%+' AND periodo='+%bP.bP.id_periodo%+' AND  forma_cobro=4 AND seleccionar_corte_caja=true AND usuario_corte='+%bU.bU.id_usuario%,'tot','decimal','MAGNITUS')" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="cuenta_b_cheque" text="Cuenta Bancaria *" columnas="3" margen-izquierdo="1" margen-derecho="1" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion" busquedaAutomatica="true"/>
+                    
+                    <campo name="cobro_tarjeta_c" text="Cobros por tarjeta de crédito" habilitado="false" calc="@consultaDirec('SELECT SUM(importe_total) as tot FROM operation.recaudacion_registro WHERE ur='+%bP.bP.id_unidad_responsable%+' AND periodo='+%bP.bP.id_periodo%+' AND  forma_cobro=5 AND seleccionar_corte_caja=true AND usuario_corte='+%bU.bU.id_usuario%,'tot','decimal','MAGNITUS')" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="cuenta_b_tc" text="Cuenta Bancaria *" columnas="3" margen-izquierdo="1" margen-derecho="1" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion" busquedaAutomatica="true"/>
+                    
+                    <campo name="cobro_tarjeta_d" text="Cobros por tarjeta de débito" habilitado="false"  calc="@consultaDirec('SELECT SUM(importe_total) as tot FROM operation.recaudacion_registro WHERE ur='+%bP.bP.id_unidad_responsable%+' AND periodo='+%bP.bP.id_periodo%+' AND  forma_cobro=6 AND seleccionar_corte_caja=true  AND usuario_corte='+%bU.bU.id_usuario%,'tot','decimal','MAGNITUS')" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="cuenta_b_td" text="Cuenta Bancaria *" columnas="3" margen-izquierdo="1" margen-derecho="1" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion" busquedaAutomatica="true"/>
+                    
+                    <campo name="cobro_donacion_p" text="Cobros por Dación en pago" habilitado="false" calc="@consultaDirec('SELECT SUM(importe_total) as tot FROM operation.recaudacion_registro WHERE ur='+%bP.bP.id_unidad_responsable%+' AND periodo='+%bP.bP.id_periodo%+' AND  forma_cobro=7 AND seleccionar_corte_caja=true  AND usuario_corte='+%bU.bU.id_usuario%,'tot','decimal','MAGNITUS')" columnas="3" margen-izquierdo="1"/> 
+                    <campo name="cuenta_b_donacion" text="Cuenta Bancaria *" columnas="3" margen-izquierdo="1" margen-derecho="1" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion" busquedaAutomatica="true"/>
+                    
+                    <!--
+                    <campo name="cobros_cheque" text="Cobros con Cheques" calc="%suma.suma.cheque%" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                    <campo name="cuenta_bancaria_cheque" text="Cuenta Bancaria *" columnas="3" margen-izquierdo="1" margen-derecho="1" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion"  busquedaAutomatica="true"/>
+                    
+                     <campo name="cuenta_bancaria_formas" text="Cuenta Bancaria *" columnas="2" margen-izquierdo="2" autoFiltrado="true" maxlength="10" autoFiltradoDescripcion="clave_cuenta,descripcion"  busquedaAutomatica="true"/>
+                    <campo name="formas_cobro" text="Otras Formas de Cobro" calc="%suma.suma.otros%" habilitado="false" columnas="2" margen-derecho="2"/>
+                    
+                    <campo name="cobros_tarjeta" text="Cobros con Tarjeta" calc="%suma.suma.tarjeta%" habilitado="false" columnas="2" margen-izquierdo="2"/> -->
+                    
+                    
+                    <campo name="importe_total" text="Importe Total" habilitado="false" calc="@consultaDirec('SELECT SUM(importe_total) as tot FROM operation.recaudacion_registro WHERE ur='+%bP.bP.id_unidad_responsable%+' AND periodo='+%bP.bP.id_periodo%+' AND seleccionar_corte_caja=true  AND usuario_corte='+%bU.bU.id_usuario%,'tot','decimal','MAGNITUS')" columnas="3" margen-izquierdo="1"/>
+                    <!-- <campo name="cantidad" calc="@numeroAletra(%suma.suma.efectivo%+%suma.suma.cheque%+%suma.suma.otros%+%suma.suma.tarjeta%,'Pesos M.N.')" visible="false"/>
+                    <campo name="importe_total_vale" text="etiqueta_a_mostrar" calc="%suma.suma.efectivo%+%suma.suma.cheque%+%suma.suma.otros%" visible="false"/>
+                    <campo name="cantidad_vale" calc="@numeroAletra(%suma.suma.efectivo%+%suma.suma.cheque%+%suma.suma.otros%,'Pesos M.N.')" visible="false"/> 
+                    <campo name="adjunta" text="Soporte Documental" local="true" type="file" columnas="3" margen-izquierdo="3"/>-->
+                    
+                    <campo name="observaciones" text="Observaciones" width="100" height="300" columnas="7" margen-izquierdo="1" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="5"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="alta_corte_caja_det_CUENTABANCARIA" id="alta_corte_caja_det_CUENTABANCARIA" interactivo="false">
+            <componente tipo="cursor" nombre="alta_corte_caja_det" id="alta_corte_caja_det_CUENTABANCARIA">
+                <tabla schema="operation" nombre="corte_caja_det">
+                  <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                  <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                  <campo name="id_corte_caja" filtroCampo="id_corte_caja" filtroOperador="=" filtroValor="%alta_corte_caja.alta_corte_caja.id_corte_caja%"/>
+                  <campo name="id_corte_caja_det"/>
+                  <campo name="cuenta_bancaria_efectivo" calc="%dCorteCaja.dCorteCaja.cuenta_bancaria_efectivo%"/>
+                  <campo name="cuenta_bancaria_cheque" calc="%dCorteCaja.dCorteCaja.cuenta_bancaria_cheque%"/>
+                  <campo name="cuenta_bancaria_formas" calc="%dCorteCaja.dCorteCaja.cuenta_bancaria_formas%"/>
+                  <campo name="cuenta_bancaria_tarjeta"/>
+                  <campo name="cuenta_bancaria"/><!--calc="@ifThenElse(%cobros_tarjeta%!=null,%alta_corte_caja_det_CUENTABANCARIA.alta_corte_caja_det_CUENTABANCARIA.cuenta_bancaria_tarjeta%,
+                  @ifThenElse(%cuenta_bancaria_efectivo%==null,%cuenta_bancaria_cheque%,
+                  @ifThenElse(%cuenta_bancaria_cheque%==null,%cuenta_bancaria_efectivo%,
+                  @ifThenElse(%cuenta_bancaria_formas%==null,'QWERTY',%cuenta_bancaria_formas%)
+                  )
+                  )
+                  )"-->
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="crearNuevaInstancia" id="cI" interactivo="false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cI" >
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'7666a03b-da34-419d-b91b-809db73cfc2c'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%dCorteCaja.dCorteCaja.ur%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%dCorteCaja.dCorteCaja.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_corte_caja" calc="%dCorteCaja.dCorteCaja.id_corte_caja%" mostrarEsc="true"/>
+                    <parametro name="out_id_recaudacion_registro" calc="%suma.suma.id_recaudacion_registro%" mostrarEsc="true"/>
+                    
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte Corte de Caja" id="repCC" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="reporte" nombre="Informe de Corte de Caja" id="repCC">
+                <reporte nombre="5_Reporte_corte_Jo"  expediente="Expediente Corte Caja/Corte Caja" nombreDocumento="'Corte Caja'"  grupo="%dCorteCaja.dCorteCaja.id_corte_caja%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%dCorteCaja.dCorteCaja.ur%"/>
+                    <campo name="periodo" type="long" calc="%dCorteCaja.dCorteCaja.id_periodo%"/>
+                    <campo name="idCorte" type="long" calc="%dCorteCaja.dCorteCaja.id_corte_caja%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente tipo="reporte" nombre="Vale de Depósito" id="repVale">
+                <reporte nombre="R_Vale_deposito_IJ" expediente="Expediente Corte Caja/Vale Deposito" nombreDocumento="'Vale Deposito'"  grupo="%dCorteCaja.dCorteCaja.id_corte_caja%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%dCorteCaja.dCorteCaja.ur%"/>
+                    <campo name="periodo" type="long" calc="%dCorteCaja.dCorteCaja.id_periodo%"/>
+                    <campo name="id_corte_caja" type="long" calc="%dCorteCaja.dCorteCaja.id_corte_caja%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="fecha" type="string" calc="%dCorteCaja.dCorteCaja.fecha_registro%"/>
+                    <campo name="cantidad" type="string" calc="%dCorteCaja.dCorteCaja.importe_total%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

@@ -1,0 +1,108 @@
+<tarea id="tar_IIIP" nombre="Registra Inventario Inicial" autor="Sergio Guzman" version="1">
+    <pagina id="pag_IIIP">
+        
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo"/>
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                        <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                        <campo name="id_activo_fijo" text="ID Activo Fijo" local="true" type="string" calc="@concatenar('AF-'+@ifThenElse(
+                        @consultaDirec('
+                        SELECT (id_activo_fijo) AS resultado
+                        FROM operation.activo_fijo_aux
+                        WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                        ,
+                        '000001'
+                        ,
+                        @consultaDirec('
+                        SELECT to_char((((substring(id_activo_fijo from char_length(id_activo_fijo)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                        FROM operation.activo_fijo_aux
+                        WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' ORDER BY id_activo_fijo DESC limit 1','resultado','string','MAGNITUS')
+                        ))" habilitado="false" visible="true"  margen-izquierdo="4" margen-derecho="4" columnas="2" />
+                         <campo name="letras" local="true" type="string" text="Contrato" calc="@subCadena(%buscaPeriodo.buscaPeriodo.id_activo_fijo%,0,3)" visible="false"/>
+                    <campo name="numeros" local="true" type="string" text="Contrato" calc="@subCadena(%buscaPeriodo.buscaPeriodo.id_activo_fijo%,4,9)" visible="false"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+        <nivel id="nl_IIIP" nombre="Registro de Inventario Inicial" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="nl_IIIP" nombre="Datos Generales de Inventario Inicial" tipo="formulario">
+                <tabla schema="operation" nombre="inventario_patrimonial">
+                    <campo name="ur" llaveForanea="false" text="Unidad Responsable" habilitado="false" margen-izquierdo="4" margen-derecho="4" columnas="2" visible="false" calc="$config.ur$"/>
+                    <campo name="id_inventario_patrimonial" text="ID Activo Fijo" generacion="@prox()+1" autogenerado="true" visible="false"/>
+                    <campo name="periodo" text="Año" llaveForanea="false" habilitado="false" margen-izquierdo="2" columnas="3" visible="true" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    
+                    <campo name="adjunta_excel" type="file" text="Adjunta Documentación" cellsalign="left" width="110" local="true" fileType="normal" 
+                    url="$config.repository_upload_file$" nombreDocumento="''" grupo="" expediente="" margen-derecho="2" columnas="3"/>
+                    
+                    <campo name="afectacion_contable" text="Inventario Con Afectación Contable*" habilitado="true" margen-izquierdo="2" columnas="3" visible="true" validacion="%afectacion_contable%==null" validacionMensaje="Campo 'Afectación Contable' es requerido">
+                    <opciones> 
+                    <opcion texto="Si" valor="Si"/> 
+                    <opcion texto="No" valor="No"/> 
+                    </opciones>
+                    </campo>
+                    
+                    <campo name="tipo_movimiento" calc="1" llaveForanea="false" visible="false"/>
+                    <campo name="transaccion" text="Transacción" descripcionForanea="transaccion" habilitado="true" margen-derecho="2" columnas="3" visible="true" /> <!--validacion="!@matchRegEx(%transaccion%,'^[A-Z 0-9-]*$') OR %transaccion%==null" validacionMensaje="Campo 'Concepto' es requerido, 'Solo numeros'" mascara="C"/>-->
+                    <campo name="concepto" text="Concepto*" habilitado="true" margen-izquierdo="2" columnas="6" visible="true" validacion="%concepto%==null" validacionMensaje="Campo 'Concepto' es requerido"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" margen-izquierdo="4" margen-derecho="4" columnas="2" visible="true"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nl_IIIPTabla" nombre="Datos Generales de Inventario Inicial" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpIIIPTabla" nombre="Datos Generales de Inventario Inicial" tipo="tabla" mostrarImportacion="true" mostrarAgregar="false">
+                <tabla schema="operation" nombre="inventario_patrimonial_det">
+                    <campo name="ur" llaveForanea="false" text="UR" columnaImportacion="UR" importacion="true"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" columnaImportacion="Periodo" importacion="true"/>
+                    <campo name="id_inventario_patrimonial" text="ID Activo Fijo" calc="%nl_IIIP.nl_IIIP.id_inventario_patrimonial%" visible="false" importacion="true" filtroCampo="id_inventario_patrimonial" filtroOperador="=" filtroValor="%nl_IIIP.nl_IIIP.id_inventario_patrimonial%"/>
+                    <campo name="id_inventario_patrimonial_det" text="ID Activo Fijo Detalle" generacion="@prox()+1" autogenerado="true" importacion="true"/>
+                    <campo name="fecha_elaboracion" text="Fecha Elaboración" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" importacion="true"/>
+                    <campo name="clave_articulo" text="Clave Artículo" columnaImportacion="Clave Artículo" importacion="true"/>
+                    <campo name="fecha_factura" text="Fecha Factura" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" importacion="true"/>
+                    <campo name="ano_adquisicion" text="Año Adquisición" columnaImportacion="Año Adquisición" importacion="true"/>
+                    <campo name="cantidad" text="Cantidad Inicial" columnaImportacion="Cantidad Inicial" importacion="true"/>
+                    <campo name="almacen" text="Descripción Almacén" columnaImportacion="Descripción Almacén" importacion="true"/>
+                    <campo name="costo_unitario" text="Importe Inicial" columnaImportacion="Importe Inicial" importacion="true"/>
+                    <campo name="marca" text="Marca" columnaImportacion="Marca" importacion="true"/>
+                    <campo name="modelo" text="Modelo" columnaImportacion="Modelo" importacion="true"/>
+                    <campo name="depreciacion" text="Depreciación" columnaImportacion="Depreciación" importacion="true"/>
+                    <campo name="serie" text="Serie" columnaImportacion="Serie" importacion="true"/>
+                    <campo name="color" text="Color" columnaImportacion="Color" importacion="true"/>
+                    <campo name="id_cat_clasificacion_objeto_gasto" text="ID Catalogo Objeto Gasto" calc="4" columna-visible="false" importacion="true"/>
+                    <campo name="clasificacion_objeto_gasto" text="Clasificación Objeto Gasto" columnaImportacion="Clasificación Objeto Gasto" importacion="true"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" columnaImportacion="Unidad de Medida" importacion="true"/>
+                    <campo name="cuenta_amortizacion" text="Cuenta Amortización" columnaImportacion="Cuenta Amortización" importacion="true"/>
+                    <campo name="aplica_depreciacion" text="Aplica Depreciación" columnaImportacion="Aplica Depreciación" importacion="true"/>
+                    <campo name="centro_registro" text="Centro Registro" columnaImportacion="Centro Registro" importacion="true"/>
+                    <campo name="factura" text="Factura" columnaImportacion="Factura" importacion="true"/>
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" texto="Continuar" margen-izquierdo="4" margen-derecho="4" columnas="2" visible="true"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nl_IIIPReporte" nombre="Registro de Inventario Inicial" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpIIIPReporte" nombre="Importación de Inventario Inicial" tipo="reporte">
+                <reporte nombre="R_Inventario_Inicial_IJ">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_inventario_patrimonial" type="long" calc="%nl_IIIP.nl_IIIP.id_inventario_patrimonial%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+       
+    </pagina>
+</tarea>

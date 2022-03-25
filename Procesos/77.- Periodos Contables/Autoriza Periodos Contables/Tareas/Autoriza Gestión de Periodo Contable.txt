@@ -1,0 +1,361 @@
+<tarea id="atrzGesPeridoCble" nombre="Autoriza Ejercicio Fiscal" version="1"> 
+    <pagina id="uno">
+        <nivel id="nlPasoParam" nombre="Paso de parámetros" mostrarProximoNivel="false" interactivo="false"> <!---->
+            <componente id="cpPasoParam" nombre="Paso de parámetros" tipo="cursor" accionDefault="seleccionar"> <!-- -->
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" visible="false"  llaveForanea="false" filtroCampo="id" filtroOperador="=" filtroValor="1"/> <!-- calc="1" -->
+                    <campo name="ur" local="true" type="string" text="Funcionalidad" calc="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="funcionalidad" local="true" type="string" text="Funcionalidad" calc="$inParam.opcion$" llaveForanea="false"/>
+                    <campo name="periodo" local="true" type="string" text="ID Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="borraObs" nombre="borraObs" interactivo="false">
+            <componente id="borraObs" nombre="Gestión de Catálogo de Ejercicios Fiscales: Agrega Ejercicio Fiscal" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.periodo%"/>
+                    <campo name="observaciones" calc="''"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlAtrzAgregaPeriodoCble" nombre="Autoriza"  mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'"> <!-- -->
+            <componente id="repor_Gestion_PeriodosContables" nombre="Autoriza Ejercicios Fiscales" tipo="reporte" >
+                 <reporte nombre="repor_Gestion_PeriodosContables">
+                    <campo name="id_responsable" local="true" type="long" calc="%nlPasoParam.cpPasoParam.ur%" />
+                    <campo name="id_periodo" local="true" type="long" calc="%nlPasoParam.cpPasoParam.periodo%" />
+                </reporte>
+            </componente>
+           <componente id="cpArtzAgregaPeriodoCble" nombre="Autoriza" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$config.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="%nlPasoParam.cpPasoParam.periodo%" visible="false" llaveForanea="false"/> <!--  -->
+                    <campo name="opcion" local="true" type="string" text="opcion" calc="%nlPasoParam.cpPasoParam.funcionalidad%" visible="false"/>
+                    <campo name="id_estatus" text="Estado" calc="1" visible="false"/>
+                    <campo name="observaciones" text="Observaciones" height="350" interaccion="%estatus%==false" validacion="%observaciones%==null AND %estatus%==false" validacionMensaje="Favor de insertar una descripción para continuar." columnas="7" margen-izquierdo="2" margen-derecho="5"/>
+                    <campo name="estatus" text="Autorizado" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="8" margen-derecho="2" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        
+        <!-- Nivel hallazgo periodo contable aperturar boolean-->
+        <!--<nivel id="actualizaEstatus" nombre="actualizaEstatus" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'" interactivo="false" >
+            <componente id="actualizaEstatus" nombre="actualizaEstatus" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.periodo%"/>
+                    <campo name="id_estatus" calc="3"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+        <!-- Nivel hallazgo periodo contable aperturar boolean-->
+        
+        <nivel id="lanzaProcesoEstructuraProgramatica" nombre="lanzaProcesoEstructuraProgramatica" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'"> <!--  -->
+            <componente id="lanzaProcesoEstructuraProgramatica" nombre="lanzaProcesoEstructuraProgramatica" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'79843ac7-0ccd-44a6-92b7-3347fbb4723f'"/>
+                    <parametro name="out_ur" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.id_periodo%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="lanzaProcesoEstructuraPresupuestal" nombre="lanzaProcesoEstructuraPresupuestal" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'">
+            <componente id="lanzaProcesoEstructuraPresupuestal" nombre="lanzaProcesoEstructuraPresupuestal" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'d9fa9c9d-3329-4759-9e8b-ab6df689ff39'"/>
+                    <parametro name="out_ur" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.id_periodo%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="lanzaProcesoEstructuraArticulos" nombre="lanzaProcesoEstructuraArticulos" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'">
+            <componente id="lanzaProcesoEstructuraPresupuestal" nombre="lanzaProcesoEstructuraPresupuestal" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'72aaf77b-14f1-4a4c-919b-e77db2cb901b'"/>
+                    <parametro name="out_ur" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.id_periodo%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="lanzaProcesoEstructuraCuentasContables" nombre="lanzaProcesoEstructuraCuentasContables" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'">
+            <componente id="lanzaProcesoEstructuraCuentasContables" nombre="lanzaProcesoEstructuraCuentasContables" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'73806f65-d1e3-4553-9fc8-3b13fc765fb2'"/>
+                    <parametro name="out_ur" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.id_periodo%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        
+        <nivel nombre="Turnar Instancia" id="TurnarInstanciaAgregar" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="TurnarInstanciaAgregar" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json"> <!--  turnarInstancia-->
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+         <nivel nombre="Negocia Instancia" id="NegociaInstanciaAgregar" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==false AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="NegociaInstanciaAgregar">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==false AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'"> 
+                 <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+                     <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                         <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                         <parametro name="process" calc="$protocolarios.process$"/>    
+                         <parametro name="version" calc="$protocolarios.version$"/> 
+                         <parametro name="user" calc="$protocolarios.user$"/>  
+                         <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                         <parametro name="message" calc="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.observaciones%"/>
+                         <parametro name="type" calc="'1'"/> 
+                     </parametros> 
+                 </componente>
+             </nivel>
+        
+        
+        
+        <nivel id="nlAtrzAperturaPeriodoCble" nombre="Autoriza: Apertura Periodo" ejecutar="%nlPasoParam.cpPasoParam.funcionalidad%=='APERTURAR'" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpArtzAperturaPeriodoCble" nombre="Gestión de Catálogo de Periodos Contables" tipo="reporte" >
+                <reporte nombre="repor_Gestion_PeriodosContables">
+                    <campo name="id_responsable" local="true" type="long" calc="%nlPasoParam.cpPasoParam.ur%" />
+                    <campo name="id_periodo" local="true" type="long" calc="%nlPasoParam.cpPasoParam.periodo%" />
+                </reporte>
+            </componente>
+           <componente id="cpArtzPeriodoCble" nombre="Autoriza: Apertura Periodo" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$config.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="%nlPasoParam.cpPasoParam.periodo%" visible="false"/>
+                    <campo name="estatus" text="Autorizado" margen-izquierdo="5" />
+                    <campo name="id_estatus" text="Estado" calcCliente="@ifThenElse(%estatus%==true,3,1)" visible="false"/>
+                    <campo name="observaciones" text="Observaciones" columnas="4" height="150" width="150" interaccion="%estatus%==false" validacion="%observaciones%==null AND %estatus%==false" margen-izquierdo="4" margen-derecho="9" validacionMensaje="Favor de insertar una descripción para continuar."/>
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="8" margen-derecho="2" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="AECP" nombre="Apertura de Estructura de Claves Presupuestales" interactivo="false" ejecutar="%nlAtrzAperturaPeriodoCble.cpArtzPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='APERTURAR'">
+            <componente id="AECP" nombre="Apertura de Estructura de Claves Presupuestales"  tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="ur" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" text="periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.periodo%"/>
+                    <campo name="auto_estruct_cve_presupuestal_ing" calc="false"/>
+                    <campo name="auto_estruct_cve_presupuestal_e" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Turnar Instancia" id="TurnarInstanciaAperturar" interactivo="false" ejecutar="%nlAtrzAperturaPeriodoCble.cpArtzPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='APERTURAR'">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="TurnarInstanciaAperturar" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Negocia Instancia" id="NegociaInstanciaAperturar" interactivo="false" ejecutar="%nlAtrzAperturaPeriodoCble.cpArtzPeriodoCble.estatus%==false AND %nlPasoParam.cpPasoParam.funcionalidad%=='APERTURAR'">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="NegociaInstanciaAperturar">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Instancia Validdor" id="InstanciaValAPERTURAR" interactivo="false" ejecutar="%nlAtrzAperturaPeriodoCble.cpArtzPeriodoCble.estatus%==false AND %nlPasoParam.cpPasoParam.funcionalidad%=='APERTURAR'"> 
+                 <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaValAPERTURAR"> 
+                     <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                         <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                         <parametro name="process" calc="$protocolarios.process$"/>    
+                         <parametro name="version" calc="$protocolarios.version$"/> 
+                         <parametro name="user" calc="$protocolarios.user$"/>  
+                         <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                         <parametro name="message" calc="%nlAtrzAperturaPeriodoCble.cpArtzPeriodoCble.observaciones%"/>
+                         <parametro name="type" calc="'1'"/> 
+                     </parametros> 
+                 </componente>
+             </nivel>
+        
+        
+        <nivel id="nlAtrzCerrarPeriodoCble" nombre="Autoriza Gestión de Periodo Contable: Cerrar Periodo" ejecutar="%nlPasoParam.cpPasoParam.funcionalidad%=='CERRAR'" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpArtzCerrarPeriodoCble" nombre="Gestión de Catálogo de Periodos Contables" tipo="reporte" >
+              <reporte nombre="repor_Gestion_PeriodosContables">
+                    <campo name="id_responsable" local="true" type="long" calc="%nlPasoParam.cpPasoParam.ur%" />
+                    <campo name="id_periodo" local="true" type="long" calc="%nlPasoParam.cpPasoParam.periodo%" />
+                </reporte>
+            </componente>
+           <componente id="cpArtzPeriodoCble" nombre="Gestión de Catálogo de Periodos Contables: Cerrar Periodo" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$config.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="%nlPasoParam.cpPasoParam.periodo%" visible="false" />
+                    <campo name="estatus" text="Autorizado"/>
+                    <campo name="id_estatus" text="Estatus" calcCliente="@ifThenElse(%estatus%==true,2,3)" visible="false"/>
+                    <campo name="observaciones" text="Observaciones" height="250" interaccion="%estatus%==false" validacion="%observaciones%==null AND %estatus%==false" validacionMensaje="Favor de insertar una descripción para continuar."/>
+                </tabla>
+                <estilo>
+                    <boton nombre="grabar" texto="Continuar" margen-izquierdo="5"/>
+                </estilo>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreCP" nombre="Barre Catalogo Presupuestal" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'">
+            <componente id="nlBarreCP" tipo="cursor">
+                <tabla schema="catalog" nombre="catalogos_presupuestales_ini">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                    <campo name="id_periodo" llaveForanea="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="2019"/>
+                    <campo name="id_catalogo" autogenerado="true" generacion="@prox()+1" llaveForanea="false"/>
+                    <campo name="nombre" text="Nombre"/>
+                    <campo name="fecha_registro" text="Fecha"/>
+                    <campo name="id_usuario_modificador" text="Usuario"/>
+                    <campo name="id_seccion" text="Seccion"/>
+                    <campo name="bloqueo" text="Bloqueo"/>
+                    <campo name="visible" text="Visible"/>
+                    </tabla>
+                    <nivel id="nlBarreCP1" nombre="Barre Catalogo Presupuestal" interactivo="false">
+                        <componente id="nlBarreCP1" tipo="altaDirect">
+                            <tabla schema="catalog" nombre="catalogos_presupuestales">
+                                <campo name="id_unidad_responsable" calc="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                                <campo name="id_periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                                <campo name="id_catalogo" calc="%nlBarreCP.nlBarreCP.id_catalogo%" llaveForanea="false"/>
+                                <campo name="nombre" calc="%nlBarreCP.nlBarreCP.nombre%"/>
+                                <campo name="fecha_registro" calc="%nlBarreCP.nlBarreCP.fecha_registro%"/>
+                                <campo name="id_usuario_modificador" calc="@castTo(%nlBarreCP.nlBarreCP.id_usuario_modificador%,'long')"/>
+                                <campo name="id_seccion" calc="%nlBarreCP.nlBarreCP.id_seccion%"/>
+                                <campo name="bloqueo" calc="%nlBarreCP.nlBarreCP.bloqueo%"/>
+                                <campo name="visible" calc="%nlBarreCP.nlBarreCP.visible%"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+                </componente>
+        </nivel>
+        <nivel id="nlBarreSM" nombre="Barre Catalogo Presupuestal" interactivo="false" ejecutar="%nlAtrzAgregaPeriodoCble.cpArtzAgregaPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='AGREGAR'">
+            <componente id="nlBarreSM" tipo="cursor">
+                <tabla schema="catalog" nombre="segmento_mascara_ini">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                    <campo name="id_periodo" llaveForanea="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="2019"/>
+                    <campo name="id_catalogo" autogenerado="true" generacion="@prox()+1" llaveForanea="false"/>
+                    <campo name="id_segmento" text="Segmento"/>
+                    <campo name="nivel" text="Nivel"/>
+                    <campo name="num_caracteres" text="Caracteres"/>
+                    <campo name="descripcion" text="Descripcion"/>
+                    <campo name="afectable" text="Afectable"/>
+                    <campo name="fecha_registro" text="Fecha"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario"/>
+                    <campo name="bloqueo" text="Bloqueo"/>
+                    <campo name="id_seccion"/>
+                    </tabla>
+                    <nivel id="nlBarreSM1" nombre="Barre Catalogo Presupuestal" interactivo="false">
+                        <componente id="nlBarreSM1" tipo="altaDirect">
+                            <tabla schema="catalog" nombre="segmento_mascara">
+                                <campo name="id_unidad_responsable" calc="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                                <campo name="id_periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                                <campo name="id_catalogo" calc="%nlBarreSM.nlBarreSM.id_catalogo%" llaveForanea="false"/>
+                                <campo name="id_segmento" calc="%nlBarreSM.nlBarreSM.id_segmento%"/>
+                                <campo name="nivel" calc="%nlBarreSM.nlBarreSM.nivel%"/>
+                                <campo name="num_caracteres" calc="%nlBarreSM.nlBarreSM.num_caracteres%"/>
+                                <campo name="descripcion" calc="%nlBarreSM.nlBarreSM.descripcion%"/>
+                                <campo name="afectable" calc="%nlBarreSM.nlBarreSM.afectable%"/>
+                                <campo name="fecha_registro" calc="%nlBarreSM.nlBarreSM.fecha_registro%"/>
+                                <campo name="id_ultimo_usuario_modificador" calc="%nlBarreSM.nlBarreSM.id_ultimo_usuario_modificador%"/>
+                                <campo name="bloqueo" calc="%nlBarreSM.nlBarreSM.bloqueo%"/>
+                                <campo name="id_seccion" calc="%nlBarreSM.nlBarreSM.id_seccion%"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+                </componente>
+        </nivel>    
+        
+       <nivel nombre="Turnar Instancia" id="TurnarInstanciaCerrar" interactivo="false" ejecutar="%nlAtrzCerrarPeriodoCble.cpArtzPeriodoCble.estatus%==true AND %nlPasoParam.cpPasoParam.funcionalidad%=='CERRAR'">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="TurnarInstanciaCerrar" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Negocia Instancia" id="NegociaInstanciaCancelar" interactivo="false" ejecutar="%nlAtrzCerrarPeriodoCble.cpArtzPeriodoCble.estatus%==false AND %nlPasoParam.cpPasoParam.funcionalidad%=='CERRAR'">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="NegociaInstanciaCancelar">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Instancia Validdor" id="InstanciaValCERRAR" interactivo="false" ejecutar="%nlAtrzCerrarPeriodoCble.cpArtzPeriodoCble.estatus%==false AND %nlPasoParam.cpPasoParam.funcionalidad%=='CERRAR'"> 
+                 <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaValCERRAR"> 
+                     <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                         <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                         <parametro name="process" calc="$protocolarios.process$"/>    
+                         <parametro name="version" calc="$protocolarios.version$"/> 
+                         <parametro name="user" calc="$protocolarios.user$"/>  
+                         <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                         <parametro name="message" calc="%nlAtrzCerrarPeriodoCble.cpArtzPeriodoCble.observaciones%"/>
+                         <parametro name="type" calc="'1'"/> 
+                     </parametros> 
+                 </componente>
+             </nivel>
+        
+    </pagina>
+</tarea>

@@ -1,0 +1,300 @@
+<tarea id="AutorizaAnt" nombre="Autoriza Gestión de Anticipo" autor="Monserrat Gerardo" version="1.0">
+    <pagina id="1">
+    
+         <nivel id="FU" nombre="Filtra Usuarios" interactivo="false">
+            <componente id="FU" nombre="Filtra Usuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="recupera_idexpediente" id="ridexp" interactivo="false">
+            <componente tipo="cursor" nombre="ridexp" id="ridexp">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" text="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="$inParam.id_duep_contrato_pedido$"/>
+                    <campo name="folio_adquisiciones" text="folio_adquisiciones"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlAutAnt" nombre="Reporte de Anticipos" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpAutRep" nombre="Reporte de Anticipos" tipo="reporte">
+                <reporte nombre="Anticipo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" text="Periodo Contable" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="id_contrato" text="Id Contrato" local="true" type="long" calc="$inParam.id_duep_contrato_pedido$"/>
+                </reporte>
+            </componente>
+            <componente id="cpAutAnt" nombre="Autoriza Anticipos" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_duep_contrato_pedido" text="DUEP" calc="$inParam.id_duep_contrato_pedido$" visible="false"/>
+                    <campo name="observaciones_auto" text="Observaciones" height="250" interaccion="%autoriza%==false" validacion="%observaciones_auto%==null AND %autoriza%==false" validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%autoriza%==true,'',%observaciones_auto%)" columnas="6" margen-izquierdo="2"/>
+                    <campo name="autoriza" text="Autorizar" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="FDCP" nombre="Filtra Duep Contrato Pedido"  interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==true">
+            <componente id="FDCP" tipo="cursor" nombre="Filtra Duep Contrato Pedido" >
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="$inParam.id_duep_contrato_pedido$"/>
+                    <campo name="tipo_documento"/>
+                    <campo name="proveedor" text="Beneficiario" llaveForanea="false"/>
+                    <!-- FC-->
+                    <campo name="id_cat_fondo"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" llaveForanea="false"/>
+                    <!-- CR -->
+                    <campo name="id_cat_area_requiriente"/>
+                    <campo name="area_requiriente" text="Unidad Ejecutora" llaveForanea="false"/>
+                    <!-- FF -->
+                    <campo name="id_cat_fuente" />
+                    <campo name="fuente_financiamiento" text="Fuente Financiamiento" llaveForanea="false"/>
+                    
+                    <campo name="id_tipo_comprobante" text="Tipo Comprobante" llaveForanea="false"/>
+                    <campo name="folio_con_ordecom"/>
+                    <campo name="concepto"/>
+                    <campo name="requiere_anticipo"/>
+                    <campo name="anticipo"/>
+                    <campo name="folio_adquisiciones"/>
+                    <campo name="folio_req"/>
+                    <campo name="total"/>
+                </tabla>
+                
+            </componente>
+        </nivel>
+        
+        <nivel id="AD" nombre="Alta Duep" interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==true">
+            <componente id="AD" nombre="Alta Duep" tipo="altaDirect">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" calc="%FDCP.FDCP.ur%" llaveForanea="false"/>
+                    <campo name="periodo" calc="%FDCP.FDCP.periodo%" llaveForanea="false"/>
+                    <campo name="folio_duep" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="folio_duep_a"/>
+                    <campo name="folio_solicitud" text="folio_solicitud" calc="%FDCP.FDCP.folio_con_ordecom%"/> 
+                    <campo name="tipo_comprobante" calc="%FDCP.FDCP.id_tipo_comprobante%"/>
+                    <campo name="tramite" text="Trámite" calc="9"/>
+                    <campo name="beneficiario" text="Beneficiario" calc="%FDCP.FDCP.proveedor%"/>
+                    <campo name="proveedor" text="Beneficiario" calc="%FDCP.FDCP.proveedor%"/>
+                    <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" calc="%FDCP.FDCP.id_fondo_contable%"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" calc="2" llaveForanea="false"/>
+                    <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" calc="%FDCP.FDCP.area_requiriente%"/>
+                    <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" calc="5"/>
+                    <campo name="id_cat_fuente_financiamiento" visible="false" text="id cat fuente" calc="%FDCP.FDCP.fuente_financiamiento%"/>
+                    <campo name="fecha_solicitud" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="id_contrato" text="Contrato" calc="%FDCP.FDCP.id_duep_contrato_pedido%"/>
+                    <campo name="concepto" text="Concepto" calc="%FDCP.FDCP.concepto%"/>
+                    <campo name="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%"/>
+                    <campo name="estatus_duep" text="Estatus" calc="1" llaveForanea="false"/>
+                    <campo name="folio_adquisiciones" calc="%ridexp.ridexp.folio_adquisiciones%"/>
+                    <campo name="folio_expediente" calc="%ridexp.ridexp.folio_adquisiciones%"/>
+                    <!--
+                    <campo name="total_comprometido" calc="%.GrabaDuepBS.total%"/>
+                    <campo name="importe_devengar" calc="%GrabaDuepBS.GrabaDuepBS.cantidad_recibida%"/>
+                    -->
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="AFD" nombre="Actualiza Folio Duep"  interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==true">
+            <componente id="AFD" nombre="Actualiza Folio Duep" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FDCP.FDCP.ur%"/> 
+                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FDCP.FDCP.periodo%" />
+                   <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%AD.AD.folio_duep%"/>
+                   <campo name="folio_duep_a" calc="@concatenar('ANT-'+
+                   @ifThenElse(%AD.AD.folio_duep% &lt; 10,'00000',
+                   @ifThenElse(%AD.AD.folio_duep% &lt; 100,'0000',
+                   @ifThenElse(%AD.AD.folio_duep% &lt; 1000,'000',
+                   @ifThenElse(%AD.AD.folio_duep% &lt; 10000,'00',
+                   @ifThenElse(%AD.AD.folio_duep% &lt; 100000,'0',null)))))+%AD.AD.folio_duep%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="FDCPD" nombre="Filtra Duep Contrato Pedido Detalle" interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==true">
+            <componente tipo="cursor" id="FDCPD" nombre="Filtra Duep Contrato Pedido Detalle">        
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                        <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%FDCP.FDCP.ur%" llaveForanea="false"/>
+                        <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FDCP.FDCP.periodo%" llaveForanea="false"/>
+                        <campo name="id_duep_contrato_pedido" text="Contrato Pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%FDCP.FDCP.id_duep_contrato_pedido%"/>
+                        <campo name="id_duep_contrato_pedido_det" text="Renglón"/>
+                        <campo name="clave_articulo" text="Articulo"/>
+                        <campo name="id_cat_cog" text="COG"/>
+                        <campo name="clasificador_objeto_gasto" text="COG"/>
+                        
+                        <campo name="id_cat_centro_registro"/>
+                        <campo name="centro_registro"/>
+                        
+                        <campo name="unidad_medida" text="Unidad de Medida"/>
+                        <campo name="precio_unitario" text="PU"/>
+                        <campo name="importe_unitario" text="IU"/>
+                        <campo name="programa_presupuestal" text="PP"/>
+                        <campo name="descuento" text="Descuento"/>
+                        <campo name="tasa_iva" text="Tasa IVA"/>
+                        <campo name="clave_presup" text="Clave Presupuestal"/>
+                        <campo name="imp_valor_agregado" text="Impuesto al Valor Agregado"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos"/>
+                        <campo name="caracteristica" text="descripcion"/>
+                        <campo name="mes"/>
+                        <campo name="anticipo_importe"/>
+                </tabla>
+                <nivel id="ADD" nombre="Alta Duep Detalle" interactivo="false" >
+                    <componente id="ADD" nombre="Alta Duep Detalle" tipo="altaDirect">                
+                        <tabla schema="operation" nombre="duep_detalle">
+                            <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%FDCPD.FDCPD.ur%"/>
+                            <campo name="periodo" text="Periodo" llaveForanea="false" calc="%FDCPD.FDCPD.periodo%"/>
+                            <campo name="folio_duep" text="Folio" calc="%AD.AD.folio_duep%"/> 
+                            <campo name="folio_duep_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="tipo_detalle" text="Tipo de Renglón" calc="2"/>
+                            <campo name="proveedor" text="Proveedor" calc="%FDCP.FDCP.proveedor%"/>
+                            <campo name="articulo" text="Artículo" calc="%FDCPD.FDCPD.clave_articulo%"/> 
+                            <campo name="id_cat_objeto_gasto" text="COG" llaveForanea="false" calc="%FDCPD.FDCPD.id_cat_cog%"/>
+                            <campo name="c_objeto_gasto" text="Objeto del Gasto" calc="%FDCPD.FDCPD.clasificador_objeto_gasto%"/>
+                            <campo name="id_cat_fondo_contable" calc="3" llaveForanea="false"/>
+                            <campo name="id_fondo_contable" calc="%FDCP.FDCP.id_fondo_contable%"/>
+                            <campo name="id_cat_centro_registro" calc="2"/>
+                            <campo name="id_centro_registro" calc="%FDCPD.FDCPD.centro_registro%"/>
+                            <campo name="mes_cve_presupuestal" calc="%FDCPD.FDCPD.mes%"/>
+                            <campo name="clave_presupuestal" text="clave presupuestal" llaveForanea="false" calc="%FDCPD.FDCPD.clave_presup%"/>
+                            <campo name="descripcion_especifica" text="Descripción Específica" calc="%FDCPD.FDCPD.caracteristica%"/>
+                            <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false"/>
+                            <campo name="programa_presupuestal" text="Programa Presupuestal" calc="%FDCPD.FDCPD.programa_presupuestal%"/>
+                            <campo name="cantidad" text="Cantidad" calc="1"/>
+                            <campo name="u_medida" text="U.M." calc="%FDCPD.FDCPD.unidad_medida%"/>
+                            <campo name="unidad_medida" text="U.M." calc="%FDCPD.FDCPD.unidad_medida%"/>
+                            <campo name="precio_unitario" text="Importe Unitario" calc="%FDCPD.FDCPD.anticipo_importe%"/>
+                            <campo name="descuento" text="Descuento"/>
+                            <campo name="iva" text="Impuesto al Valor Agregado"/>
+                            <campo name="otros_impuestos" text="Otros Impuestos"/>
+                            <campo name="importe" text="Importe" calc="%FDCPD.FDCPD.anticipo_importe%"/>
+                            <campo name="total" text="Total" calc="%FDCPD.FDCPD.anticipo_importe%"/>
+                            <campo name="anticipo" calc="%FDCPD.FDCPD.anticipo_importe%"/>
+                            <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                            <campo name="id_duep_contrato_pedido" text="Contrato" calc="%FDCPD.FDCPD.id_duep_contrato_pedido%"/>
+                            <campo name="id_duep_contrato_pedido_det" text="Contrato" calc="%FDCPD.FDCPD.id_duep_contrato_pedido_det%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!--
+        <nivel nombre="Suma" id="Suma" interactivo="false">
+            <componente tipo="cursor" nombre="Suma" id="Suma">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="total" local="true" type="decimal" calc="@consultaDirec('SELECT SUM(total) AS suma FROM operation.duep_detalle WHERE ur='+%AD.AD.ur%+' AND periodo='+%AD.AD.periodo%+' AND folio_duep='+%AD.AD.folio_duep%+'','suma','decimal','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        -->
+        
+        <nivel id="STA" nombre="Suma Total Anticipo"  interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==true">
+            <componente id="STA" nombre="Suma Total Anticipo" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FDCP.FDCP.ur%"/> 
+                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FDCP.FDCP.periodo%" />
+                   <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%AD.AD.folio_duep%"/>
+                   <campo name="total" calc="@consultaDirec('SELECT COALESCE(SUM(total),0) AS suma FROM operation.duep_detalle WHERE ur='+%AD.AD.ur%+' AND periodo='+%AD.AD.periodo%+' AND folio_duep='+%AD.AD.folio_duep%+'','suma','decimal','MAGNITUS')"/>
+                   <campo name="total_descuento" calc="0.00"/>
+                   <campo name="total_importe" calc="@consultaDirec('SELECT COALESCE(SUM(total),0) AS suma FROM operation.duep_detalle WHERE ur='+%AD.AD.ur%+' AND periodo='+%AD.AD.periodo%+' AND folio_duep='+%AD.AD.folio_duep%+'','suma','decimal','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="totalALetra" nombre="totalALetra" interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==true">
+            <componente id="totalALetra" nombre="totalALetra" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%AD.AD.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo"  filtroOperador="=" filtroValor="%AD.AD.periodo%"/> 
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%AD.AD.folio_duep%"/>
+                    <campo name="total_letra" calc="@numeroAletra(%STA.STA.total%,'PESOS M.N.')" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!--Acción Agregar Mensaje -->
+        <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado">
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/>
+                    <parametro name="message" calc="%nlAutAnt.cpAutAnt.observaciones_auto%"/>
+                    <parametro name="type" calc="'1'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        -->
+        <!--Acción Negocia Instancia -->
+        <nivel nombre="Instancia Rechazo" id="RechazoInstancia" interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="RechazoInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                    <parametro name="out_observaciones" calc="%nlAutAnt.cpAutAnt.observaciones_auto%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!--FINALIZAR INSTANCIA -->
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!--CREA INSTANCIA -->
+        <nivel id="CreaInsDic4" nombre="CreaInstancia" interactivo="false" ejecutar="%nlAutAnt.cpAutAnt.autoriza%==true">
+            <componente id="CreaInsDic4" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="'4858fae7-eb04-45e9-9dd7-d33130c59135'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                    <parametro name="out_folio_duep" calc="%AD.AD.folio_duep%" mostrarEsc="true"/>
+                    <parametro name="out_beneficiario" calc="%FDCP.FDCP.proveedor%" mostrarEsc="true"/>
+                    <parametro name="out_folio_contrato_compra" calc="$inParam.id_duep_contrato_pedido$" mostrarEsc="true"/>
+                    <parametro name="out_tramite" calc="%AD.AD.tramite%" mostrarEsc="true"/>
+                    <parametro name="out_expediente" calc="%ridexp.ridexp.folio_adquisiciones%" mostrarEsc="true"/>
+                    <parametro name="out_importe" calc="%STA.STA.total%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>

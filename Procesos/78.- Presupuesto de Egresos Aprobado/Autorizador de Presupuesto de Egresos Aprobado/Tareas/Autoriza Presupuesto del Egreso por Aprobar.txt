@@ -1,0 +1,902 @@
+<tarea nombre="Autoriza Presupuesto del Egreso por Aprobar"  version="1">
+    <pagina id="1" nombre="Autoriza Presupuesto del Egreso por Aprobar">
+       
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+					<campo name="estatus"/>
+					<campo name="id_estatus"/>
+					<campo name="id_separador"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="obSeparador" nombre="obSeparador" interactivo="false">
+			<componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+				<tabla schema="catalog" nombre="separador">
+					<campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_separador%"/>
+					<campo name="caracter"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlPreEgAp" nombre="Presupuesto de Egresos por Autorizar" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cePreEgAp" nombre="Presupuesto de Egresos por Autorizar" tipo="reporte">
+                <reporte nombre="asignacion_calendarizada_IJUA">
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_presupuesto_egresos" type="long" calc="$inParam.presupuesto_egresos$"/>
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                </reporte>
+            </componente>
+            
+            <componente id="ceAutPreEgrApr" nombre="Autoriza Presupuesto del Egreso" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" visible="false" llaveForanea="false" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" visible="false" llaveForanea="false" calc="$inParam.periodo$"/>
+                    <campo name="id_presupuesto_egresos" visible="false"  calc="$inParam.presupuesto_egresos$"/>
+                    <campo name="observaciones" text="Observaciones" columnas="6" margen-izquierdo="2" height="250" width="250" mascara="C" interaccion="%autoriza%==false" validacion="%observaciones%==null AND %autoriza%==false" validacionMensaje="Favor de ingresar un comentario de retroalimentación para continuar"/>
+                    <campo name="autoriza" text="Autoriza" columnas="2" margen-derecho="4" margen-izquierdo="4" local="true" type="bool"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="true" alineacion="right" margen-izquierdo="3" columnas="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!--<nivel id="nlAutPreEgrApr" nombre="Autoriza Presupuesto del Egreso por Aprobar" mostrarProximoNivel="false">
+            <componente id="ceAutPreEgrApr" nombre="Autoriza Presupuesto del Egreso por Aprobar" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" visible="false" calc="1"/>
+                    <campo name="id_periodo" visible="false" calc="2019"/>
+                    <campo name="id_presupuesto_egresos" visible="false"/>
+                    <campo name="autoriza" text="Autoriza" local="true" type="bool"/>
+                    <campo name="observaciones" text="Observaciones" height="250" width="250" mascara="C" interaccion="%autoriza%==false" validacion="%observaciones%==null AND %autoriza%==false" validacionMensaje="Favor de ingresar un comentario de retroalimentación para continuar"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="true" alineacion="right"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>-->
+        
+        <nivel id="nlcambiaEstatus" nombre="Cambia Estatus" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==true">
+            <componente id="cecambiaEstatus" nombre="Cambia Estatus" tipo="cursor">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_presupuesto_egresos" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="$inParam.presupuesto_egresos$"/>
+                    <campo name="estatus" calc="2"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==true">
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%nlPreEgAp.ceAutPreEgrApr.id_unidad_responsable%"/> 
+                   <campo name="periodo" calc="%nlPreEgAp.ceAutPreEgrApr.id_periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo"/>
+                   <campo name="fondo_contable"/>
+                   <campo name="duep_origen"/>
+                   <campo name="momento_contable" calc="1"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="concepto_general" calc="'Póliza del Presupuesto de Egresos Aprobado'"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- GENERACIÓN DEL FOLIO DE LA PÓLIZA-->
+        <nivel id="generaFolioPoliza" nombre="Generación del Folio de la Póliza" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==true">
+            <componente id="generaFolioPoliza" nombre="Generación del Folio de la Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlPreEgAp.ceAutPreEgrApr.id_unidad_responsable%"/> 
+                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlPreEgAp.ceAutPreEgrApr.id_periodo%" />
+                   <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                   <campo name="folio_reporte" calc="@concatenar(%nlPreEgAp.ceAutPreEgrApr.id_periodo%+'-'+
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%folio_movimiento_auxiliar%)" />
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+
+        
+        <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==true">
+            <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles" tipo="cursor">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_presupuesto_egresos" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="$inParam.presupuesto_egresos$"/>
+                    <campo name="id_presupuesto_egresos_det"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="techo_presupuestal"/>
+
+                </tabla>
+                <!-- INGRESA EL CARGO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%" />
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.techo_presupuestal%"/>
+                            <campo name="concepto_bloque" calc="'Póliza del Presupuesto de Egresos Aprobado '"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                          <!-- <campo name="tipo_detalle" calc="1" llaveForanea="false"/>--> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')"/>
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.techo_presupuestal%"/>
+                            <campo name="concepto_bloque" calc="'Póliza del Presupuesto de Egresos Aprobado '"/>
+                            
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                            <!-- <campo name="tipo_detalle" calc="1" llaveForanea="false"/>--> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- ALTA TABLA PRESUPUESTO DE EGRESOS POR MES-->
+        <nivel id="alta_pmes" nombre="Barrido presupuesto egresos" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==true">
+            <componente id="alta_pmes" nombre="Barrido presupuesto egresos" tipo="cursor">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_presupuesto_egresos" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="$inParam.presupuesto_egresos$"/>
+                    <campo name="id_presupuesto_egresos_det"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="id_cat_centro_registro" />
+                    <campo name="centro_registro"/>
+                    <campo name="id_cat_fondo" />
+                    <campo name="fondo_contable" />
+                    <campo name="id_cat_fuente"/>
+                    <campo name="fuente_financiamiento"/>
+                    <campo name="id_cat_cog"/>
+                    <campo name="cog"/>
+                    <campo name="id_cat_tipo_gasto"/>
+                    <campo name="tipo_gasto"/>
+                    <campo name="id_cat_municipio"/>
+                    <campo name="municipio"/>
+                    <campo name="id_clasif_funcional"/>
+                    <campo name="clasificador_funcional"/>
+                    <campo name="id_cat_clasif_programatico"/>
+                    <campo name="clasificador_programatico"/>
+                    <campo name="id_cat_progra_presup"/>
+                    <campo name="programa_presupuestario"/>
+                    <!-- AGREGAR NUEVOS CAMPOS-->
+                    <campo name="id_cat_eje_pide"/>
+                    <campo name="eje_pide"/>
+                    <campo name="id_cat_proceso_proyecto"/>
+                    <campo name="proceso_proyecto"/>
+                    <campo name="id_cat_proceso_proyecto_eje_pide"/>
+                    <campo name="detalle_proceso_proyecto"/>
+                    <!-- AGREGAR NUEVOS CAMPOS-->
+                    <campo name="techo_presupuestal"/>
+                    <campo name="enero"/>
+                    <campo name="febrero"/>
+                    <campo name="marzo"/>
+                    <campo name="abril"/>
+                    <campo name="mayo"/>
+                    <campo name="junio"/>
+                    <campo name="julio"/>
+                    <campo name="agosto"/>
+                    <campo name="septiembre"/>
+                    <campo name="octubre"/>
+                    <campo name="noviembre"/>
+                    <campo name="diciembre"/>
+                </tabla>
+                <nivel id="alta1" nombre="Alta" interactivo="false">
+                    <componente id="alta1" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="1"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.enero%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.enero%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="alta2" nombre="Alta" interactivo="false">
+                    <componente id="alta2" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="2"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR NUEVOS CAMPOS-->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.febrero%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.febrero%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="alta3" nombre="Alta" interactivo="false">
+                    <componente id="alta3" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="3"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.marzo%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.marzo%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta4" nombre="Alta" interactivo="false">
+                    <componente id="alta4" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="4"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.abril%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.abril%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta5" nombre="Alta" interactivo="false">
+                    <componente id="alta5" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="5"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.mayo%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.mayo%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta6" nombre="Alta" interactivo="false">
+                    <componente id="alta6" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="6"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.junio%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.junio%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta7" nombre="Alta" interactivo="false">
+                    <componente id="alta7" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="7"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.julio%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.julio%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta8" nombre="Alta" interactivo="false">
+                    <componente id="alta8" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="8"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.agosto%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.agosto%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta9" nombre="Alta" interactivo="false">
+                    <componente id="alta9" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="9"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.septiembre%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.septiembre%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta10" nombre="Alta" interactivo="false">
+                    <componente id="alta10" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="10"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.octubre%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.octubre%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta11" nombre="Alta" interactivo="false">
+                    <componente id="alta11" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="11"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.noviembre%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.noviembre%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel><nivel id="alta12" nombre="Alta" interactivo="false">
+                    <componente id="alta12" nombre="alta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" calc="%alta_pmes.alta_pmes.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%alta_pmes.alta_pmes.id_periodo%" />
+                            <campo name="clave_presupuestal" calc="%alta_pmes.alta_pmes.clave_presupuestal%" />
+                            <campo name="mes" calc="12"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                            <campo name="id_clave_egreso" calc="%alta_pmes.alta_pmes.id_presupuesto_egresos_det%"/>
+                            <campo name="id_cat_centro_registro" calc="%alta_pmes.alta_pmes.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%alta_pmes.alta_pmes.centro_registro%"/>
+                            <campo name="id_cat_fondo" calc="%alta_pmes.alta_pmes.id_cat_fondo%"/>
+                            <campo name="fondo_contable" calc="%alta_pmes.alta_pmes.fondo_contable%"/>
+                            <campo name="id_cat_fuente" calc="%alta_pmes.alta_pmes.id_cat_fuente%"/>
+                            <campo name="fuente_financiamiento" calc="%alta_pmes.alta_pmes.fuente_financiamiento%"/>
+                            <campo name="id_cat_cog" calc="%alta_pmes.alta_pmes.id_cat_cog%"/>
+                            <campo name="cog" calc="%alta_pmes.alta_pmes.cog%"/>
+                            <campo name="id_cat_tipo_gasto" calc="%alta_pmes.alta_pmes.id_cat_tipo_gasto%"/>
+                            <campo name="tipo_gasto" calc="%alta_pmes.alta_pmes.tipo_gasto%"/>
+                            <campo name="id_cat_municipio" calc="%alta_pmes.alta_pmes.id_cat_municipio%"/>
+                            <campo name="municipio" calc="%alta_pmes.alta_pmes.municipio%"/>
+                            <campo name="id_clasif_funcional" calc="%alta_pmes.alta_pmes.id_clasif_funcional%"/>
+                            <campo name="clasificador_funcional" calc="%alta_pmes.alta_pmes.clasificador_funcional%"/>
+                            <campo name="id_cat_clasif_programatico" calc="%alta_pmes.alta_pmes.id_cat_clasif_programatico%"/>
+                            <campo name="clasificador_programatico" calc="%alta_pmes.alta_pmes.clasificador_programatico%"/>
+                            <campo name="id_cat_progra_presup" calc="%alta_pmes.alta_pmes.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestario" calc="%alta_pmes.alta_pmes.programa_presupuestario%"/>
+                            <!-- AGREGAR CAMPOS-->
+                            <campo name="id_cat_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_eje_pide%"/>
+                            <campo name="eje_pide" calc="%alta_pmes.alta_pmes.eje_pide%"/>
+                            <campo name="id_cat_proceso_proyecto" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto%"/>
+                            <campo name="proceso_proyecto" calc="%alta_pmes.alta_pmes.proceso_proyecto%"/>
+                            <campo name="id_cat_proceso_proyecto_eje_pide" calc="%alta_pmes.alta_pmes.id_cat_proceso_proyecto_eje_pide%"/>
+                            <campo name="detalle_proceso_proyecto" calc="%alta_pmes.alta_pmes.detalle_proceso_proyecto%"/>
+                            <!-- AGREGAR CAMPOS -->
+                            <campo name="techo_presupuestal" calc="%alta_pmes.alta_pmes.techo_presupuestal%"/>
+                            <campo name="asignado" calc="%alta_pmes.alta_pmes.diciembre%"/>
+                            <campo name="presupuesto_autorizado" calc="%alta_pmes.alta_pmes.diciembre%"/>
+                            <campo name="presupuesto_reservado" calc="0.0"/>
+                            <campo name="presupuesto_precomprometido" calc="0.0"/>
+                            <campo name="presupuesto_comprometido" calc="0.0"/>
+                            <campo name="presupuesto_devengado" calc="0.0"/>
+                            <campo name="presupuesto_ejercido" calc="0.0"/>
+                            <campo name="presupuesto_pagado" calc="0.0"/>
+                            <campo name="presupuesto_ampliacion" calc="0.0"/>
+                            <campo name="presupuesto_reduccion" calc="0.0"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- Cambia Estatus de Presupuesto-->
+        <nivel id="autoriza_pmes" nombre="Barrido presupuesto egresos" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==true">
+            <componente id="autoriza_pmes" nombre="Barrido presupuesto egresos" tipo="cursor">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_presupuesto_egresos" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="$inParam.presupuesto_egresos$"/>
+                    <campo name="autorizado" calc="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+		
+		<nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==false">
+             <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal">
+                 <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                     <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                     <parametro name="process" calc="$protocolarios.process$"/>
+                     <parametro name="version" calc="$protocolarios.version$"/>
+                     <parametro name="user" calc="$protocolarios.user$"/>
+                     <parametro name="instanceId" calc="$protocolarios.instance$"/>
+                     <parametro name="message" calc="%nlPreEgAp.ceAutPreEgrApr.observaciones%"/>
+                     <parametro name="type" calc="'1'"/>
+                 </parametros> 
+             </componente>
+        </nivel>
+        
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+         <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==true">
+			<componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+				<parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+					<parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+					<parametro name="process" calc="$protocolarios.process$"/>
+					<parametro name="version" calc="$protocolarios.version$"/>
+					<parametro name="instance" calc="$protocolarios.instance$"/>
+				</parametros>
+			</componente>
+		</nivel>
+        
+        <!-- Fin Cambia Estatus de Presupuesto-->
+        
+         <nivel id="nlPolPreEgApr" nombre="Póliza del Presupuesto de Egreso Aprobado" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%nlPreEgAp.ceAutPreEgrApr.autoriza%==true">
+            <componente id="cePolPreEgApr" nombre="Póliza del Presupuesto de Egreso Aprobado" tipo="reporte">
+                <reporte nombre="polizacontable">
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                    <campo name="periodo" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%"/>
+                    <campo name="ur" type="long" calc="@castTo(%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%,'long')"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+       
+
+    </pagina>
+</tarea>
