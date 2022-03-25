@@ -1,0 +1,144 @@
+<tarea id="tr_Reg_Alm_Pat" nombre="Registra Catalogo de Almacenes de Patrimonio" autor="Sergio Guzmán" version="1">
+    <pagina id="pg_Reg_Alm_Pat">
+        
+<nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="permisos_especiales"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    </tabla>
+                </componente>
+            </nivel>
+		  <nivel id="per" nombre="per" interactivo="false">
+                <componente tipo="cursor" id="per" nombre="per">
+                    <tabla schema="catalog" nombre="periodo">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_periodo"/>
+                        <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                        <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                        <!-- <campo name="folio_compras" local="true" type="string" calc="@concatenar('ALM-UTA-'+@ifThenElse(-->
+                        <!--@consultaDirec('-->
+                        <!--SELECT (clave_alamcen) AS resultado-->
+                        <!--FROM operation.almacenes_det-->
+                        <!--WHERE ur='+$config.ur$+' AND id_periodo='+%per.per.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null-->
+                        <!--,-->
+                        <!--'000001'-->
+                        <!--,-->
+                        <!--@consultaDirec('-->
+                        <!--SELECT to_char((((substring(clave_alamcen from char_length(clave_alamcen)-4)::int)+1)),\\''+'00000'+'\\') as resultado-->
+                        <!--FROM operation.almacenes_det-->
+                        <!--WHERE ur='+$config.ur$+' AND id_periodo='+%per.per.id_periodo%+' ORDER BY clave_alamcen DESC limit 1','resultado','string','MAGNITUS')-->
+                        <!--))" habilitado="false" visible="false"/>-->
+                        <!--<campo name="letras" local="true" type="string" text="Contrato" calc="@subCadena(%per.per.folio_compras%,0,8)" visible="false"/>-->
+                        <!--<campo name="numeros" local="true" type="string" text="Contrato" calc="@subCadena(%per.per.folio_compras%,9,14)" visible="false"/>-->
+                    </tabla>
+                </componente>
+            </nivel>
+		
+        <nivel id="tipo" nombre="Selección de Gestión" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="tipo" nombre="Selección de Gestión" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="activo_fijo">
+                    <campo name="ur" text="id_unidad_responsable" calc="$config.ur$" visible="false"/>
+                  <campo name="periodo" text="Año *"  validacion="%periodo%==null" descripcionForanea="id_periodo" llavesFijas="id_estatus=1 OR id_estatus=3" validacionMensaje="Selecciona periodo contable" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Guardar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="ALM" nombre="ALM" interactivo="false">
+                <componente id="ALM" nombre="ALM" tipo="altaDirect">
+                    <tabla schema="operation" nombre="almacenes">
+                        <campo name="ur" calc="$config.ur$"/>
+                        <campo name="id_periodo" calc="%tipo.tipo.periodo%"/>
+                        <campo name="id_almacenes" autogenerado="true" generacion="@prox()+1"/>
+                        <campo name="fecha_elaboracion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    </tabla>
+                </componente>
+            </nivel>
+        <nivel id="nl_Reg_Alm_Pat_Tab" nombre="Registra Catalogo de Almacenes de Patrimonio" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+            <componente id="cp_Reg_Alm_Pat_Tab" nombre="Registra Catalogo de Almacenes de Patrimonio" tipo="tabla">
+                <tabla schema="operation" nombre="almacenes_det">
+                    <campo name="ur" llaveForanea="false" text="Unidad Responsable" habilitado="false" visible="false" columna-visible="false" calc="$config.ur$" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" text="Año" calc="%tipo.tipo.periodo%" llaveForanea="false" habilitado="false" visible="false" columna-visible="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%tipo.tipo.periodo%"/>
+                    <campo name="id_almacenes" text="ID de Almacen" calc="%ALM.ALM.id_almacenes%" visible="false" columna-visible="false" />
+                    <!--filtroCampo="id_almacenes" filtroOperador="=" filtroValor="%ALM.ALM.id_almacenes%"-->
+                   
+                    <campo name="id_almacenes_det" text="ID de Almacen" autogenerado="true" generacion="@prox()+1" margen-izquierdo="4" margen-derecho="4" columnas="2" visible="true" columna-visible="false"/>
+                   
+                    <campo name="fecha_elaboracion" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"  columnas="2" margen-derecho="3" visible="false" columna-visible="false"/>
+                    <campo name="id_pais" text="ID Pais" calc="1" visible="false" columna-visible="false"/>
+                    <campo name="id_estado" text="ID Estado"  calc="1" visible="false" columna-visible="false"/>
+                    <campo name="id_centro_registro" text="ID Centro Registro" calc="2"  llaveForanea="false" columna-visible="false" visible="false"/>
+                    
+                    <campo name="clave_alamcen" text="Clave Almacen *" columnas="3" margen-izquierdo="2" validacion="%clave_alamcen%==null" validacionMensaje="Se debe capturar la clave de almacén."
+                    calc="
+                    @concatenar('ALM-'+
+                    @subCadena(@ifThenElse(
+                    @consultaDirec('
+                        SELECT (clave_alamcen) AS resultado
+                        FROM operation.almacenes_det
+                        WHERE ur='+$config.ur$+' AND id_periodo='+%per.per.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                    ,'000001',
+                    @consultaDirec('
+                        SELECT to_char((((substring(clave_alamcen from char_length(clave_alamcen)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                        FROM operation.almacenes_det
+                        WHERE ur='+$config.ur$+' AND id_periodo='+%per.per.id_periodo%+' ORDER BY clave_alamcen DESC limit 1','resultado','string','MAGNITUS')),1,6))"/>
+                    <campo name="nombre" text="Nombre *" columnas="3" margen-derecho="2" validacion="@ifThenElse(!@matchRegEx(%nombre%,'^[A-Z 0-9-]*$'), true, false)" validacionMensaje="Se debe capturar el nombre."/>
+                    <campo name="ubicacion_fisica" text="Ubicación Fisica *"  columnas="3" margen-izquierdo="2"  validacion="@ifThenElse(!@matchRegEx(%ubicacion_fisica%,'^[A-Z 0-9-]*$'), true, false)" validacionMensaje="Se debe capturar la ubicación fisica."/>
+                    <campo name="id_municipio" text="Municipio *" descripcionForaneaTabla="nombre" columnas="3" margen-derecho="2" validacion="%id_municipio%==null" validacionMensaje="Se debe capturar el municipio."/>
+                    
+                    <campo name="centro_registro" text="Centro de Registro *" descripcionForaneaTabla="descripcion" columnas="3" margen-izquierdo="2" validacion="%centro_registro%==null" validacionMensaje="Se debe capturar el centro de registro." habilitado="true"/>
+                    <campo name="responsable_alamcen" text="Responsable de Almacen *" descripcionForaneaTabla="nombre,primer_apellido,segundo_apellido" columnas="3" margen-derecho="2"  validacion="%responsable_alamcen%==null" validacionMensaje="Se debe capturar el responsable de almacen."/>
+                    <campo name="usuario_alta" text="usuario_alta"  calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="seleccion" text="Seleccionar"  editable="true"/>
+                </tabla>
+                 
+            </componente>
+        </nivel>
+        
+         <nivel id="barridoPatrimonio" nombre="barridoPatrimonio" interactivo="false" >
+            <componente id="barridoPatrimonio" nombre="barridoPatrimonio" tipo="cursor">
+                <tabla schema="operation" nombre="almacenes_det">
+                    
+                    <campo name="ur" text="Unidad Responsable" columna-visible="false" visible="true" habilitado="false" filtroCampo="ur" filtroOperador="=" filtroValor="%nl_Reg_Alm_Pat_Tab.cp_Reg_Alm_Pat_Tab.ur%"/>
+                    <campo name="id_periodo" text="Periodo"  filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nl_Reg_Alm_Pat_Tab.cp_Reg_Alm_Pat_Tab.id_periodo%"/>
+                    <campo name="id_almacenes"/>
+                   
+                    <campo name="id_almacenes_det"/>
+                    <campo name="fecha_elaboracion"/>
+                    <campo name="id_pais"/>
+                    <campo name="id_estado" />
+                    <campo name="id_centro_registro"/>
+                    <campo name="clave_alamcen" />
+                    <campo name="nombre"/>
+                    <campo name="ubicacion_fisica"/>
+                    <campo name="id_municipio"/>
+                    <campo name="centro_registro"/>
+                    <campo name="responsable_alamcen"/>
+                    <campo name="usuario_alta"/>
+                    <campo name="seleccion"/>
+                </tabla>
+            </componente>
+        </nivel>    
+        
+        
+        <nivel id="nl_Elim_Solic_Mod_Patrim_Rep" nombre="Reporte Catálogo de Almacen" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="Reporte2" nombre="Reporte Catálogo de Almacen" tipo="reporte">
+                <reporte nombre="Rep_Catalogo_de_Almacen_IJ">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%barridoPatrimonio.barridoPatrimonio.id_periodo%"/>
+                    <campo name="usuario" type="string" calc="%barridoPatrimonio.barridoPatrimonio.usuario_alta%"/>
+                    <campo name="id_almacenes" type="long" calc="%barridoPatrimonio.barridoPatrimonio.id_almacenes%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        -->
+    </pagina>
+</tarea>
