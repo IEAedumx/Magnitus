@@ -1,0 +1,273 @@
+<tarea id="registra_periodos_contables" nombre="Ejercicios Fiscales">
+    <pagina id="1">
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN LEGO TIPO CURSOR -->
+        
+        <nivel id="registra_periodos_contables" nombre="Ejercicios Fiscales" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente tipo="formulario" id="registra_periodos_contables" nombre="Ejercicios Fiscales" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1" visible="false"/>
+                    <campo name="opciones" text="Opciones" local="true" type="long" validacion="%opciones%==null" validacionMensaje="Por favor selecciona una acción a realizar" marcador="Seleccione un Valor" columnas="4" margen-izquierdo="3" margen-derecho="3">
+                        <opciones>
+                            <opcion texto="Consultar Periodos" valor="0" />
+                            <opcion texto="Agregar Ejercicio Fiscal" valor="1"/>
+                            <opcion texto="Aperturar Ejercicio Fiscal" valor="2"/>
+                            <opcion texto="Cerrar Ejercicio Fiscal" valor="3"/>
+                            <opcion texto="Eliminar Ejercicio Fiscal" valor="4"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="8" margen-derecho="2" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente id="vista" tipo="tabla" nombre="Consulta de Periodos Contables" ejecutarComponente="%registra_periodos_contables.registra_periodos_contables.opciones%==0" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" >
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" width="370" />
+                    <campo name="id_periodo" text="Periodo" width="80" />
+                    <campo name="id_estatus" text="Descripción Estatus" width="150" />
+                    <campo name="estatus" text="Estatus" width="80" />
+                    <campo name="aperturar" text="Aperturar" width="100" />
+                    <campo name="cerrar" text="Cerrar" width="100" />
+                </tabla>
+            </componente>
+            <componente id="agrega_periodos_contables" tipo="formulario" nombre="Agregar Ejercicio Fiscal" ejecutarComponente="%registra_periodos_contables.registra_periodos_contables.opciones%==1">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Identificador" calc="$config.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Año" columnas="3" margen-izquierdo="4">
+                        <opciones>
+                            <opcion texto="2018" valor="2018"/>
+                            <opcion texto="2019" valor="2019"/>
+                            <opcion texto="2020" valor="2020"/>
+                            <opcion texto="2021" valor="2021"/>
+                            <opcion texto="2022" valor="2022"/>
+                            <opcion texto="2023" valor="2023"/>
+                            <opcion texto="2024" valor="2024"/>
+                            <opcion texto="2025" valor="2025"/>
+                        </opciones>
+                    </campo>
+                    <campo name="id_estatus" text="id estatus" calc="3" visible="false" />
+                    <campo name="id_separador" text="Separador" descripcionForanea="caracter,descripcion" validacion="%id_separador%==null" validacionMensaje="Favor de Capturar el Segmento Separador del Periodo" columnas="3" margen-izquierdo="4" margen-derecho="3"/>
+                    <campo name="id_separador_caracter" local="true" type="string" visible="false" referenciaForanea="id_separador" celdaForanea="caracter" autocompletar="true"/>
+                    <campo name="fecha_registro" text="fecha" calc="@fechaSistema()" visible="false"/>
+                    <campo name="id_ultimo_usuario_modificador" text="usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                    <campo name="aperturar" text="aperturar" calc="false" visible="false"/>
+                    <campo name="cerrar" text="cerrar" calc="false" visible="false"/>
+                    <campo name="val_periodo" text="cerrar" visible="false" local="true" type="string" validacion="@ValidarRegistro('catalog','periodo','id_periodo='+%id_periodo%,'id_unidad_responsable='+%id_unidad_responsable%,'MAGNITUS')" validacionMensaje="Este Periodo ya existe en el Sistema, favor de Agregar Otro"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" margen-izquierdo="8" margen-derecho="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <componente id="apertura_periodos_contables" nombre="Aperturar Ejercicio Fiscal" tipo="tabla" mostrarEliminar="false" mostrarAgregar="false" ejecutarComponente="%registra_periodos_contables.registra_periodos_contables.opciones%==2" mostrarEditar="false">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Identificador" calc="$config.ur$" columna-visible="false"/>
+                    <campo name="id_periodo" text="Año" habilitado="false" width="50"/>
+                    <campo name="id_estatus" text="ID Estatus" width="200" /> <!--llavesFijas="id_periodo_estatus=3" filtroCampo="id_estatus" filtroOperador="=" filtroValor="1" -->
+                    <campo name="fecha_registro" text="Fecha" visible="false" columna-visible="false"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" columna-visible="false"/> 
+                    <campo name="id_separador" text="Separado por" descripcionForanea="caracter,descripcion" width="150"/>
+                    <campo name="aperturar" text="Aperturar Ejercicio Fiscal" width="200" editable="true" filtroCampo="aperturar" filtroOperador="=" filtroValor="false"/>
+                    <!--  filtroCampo="estatus" filtroOperador="=" filtroValor="true" -->
+                    <campo name="estatus" text="Estatus Autorización" visible="false" columna-visible="false"/>
+                    <campo name="autoriza_estructura_articulos" filtroCampo="autoriza_estructura_articulos" filtroOperador="=" filtroValor="null" columna-visible="false"/>
+                    <campo name="autoriza_estructura_cuenta" filtroCampo="autoriza_estructura_cuenta" filtroOperador="=" filtroValor="null" columna-visible="false"/>
+                    <campo name="autoriza_estructura_programatica" filtroCampo="autoriza_estructura_programatica" filtroOperador="=" filtroValor="null" columna-visible="false"/>
+                    <campo name="autoriza_estructura_presupuestal" filtroCampo="autoriza_estructura_presupuestal" filtroOperador="=" filtroValor="null" columna-visible="false"/>
+                </tabla>
+            </componente>
+            <componente tipo="tabla" id="cierra_periodos_contables" nombre="Cerrar Ejercicio Fiscal" ejecutarComponente="%registra_periodos_contables.registra_periodos_contables.opciones%==3" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Identificador" calc="$config.ur$" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="Año" habilitado="false" width="50"/>
+                    <campo name="id_estatus" text="Estatus" columnas="5" llavesFijas="id_periodo_estatus=2"/>
+                    <campo name="fecha_registro" text="Fecha" visible="false" columna-visible="false"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" visible="false" columna-visible="false"/>
+                    <campo name="id_separador" text="Separado por" descripcionForanea="caracter,descripcion" width="150" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="aperturar" text="Cerrar Ejercicio Fiscal" width="100" columna-visible="false"/> 
+                    <campo name="cerrar" text="Cerrar Ejercicio Fiscal" columnas="4" width="200" editable="true" filtroCampo="cerrar" filtroOperador="!=" filtroValor="true"/>
+                    <campo name="estatus" columna-visible="false" text="Estatus Autorización" visible="false" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+             </tabla>
+            </componente>
+            <componente tipo="tabla" id="elimina_periodos_contables" nombre="Elimina asunto" ejecutarComponente="%registra_periodos_contables.registra_periodos_contables.opciones%==4" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Identificador" columna-visible="false"/>
+                    <campo name="id_periodo" text="Año" habilitado="false"/>
+                    <campo name="id_estatus" text="estatus" habilitado="false"/>
+                    <campo name="fecha_registro" text="Fecha" columna-visible="false"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" columna-visible="false"/>
+                    <campo name="id_separador" text="separador" habilitado="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barre_ur" nombre="barre_ur" interactivo="false">
+            <componente id="barre_ur" nombre="barre_ur" tipo="cursor">
+                <tabla schema="catalog" nombre="unidad_responsable">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="nombre"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barre_agregar" nombre="barre_agregar" ejecutar="%registra_periodos_contables.registra_periodos_contables.opciones%==1" interactivo="false">
+            <componente id="barre_agregar" nombre="barre_agregar" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%registra_periodos_contables.agrega_periodos_contables.id_periodo%"/>
+                    <campo name="id_estatus" calc="3"/>
+                    <campo name="id_separador"/>
+                    <campo name="id_separador_caracter" referenciaForanea="id_separador" celdaForanea="caracter" local="true" type="string"/>
+                    <campo name="estatus" calc="true"/>
+                    <campo name="aperturar" filtroCampo="aperturar" filtroOperador="=" filtroValor="false" />
+                    <campo name="cerrar" filtroCampo="aperturar" filtroOperador="=" filtroValor="false" />
+                </tabla>
+            </componente>
+            <componente id="lanzaProcesoEstructuraProgramatica" nombre="lanzaProcesoEstructuraProgramatica" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'79843ac7-0ccd-44a6-92b7-3347fbb4723f'"/>
+                    <parametro name="out_ur" calc="%barre_agregar.barre_agregar.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%barre_agregar.barre_agregar.id_periodo%"/>
+                </parametros>
+            </componente>
+            <componente id="lanzaProcesoEstructuraPresupuestal" nombre="lanzaProcesoEstructuraPresupuestal" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'d9fa9c9d-3329-4759-9e8b-ab6df689ff39'"/>
+                    <parametro name="out_ur" calc="%barre_agregar.barre_agregar.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%barre_agregar.barre_agregar.id_periodo%"/>
+                </parametros>
+            </componente>
+            <componente id="lanzaProcesoEstructuraPresupuestal" nombre="lanzaProcesoEstructuraPresupuestal" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'72aaf77b-14f1-4a4c-919b-e77db2cb901b'"/>
+                    <parametro name="out_ur" calc="%barre_agregar.barre_agregar.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%barre_agregar.barre_agregar.id_periodo%"/>
+                </parametros>
+            </componente>
+            <componente id="lanzaProcesoEstructuraCuentasContables" nombre="lanzaProcesoEstructuraCuentasContables" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'73806f65-d1e3-4553-9fc8-3b13fc765fb2'"/>
+                    <parametro name="out_ur" calc="%barre_agregar.barre_agregar.id_unidad_responsable%"/>
+                    <parametro name="out_periodo" calc="%barre_agregar.barre_agregar.id_periodo%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="barre_instancia_aperturar" nombre="barre_instancia_aperturar" ejecutar="%registra_periodos_contables.registra_periodos_contables.opciones%==2" interactivo="false">
+            <componente id="barre_instancia_aperturar" nombre="barre_instancia_aperturar" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%registra_periodos_contables.apertura_periodos_contables.id_periodo%"/>
+                    <campo name="id_estatus" calc="3"/>
+                    <campo name="id_separador"/>
+                    <campo name="id_separador_caracter" referenciaForanea="id_separador" celdaForanea="caracter" local="true" type="string"/>
+                    <campo name="estatus" calc="true"/>
+                    <campo name="aperturar" filtroCampo="aperturar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="auto_estruct_cve_presupuestal_ing" calc="false"/>
+                    <campo name="auto_estruct_cve_presupuestal_e" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barre_instancia_cerrar" nombre="barre_instancia_cerrar" ejecutar="%registra_periodos_contables.registra_periodos_contables.opciones%==3" interactivo="false">
+            <componente id="barre_instancia_cerrar" nombre="barre_instancia_cerrar" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%registra_periodos_contables.cierra_periodos_contables.id_periodo%"/>
+                    <campo name="id_estatus" calc="2" />
+                    <campo name="id_separador"/>
+                    <campo name="id_separador_caracter" referenciaForanea="id_separador" celdaForanea="caracter" local="true" type="string"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="aperturar" filtroCampo="aperturar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="cerrar" filtroCampo="cerrar" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreCP" nombre="Barre Catalogo Presupuestal" interactivo="false" ejecutar="%registra_periodos_contables.registra_periodos_contables.opciones%==1">
+            <componente id="nlBarreCP" tipo="cursor">
+                <tabla schema="catalog" nombre="catalogos_presupuestales_ini">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="@castTo($config.ur$,'long')" llaveForanea="false"/>
+                    <campo name="id_periodo" llaveForanea="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%registra_periodos_contables.agrega_periodos_contables.id_periodo%"/>
+                    <campo name="id_catalogo" autogenerado="true" generacion="@prox()+1" llaveForanea="false"/>
+                    <campo name="nombre" text="Nombre"/>
+                    <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="id_usuario_modificador" text="Usuario" calc="$protocolarios.user$" />
+                    <campo name="id_seccion" text="Seccion"/>
+                    <campo name="bloqueo" text="Bloqueo"/>
+                    <campo name="visible" text="Visible"/>
+                </tabla>
+                <nivel id="nlBarreCP1" nombre="Barre Catalogo Presupuestal" interactivo="false">
+                    <componente id="nlBarreCP1" tipo="altaDirect">
+                        <tabla schema="catalog" nombre="catalogos_presupuestales">
+                            <campo name="id_unidad_responsable" calc="@castTo($config.ur$,'long')" llaveForanea="false"/>
+                            <campo name="id_periodo" calc="%nlBarreCP.nlBarreCP.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_catalogo" calc="%nlBarreCP.nlBarreCP.id_catalogo%" llaveForanea="false"/>
+                            <campo name="nombre" calc="%nlBarreCP.nlBarreCP.nombre%"/>
+                            <campo name="fecha_registro" calc="%nlBarreCP.nlBarreCP.fecha_registro%"/>
+                            <campo name="id_usuario_modificador" calc="@castTo(%nlBarreCP.nlBarreCP.id_usuario_modificador%,'long')"/>
+                            <campo name="id_seccion" calc="%nlBarreCP.nlBarreCP.id_seccion%"/>
+                            <campo name="bloqueo" calc="%nlBarreCP.nlBarreCP.bloqueo%"/>
+                            <campo name="visible" calc="%nlBarreCP.nlBarreCP.visible%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="nlBarreSM" nombre="Barre Catalogo Presupuestal" interactivo="false" ejecutar="%registra_periodos_contables.registra_periodos_contables.opciones%==1">
+            <componente id="nlBarreSM" tipo="cursor">
+                <tabla schema="catalog" nombre="segmento_mascara_ini">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="@castTo($config.ur$,'long')" llaveForanea="false"/>
+                    <campo name="id_periodo" llaveForanea="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%registra_periodos_contables.agrega_periodos_contables.id_periodo%"/>
+                    <campo name="id_catalogo" autogenerado="true" generacion="@prox()+1" llaveForanea="false"/>
+                    <campo name="id_segmento" text="Segmento"/>
+                    <campo name="nivel" text="Nivel"/>
+                    <campo name="num_caracteres" text="Caracteres"/>
+                    <campo name="descripcion" text="Descripcion"/>
+                    <campo name="afectable" text="Afectable"/>
+                    <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" calc="$protocolarios.user$" />
+                    <campo name="bloqueo" text="Bloqueo"/>
+                    <campo name="id_seccion"/>
+                </tabla>
+                <nivel id="nlBarreSM1" nombre="Barre Catalogo Presupuestal" interactivo="false">
+                    <componente id="nlBarreSM1" tipo="altaDirect">
+                        <tabla schema="catalog" nombre="segmento_mascara">
+                            <campo name="id_unidad_responsable" calc="@castTo($config.ur$,'long')" llaveForanea="false"/>
+                            <campo name="id_periodo" calc="%nlBarreSM.nlBarreSM.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_catalogo" calc="%nlBarreSM.nlBarreSM.id_catalogo%" llaveForanea="false"/>
+                            <campo name="id_segmento" calc="%nlBarreSM.nlBarreSM.id_segmento%"/>
+                            <campo name="nivel" calc="%nlBarreSM.nlBarreSM.nivel%"/>
+                            <campo name="num_caracteres" calc="%nlBarreSM.nlBarreSM.num_caracteres%"/>
+                            <campo name="descripcion" calc="%nlBarreSM.nlBarreSM.descripcion%"/>
+                            <campo name="afectable" calc="%nlBarreSM.nlBarreSM.afectable%"/>
+                            <campo name="fecha_registro" calc="%nlBarreSM.nlBarreSM.fecha_registro%"/>
+                            <campo name="id_ultimo_usuario_modificador" calc="%nlBarreSM.nlBarreSM.id_ultimo_usuario_modificador%"/>
+                            <campo name="bloqueo" calc="%nlBarreSM.nlBarreSM.bloqueo%"/>
+                            <campo name="id_seccion" calc="%nlBarreSM.nlBarreSM.id_seccion%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel> 
+    </pagina>
+</tarea>

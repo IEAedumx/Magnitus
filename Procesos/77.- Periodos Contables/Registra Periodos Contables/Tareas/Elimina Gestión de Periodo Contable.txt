@@ -1,0 +1,120 @@
+<tarea id="Elimina_Gestion_Periodo_Contable" nombre="Elimina Ejercicios Fiscales" version="1" autor="Luis Eduardo Castañeda Delgadillo">
+    <pagina id="1" >
+        <nivel id="nlPasoParam" nombre="Paso de parámetros" interactivo="false">
+            <componente id="cpPasoParam" nombre="Paso de parámetros" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" text="UR" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" text="ejercicio fiscal" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="accion" text="Acción" local="true" type="string" calc="$inParam.opcion$" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlPeriodoContable" nombre="Elimina Ejercicio Fiscal" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpReportePeriodoContable" nombre="Reporte Ejercicio Fiscal" tipo="reporte">
+                <reporte nombre="repor_Gestion_PeriodosContables" update="true" nombreDocumento="'Periodo Contable'" expediente="Gestión de Periodos Contables"  grupo="%nlPasoParam.cpPasoParam.periodo%" url="$config.repository_upload_file$">
+                    <campo name="id_responsable" local="true" type="long" calc="%nlPasoParam.cpPasoParam.ur%" />
+                    <campo name="id_periodo" local="true" type="long" calc="%nlPasoParam.cpPasoParam.periodo%" />
+                </reporte>
+            </componente>
+            
+            <!-- ELIMINA AGREGA PERIODO -->
+            <componente id="cpElimAgregaPeriodo" nombre="Elimina Agrega Ejercicio Fiscal" ejecutarComponente="%nlPasoParam.cpPasoParam.accion%=='AGREGAR'" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1" visible="false"/>
+                </tabla>
+                <estilos>
+                   <boton nombre="grabar" visible="true" texto="ELIMINAR" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            
+            <!-- ELIMINA APERTURA PERIODO -->
+            <componente id="cpElimAperturaPeriodo" nombre="Elimina asunto" ejecutarComponente="%nlPasoParam.cpPasoParam.accion%=='APERTURAR'" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1" visible="false"/>
+                </tabla>
+                <estilos>
+                   <boton nombre="grabar" visible="true" texto="ELIMINA APERTURA DE PERIODO" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            
+            <!-- ELIMINA CIERRE PERIODO -->
+            <componente id="cpElimCierraPeriodo" nombre="Elimina Cierre del Ejercicio Fiscal" ejecutarComponente="%nlPasoParam.cpPasoParam.accion%=='CERRAR'" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1" visible="false"/>
+                </tabla>
+                <estilos>
+                   <boton nombre="grabar" visible="true" texto="ELIMINA CIERRE DE PERIODO" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            
+            <confirmaciones>
+                <confirmacion confirmacionTitulo="'ELIMINAR ' + %nlPasoParam.cpPasoParam.accion% + ' PERIODO'" confirmacionMensaje="'¿Está seguro de eliminar Periodo?'" tipo="avanzar"/>
+            </confirmaciones>
+        </nivel>
+        
+        <nivel id="actualizaEstatusAgrega" nombre="actualizaEstatusAgrega" ejecutar="%nlPasoParam.cpPasoParam.accion%=='AGREGAR'" interactivo="false">
+            <componente id="actualizaEstatus" nombre="actualizaEstatus" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.periodo%"/>
+                    <campo name="aperturar" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="borraPeriodo" nombre="borraPeriodo" ejecutar="%nlPasoParam.cpPasoParam.accion%=='AGREGAR'" interactivo="false">
+            <componente id="borraPeriodo" nombre="borraPeriodo" tipo="bajaDirect">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" calc="%nlPasoParam.cpPasoParam.ur%"/>
+                    <campo name="id_periodo" calc="%nlPasoParam.cpPasoParam.periodo%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="actualizaEstatusApertura" nombre="actualizaEstatusApertura" ejecutar="%nlPasoParam.cpPasoParam.accion%=='APERTURAR'" interactivo="false">
+            <componente id="actualizaEstatus" nombre="actualizaEstatus" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.periodo%"/>
+                    <campo name="aperturar" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="actualizaEstatusCierre" nombre="actualizaEstatusCierre" ejecutar="%nlPasoParam.cpPasoParam.accion%=='CERRAR'" interactivo="false">
+            <componente id="actualizaEstatus" nombre="actualizaEstatus" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.periodo%"/>
+                    <campo name="cerrar" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--TERMINAR INSTANCIA-->
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false">
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                    <parametro name="process" calc="$protocolarios.process$" />
+                    <parametro name="version" calc="$protocolarios.version$" />
+                    <parametro name="instance" calc="$protocolarios.instance$" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="url" calc="$protocolarios.url$" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>
