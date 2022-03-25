@@ -1,0 +1,165 @@
+<tarea id="GesCatBene" nombre="Catálogos de Beneficiarios y Proveedores" autor="Froylán Alanís" version="2" fechaModificacion="04/03/2019">
+    <pagina id="GesCatBene" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+        <nivel id="pasoParamNivel" nombre="Paso de parámetros" interactivo="false"> 
+            <componente id="pasoParamComp" nombre="Paso de parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" text="UR" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" text="Periodo" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="folio" text="Folio de operación" local="true" type="string" calc="$inParam.folio$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="gesCatBene" nombre="Catálogos de Beneficiarios y Proveedores" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="gesCatBene" nombre="Gestión de Catálogos de Beneficiarios y Proveedores" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="entity" nombre="beneficiario_folio">
+                    <campo name="ur" text="ur" calc="$config.ur$"  visible="false" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo Contable" llaveForanea="false" calc="%pasoParamNivel.pasoParamComp.periodo%"  visible="false" />
+                    <campo name="folio_operacion" text="folio_operacion" visible="false" calc="%pasoParamNivel.pasoParamComp.folio%" llaveForanea="false"/>
+                    <campo name="fecha_registro" text="fecha_registro"  visible="false" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="funcion" text="Opciones" validacion="%funcion%==null" validacionMensaje="Por favor selecciona una acción a realizar" columnas="4" margen-derecho="3" margen-izquierdo="3">
+                        <opciones>
+                            <opcion texto="Agregar" valor="Agregar" />
+                            <opcion texto="Modificar" valor="Modificar" />
+                            <opcion texto="Eliminar" valor="Eliminar" />
+                            <opcion texto="Consultar Beneficiarios y Proveedores Autorizados" valor="Consultar" />
+                            <opcion texto="Modificar Beneficiarios y Proveedores Autorizados" valor="ModificarAutorizados" />
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="4" margen-derecho="3" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+    <!--Componente Agregar-->
+            <componente id="AgregaBene" nombre="Catálogos de Beneficiarios y Proveedores" tipo="tabla" ejecutarComponente="%gesCatBene.gesCatBene.funcion%=='Agregar'" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="entity" nombre="beneficiario_aux">
+                    <campo name="id_unidad_responsable" text="UR" calc="$config.ur$" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" visible="false" calc="$inParam.periodo$" columna-visible="false"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="id_beneficiario" text="ID Identificador Único del beneficiario" generacion="@prox()+1" autogenerado="true" habilitado="false" columna-visible="true" columnas="3"  margen-derecho="2"/>
+                    <campo name="id_aux" text="Id_aux" visible="false" calc="%pasoParamNivel.pasoParamComp.folio%" habilitado="true" llaveForanea="false" columna-visible="false"/>
+                    <campo name="id_tipo_beneficiario" text="Tipo beneficiario" validacion="%id_tipo_beneficiario%==null" validacionMensaje="Seleccione un tipo de beneficiario" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="id_clasificacion_beneficiario" text="Clasificación de Beneficiario" visible="true" validacion="%id_clasificacion_beneficiario%==null" validacionMensaje="Seleccione una clasificación de beneficiario" columnas="3"  margen-derecho="2" />
+                    <campo name="id_estatus_beneficiario" columna-visible="false" text="Estatus Beneficiario" calc="3" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="razon_social" text="Razón Social" interaccion="%id_tipo_beneficiario%==3" marcador="Razón Social" mascara="C" validacion="%razon_social%==null AND %id_tipo_beneficiario%==3" validacionMensaje="Favor de Capturar una Razon Social Valida" columna-visible="true"  columnas="3"  margen-derecho="2"/>
+                    <campo name="nombre" text="* Nombre(s)" interaccion="%id_tipo_beneficiario%==2" validacion="%nombre%==null AND %id_tipo_beneficiario%==2" validacionMensaje="Favor de Capturar Un Nombre o Nombres" mascara="C" marcador="Nombre (s)" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="primer_apellido" interaccion="%id_tipo_beneficiario%==2" validacion="%primer_apellido%==null AND %id_tipo_beneficiario%==2" text="* Apellido Paterno"  validacionMensaje="Favor de Capturar Un Apellido Paterno" mascara="C"  marcador="Apellido Paterno" columnas="3"  margen-derecho="2"/>
+                    <campo name="segundo_apellido" interaccion="%id_tipo_beneficiario%==2" validacion="%segundo_apellido%==null AND %id_tipo_beneficiario%==2" text="* Apellido Materno"  validacionMensaje="Favor de Capturar Un Apellido Materno" mascara="C" marcador="Apellido Materno" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="rfc" text="* RFC" interaccion="%id_tipo_beneficiario%==3" validacion="%id_tipo_beneficiario%==3 AND %rfc%==null OR @ValidarRegistro('entity','beneficiario_aux','rfc='+'\\''+%rfc%+'\\'',';','MAGNITUS')" validacionMensaje="Debe de Capturar el RFC valido no Existente" mascara="AAA######XXX" marcador="RFC" columnas="3"  margen-derecho="2"/>
+                    <campo name="curp" text="* CURP" interaccion="%id_tipo_beneficiario%==2" mascara="CCCC######CCCCCCXX" validacion="%id_tipo_beneficiario%==2 AND %curp%==null AND !@matchRegEx(%curp%,'([A-Z][A,E,I,O,U,X][A-Z]{2}[0-9]{2}[0-1][0-9][0-3][0-9][M,H][A-Z]{2}[B,C,D,F,G,H,J,K,L,M,N,Ñ,P,Q,R,S,T,V,W,X,Y,Z]{3}[0-9,A-Z][0-9])') OR @ValidarRegistro('entity','beneficiario_aux','curp='+'\\''+%curp%+'\\'',';','MAGNITUS')" validacionMensaje="Favor de Capturar Una CURP Valida no Existente" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="folio_operacion_instancia" columna-visible="false" visible="false" calc="%pasoParamNivel.pasoParamComp.folio%"/>
+                    <tareas>
+                        <tarea nombre="Domicilio y Cuenta Bancaria del Beneficiario" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_beneficiario,id_aux,id_ultimo_usuario_modificador,id_unidad_responsable,id_periodo" ref="task=74975161-1830-4a23-bb40-026912ae2095"/>                          
+                    </tareas>
+                </tabla>
+            </componente>
+    <!--Fin agregar beneficiario -->
+    <!--Nivel MODIFICA-->
+            <componente id="ModificBene" nombre="Catálogos de Beneficiarios y Proveedores" tipo="tabla" ejecutarComponente="%gesCatBene.gesCatBene.funcion%=='Modificar'"  mostrarEditar="true" mostrarEliminar="false" mostrarAgregar="false" filtro="true">
+                <tabla schema="entity" nombre="beneficiario_aux">
+                    <campo name="id_unidad_responsable" text="UR" calc="$config.ur$" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" visible="false" calc="$inParam.periodo$" columna-visible="false"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="id_beneficiario" text="ID Identificador Único del beneficiario" generacion="@prox()+1" autogenerado="true" habilitado="true" llaveForanea="false" columnas="3"  margen-derecho="2"/>
+                    <campo name="id_aux" text="Id_aux" visible="false" calc="%pasoParamNivel.pasoParamComp.folio%" habilitado="true" llaveForanea="false" columna-visible="false"/>
+                    <campo name="id_tipo_beneficiario" text="Tipo beneficiario" validacionModificacion="%id_tipo_beneficiario%==null" validacionModificacionMensaje="Seleccione un tipo de beneficiario" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="id_clasificacion_beneficiario" text="Clasificación de Beneficiario" visible="true" validacionModificacion="%id_clasificacion_beneficiario%==null" validacionModificacionMensaje="Seleccione una clasificación de beneficiario" columnas="3"  margen-derecho="2" />
+                    <campo name="id_estatus_beneficiario" text="Estatus Beneficiario" cal0c="3" columnas="3" columna-visible="true" margen-izquierdo="2"/>
+                    <campo name="razon_social" text="Razón Social" interaccion="%id_tipo_beneficiario%==3" marcador="Razón Social" mascara="C" validacionModificacion="%razon_social%==null AND %id_tipo_beneficiario%==3" validacionModificacionMensaje="Favor de Capturar una Razon Social Valida" columna-visible="true"  columnas="3"  margen-derecho="2"/>
+                    <campo name="nombre" text="* Nombre(s)" interaccion="%id_tipo_beneficiario%==2" validacionModificacion="%nombre%==null AND %id_tipo_beneficiario%==2" validacionModificacionMensaje="Favor de Capturar Un Nombre o Nombres" mascara="C" marcador="Nombre (s)" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="primer_apellido" interaccion="%id_tipo_beneficiario%==2" validacionModificacion="%primer_apellido%==null AND %id_tipo_beneficiario%==2" text="* Apellido Paterno"  validacionModificacionMensaje="Favor de Capturar Un Apellido Paterno" mascara="C"  marcador="Apellido Paterno" columnas="3"  margen-derecho="2"/>
+                    <campo name="segundo_apellido" interaccion="%id_tipo_beneficiario%==2" validacionModificacion="%segundo_apellido%==null AND %id_tipo_beneficiario%==2" text="* Apellido Materno"  validacionModificacionMensaje="Favor de Capturar Un Apellido Materno" mascara="C" marcador="Apellido Materno" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="rfc" text="* RFC" habilitado="false" columnas="3"  margen-derecho="2"/>
+                    <campo name="curp" text="* CURP" interaccion="%id_tipo_beneficiario%==2" mascara="CCCC######CCCCCCXX" validacionModificacion="%id_tipo_beneficiario%==2 AND %curp%==null AND !@matchRegEx(%curp%,'([A-Z][A,E,I,O,U,X][A-Z]{2}[0-9]{2}[0-1][0-9][0-3][0-9][M,H][A-Z]{2}[B,C,D,F,G,H,J,K,L,M,N,Ñ,P,Q,R,S,T,V,W,X,Y,Z]{3}[0-9,A-Z][0-9])') OR @ValidarRegistro('entity','beneficiario_aux','curp='+'\\''+%curp%+'\\'',';','MAGNITUS')" validacionModificacionMensaje="Favor de Capturar Una CURP Valida no Existente" marcador="CURP" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="folio_operacion_instancia" columna-visible="false" visible="false" calc="%pasoParamNivel.pasoParamComp.folio%"/>
+                    <tareas>
+                        <tarea nombre="Domicilio y Cuenta Bancaria del Beneficiario" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_beneficiario,id_tipo_beneficiario,id_aux,id_ultimo_usuario_modificador,id_unidad_responsable,id_periodo" ref="task=74975161-1830-4a23-bb40-026912ae2095"/>                          
+                    </tareas>
+                </tabla>
+                <!--<estilos>
+                    <boton nombre="guardar" columnas="4" margen-izquierdo="2" margen-derecho="2"/>
+                </estilos>-->
+            </componente>
+        <!--Fin MODIFICA beneficiario -->
+        <!--Nivel ELIMINA-->
+            <componente id="ElimiBene" nombre="Catálogos de Beneficiarios y Proveedores" tipo="tabla" ejecutarComponente="%gesCatBene.gesCatBene.funcion%=='Eliminar'" filtro="true" mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_beneficiario" text="id_beneficiario" columna-visible="false" />
+                    <campo name="folio_beneficiario" text="Folio Beneficiario"/>
+                    <campo name="id_unidad_responsable" text="id_unidad_responsable" columna-visible="false" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                    <campo name="id_periodo" text="id_periodo" columna-visible="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="razon_social" text="Nombre o Razón Social" />
+                    <campo name="curp" text="CURP" />
+                    <campo name="rfc" text="RFC" />
+                    <campo name="id_tipo_beneficiario" text="Tipo Beneficario" descripcionForaneaTabla="tipo" />
+                    <campo name="id_clasificacion_beneficiario" text="Clasificación Beneficario" descripcionForaneaTabla="descripcion_clasificacion_beneficiario" />
+                    <campo name="id_estatus_beneficiario" text="Estatus" descripcionForaneaTabla="estatus" />
+                    <campo name="elimina" editable="true" text="Eliminar o Inactivar"  filtroCampo="elimina" filtroOperador="=" filtroValor="false" />
+                    <campo name="id_estatus_beneficiario" text="estatus" columna-visible="false" filtroCampo="id_estatus_beneficiario" filtroOperador="=" filtroValor="1" />
+                </tabla>
+            </componente>
+            <componente id="ConsultarBene" nombre="Catálogos de Beneficiarios y Proveedores" tipo="tabla" ejecutarComponente="%gesCatBene.gesCatBene.funcion%=='Consultar'" filtro="true" mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false">
+                <tabla schema="entity" nombre="beneficiario_aux">
+                    <campo name="id_unidad_responsable" text="UR" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" visible="false" columna-visible="false" />
+                    <campo name="id_periodo" text="Periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" columna-visible="false" />
+                    <campo name="fecha_registro" text="Fecha Registro" />
+                    <campo name="id_beneficiario" text="ID Identificador Único del beneficiario" />
+                    <campo name="id_aux" text="Id_aux" />
+                    <!-- calc="%gesCatBene.gesCatBene.folio_operacion%"-->
+                    <campo name="id_tipo_beneficiario" text="Tipo beneficiario" />
+                    <campo name="id_clasificacion_beneficiario" text="Clasificación de Beneficiario" />
+                    <campo name="id_estatus_beneficiario" text="Estatus Beneficiario" />
+                    <campo name="razon_social" text="Razón Social" />
+                    <campo name="nombre" text="* Nombre(s)" />
+                    <campo name="primer_apellido" text="* Apellido Paterno" />
+                    <campo name="segundo_apellido" text="* Apellido Materno" />
+                    <campo name="rfc" text="* RFC" />
+                    <campo name="curp" text="* CURP" />
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" visible="false" columna-visible="false" />
+                    <campo name="folio_operacion_instancia" columna-visible="false" visible="false" />
+                    <campo name="autorizado" columna-visible="false" visible="false" filtroCampo="autorizado" filtroOperador="=" filtroValor="true" />
+                    <tareas>
+                        <tarea nombre="Visualizar detalle del beneficiario" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_beneficiario,id_tipo_beneficiario,id_aux,id_ultimo_usuario_modificador,id_unidad_responsable,id_periodo" ref="task=0e4cb049-ead5-4335-b867-c5ce466448d5" />
+                    </tareas>
+                </tabla>
+            </componente>
+            <componente id="ModificaBene" nombre="Catálogos de Beneficiarios y Proveedores" tipo="tabla" ejecutarComponente="%gesCatBene.gesCatBene.funcion%=='ModificarAutorizados'" filtro="true" mostrarEditar="false" mostrarEliminar="true" mostrarAgregar="false">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_beneficiario" text="id_beneficiario" columna-visible="false" />
+                    <campo name="folio_beneficiario" text="Folio Beneficiario"/>
+                    <campo name="id_unidad_responsable" text="id_unidad_responsable" columna-visible="false" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="id_periodo" text="id_periodo" columna-visible="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.periodo%" />
+                    <campo name="razon_social" text="Nombre o Razón Social" />
+                    <campo name="curp" text="CURP" />
+                    <campo name="rfc" text="RFC" />
+                    <campo name="id_tipo_beneficiario" text="Tipo Beneficario" descripcionForaneaTabla="tipo" />
+                    <campo name="id_clasificacion_beneficiario" text="Clasificación Beneficario" descripcionForaneaTabla="descripcion_clasificacion_beneficiario" />
+                    <campo name="id_estatus_beneficiario" text="Estatus" descripcionForaneaTabla="estatus" filtroCampo="id_estatus_beneficiario" filtroOperador="=" filtroValor="1" />
+                    
+                    <campo name="folio_operacion_instancia"  text="folio_operacion_instancia" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="$inParam.folio$"/>
+                    <campo name="accion" text="accion" local="true" type="string" calc="'modifica'" columna-visible="false"/>
+                    <campo name="id_aux" text="id_aux" local="true" type="long" calc="$inParam.folio$" columna-visible="false"/>
+                                    <tareas>
+                    <tarea nombre="Domicilio y Cuenta Bancaria del Beneficiario" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_beneficiario,id_tipo_beneficiario,id_aux,id_ultimo_usuario_modificador,id_unidad_responsable,id_periodo,accion" ref="task=74975161-1830-4a23-bb40-026912ae2095" />
+                </tareas>
+                </tabla>
+
+            </componente>
+            </nivel>
+    </pagina>
+</tarea>

@@ -1,0 +1,100 @@
+<tarea id="consBene" nombre="Consulta Beneficiarios" autor="Froylán Alanís" version="1">
+    <pagina id="1">
+         <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="selTipoBene" nombre="Selección de Clasificación de Beneficiario" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="selTipoBene" nombre="Selección de Clasificación de Beneficiario" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                   <campo name="id" visible="false"/>
+                   <campo name="tabla" text="Situación de Beneficiarios" local="true" type="string" validacion="%tabla%==null" validacionMensaje="Selecciona Situación de Beneficiario" calc="'BENEFICIARIO'" habilitado="true" columnas="4" margen-izquierdo="3" margen-derecho="3">
+                       <opciones>
+                           <opcion texto="Beneficiarios Previamente Autorizados" valor="BENEFICIARIO"></opcion>
+                           <opcion texto="Beneficiarios No Autorizados" valor="BENEFICIARIOAUX"></opcion>
+                       </opciones>
+                   </campo>        
+                   <campo name="clasificacion_beneficiario_local" text="Tipo de Beneficiario" validacion="%clasificacion_beneficiario_local%==null OR %clasificacion_beneficiario_local%==''" validacionMensaje="Debe seleccionar una Clasificación de Beneficiario" columnas="4" margen-izquierdo="3" local="true" type="long">
+                        <opciones>
+                            <opcion texto="PROVEEDOR" valor="1" />
+                            <opcion texto="FUNCIONARIO" valor="2" />
+                            <opcion texto="DEUDOR" valor="3" />
+                            <opcion texto="ALUMNO" valor="4" />
+                            <opcion texto="TERCEROS" valor="5" />
+                            <opcion texto="CONTRATISTAS" valor="6" />
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" columnas="2" margen-izquierdo="4" visible="true" texto="Continuar" />
+                </estilos>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+             <componente id="ConsultarBene" nombre="Catálogo de Beneficiarios No Autorizados (incluye acción de Click Derecho)" tipo="tabla" ejecutarComponente="%selTipoBene.selTipoBene.clasificacion_beneficiario_local%!=null AND %selTipoBene.selTipoBene.tabla%=='BENEFICIARIOAUX'" filtro="true"  mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false">
+                <tabla schema="entity" nombre="beneficiario_aux">
+                    <campo name="id_unidad_responsable" text="UR" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" visible="false" columna-visible="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="fecha_registro" text="Fecha De Registro" width="170" columna-visible="false" />
+                    <campo name="id_beneficiario" text="ID Beneficiario" habilitado="true" llaveForanea="false" columnas="3"  margen-derecho="2" width="100" cellsalign="center"/>
+                    <campo name="id_aux" text="ID Aux" visible="false" habilitado="true" llaveForanea="false" columna-visible="true" cellsalign="center" width="80"/> 
+                    <campo name="id_tipo_beneficiario" text="Tipo Beneficiario" width="170"/>
+                    <campo name="id_clasificacion_beneficiario" text="Clasificación" filtroCampo="id_clasificacion_beneficiario" filtroOperador="=" filtroValor="%selTipoBene.selTipoBene.clasificacion_beneficiario_local%" width="120"/>
+                    <campo name="id_estatus_beneficiario" text="Estatus" columna-visible="true" width="120" filtroCampo="id_estatus_beneficiario" filtroOperador="=" filtroValor="3" />
+                    <campo name="razon_social" text="Razón Social" columna-visible="true" width="200"/> 
+                    <campo name="nombre" text="* Nombre(s)" width="120"/>
+                    <campo name="primer_apellido" text="* Apellido Paterno" width="150"/>
+                    <campo name="segundo_apellido" text="* Apellido Materno" width="150"/>
+                    <campo name="rfc" text="* RFC" width="150"/>
+                    <campo name="curp" text="* CURP" width="200"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" visible="false" columna-visible="false"/>
+                    <campo name="folio_operacion_instancia" columna-visible="false" visible="false"/>
+                    <campo name="tabla" text="tabla" local="true" type="string" calc="%selTipoBene.selTipoBene.tabla%" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Visualizar Detalle del Beneficiario" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_beneficiario,id_tipo_beneficiario,id_aux,id_ultimo_usuario_modificador,id_unidad_responsable,id_periodo,tabla" ref="task=0e4cb049-ead5-4335-b867-c5ce466448d5"/>                          
+                    </tareas>
+                </tabla>  
+            </componente>
+            <componente id="ConsultarBene1" nombre="Catálogo de Beneficiarios Autorizados (incluye acción de Click Derecho)" tipo="tabla" ejecutarComponente="%selTipoBene.selTipoBene.clasificacion_beneficiario_local%!=null AND %selTipoBene.selTipoBene.tabla%=='BENEFICIARIO'" filtro="true" mostrarEditar="false" mostrarEliminar="false" mostrarAgregar="false">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_unidad_responsable" text="UR" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" visible="false" columna-visible="false" />
+                    <!-- filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" -->
+                    <campo name="fecha_registro" text="Fecha De Registro" width="170" columna-visible="false" />
+                    <campo name="id_beneficiario" text="ID Beneficiario" habilitado="true" llaveForanea="false" columnas="3"  margen-derecho="2" width="110" cellsalign="center" />
+                    <campo name="id_aux" text="ID Aux" visible="false" habilitado="true" llaveForanea="false" cellsalign="center" width="80" columna-visible="false" /> 
+                    <campo name="id_tipo_beneficiario" text="Tipo Beneficiario" width="160"/>
+                    <campo name="id_clasificacion_beneficiario" text="Clasificación" filtroCampo="id_clasificacion_beneficiario" filtroOperador="=" filtroValor="%selTipoBene.selTipoBene.clasificacion_beneficiario_local%" width="115" />
+                    <campo name="id_estatus_beneficiario" text="Estatus" columna-visible="true" width="72"/>
+                    <campo name="razon_social" text="Razón Social" columna-visible="true" width="335"/> 
+                    <campo name="nombre" text="* Nombre(s)" width="160"/>
+                    <campo name="primer_apellido" text="* Apellido Paterno" width="135"/>
+                    <campo name="segundo_apellido" text="* Apellido Materno" width="140"/>
+                    <campo name="rfc" text="* RFC" width="135"/>
+                    <campo name="curp" text="* CURP" width="180"/>
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" visible="false" columna-visible="false"/>
+                    <campo name="folio_operacion_instancia" columna-visible="false" visible="false"/>
+                    <campo name="tabla" text="tabla" local="true" type="string" calc="%selTipoBene.selTipoBene.tabla%" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Visualizar Detalle del Beneficiario" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_beneficiario,id_tipo_beneficiario,id_aux,id_ultimo_usuario_modificador,id_unidad_responsable,id_periodo,tabla" ref="task=0e4cb049-ead5-4335-b867-c5ce466448d5"/>                          
+                    </tareas>
+                </tabla>  
+            </componente>
+        </nivel>
+        <nivel id="consultaBene" nombre="Reporte Catálogo de Beneficiarios">
+            <componente id="consultaBene" tipo="reporte" nombre="Reporte Catálogo de Beneficiarios">
+                <reporte nombre="catalogo_beneficiario_autoriza_fltr">
+                    <campo name="id_periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_clasificacion_beneficiario" type="long" calc="%selTipoBene.selTipoBene.clasificacion_beneficiario_local%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

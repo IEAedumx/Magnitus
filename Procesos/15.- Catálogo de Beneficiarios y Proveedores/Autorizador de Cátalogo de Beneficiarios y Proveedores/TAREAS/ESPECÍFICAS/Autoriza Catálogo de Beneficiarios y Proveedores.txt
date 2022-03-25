@@ -1,0 +1,366 @@
+<tarea id="autorizaBeneficiarios" nombre="Autoriza Catálogo de Beneficiarios y Proveedores" version="1">
+    <pagina id="autorizaBeneficiariosPagina" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+        <nivel id="pasoParamNivel" nombre="Paso de parámetros" interactivo="false">
+            <componente id="pasoParamComp" nombre="Paso de parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" filtroCampo="id" filtroOperador="=" filtroValor="1" />
+                    <campo name="id_periodo" text="Periodo" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="id_aux" text="Folio de operación" local="true" type="string" calc="$inParam.folio$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="autorizaAgregarBeneficiariosNivel" nombre="Autoriza Catálogo de Beneficiarios y Proveedores" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="reporte" nombre="Catálogo de Beneficiarios y Proveedores" id="consultaAgregarBeneficiariosComp">
+                <reporte nombre="catalogo_beneficiario_autoriza">
+                    <campo name="id_periodo" type="long" calc="%pasoParamNivel.pasoParamComp.id_periodo%" />
+                    <campo name="folio" type="long" calc="%pasoParamNivel.pasoParamComp.id_aux%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="autorizaAgregarBeneficiariosCheck" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$inParam.ur$" visible="false" />
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" visible="false" />
+                    <campo name="observaciones_catalogo_beneficiarios" text="Observaciones" columnas="4" margen-izquierdo="3" margen-derecho="7" interaccion="%check%==false" validacion="%observaciones_catalogo_beneficiarios%==null AND %check%==false" validacionMensaje="Favor de insertar una descripción para continuar." height="200" />
+                    <campo name="check" text="Autorizar" local="true" type="bool" columnas="4" margen-izquierdo="3" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+
+        <nivel id="barrerBeneficiariosAux" nombre="barrerBeneficiariosAux" interactivo="false" ejecutar="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.check%==true">
+            <componente id="barrerBeneficiariosAux" nombre="barrerBeneficiariosAux" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario_aux">
+                    <campo name="id_beneficiario" />
+                    <campo name="id_aux" filtroCampo="id_aux" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.id_aux%" />
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.id_periodo%" />
+                    <campo name="nombre" />
+                    <campo name="primer_apellido" />
+                    <campo name="segundo_apellido" />
+                    <campo name="razon_social" />
+                    <campo name="curp" />
+                    <campo name="rfc" />
+                    <campo name="id_tipo_beneficiario" />
+                    <campo name="id_estatus_beneficiario" />
+                    <campo name="fecha_registro" />
+                    <campo name="id_ultimo_usuario_modificador" />
+                    <campo name="id_clasificacion_beneficiario" />
+                    <campo name="folio_beneficiario" />
+                    <campo name="activo" />
+                    <campo name="folio_operacion_instancia" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.id_aux%" />
+                    
+                </tabla>
+                <nivel id="altaBeneficario" nombre="altaBeneficario" interactivo="false" ejecutar="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_beneficiario%!=null">
+                    <componente id="altaBeneficario" nombre="altaBeneficario" tipo="altaDirect">
+                        <tabla schema="entity" nombre="beneficiario">
+                            <campo name="id_beneficiario" generacion="@prox()+1" autogenerado="true" />
+                            <campo name="id_unidad_responsable" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_unidad_responsable%" />
+                            <campo name="id_periodo" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%" />
+                            <campo name="nombre" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.nombre%" />
+                            <campo name="razon_social" calc="@ifThenElse(%barrerBeneficiariosAux.barrerBeneficiariosAux.razon_social%!=null,%barrerBeneficiariosAux.barrerBeneficiariosAux.razon_social%,@concatenar(%barrerBeneficiariosAux.barrerBeneficiariosAux.nombre%+' '+%barrerBeneficiariosAux.barrerBeneficiariosAux.primer_apellido%+' '+%barrerBeneficiariosAux.barrerBeneficiariosAux.segundo_apellido%))" />
+                            <campo name="primer_apellido" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.primer_apellido%" />
+                            <campo name="segundo_apellido" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.segundo_apellido%" />
+                            <campo name="curp" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.curp%" />
+                            <campo name="rfc" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.rfc%" />
+                            <campo name="id_tipo_beneficiario" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_tipo_beneficiario%" />
+                            <campo name="id_estatus_beneficiario" calc="1" />
+                            <campo name="folio_operacion_instancia" calc="%pasoParamNivel.pasoParamComp.id_aux%"/>
+                            <campo name="fecha_registro" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.fecha_registro%" />
+                            <campo name="id_ultimo_usuario_modificador" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_ultimo_usuario_modificador%" />
+                            <campo name="id_clasificacion_beneficiario" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_clasificacion_beneficiario%" />
+                            <campo name="folio_beneficiario" calc="@concatenar('IDUB-'+@ifThenElse(@consultaDirec('SELECT MAX(id_beneficiario)+1 fol FROM entity.beneficiario WHERE id_periodo= '+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+'\\' AND id_unidad_responsable='+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_unidad_responsable%+'\\'','fol','long','MAGNITUS')==null,%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+'000001',%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+
+                            @ifThenElse(@consultaDirec('SELECT MAX(id_beneficiario)+1 fol FROM entity.beneficiario WHERE id_periodo= '+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+'\\' AND id_unidad_responsable='+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_unidad_responsable%+'\\'','fol','long','MAGNITUS')&lt;10,'00000',
+                            @ifThenElse(@consultaDirec('SELECT MAX(id_beneficiario)+1 fol FROM entity.beneficiario WHERE id_periodo= '+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+'\\' AND id_unidad_responsable='+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_unidad_responsable%+'\\'','fol','long','MAGNITUS')&lt;100,'0000',
+                            @ifThenElse(@consultaDirec('SELECT MAX(id_beneficiario)+1 fol FROM entity.beneficiario WHERE id_periodo= '+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+'\\' AND id_unidad_responsable='+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_unidad_responsable%+'\\'','fol','long','MAGNITUS') &lt;1000,'000',
+                            @ifThenElse(@consultaDirec('SELECT MAX(id_beneficiario)+1 fol FROM entity.beneficiario WHERE id_periodo= '+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+'\\' AND id_unidad_responsable='+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_unidad_responsable%+'\\'','fol','long','MAGNITUS')&lt;10000,'00',
+                            @ifThenElse(@consultaDirec('SELECT MAX(id_beneficiario)+1 fol FROM entity.beneficiario WHERE id_periodo= '+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+'\\' AND id_unidad_responsable='+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_unidad_responsable%+'\\'','fol','long','MAGNITUS')&lt;100000,'0','')))))
+                            +@consultaDirec('SELECT MAX(id_beneficiario)+1 fol FROM entity.beneficiario WHERE id_periodo= '+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_periodo%+'\\' AND id_unidad_responsable='+'\\''+%barrerBeneficiariosAux.barrerBeneficiariosAux.id_unidad_responsable%+'\\'','fol','long','MAGNITUS')))" />
+                            <campo name="id_ben_aux" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_beneficiario%"/>
+                            <campo name="id_aux" calc="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_aux%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="RBAB" nombre="Relacionar BeneficiarioAux Beneficiario"  interactivo="false">
+                    <componente id="RBAB" nombre="Relacionar BeneficiarioAux Beneficiario" tipo="cursor">
+                        <tabla schema="entity" nombre="beneficiario_aux">
+                            <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_beneficiario%"/>
+                            <campo name="id_aux" filtroCampo="id_aux" filtroOperador="=" filtroValor="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_aux%"/>
+                            <campo name="id_ben_aut" calc="%altaBeneficario.altaBeneficario.id_beneficiario%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="barrerCuentaAux" nombre="barrerCuentaAux" interactivo="false" ejecutar="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_beneficiario%!=null">
+                            <componente id="barrerCuentaAux" nombre="barrerCuentaAux" tipo="cursor">
+                                <tabla schema="entity" nombre="beneficiario_cuenta_bancaria_aux">
+                                    <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_beneficiario%"/> <!--  -->
+                                    <campo name="cuenta_bancaria" />
+                                    <campo name="id_aux" filtroCampo="id_aux" filtroOperador="=" filtroValor="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_aux%"/> <!-- -->
+                                    <campo name="id_banco" />
+                                    <campo name="clabe" />
+                                    <campo name="estatus" />
+                                </tabla>
+                                <nivel id="altaCuenta" nombre="altaCuenta" interactivo="false" ejecutar="%barrerCuentaAux.barrerCuentaAux.cuenta_bancaria%!=null">
+                                    <componente id="altaCuenta" nombre="altaCuenta" tipo="altaDirect">
+                                        <tabla schema="entity" nombre="beneficiario_cuenta_bancaria">
+                                            <campo name="cuenta_bancaria" calc="%barrerCuentaAux.barrerCuentaAux.cuenta_bancaria%" />
+                                            <campo name="id_beneficiario" calc="%altaBeneficario.altaBeneficario.id_beneficiario%" />
+                                            <campo name="id_banco" calc="%barrerCuentaAux.barrerCuentaAux.id_banco%" />
+                                            <campo name="clabe" calc="%barrerCuentaAux.barrerCuentaAux.clabe%" />
+                                            <campo name="estatus" calc="%barrerCuentaAux.barrerCuentaAux.estatus%" />
+                                        </tabla>
+                                    </componente>
+                                </nivel>
+                            </componente>
+                        </nivel>
+                        <!-- -->
+                        
+                        
+                        <nivel id="barreDomicilioAux" nombre="barreDomicilioAux" interactivo="false" ejecutar="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_beneficiario%!=null">
+                            <componente id="barreDomicilioAux" nombre="barreDomicilioAux" tipo="cursor">
+                                <tabla schema="entity" nombre="beneficiario_domicilio_aux">
+                                    <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_beneficiario%" />
+                                    <campo name="id_aux" filtroCampo="id_aux" filtroOperador="=" filtroValor="%barrerBeneficiariosAux.barrerBeneficiariosAux.id_aux%"/>
+                                    <campo name="id_domicilio_beneficiario" />
+                                    <campo name="colonia" />
+                                    <campo name="codigo_postal" />
+                                    <campo name="activo" />
+                                    <campo name="fecha_registro" />
+                                    <campo name="id_ultimo_usuario_modificador" />
+                                    <campo name="id_estado" />
+                                    <campo name="id_municipio" />
+                                    <campo name="id_pais" />
+                                    <campo name="calle" />
+                                    <campo name="numero" />
+                                    <campo name="id_unidad_responsable" />
+                                    <campo name="id_periodo" />
+                                    <campo name="ciudad" />
+                                </tabla>
+                                <nivel id="altaDomicilio" nombre="altaDomicilio" interactivo="false" >
+                                    <componente id="altaDomicilio" nombre="altaDomicilio" tipo="altaDirect">
+                                        <tabla schema="entity" nombre="beneficiario_domicilio">
+                                            <campo name="id_beneficiario" calc="%altaBeneficario.altaBeneficario.id_beneficiario%" />
+                                            <campo name="id_domicilio_beneficiario" generacion="@prox()+1" autogenerado="true" />
+                                            <campo name="colonia" calc="%barreDomicilioAux.barreDomicilioAux.colonia%" />
+                                            <campo name="codigo_postal" calc="%barreDomicilioAux.barreDomicilioAux.codigo_postal%" />
+                                            <campo name="activo" calc="%barreDomicilioAux.barreDomicilioAux.activo%" />
+                                            <campo name="fecha_registro" calc="%barreDomicilioAux.barreDomicilioAux.fecha_registro%" />
+                                            <campo name="id_ultimo_usuario_modificador" calc="%barreDomicilioAux.barreDomicilioAux.id_ultimo_usuario_modificador%" />
+                                            <campo name="id_estado" calc="%barreDomicilioAux.barreDomicilioAux.id_estado%" />
+                                            <campo name="id_municipio" calc="%barreDomicilioAux.barreDomicilioAux.id_municipio%" />
+                                            <campo name="id_pais" calc="%barreDomicilioAux.barreDomicilioAux.id_pais%" />
+                                            <campo name="calle" calc="%barreDomicilioAux.barreDomicilioAux.calle%" />
+                                            <campo name="numero" calc="%barreDomicilioAux.barreDomicilioAux.numero%" />
+                                            <campo name="id_unidad_responsable" calc="%barreDomicilioAux.barreDomicilioAux.id_unidad_responsable%" />
+                                            <campo name="id_periodo" calc="%barreDomicilioAux.barreDomicilioAux.id_periodo%" />
+                                            <campo name="ciudad" calc="%barreDomicilioAux.barreDomicilioAux.ciudad%" />
+                                        </tabla>
+                                    </componente>
+                                </nivel>
+                            </componente>
+                        </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="actualiza" nombre="actualiza" interactivo="false" ejecutar="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.check%==true">
+            <componente id="actualiza" nombre="actualiza" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario_aux">
+                    <campo name="id_beneficiario" />
+                    <campo name="id_aux" />
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.id_periodo%" />
+                    <campo name="nombre" />
+                    <campo name="primer_apellido" />
+                    <campo name="segundo_apellido" />
+                    <campo name="razon_social" />
+                    <campo name="curp" />
+                    <campo name="rfc" />
+                    <campo name="id_tipo_beneficiario" />
+                    <campo name="id_estatus_beneficiario" calc="1" />
+                    <campo name="fecha_registro" />
+                    <campo name="id_ultimo_usuario_modificador" />
+                    <campo name="id_clasificacion_beneficiario" />
+                    <campo name="folio_beneficiario" />
+                    <campo name="activo" />
+                    <campo name="folio_operacion_instancia" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.folio_operacion%" />
+                    <campo name="autorizado" calc="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- ORIGINAL FROY
+        <nivel nombre="InactivaBene" id="InactivaBene" interactivo="false" ejecutar="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.check%==true">
+            <componente id="InactivaBene" nombre="InactivaBene" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_beneficiario"/>
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.id_periodo%" />
+                    <campo name="elimina" filtroCampo="elimina" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus_beneficiario" calc="4"/>
+                </tabla>
+            </componente>
+        </nivel>
+        -->
+        
+        
+        <nivel id="EliminaBene" nombre="EliminaBene"  interactivo="false" ejecutar="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.check%==true AND @consultaDirec('SELECT COUNT(elimina) AS result FROM entity.beneficiario WHERE elimina=true','result','long','MAGNITUS')&gt;0">
+            <componente id="EliminaBene" nombre="EliminaBene" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_beneficiario"/>
+                    <!--
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.id_periodo%" />
+                    -->
+                    <campo name="id_ben_aux"/>
+                    <campo name="id_aux"/>
+                    <campo name="elimina" filtroCampo="elimina" filtroOperador="=" filtroValor="true"/>
+                    <!--
+                    <campo name="id_estatus_beneficiario" calc="4"/>
+                    -->
+                </tabla>
+                <nivel id="buscaCuentaAux" nombre="buscaCuentaAux" interactivo="false" ejecutar="%EliminaBene.EliminaBene.id_ben_aux%!=null AND %EliminaBene.EliminaBene.id_aux%!=null">
+                    <componente id="buscaCuentaAux" nombre="buscaCuentaAux" tipo="cursor">
+                        <tabla schema="entity" nombre="beneficiario_cuenta_bancaria_aux">
+                            <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%EliminaBene.EliminaBene.id_ben_aux%"/>
+                            <campo name="id_aux" filtroCampo="id_aux" filtroOperador="=" filtroValor="%EliminaBene.EliminaBene.id_aux%"/>
+                            <campo name="cuenta_bancaria"/>
+                        </tabla>
+                        <nivel id="eliminaCuentaAux" nombre="Elimina Cuenta Aux" interactivo="false" ejecutar="%buscaCuentaAux.buscaCuentaAux.cuenta_bancaria%!=null">
+                            <componente id="eliminaCuentaAux" nombre="Elimina Cuenta Aux" tipo="bajaDirect">
+                                <tabla schema="entity" nombre="beneficiario_cuenta_bancaria_aux">
+                                    <campo name="cuenta_bancaria" calc="%buscaCuentaAux.buscaCuentaAux.cuenta_bancaria%"/>
+                                    <campo name="id_beneficiario" calc="%buscaCuentaAux.buscaCuentaAux.id_beneficiario%"/>
+                                    <campo name="id_aux" calc="%buscaCuentaAux.buscaCuentaAux.id_aux%"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>                
+                </nivel>
+                <nivel id="buscaDomicilioAux" nombre="Busca Domicilio Aux" interactivo="false" ejecutar="%EliminaBene.EliminaBene.id_ben_aux%!=null AND %EliminaBene.EliminaBene.id_aux%!=null">
+                    <componente id="buscaDomicilioAux" nombre="busca C" tipo="cursor">
+                         <tabla schema="entity" nombre="beneficiario_domicilio_aux">
+                            <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%EliminaBene.EliminaBene.id_ben_aux%"/>
+                            <campo name="id_aux" filtroCampo="id_aux" filtroOperador="=" filtroValor="%EliminaBene.EliminaBene.id_aux%"/>
+                            <campo name="id_domicilio_beneficiario"/>
+                        </tabla>
+                        <nivel id="eliminaDomicilioAux" nombre="Elimina Domicilio Aux" interactivo="false" ejecutar="%buscaDomicilioAux.buscaDomicilioAux.id_domicilio_beneficiario%!=null">
+                            <componente id="eliminaDomicilio" nombre="elimina D" tipo="bajaDirect">
+                                <tabla schema="entity" nombre="beneficiario_domicilio_aux">
+                                    <campo name="id_domicilio_beneficiario" calc="%buscaDomicilioAux.buscaDomicilioAux.id_domicilio_beneficiario%"/>
+                                    <campo name="id_beneficiario" calc="%buscaDomicilioAux.buscaDomicilioAux.id_beneficiario%"/>
+                                    <campo name="id_aux" calc="%buscaDomicilioAux.buscaDomicilioAux.id_aux%"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+                
+                <nivel id="EBA" nombre="Elimina Beneficiario Auxiliar"  interactivo="false" ejecutar="%EliminaBene.EliminaBene.id_ben_aux%!=null AND %EliminaBene.EliminaBene.id_aux%!=null">
+                    <componente id="EBA"  nombre="Elimina Beneficiario Auxiliar" tipo="bajaDirect" >
+                        <tabla schema="entity" nombre="beneficiario_aux">
+                            <campo name="id_beneficiario" calc="%EliminaBene.EliminaBene.id_ben_aux%"/>
+                            <campo name="id_aux" calc="%EliminaBene.EliminaBene.id_aux%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="buscaCuenta" nombre="Busca Cuenta" interactivo="false" ejecutar="%EliminaBene.EliminaBene.id_beneficiario%!=null">
+                    <componente id="buscaCuenta" nombre="Busca Cuenta" tipo="cursor">
+                        <tabla schema="entity" nombre="beneficiario_cuenta_bancaria">
+                            <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%EliminaBene.EliminaBene.id_beneficiario%"/>
+                            <campo name="cuenta_bancaria"/>
+                        </tabla>
+                        <nivel id="eliminaCuenta" nombre="Elimina Cuenta" interactivo="false" ejecutar="%buscaCuenta.buscaCuenta.cuenta_bancaria%!=null">
+                            <componente id="eliminaCuenta" nombre="Elimina Cuenta" tipo="bajaDirect">
+                                <tabla schema="entity" nombre="beneficiario_cuenta_bancaria">
+                                    <campo name="cuenta_bancaria" calc="%buscaCuenta.buscaCuenta.cuenta_bancaria%"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+                
+                <nivel id="buscaDomicilio" nombre="Busca Domicilio" interactivo="false" ejecutar="%EliminaBene.EliminaBene.id_beneficiario%!=null">
+                    <componente id="buscaDomicilio" nombre="Busca Domicilio" tipo="cursor">
+                        <tabla schema="entity" nombre="beneficiario_domicilio">
+                            <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%EliminaBene.EliminaBene.id_beneficiario%"/>
+                            <campo name="id_domicilio_beneficiario"/>
+                        </tabla>
+                        <nivel id="eliminaDomicilio" nombre="Elimina Domicilio" interactivo="false" ejecutar="%buscaDomicilio.buscaDomicilio.id_domicilio_beneficiario%!=null">
+                            <componente id="eliminaDomicilio" nombre="Elimina Domicilio" tipo="bajaDirect">
+                                <tabla schema="entity" nombre="beneficiario_domicilio">
+                                    <campo name="id_domicilio_beneficiario" calc="%buscaDomicilio.buscaDomicilio.id_domicilio_beneficiario%"/>
+                                    <campo name="id_beneficiario" calc="%buscaDomicilio.buscaDomicilio.id_beneficiario%"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+                
+                 <nivel id="eliminaB" nombre="Elimina Beneficiario"  interactivo="false" ejecutar="%EliminaBene.EliminaBene.id_beneficiario%!=null">
+                    <componente id="eliminaB" nombre="Elimina Beneficiario" tipo="bajaDirect">
+                        <tabla schema="entity" nombre="beneficiario">
+                            <campo name="id_beneficiario" calc="%EliminaBene.EliminaBene.id_beneficiario%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        
+        <nivel nombre="Negocia Instancia" id="NegociaInstanciaAgregar" interactivo="false" ejecutar="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.check%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="NegociaInstanciaAgregar">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                    <parametro name="process" calc="$protocolarios.process$" />
+                    <parametro name="version" calc="$protocolarios.version$" />
+                    <parametro name="instance" calc="$protocolarios.instance$" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="url" calc="$protocolarios.url$" />
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.check%==false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal">
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                    <parametro name="process" calc="$protocolarios.process$" />
+                    <parametro name="version" calc="$protocolarios.version$" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="instanceId" calc="$protocolarios.instance$" />
+                    <parametro name="message" calc="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.observaciones_catalogo_beneficiarios%" />
+                    <parametro name="type" calc="'1'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel id="actualizaObservaciones" nombre="actualizaObservaciones" interactivo="false" ejecutar="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.check%==true">
+            <componente id="actualizaObservaciones" nombre="actualizaObservaciones" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$" />
+                    <campo name="observaciones_catalogo_beneficiarios" calc="''" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Turnar Instancia" id="TurnarInstanciaAgregar" interactivo="false" ejecutar="%autorizaAgregarBeneficiariosNivel.autorizaAgregarBeneficiariosCheck.check%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="TurnarInstanciaAgregar">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                    <parametro name="process" calc="$protocolarios.process$" />
+                    <parametro name="version" calc="$protocolarios.version$" />
+                    <parametro name="instance" calc="$protocolarios.instance$" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="url" calc="$protocolarios.url$" />
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

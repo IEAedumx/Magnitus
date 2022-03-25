@@ -1,0 +1,228 @@
+<tarea id="importaBeneficiario" nombre="Importa Catálogo de Beneficiarios y Proveedores" autor="Froylán Alanís" version="1">
+    <pagina id="1" nombre="Importa Catláogo Único de Beneficiarios">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false" >
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="folio" nombre="Folio Operacion Beneficiario" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.id_periodo%!=null">
+            <componente id="folio" tipo="altaDirect" nombre="Folio Operacion Beneficiario">
+                <tabla schema="entity" nombre="beneficiario_folio">
+                    <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_operacion" autogenerado="true" generacion="@prox()+1"/>
+                    <campo name="fecha_registro" calc="@fechaSistema()"/>
+                    <campo name="funcion" calc="'Importacion'"/>
+                </tabla>        
+            </componente>
+        </nivel>
+        <nivel id="importa" nombre="Importa Catálogo de Beneficiarios y Proveedores" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="tabla" id="importa" nombre="Importa Catláogo Único de Beneficiarios" mostrarImportacion="true" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="entity" nombre="beneficiario_temp">
+                    <campo name="ur" text="UR" columnaImportacion="ur" llaveForanea="false" validacionImportacion="@ifThenElse(%ur%=='', true, false)" validacionImportacionMensaje="Columna UR vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="periodo" text="Periodo" columnaImportacion="periodo" llaveForanea="false" validacionImportacion="@ifThenElse(%periodo%=='', true, false)" validacionImportacionMensaje="Columna Periodo vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_temp" text="Temporal" calc="%folio.folio.folio_operacion%"  columna-visible="false" importacion="true"/>
+                    <campo name="id_beneficiario" text="id" autogenerado="true" generacion="@prox()+1" columna-visible="false" importacion="true"/>
+                    
+                    <campo name="nombre" text="Nombres" columnaImportacion="nombre" columnaImportacionVisible="true" importacion="true" validacionImportacion="@ifThenElse(%tipo_beneficiario%==2 AND %nombre%=='' , true, false)" validacionImportacionMensaje="Columna Nombres vacía"/>
+                    <campo name="primer_apellido" text="Apellido Paterno" columnaImportacion="primer_apellido" columnaImportacionVisible="true" importacion="true" /><!--validacionImportacion="@ifThenElse(%tipo_beneficiario%==2 AND %primer_apellido%=='' , true, false)" validacionImportacionMensaje="Columna Apellido Paterno vacía"-->
+                    <campo name="segundo_apellido" text="Apellido Materno" columnaImportacion="segundo_apellido" columnaImportacionVisible="true" importacion="true" /><!--validacionImportacion="@ifThenElse(%tipo_beneficiario%==2 AND %segundo_apellido%=='' , true, false)" validacionImportacionMensaje="Columna Apellido Materno vacía"-->
+                    <campo name="razon_social" text="Razón Social" columnaImportacion="razon_social" columnaImportacionVisible="true" importacion="true" validacionImportacion="@ifThenElse(%tipo_beneficiario%==3 AND %razon_social%=='' , true, false)" validacionImportacionMensaje="Columna Razón Social vacía"/>
+                    <campo name="curp" text="CURP" columnaImportacion="curp" columnaImportacionVisible="true" importacion="true" validacionImportacion="@ifThenElse(%tipo_beneficiario%==2 AND %curp%=='' , true, false)" validacionImportacionMensaje="Columna CURP vacía"/>
+                    <campo name="rfc" text="RFC" columnaImportacion="rfc" columnaImportacionVisible="true" importacion="true" />
+                    <campo name="tipo_beneficiario" text="Tipo Beneficiario" columnaImportacion="tipo_beneficiario" validacionImportacion="@ifThenElse(%tipo_beneficiario%=='', true, false)" validacionImportacionMensaje="Columna Tipo Beneficiario vacía" columnaImportacionVisible="true" importacion="true" />
+                    <!--validacionImportacion="@ifThenElse(%tipo_beneficiario%==3 AND %rfc%=='' , true, false)" validacionImportacionMensaje="Columna RFC vacía"-->
+                    
+                    <!--<campo name="estatus_beneficiario" text="Estatus Beneficiario" columna-visible="false" filtroCampo="estatus_beneficiario" filtroOperador="=" filtroValor="3"/>-->
+                    <campo name="clasificacion_beneficiario" text="Clasificación Beneficiario" columnaImportacion="clasificacion_beneficiario" validacionImportacion="@ifThenElse(%clasificacion_beneficiario%=='', true, false)" validacionImportacionMensaje="Columna Clasificación Beneficiario vacía" columnaImportacionVisible="true" importacion="true"/>
+                    
+                    <campo name="cuenta_bancaria" text="Cuenta Bancaria" columnaImportacion="cuenta_bancaria" columnaImportacionVisible="true"  importacion="true"/>  <!--validacionImportacion="@ifThenElse(%cuenta_bancaria%=='', true, false)" validacionImportacionMensaje="Columna Cuenta Bancaria vacía"-->
+                    
+                    <campo name="banco" text="Banco" columnaImportacion="banco"  columnaImportacionVisible="true" importacion="true"/>
+                    <!--validacionImportacion="@ifThenElse(%banco%=='', true, false)" validacionImportacionMensaje="Columna Banco vacía"-->
+                    
+                    <campo name="clabe" text="Clabe Interbancaria" columnaImportacion="clabe"  columnaImportacionVisible="true" importacion="true"/><!--validacionImportacion="@ifThenElse(%clabe%=='', true, false)" validacionImportacionMensaje="Columna Banco vacía"-->
+                    <!--<campo name="estatus_cuenta" text="Estatus Cuenta" calc="3" importacion="true" columna-visible="false" FiltrarConCalc="fale"/>-->
+                    <campo name="calle" text="Calle" columnaImportacion="calle"  columnaImportacionVisible="true" importacion="true"/>
+                    <!--validacionImportacion="@ifThenElse(%calle%=='', true, false)" validacionImportacionMensaje="Columna Calle vacía"-->
+                    <campo name="numero" text="Número" columnaImportacion="numero"  columnaImportacionVisible="true" importacion="true"/>
+                    <!--validacionImportacion="@ifThenElse(%numero%=='', true, false)" validacionImportacionMensaje="Columna Número vacía"-->
+                    
+                    <campo name="colonia" text="Colonia" columnaImportacion="colonia"  columnaImportacionVisible="true" importacion="true"/>
+                    <!--validacionImportacion="@ifThenElse(%colonia%=='', true, false)" validacionImportacionMensaje="Columna Colonia vacía"-->
+                    <campo name="codigo_postal" text="C.P." columnaImportacion="codigo_postal"  columnaImportacionVisible="true" importacion="true"/><!--validacionImportacion="@ifThenElse(%codigo_postal%=='', true, false)" validacionImportacionMensaje="Columna C.P. vacía"-->
+                    
+                    <campo name="ciudad" text="Ciudad" columnaImportacion="ciudad" validacionImportacion="@ifThenElse(%ciudad%=='', true, false)" validacionImportacionMensaje="Columna Ciudad vacía" columnaImportacionVisible="true" importacion="true"/>
+                    
+                    <campo name="municipio" text="Municipio" columnaImportacion="municipio" validacionImportacion="@ifThenElse(%municipio%=='', true, false)" validacionImportacionMensaje="Columna Municipio vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="estado" text="Estado" columnaImportacion="estado" validacionImportacion="@ifThenElse(%estado%=='', true, false)" validacionImportacionMensaje="Columna Estado vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="pais" text="País" columnaImportacion="pais" validacionImportacion="@ifThenElse(%pais%=='', true, false)" validacionImportacionMensaje="Columna País vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <!--<campo name="activo_domicilio" text="Domicilio Activo" calc="true" importacion="true" columna-visible="false" FiltrarConCalc="false"/>
+                    <campo name="usuario_modificador" text="Usuario" importacion="true" llaveForanea="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" FiltrarConCalc="false"/>-->
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="actualiza" nombre="actualiza Temporal" interactivo="false">
+            <componente tipo="cursor" id="actualiza" nombre="actualiza Temporal">
+                <tabla schema="entity" nombre="beneficiario_temp">
+                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_temp" filtroCampo="id_temp" filtroOperador="=" filtroValor="%folio.folio.folio_operacion%"/> 
+                    <campo name="usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="fecha_registro" calc="@fechaSistema()"/>
+                    <campo name="estatus_beneficiario" calc="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barrerTemporal" nombre="Barrer Temporal" interactivo="false">
+            <componente tipo="cursor" id="barrerTemporal" nombre="Barrer Temporal">
+                <tabla schema="entity" nombre="beneficiario_temp">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_temp" filtroCampo="id_temp" filtroOperador="=" filtroValor="%folio.folio.folio_operacion%"/>
+                    <campo name="id_beneficiario" />
+                    <campo name="nombre" />
+                    <campo name="primer_apellido" />
+                    <campo name="segundo_apellido" />
+                    <campo name="razon_social" />
+                    <campo name="curp" />
+                    <campo name="rfc" />
+                    <campo name="tipo_beneficiario" />
+                    <campo name="estatus_beneficiario" />
+                    <campo name="clasificacion_beneficiario" />
+                    <campo name="cuenta_bancaria" />
+                    <campo name="banco" />
+                    <campo name="clabe" />
+                    <campo name="estatus_cuenta"/>
+                    <campo name="calle" />
+                    <campo name="numero" />
+                    <campo name="colonia" />
+                    <campo name="codigo_postal" />
+                    <campo name="ciudad" />
+                    <campo name="municipio" />
+                    <campo name="estado" />
+                    <campo name="pais" />
+                    <campo name="activo_domicilio"  />
+                    <campo name="usuario_modificador"  />
+                    <campo name="fecha_registro" />
+                </tabla>
+                <nivel id="altaBeneficiarioAux" nombre="Alta Beneficiarios Auxiliar" interactivo="false" ejecutar="%barrerTemporal.barrerTemporal.id_beneficiario%!=null">
+                    <componente id="altaBeneficiarioAux" nombre="Alta Beneficiarios Auxiliar" tipo="altaDirect">
+                        <tabla schema="entity" nombre="beneficiario">
+                            <campo name="id_beneficiario" calc="%barrerTemporal.barrerTemporal.id_beneficiario%"/>
+                            <campo name="id_aux" calc="%barrerTemporal.barrerTemporal.id_temp%"/>
+                            <campo name="id_unidad_responsable" calc="%barrerTemporal.barrerTemporal.ur%"/>
+                            <campo name="id_periodo" calc="%barrerTemporal.barrerTemporal.periodo%"/>
+                            <campo name="id_tipo_beneficiario" calc="%barrerTemporal.barrerTemporal.tipo_beneficiario%"/>
+                            <campo name="nombre" calc="%barrerTemporal.barrerTemporal.nombre%"/>
+                            <campo name="primer_apellido" calc="%barrerTemporal.barrerTemporal.primer_apellido%"/>
+                            <campo name="segundo_apellido" calc="%barrerTemporal.barrerTemporal.segundo_apellido%"/>
+                            <campo name="razon_social" calc="%barrerTemporal.barrerTemporal.razon_social%"/>
+                            <campo name="curp" calc="%barrerTemporal.barrerTemporal.curp%"/>
+                            <campo name="rfc" calc="%barrerTemporal.barrerTemporal.rfc%"/>
+                            <campo name="id_estatus_beneficiario" calc="%barrerTemporal.barrerTemporal.estatus_beneficiario%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()"/>
+                            <campo name="id_ultimo_usuario_modificador" calc="%barrerTemporal.barrerTemporal.usuario_modificador%"/>
+                            <campo name="id_clasificacion_beneficiario" calc="%barrerTemporal.barrerTemporal.clasificacion_beneficiario%"/>
+                            <campo name="folio_operacion_instancia" calc="%barrerTemporal.barrerTemporal.id_temp%"/>
+                            <campo name="folio_beneficiario" calc="'IDUB-'.%barrerTemporal.barrerTemporal.periodo%.%barrerTemporal.barrerTemporal.id_beneficiario%"/>
+                            
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaCuentaAux" nombre="Alta Cuenta Bancaria Auxiliar" interactivo="false" ejecutar="%barrerTemporal.barrerTemporal.id_beneficiario%!=null AND %barrerTemporal.barrerTemporal.cuenta_bancaria%!=null">
+                    <componente id="altaCuentaAux" nombre="Alta Cuenta Bancaria Auxiliar" tipo="altaDirect">
+                        <tabla schema="entity" nombre="beneficiario_cuenta_bancaria_aux">
+                            <campo name="cuenta_bancaria" calc="%barrerTemporal.barrerTemporal.cuenta_bancaria%"/>
+                            <campo name="id_aux" calc="%barrerTemporal.barrerTemporal.id_temp%"/>
+                            <campo name="id_banco" calc="%barrerTemporal.barrerTemporal.banco%"/>
+                            <campo name="clabe" calc="@ifThenElse(%barrerTemporal.barrerTemporal.clabe%==null,'',%barrerTemporal.barrerTemporal.clabe%)"/>
+                            <campo name="id_beneficiario" calc="%barrerTemporal.barrerTemporal.id_beneficiario%"/>
+                            <campo name="estatus" calc="3"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+
+        <nivel id="barrerTemporalDomicilio" nombre="Dimicilio" interactivo="false">
+            <componente tipo="cursor"  id="barrerTemporalDomicilio" nombre="Dimicilio">
+                 <tabla schema="entity" nombre="beneficiario_temp">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_temp" filtroCampo="id_temp" filtroOperador="=" filtroValor="%folio.folio.folio_operacion%"/>
+                    <campo name="id_beneficiario" />
+                    <campo name="calle" />
+                    <campo name="numero" />
+                    <campo name="colonia" />
+                    <campo name="codigo_postal" />
+                    <campo name="ciudad" />
+                    <campo name="municipio" />
+                    <campo name="estado" />
+                    <campo name="pais" />
+                    <campo name="activo_domicilio"  />
+                    <campo name="usuario_modificador"  />
+                    <campo name="fecha_registro" />
+                </tabla>
+        <nivel id="altaDomicilioAux" nombre="Alta Domicilio Auxiliar" interactivo="false" ejecutar="%barrerTemporalDomicilio.barrerTemporalDomicilio.id_beneficiario%!=null AND %barrerTemporalDomicilio.barrerTemporalDomicilio.calle%!=null">
+                    <componente id="altaDomicilioAux" nombre="Alta Domicilio Auxiliar" tipo="altaDirect">
+                        <tabla schema="entity" nombre="beneficiario_domicilio_aux">
+                            
+                            <campo name="id_beneficiario" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.id_beneficiario%"/>
+                            <campo name="id_aux" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.id_temp%"/>
+                            <campo name="id_domicilio_beneficiario" autogenerado="true" generacion="@prox()+1" />
+                            
+                            <campo name="colonia" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.colonia%"/>
+                            <campo name="codigo_postal" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.codigo_postal%"/>
+                            <campo name="activo" calc="true"/>
+                            <campo name="fecha_registro" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.fecha_registro%"/>
+                            <campo name="id_ultimo_usuario_modificador" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.usuario_modificador%"/>
+                            
+                            <campo name="id_estado" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.estado%"/>
+                            <campo name="id_municipio" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.municipio%"/>
+                            <campo name="id_pais" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.pais%"/>
+                            <campo name="calle" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.calle%"/>
+                            <campo name="numero" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.numero%"/>
+                            <campo name="id_unidad_responsable" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.ur%"/>
+                            <campo name="id_periodo" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.periodo%"/>
+                            <campo name="ciudad" calc="%barrerTemporalDomicilio.barrerTemporalDomicilio.ciudad%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+        </componente>
+        </nivel>
+        
+       <nivel id="crearNuevaInstancia" nombre="crearInstancia" interactivo="false">
+            <componente id="crearInstancia" nombre="crearInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'1c105fe3-49b1-4a7a-b635-94e8e038a628'"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="$config.ur$"/>
+                    <parametro name="out_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_folio" calc="%folio.folio.folio_operacion%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
