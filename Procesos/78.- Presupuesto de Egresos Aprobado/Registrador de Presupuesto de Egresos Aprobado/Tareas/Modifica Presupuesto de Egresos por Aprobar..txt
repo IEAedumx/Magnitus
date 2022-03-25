@@ -1,0 +1,365 @@
+<tarea id="Presupuesto_de_Egresos" nombre="Modificación del Presupuesto de Egreso por Autorizar" version="1" autor="Sergio Armando Guzman Avila">
+    <pagina id="pag_Presupuesto_de_Egresos">
+        
+        <!--NIVEL PARA RECIBIR LOS VALORES A LOS PARAMETROS
+        <nivel id="nlPasoParam" nombre="Paso de parámetros" interactivo="false" >
+            <componente id="cpPasoParam" nombre="Paso de parámetros" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" text="UR" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" text="Periodo" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="accion" text="Acción" local="true" type="string" calc="$inParam.opcion$" />
+                    <campo name="id_presupuesto_egresos" text="Presupuesto" local="true" type="string" calc="$inParam.id_presupuesto_egresos$"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+        
+        <!--NIVEL PARA OBTENER EL PERIODO-->
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"  filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_presupuesto_egresos" local="true" type="long" calc="$inParam.presupuesto_egresos$"/>
+                    <campo name="estatus"/>
+                    <campo name="id_estatus"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- LEGO TIPO CURSOR -->
+            <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            <!-- FIN LEGO TIPO CURSOR -->
+        
+        <!--NIVEL MENU-->
+        <nivel id="menu" nombre="Selección de Año" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="menu" nombre="Selección de Año" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_periodo" text="Ejercicio Fiscal" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="estatus" text="Estatus" calc="1" habilitado="false" validacionModificacion="%estatus%==null"  validacionModificacionMensaje="Favor de seleccionar el ESTATUS." columnas="3" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" columnas="3" margen-izquierdo="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="selecion" nombre="Modificación del Presupuesto de Egreso por Autorizar" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="selecion" nombre="Modificación del Presupuesto de Egreso por Autorizar" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" visible="false"/>
+                    <campo name="opciones" text="Seleccione una opción:" columnas="3" margen-izquierdo="2"  local="true" type="long" validacion="%id%==null" validacionMensaje="Favor de seleccionar una opción.">
+                        <opciones>
+                            <opcion texto="Importar" valor="1"/>
+                            <opcion texto="Agregar" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar"  columnas="4" margen-izquierdo="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        
+        <!--NIVEL PARA IMPORTAR-->
+        <nivel id="nlImportar" nombre="Importar" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%selecion.selecion.opciones%==1">
+            <componente id="cpImportar" tipo="tabla" nombre="Modificación del Presupuesto de Egreso por Autorizar" filtro="true" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false" mostrarImportacion="true">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" habilitado="false"
+                    columnaImportacion="id_unidad_responsable" validacionImportacion="@ifThenElse(%id_unidad_responsable%=='', true, false)" validacionImportacionMensaje="Columna id_unidad_responsable vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_periodo" text="Periodo" visible="true" llaveForanea="false" columna-visible="false" habilitado="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"
+                    columnaImportacion="id_periodo" validacionImportacion="@ifThenElse(%id_periodo%=='', true, false)" validacionImportacionMensaje="Columna id_periodo vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_presupuesto_egresos" text="id_presupuesto_egresos" visible="false" columna-visible="false" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="$inParam.presupuesto_egresos$"
+                    columnaImportacion="id_presupuesto_egresos" validacionImportacion="@ifThenElse(%id_presupuesto_egresos%=='', true, false)" validacionImportacionMensaje="Columna id_presupuesto_egresos vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_presupuesto_egresos_det" text="id presupuesto egresos detalle" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true"  importacion="true"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" columna-visible="false" calc="@fechaSistema()"/>
+                    <campo name="id_clave_egreso" text="Clave Egreso" visible="false" columna-visible="true"/>
+                    <campo name="id_cat_centro_registro" text="id_cat_centro_registro" llaveForanea="false"  visible="false" columna-visible="false" calc="2" importacion="true"/>
+                    <campo name="centro_registro" text="Centro de Registro" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion" 
+                        columnaImportacion="centro_registro" validacionImportacion="@ifThenElse(%centro_registro%=='', true, false)" validacionImportacionMensaje="Columna centro_registro vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_cat_fondo" text="id_cat_fondo" visible="false" llaveForanea="false" columna-visible="false" calc="3" importacion="true"/>
+                    <campo name="fondo_contable" text="Fondo Contable" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion" 
+                        columnaImportacion="fondo_contable" validacionImportacion="@ifThenElse(%fondo_contable%=='', true, false)" validacionImportacionMensaje="Columna fondo_contable vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_cat_fuente" text="id_cat_fuente" visible="false" llaveForanea="false" columna-visible="false" calc="5" importacion="true"/>
+                    <campo name="fuente_financiamiento" text="Fuente Financiamiento" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="fuente_financiamiento" validacionImportacion="@ifThenElse(%fuente_financiamiento%=='', true, false)" validacionImportacionMensaje="Columna fuente_financiamiento vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_cat_cog" text="id_cat_cog" visible="false" llaveForanea="false" columna-visible="false" calc="4" importacion="true"/>
+                    <campo name="cog" text="COG" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="cog" validacionImportacion="@ifThenElse(%cog%=='', true, false)" validacionImportacionMensaje="Columna cog vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_cat_tipo_gasto" text="id_cat_tipo_gasto" visible="false" llaveForanea="false" columna-visible="false" calc="6" importacion="true"/>
+                    <campo name="tipo_gasto" text="Tipo Gasto" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="tipo_gasto" validacionImportacion="@ifThenElse(%tipo_gasto%=='', true, false)" validacionImportacionMensaje="Columna tipo_gasto vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_cat_municipio" text="id_cat_municipio" visible="false" llaveForanea="false" columna-visible="false" calc="7" importacion="true"/>
+                    <campo name="municipio" text="Municipio" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="municipio" validacionImportacion="@ifThenElse(%municipio%=='', true, false)" validacionImportacionMensaje="Columna municipio vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_clasif_funcional" text="id_clasif_funcional" visible="false" llaveForanea="false" columna-visible="false" calc="8" importacion="true"/>
+                    <campo name="clasificador_funcional" text="Clasificador Funcional" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="clasificador_funcional" validacionImportacion="@ifThenElse(%clasificador_funcional%=='', true, false)"  validacionImportacionMensaje="Columna clasificador_funcional vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="id_cat_clasif_programatico" text="id_cat_clasif_programatico" visible="false" llaveForanea="false" columna-visible="false" calc="9" importacion="true"/>
+                    <campo name="clasificador_programatico" text="Clasificador Programático" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="clasificador_programatico" columnaImportacionVisible="true" validacionImportacion="@ifThenElse(%clasificador_programatico%=='', true, false)" validacionImportacionMensaje="Columna clasificador_programatico vacía" importacion="true"/>
+                    <campo name="id_cat_progra_presup" text="id_cat_progra_presup" visible="false" llaveForanea="false" columna-visible="false" calc="10" importacion="true"/>
+                    <campo name="programa_presupuestario" text="Programa Presupuestario" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="programa_presupuestario" validacionImportacion="@ifThenElse(%programa_presupuestario%=='', true, false)" validacionImportacionMensaje="Columna programa_presupuestario vacía" columnaImportacionVisible="true" importacion="true"/>
+                        
+                    <!-- Se Agregan mas elementos a los campos de la clave presupuestal-->
+                    <campo name="id_cat_eje_pide" text="id_cat_eje_pide" visible="false" llaveForanea="false" columna-visible="false" calc="13" importacion="true"/>
+                    <campo name="eje_pide" text="eje_pide" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="Eje" validacionImportacion="@ifThenElse(%Eje%=='', true, false)" validacionImportacionMensaje="Columna Eje vacía" columnaImportacionVisible="true" importacion="true"/>
+                        
+                    <campo name="id_cat_proceso_proyecto" text="id_cat_proceso_proyecto" visible="false" llaveForanea="false" columna-visible="false" calc="14" importacion="true"/>
+                    <campo name="proceso_proyecto" text="proceso_proyecto" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="Proceso Proyecto" validacionImportacion="@ifThenElse(%Proceso Proyecto%=='', true, false)" validacionImportacionMensaje="Columna Proceso Proyecto vacía" columnaImportacionVisible="true" importacion="true"/>
+                        
+                    <campo name="id_cat_proceso_proyecto_eje_pide" text="id_cat_proceso_proyecto_eje_pide" visible="false" llaveForanea="false" columna-visible="false" calc="15" importacion="true"/>
+                    <campo name="detalle_proceso_proyecto" text="detalle_proceso_proyecto" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion"
+                        columnaImportacion="Proceso Proyecto Detalle" validacionImportacion="@ifThenElse(%Proceso Proyecto Detalle%=='', true, false)" validacionImportacionMensaje="Columna Eje vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <!-- Fin Se Agregan mas elementos a los campos de la clave presupuestal-->    
+                        
+                    <campo name="techo_presupuestal" text="Importe Autorizado" visible="true" columna-visible="true"
+                        columnaImportacion="techo_presupuestal" validacionImportacion="@ifThenElse(%techo_presupuestal%=='', true, false)" validacionImportacionMensaje="Columna techo_presupuestal vacía" columnaImportacionVisible="true" importacion="true"/><!--validacion="@ifThenElse((%enero%+%febrero%+%marzo%+%abril%+%mayo%+%junio%+%julio%+%agosto%+%septiembre%+%octubre%+%noviembre%+%diciembre%) &gt;%techo_presupuestal%,true,false)" validacionMensaje="La suma de los meses supera el techo presupuestal"-->
+                    <campo name="por_distrubuir" text="Por Asignar" visible="true" columna-visible="true"/>
+                    <campo name="enero" text="Enero" visible="true" columna-visible="true"
+                        columnaImportacion="enero" validacionImportacion="@ifThenElse(%enero%=='', true, false)" validacionImportacionMensaje="Columna enero vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="febrero" text="Febrero" visible="true" columna-visible="true"
+                        columnaImportacion="febrero" validacionImportacion="@ifThenElse(%febrero%=='', true, false)" validacionImportacionMensaje="Columna febrero vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="marzo" text="Marzo" visible="true" columna-visible="true"
+                        columnaImportacion="marzo" validacionImportacion="@ifThenElse(%marzo%=='', true, false)" validacionImportacionMensaje="Columna marzo vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="abril" text="Abril" visible="true" columna-visible="true"
+                        columnaImportacion="abril" validacionImportacion="@ifThenElse(%abril%=='', true, false)" validacionImportacionMensaje="Columna abril vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="mayo" text="Mayo" visible="true" columna-visible="true"
+                        columnaImportacion="mayo" validacionImportacion="@ifThenElse(%mayo%=='', true, false)" validacionImportacionMensaje="Columna mayo vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="junio" text="Junio" visible="true" columna-visible="true"
+                        columnaImportacion="junio" validacionImportacion="@ifThenElse(%junio%=='', true, false)" validacionImportacionMensaje="Columna junio vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="julio" text="Julio" visible="true" columna-visible="true"
+                        columnaImportacion="julio" validacionImportacion="@ifThenElse(%julio%=='', true, false)" validacionImportacionMensaje="Columna julio vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="agosto" text="Agosto" visible="true" columna-visible="true" 
+                        columnaImportacion="agosto" validacionImportacion="@ifThenElse(%agosto%=='', true, false)" validacionImportacionMensaje="Columna agosto vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="septiembre" text="Septiembre" visible="true" columna-visible="true"
+                        columnaImportacion="septiembre" validacionImportacion="@ifThenElse(%septiembre%=='', true, false)" validacionImportacionMensaje="Columna septiembre vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="octubre" text="Octubre" visible="true" columna-visible="true"
+                        columnaImportacion="octubre" validacionImportacion="@ifThenElse(%octubre%=='', true, false)" validacionImportacionMensaje="Columna octubre vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="noviembre" text="Noviembre" visible="true" columna-visible="true"
+                        columnaImportacion="noviembre" validacionImportacion="@ifThenElse(%noviembre%=='', true, false)" validacionImportacionMensaje="Columna noviembre vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="diciembre" text="Diciembre" visible="true" columna-visible="true"
+                        columnaImportacion="diciembre" validacionImportacion="@ifThenElse(%diciembre%=='', true, false)" validacionImportacionMensaje="Columna diciembre vacía" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="total" text="Total" visible="true" columna-visible="true"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" columna-visible="false"/>
+                </tabla>
+               <!-- <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Mostrar reporte" />
+                </estilos>-->
+            </componente>
+        </nivel>
+         <!--NIVEL PARA AGREGAR-->
+        
+        <!--NIVEL TABLA-->
+        <nivel id="nAgregar" nombre="Agregar" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%selecion.selecion.opciones%==2">
+            <componente id="cpAgregar" tipo="tabla" filtro="true" nombre="Modificación del Presupuesto de Egreso por Autorizar" mostrarEliminar="true" mostrarEditar="true">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" habilitado="false" />
+                    <campo name="id_periodo" text="Año" columnas="3" margen-izquierdo="2" visible="false" llaveForanea="false" columna-visible="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="true"/>
+                    <campo name="id_presupuesto_egresos" text="id_presupuesto_egresos" columnas="3" margen-derecho="2" visible="false" columna-visible="false" calc="$inParam.presupuesto_egresos$"/>
+                    <campo name="id_presupuesto_egresos_det" text="Clave Egreso" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="fecha_elaboracion" text="Fecha" visible="false" columna-visible="false" calc="@fechaSistema()"/>
+                    <campo name="id_clave_egreso" text="Clave Egreso" visible="false" columna-visible="true" habilitado="false"/>
+                    <campo name="id_cat_centro_registro" text="id_cat_centro_registro" llaveForanea="false" calc="2" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="centro_registro" text="Centro de Registro" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%centro_registro%==null" validacionModificacionMensaje="Campo 'Centro de Registro' no puede quedar vacío" visible="true" columna-visible="false" descripcionForanea="id_cat,descripcion" validacion="%centro_registro%==null" validacionMensaje="Campo 'Centro de Registro' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>
+                        
+                       <campo name="id_cat_fondo" text="id_cat_fondo" visible="false" llaveForanea="false" columna-visible="false" calc="3" importacion="true"/>
+                    <campo name="fondo_contable" text="Fondo Contable" columnas="2" validacionModificacion="%fondo_contable%==null" validacionModificacionMensaje="Campo 'Fondo Contable' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%fondo_contable%==null" validacionMensaje="Campo 'Fondo Contable' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" descripcionForanea="id_cat,descripcion" llavesFijas="afectable=true"/>
+                      <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/> 
+                    <campo name="id_cat_fuente" text="id_cat_fuente" visible="false" llaveForanea="false" columna-visible="false" calc="5" importacion="true" calcCliente="%id_catalogo_foraneo%"/>
+                    <campo name="fuente_financiamiento" text="Fuente Financiamiento" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%fuente_financiamiento%==null" validacionModificacionMensaje="Campo 'Fuente Financiamiento' no puede quedar vacío" visible="true" columna-visible="false" validacion="%fuente_financiamiento%==null" validacionMensaje="Campo 'Fuente Financiamiento' no puede quedar vacío"  llavesFijas="afectable=true" calcCliente="%id_cat_foraneo%" descripcionForanea="id_cat,descripcion" habilitado="false"/> <!--autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" descripcionForanea="id_cat,descripcion"--> 
+                        
+                        
+                <!--    <campo name="id_cat_fondo" text="id_cat_fondo" visible="false" llaveForanea="false" columna-visible="false" calc="3" importacion="true"/>
+                    <campo name="fondo_contable" text="Fondo Contable" columnas="3" margen-derecho="2" validacionModificacion="%fondo_contable%==null" validacionModificacionMensaje="Campo 'Fondo Contable' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%fondo_contable%==null" validacionMensaje="Campo 'Fondo Contable' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_fuente" text="id_cat_fuente" visible="false" llaveForanea="false" columna-visible="false" calc="5" importacion="true"/>
+                    <campo name="fuente_financiamiento" text="Fuente Financiamiento" columnas="3" margen-izquierdo="2" validacionModificacion="%fuente_financiamiento%==null" validacionModificacionMensaje="Campo 'Fuente Financiamiento' no puede quedar vacío" visible="true" columna-visible="false" 
+                        validacion="%fuente_financiamiento%==null" validacionMensaje="Campo 'Fuente Financiamiento' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>-->
+                    <campo name="id_cat_cog" text="id_cat_cog" visible="false" llaveForanea="false" columna-visible="false" calc="4" importacion="true"/>
+                    <campo name="cog" text="COG" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%cog%==null" validacionModificacionMensaje="Campo 'COG' no puede quedar vacío" visible="true" columna-visible="false" 
+                        validacion="%cog%==null" validacionMensaje="Campo 'COG' no puede quedar vacío" descripcionForanea="id_cat,descripcion" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_tipo_gasto" text="id_cat_tipo_gasto" visible="false" llaveForanea="false" columna-visible="false" calc="6" importacion="true"/>
+                    <campo name="tipo_gasto" text="Tipo de Gasto" columnas="2" validacionModificacion="%tipo_gasto%==null" validacionModificacionMensaje="Campo 'Tipo de Gasto' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%tipo_gasto%==null" validacionMensaje="Campo 'Tipo de Gasto' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_municipio" text="id_cat_municipio" visible="false" llaveForanea="false" columna-visible="false" calc="7" importacion="true"/>
+                    <campo name="municipio" text="Municipio" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%municipio%==null" validacionModificacionMensaje="Campo 'Municipio' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%municipio%==null" validacionMensaje="Campo 'Municipio' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>
+                    <campo name="id_clasif_funcional" text="id_clasif_funcional" visible="false" llaveForanea="false" columna-visible="false" calc="8" importacion="true"/>
+                    <campo name="clasificador_funcional" text="Clasificador Funcional" columnas="2" margen-izquierdo="1" validacionModificacion="%clasificador_funcional%==null" validacionModificacionMensaje="Campo 'Clasificador Funcional' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%clasificador_funcional%==null" validacionMensaje="Campo 'Clasificador Funcional' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_clasif_programatico" text="id_cat_clasif_programatico" visible="false" llaveForanea="false" columna-visible="false" calc="9" importacion="true"/>
+                    <campo name="clasificador_programatico" text="Clasificador Programático" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%clasificador_programatico%==null" validacionModificacionMensaje="Campo 'Clasificador Programático' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%clasificador_programatico%==null" validacionMensaje="Campo 'Clasificador Programático' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_progra_presup" text="id_cat_progra_presup" visible="false" llaveForanea="false" columna-visible="false" calc="10" importacion="true"/>
+                    <campo name="programa_presupuestario" text="Programa Presupuestario" columnas="2" validacionModificacion="%programa_presupuestario%==null" validacionModificacionMensaje="Campo 'Programa Presupuestario' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%programa_presupuestario%==null" validacionMensaje="Campo 'Programa Presupuestario' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" llavesFijas="afectable=true"/>
+                    <!-- Se egregan mas elementos a la clave presupuestal-->
+                    <campo name="id_cat_eje_pide" text="id_cat_eje_pide" visible="false" llaveForanea="false" columna-visible="false" calc="13" importacion="true"/>
+                    <campo name="eje_pide" text="Eje Pide" columnas="2" margen-izquierdo="1" validacionModificacion="%eje_pide%==null" validacionModificacionMensaje="Campo 'Eje Pide' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%eje_pide%==null" validacionMensaje="Campo 'Eje Pide' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" descripcionForanea="id_cat,descripcion" /> <!--llavesFijas="afectable=true"-->
+                        
+                    <campo name="id_cat_proceso_proyecto" text="id_cat_proceso_proyecto" visible="false" llaveForanea="false" columna-visible="false" calc="14" importacion="true"/>
+                    <campo name="proceso_proyecto" text="Proceso Proyecto" columnas="2" margen-izquierdo="1" validacionModificacion="%proceso_proyecto%==null" validacionModificacionMensaje="Campo 'Proceso Proyecto' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%proceso_proyecto%==null" validacionMensaje="Campo 'Proceso Proyecto' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" descripcionForanea="id_cat,descripcion" /> <!--llavesFijas="afectable=true"-->
+                        
+                    <campo name="id_cat_proceso_proyecto_eje_pide" text="id_cat_proceso_proyecto_eje_pide" visible="false" llaveForanea="false" columna-visible="false" calc="15" importacion="true"/>
+                    <campo name="detalle_proceso_proyecto" text="Detalle Proceso Proyecto" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%detalle_proceso_proyecto%==null" validacionModificacionMensaje="Campo 'Detalle Proceso Proyecto' no puede quedar vacío" visible="true" columna-visible="false"
+                        validacion="%detalle_proceso_proyecto%==null" validacionMensaje="Campo 'Detalle Proceso Proyecto' no puede quedar vacío" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" maxlenght="50" descripcionForanea="id_cat,descripcion" /> <!--llavesFijas="afectable=true"-->
+                    <!-- Se agregan mas elementos a la clave presupuestal-->
+                        
+                    <!-- Cambio  a la clave presupuestal -->   
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" columnas="2" margen-izquierdo="1" margen-derecho="1"  visible="true" columna-visible="true" habilitado="false" calcCliente="@concatenar(@ifThenElse(%centro_registro%==null,'',%centro_registro%)+' '+@ifThenElse(%fondo_contable%==null,'',%fondo_contable%)+' '+@ifThenElse(%cog%==null,'',%cog%)+' '+@ifThenElse(%fuente_financiamiento%==null,'',%fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestario%==null,'',%programa_presupuestario%)+' '+@ifThenElse(%eje_pide%==null,'',%eje_pide%)+' '+@ifThenElse(%proceso_proyecto%==null,'',%proceso_proyecto%)+' '+@ifThenElse(%detalle_proceso_proyecto%==null,'',%detalle_proceso_proyecto%))"/>
+                    <!-- Fin Cambio  a la clave presupuestal -->   
+                    <campo name="techo_presupuestal" text="Importe Autorizado" columnas="2"  visible="true" columna-visible="true" validacionModificacion="@ifThenElse((%enero%+%febrero%+%marzo%+%abril%+%mayo%+%junio%+%julio%+%agosto%+%septiembre%+%octubre%+%noviembre%+%diciembre%) &gt;%techo_presupuestal%,true,false)" validacionModificacionMensaje="La suma de los meses supera el techo presupuestal"
+                        validacion="@ifThenElse((%enero%+%febrero%+%marzo%+%abril%+%mayo%+%junio%+%julio%+%agosto%+%septiembre%+%octubre%+%noviembre%+%diciembre%) &gt;%techo_presupuestal%,true,false)" validacionMensaje="La suma de los meses supera el techo presupuestal"/>
+                    <campo name="por_distrubuir" text="Por Asignar" columnas="2" margen-izquierdo="1" margen-derecho="1"  visible="true" columna-visible="true" habilitado="false" validacion="%por_distrubuir% != 0" validacionMensaje="El campo por distribuir debe quedar en '0'" validacionModificacion="%por_distrubuir% != 0" validacionModificacionMensaje="El campo por distribuir debe quedar en '0'" calcCliente="(%techo_presupuestal%-%enero%-%febrero%-%marzo%-%abril%-%mayo%-%junio%-%julio%-%agosto%-%septiembre%-%octubre%-%noviembre%-%diciembre%)"/>
+                    <campo name="enero" text="Enero" columnas="2" margen-izquierdo="1" validacionModificacion="%enero% &lt; 0" validacionModificacionMensaje="Campo 'Enero' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%enero% &lt; 0" validacionMensaje="Campo 'Enero' no puede ser negativo"/>
+                    <campo name="febrero" text="Febrero" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%febrero% &lt; 0"  validacionModificacionMensaje="Campo 'Febrero' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%febrero% &lt; 0"  validacionMensaje="Campo 'Febrero' no puede ser negativo"/>
+                    <campo name="marzo" text="Marzo" columnas="2" validacionModificacion="%marzo% &lt; 0"  validacionModificacionMensaje="Campo 'Marzo' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%marzo% &lt; 0"  validacionMensaje="Campo 'Marzo' no puede ser negativo"/>
+                    <campo name="abril" text="Abril" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%abril% &lt; 0"  validacionModificacionMensaje="Campo 'Abril' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%abril% &lt; 0"  validacionMensaje="Campo 'Abril' no puede ser negativo"/>
+                    <campo name="mayo" text="Mayo" columnas="2" validacionModificacion="%mayo% &lt; 0"  validacionModificacionMensaje="Campo 'Mayo' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%mayo% &lt; 0"  validacionMensaje="Campo 'Mayo' no puede ser negativo"/>
+                    <campo name="junio" text="Junio" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%junio% &lt; 0"  validacionModificacionMensaje="Campo 'Junio' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%junio% &lt; 0" validacionMensaje="Campo 'Junio' no puede ser negativo"/>
+                    <campo name="julio" text="Julio" columnas="2" margen-izquierdo="1" validacionModificacion="%julio% &lt; 0"  validacionModificacionMensaje="Campo 'Julio' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%julio% &lt; 0"  validacionMensaje="Campo 'Julio' no puede ser negativo"/>
+                    <campo name="agosto" text="Agosto" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%agosto% &lt; 0"  validacionModificacionMensaje="Campo 'Agosto' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%agosto% &lt; 0" validacionMensaje="Campo 'Agosto' no puede ser negativo" />
+                    <campo name="septiembre" text="Septiembre" columnas="2" validacionModificacion="%septiembre% &lt; 0"  validacionModificacionMensaje="Campo 'Septiembre' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%septiembre% &lt; 0"  validacionMensaje="Campo 'Septiembre' no puede ser negativo"/>
+                    <campo name="octubre" text="Octubre" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%octubre% &lt; 0"  validacionModificacionMensaje="Campo 'Octubre' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%octubre% &lt; 0"  validacionMensaje="Campo 'Octubre' no puede ser negativo"/>
+                    <campo name="noviembre" text="Noviembre" columnas="2" validacionModificacion="%noviembre% &lt; 0"  validacionModificacionMensaje="Campo 'Noviembre' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%noviembre% &lt; 0"  validacionMensaje="Campo 'Noviembre' no puede ser negativo"/>
+                    <campo name="diciembre" text="Diciembre" columnas="2" margen-izquierdo="1" margen-derecho="1" validacionModificacion="%diciembre% &lt; 0"  validacionModificacionMensaje="Campo 'Diciembre' no puede ser negativo" visible="true" columna-visible="true" muestraAcumulado="true"
+                        validacion="%diciembre% &lt; 0"  validacionMensaje="Campo 'Diciembre' no puede ser negativo" />
+                    <!--<campo name="total" text="Total" visible="true" columna-visible="true"/>-->
+                    <campo name="ultimo_usuario_modificador" text="Usuario" visible="false" columna-visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+                <!--<acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Mostrar reporte" />
+                </estilos>-->
+            </componente>
+        </nivel>
+        <nivel id="asignarFolio" nombre="Asignar folio" interactivo="false">
+            <componente tipo="cursor" id="asignarFolio" nombre="Asignar folio">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_presupuesto_egresos" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_presupuesto_egresos%"/>
+                    <campo name="id_presupuesto_egresos_det"/>
+                    <campo name="centro_registro"/>
+                    <campo name="fondo_contable"/>
+                    <campo name="cog"/>
+                    <campo name="fuente_financiamiento"/>
+                    <campo name="programa_presupuestario"/>
+                    <campo name="techo_presupuestal"/>
+                    <campo name="enero"/>
+                    <campo name="febrero"/>
+                    <campo name="marzo"/>
+                    <campo name="abril"/>
+                    <campo name="mayo"/>
+                    <campo name="junio"/>
+                    <campo name="julio"/>
+                    <campo name="agosto"/>
+                    <campo name="septiembre"/>
+                    <campo name="octubre"/>
+                    <campo name="noviembre"/>
+                    <campo name="diciembre"/>
+                    <campo name="por_distrubuir" calc="(@ifThenElse(%techo_presupuestal%==null,0,%techo_presupuestal%)-@ifThenElse(%enero%==null,0,%enero%)-@ifThenElse(%febrero%==null,0,%febrero%)-
+                    @ifThenElse(%marzo%==null,0,%marzo%)-@ifThenElse(%abril%==null,0,%abril%)-@ifThenElse(%mayo%==null,0,%mayo%)-
+                    @ifThenElse(%junio%==null,0,%junio%)-@ifThenElse(%julio%==null,0,%julio%)-@ifThenElse(%agosto%==null,0,%agosto%)-
+                    @ifThenElse(%septiembre%==null,0,%septiembre%)-@ifThenElse(%octubre%==null,0,%octubre%)-
+                    @ifThenElse(%noviembre%==null,0,%noviembre%)-@ifThenElse(%diciembre%==null,0,%diciembre%))"/>
+                    <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="null" calc="@concatenar(@ifThenElse(%asignarFolio.asignarFolio.centro_registro%==null,'',%asignarFolio.asignarFolio.centro_registro%)+' '+
+                    @ifThenElse(%asignarFolio.asignarFolio.fondo_contable%==null,'',%asignarFolio.asignarFolio.fondo_contable%)+' '+@ifThenElse(%asignarFolio.asignarFolio.cog%==null,'',%asignarFolio.asignarFolio.cog%)+' '+
+                    @ifThenElse(%asignarFolio.asignarFolio.fuente_financiamiento%==null,'',%asignarFolio.asignarFolio.fuente_financiamiento%)+' '+
+                    @ifThenElse(%asignarFolio.asignarFolio.programa_presupuestario%==null,'',%asignarFolio.asignarFolio.programa_presupuestario%))"/>                   
+                    <!--<campo name="id_clave_egreso" filtroCampo="id_clave_egreso" filtroOperador="=" filtroValor="null" calc="@concatenar(%buscaPeriodo.buscaPeriodo.id_periodo% +'-'+
+                    @ifThenElse(%asignarFolio.asignarFolio.id_presupuesto_egresos_det%==null,000001,
+                    @ifThenElse(%asignarFolio.asignarFolio.id_presupuesto_egresos_det%&lt;10,'00000',
+                    @ifThenElse(%asignarFolio.asignarFolio.id_presupuesto_egresos_det%&lt;100,'0000',
+                    @ifThenElse(%asignarFolio.asignarFolio.id_presupuesto_egresos_det%&lt;1000,'000',
+                    @ifThenElse(%asignarFolio.asignarFolio.id_presupuesto_egresos_det%&lt;10000,'00',
+                    @ifThenElse(%asignarFolio.asignarFolio.id_presupuesto_egresos_det%&lt;100000,'',''))))))) + %asignarFolio.asignarFolio.id_presupuesto_egresos_det%"/>-->
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="totales" nombre="Calcula Total" interactivo="false">
+            <componente tipo="cursor" id="totales" nombre="Calcula Total">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_presupuesto_egresos" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_presupuesto_egresos%"/>
+                    <campo name="total" filtroCampo="total" filtroOperador="=" filtroValor="null" calc="@consultaDirec('SELECT SUM(techo_presupuestal) AS result FROM operation.presupuesto_egresos_det WHERE id_unidad_responsable='+%Registro_presup.Registro_presup.id_unidad_responsable%+' AND id_periodo='+%Registro_presup.Registro_presup.id_periodo%+' AND id_presupuesto_egresos='+%Registro_presup.Registro_presup.id_presupuesto_egresos%,'result','decimal','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="folio" nombre="Agrega Folio" interactivo="false">
+            <componente tipo="cursor" id="folio" nombre="Agrega Folio">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_presupuesto_egresos" filtroCampo="id_presupuesto_egresos" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_presupuesto_egresos%"/>
+                    <campo name="id_presupuesto_egresos_det"/>
+                    <campo name="id_clave_egreso" filtroCampo="id_clave_egreso" filtroOperador="=" filtroValor="null" calc="@concatenar(%buscaPeriodo.buscaPeriodo.id_periodo%+'-'+
+                    @ifThenElse(%folio.folio.id_presupuesto_egresos_det% &lt;10,'00000',
+                    @ifThenElse(%folio.folio.id_presupuesto_egresos_det% &lt;100,'0000',
+                    @ifThenElse(%folio.folio.id_presupuesto_egresos_det% &lt;1000,'000',
+                    @ifThenElse(%folio.folio.id_presupuesto_egresos_det% &lt;10000,'00',
+                    @ifThenElse(%folio.folio.id_presupuesto_egresos_det% &lt;100000,'','')))))+%folio.folio.id_presupuesto_egresos_det%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="reporte" nombre="Reporte Presupuesto" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <!--NIVEL PARA MOSTRAR REPORTE DE IMPORTACION-->
+            <!--<componente id="cp_reporte_importacion" nombre="Reporte de Importación" tipo="reporte" colapsado="si">-->
+            <!--    <reporte nombre="importacion_IJ">-->
+            <!--        <campo name="id_periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>-->
+            <!--        <campo name="id_presupuesto_egresos" type="long" calc="$inParam.presupuesto_egresos$"/>-->
+            <!--        <campo name="ur" type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>-->
+            <!--    </reporte>-->
+            <!--</componente>-->
+            
+            <!--NIVEL PARA MOSTRAR REPORTE DE PRESUPUESTO DE EGRESOS POR APROBAR-->
+            <componente id="cp_reporte_importacion" nombre="Presupuesto De Egresos Por Autorizar" tipo="reporte" colapsado="si">
+                <reporte nombre="asignacion_calendarizada_IJUA">
+                    <campo name="id_periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_presupuesto_egresos" type="long" calc="$inParam.presupuesto_egresos$"/>
+                    <campo name="ur" type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
