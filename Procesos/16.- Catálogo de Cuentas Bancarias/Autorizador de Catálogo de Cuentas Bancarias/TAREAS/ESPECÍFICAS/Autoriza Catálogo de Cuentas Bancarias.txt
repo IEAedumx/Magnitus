@@ -1,0 +1,91 @@
+<tarea id="tr_Autoriza_Catalogo_de_Cuentas_Bancaria" nombre="Autoriza Catálogo de Cuentas Bancarias" version="1" autor="Froylan Alanis">
+    <pagina id="pg_Autoriza_Catalogo_de_Cuentas_Bancaria">
+        
+        <nivel id="pasoParamNivel" nombre="Paso de parámetros" interactivo="false"> 
+            <componente id="pasoParamComp" nombre="Paso de parámetros" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" text="UR" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" text="Periodo" local="true" type="string" calc="$inParam.id_periodo$" />
+                    <campo name="folio_operacion" text="Folio Operacion" local="true" type="string" calc="$inParam.folio_operacion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nl_reporte" nombre="Catalogo De Cuentas Bancaria" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cp_Autoriza_Cat_Ctas_Ban" nombre="Catalogo De Cuentas Bancarias" tipo="reporte">
+                <reporte nombre="catalogo_de_cuentas_bancarias">
+                    <campo name="ur" type="long" calc="%pasoParamNivel.pasoParamComp.ur%" />
+                    <campo name="id_periodo" type="long" calc="%pasoParamNivel.pasoParamComp.periodo%"/> 
+                    <campo name="folio_operacion" type="long" calc="%pasoParamNivel.pasoParamComp.folio_operacion%"/> 
+                </reporte>
+            </componente>
+            <!--Autorización-->
+            <componente id="cp_Autoriza_Cat_Ctas_Ban_2" nombre="Autoriza Catalogo De Cuentas Bancarias" tipo="formulario" accionDefault="editar">
+                <tabla schema="entity" nombre="cuenta_bancaria_folio">
+                    <campo name="ur" text="UR"  calc="%pasoParamNivel.pasoParamComp.ur%" visible="false" />
+                    <campo name="periodo" text="Periodo" calc="%pasoParamNivel.pasoParamComp.periodo%" visible="false"/>
+                    <campo name="folio_operacion" text="Folio Operacion" calc="%pasoParamNivel.pasoParamComp.folio_operacion%" visible="false"/>
+                    <!--<campo name="id_estatus" text="Estatus" calcCliente="@ifThenElse(%autoriza%==true AND %id_estatus%==3,2,@ifThenElse(%autoriza%==true AND %id_estatus%==3,3,%id_estatus%))" visible="false"/>-->
+                    <campo name="observaciones_auto" text="Observaciones" height="250" habilitado="true" interaccion="%autoriza%!=true" 
+                    validacion="%observaciones_auto%==null AND %autoriza%==false" 
+                    validacionMensaje="Favor de ingresar una observación para continuar." calc="@ifThenElse(%autoriza%==true,'',%observaciones_auto%)" columnas="6" margen-izquierdo="2"/>
+                    <campo name="autoriza" text="Autoriza" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Grabar" visible="true"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false" ejecutar="%nl_reporte.cp_Autoriza_Cat_Ctas_Ban_2.autoriza%==true">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="entity" nombre="cuenta_bancaria">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.periodo%"/>
+                    <campo name="folio_operacion_instancia" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.folio_operacion%"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" calc="2"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%nl_reporte.cp_Autoriza_Cat_Ctas_Ban_2.autoriza%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nl_reporte.cp_Autoriza_Cat_Ctas_Ban_2.observaciones_auto%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+        <nivel nombre="negociaInstancia" id="negociaInstancia" interactivo="false" ejecutar="%nl_reporte.cp_Autoriza_Cat_Ctas_Ban_2.autoriza%==false">
+           <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="finzalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nl_reporte.cp_Autoriza_Cat_Ctas_Ban_2.autoriza%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

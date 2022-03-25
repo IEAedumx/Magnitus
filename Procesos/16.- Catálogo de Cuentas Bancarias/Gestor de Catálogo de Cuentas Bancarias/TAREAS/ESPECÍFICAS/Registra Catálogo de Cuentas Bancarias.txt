@@ -1,0 +1,57 @@
+<tarea id="gestionaCuentasBancarias" nombre="Gestión de Catálogo de Cuentas Bancarias" version="1">
+    <pagina id="catalogoCuentasBancariasPag" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+        <nivel id="pasoParamNivel" nombre="Paso de parámetros" interactivo="false"> 
+            <componente id="pasoParamComp" nombre="Paso de parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" />
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="long" calc="$inParam.id_periodo$" />
+                    <campo name="folio_operacion" local="true" type="long" calc="$inParam.folio_operacion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN LEGO TIPO CURSOR -->
+        <nivel id="agragaCuentasBancariasNivel" nombre="Catálogo de Cuentas Bancarias" mostrarProximoNivel="false"><!--ejecutar="%catalogoCuentasBancariasNivel.catalogoCuentasBancariasComp.selecOpcion%==1" -->
+            <componente id="agragaCuentasBancariasComp" nombre="Catálogo de Cuentas Bancarias" tipo="tabla" filtro="true">
+                <tabla schema="entity" nombre="cuenta_bancaria">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.ur%" calc="%pasoParamNivel.pasoParamComp.ur%" llaveForanea="false" visible="false" columna-visible="false" columnas="3"  margen-izquierdo="2"/> <!-- calc="pasoParamNivel.pasoParamComp.ur" -->
+                    <campo name="id_periodo" text="Periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.periodo%" calc="%pasoParamNivel.pasoParamComp.periodo%"  llaveForanea="false" visible="false" columna-visible="false" columnas="3" margen-derecho="2"/> <!--calc="%pasoParamNivel.pasoParamComp.periodo%"-->
+                    
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" width="165" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="id_tipo_cuenta" text="Tipo de Cuenta" editarHabilitado="false" width="120" validacion="%id_tipo_cuenta%==null" validacionMensaje="Favor de Seleccionar algún tipo de cuenta" columnas="3" margen-derecho="2"/> <!--editarHabilitado="false" -->
+                    
+                    <campo name="id_banco" text="Institución Bancaria" descripcionForanea="nombre" descripcionForaneaTabla="nombre" validacion="%id_banco%==null" validacionMensaje="Favor de seleccionar alguna institución bancaria" columnas="3"  margen-izquierdo="2"/> <!--descripcionForanea="nombre" descripcionForaneaTabla="nombre" llavesDinamicas="'anio=\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\''"-->
+                    <campo name="clabe" text="Clabe Interbancaria" mascara="##################" editarHabilitado="false"  validacion="%clabe%==null" validacionMensaje="Favor de ingresar una clabe interbancaria, máximo 18 dígitos" columnas="3" margen-derecho="2"/> <!--editarHabilitado="false"-->
+                    
+                    <campo name="cuenta_bancaria" text="Cuenta Bancaria" mascara="###########" llavesFijas="tipo_cuenta=2" editarHabilitado="false" validacion="%cuenta_bancaria%==null" validacionMensaje="Favor de ingresar una cuenta bancaria, o verificar si ya esta registrada, máximo 11 dígitos" columnas="3"  margen-izquierdo="2"/> <!--@ValidarRegistro('entity','cuenta_bancaria','cuenta_bancaria='+%cuenta_bancaria%,'id_unidad_responsable='+%id_unidad_responsable%,'id_periodo='+%id_periodo%,'id_tipo_cuenta='+%id_tipo_cuenta%,'MAGNITUS') OR-->
+                    <campo name="numero_sucursal" text="Número de Sucursal" mascara="####" editarHabilitado="false" columna-visible="false" validacion="%numero_sucursal%==null" validacionMensaje="Favor de ingresar el número de Sucursal, máximo 4 dígitos" columnas="3" margen-derecho="2"/> <!-- editarHabilitado="false"-->
+                    
+                    <campo name="numero_plaza" text="Número de Plaza" mascara="###" editarHabilitado="false" columna-visible="false" validacion="%numero_plaza%==null" validacionMensaje="Favor de ingresar el número de plaza, máximo 3 digitos" columnas="3"  margen-izquierdo="2"/> <!-- editarHabilitado="false"-->
+                    <campo name="cuenta_contable" text="Cuenta Contable" cellsalign="left" width="100" editarHabilitado="false" descripcionForanea="clave_cuenta" descripcionForaneaTabla="clave_cuenta" 
+                    validacion="%cuenta_contable%==null" validacionMensaje="Favor de capturar el campo de Cuenta Contable"
+                    columnas="3" margen-derecho="2"/> <!-- filtradoInteractivo="@ifThenElse(%id_tipo_cuenta%==1, 'clave_cuenta LIKE \\'1.1.1.2[37]\\'', 'clave_cuenta LIKE \\'1.1.1.4[37]\\''  )"-->
+
+                    <campo name="descripcion" text="Descripción" validacion="%descripcion%==null" validacionMensaje="Favor de ingresar la descripción de la cuenta" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="id_catalogo" text="Id Católogo" editarHabilitado="false" llaveForanea="false" visible="false" calc="5" columna-visible="false"/> <!--Deveria ser 5-->  <!--editarHabilitado="false"-->
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" llavesFijas="afectable=true" validacion="%fuente_financiamiento%==null" validacionMensaje="Favor de seleccionar una fuente de financiamiento" columnas="3" margen-derecho="2"/><!--validacion="%fuente_financiamiento%==null" validacionMensaje="Favor de seleccionar alguna Fuente de Financiamiento valida"-->
+                    
+                    <campo name="id_estatus" text="Estatus" editarHabilitado="false"  llavesFijas="id_estatus_cuenta=3" calc="3"  width="100" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" validacion="%id_estatus%==null" validacionMensaje="Favor de Seleccionar un Estatus" columnas="3"  margen-izquierdo="2"/> <!--editarHabilitado="false"-->
+                    <campo name="observaciones" text="Notas de la Cuenta" editarHabilitado="false" columna-visible="false" columnas="3" margen-derecho="2"/> <!-- editarHabilitado="false" -->
+                    <!--<campo name="id_ultimo_usuario_modificador" text="Usuario Modificador" calc="$protocolarios.user$" columna-visible="false" visible="false"/>-->
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" cellsalign="left" width="100" visible="false" columna-visible="false"/>
+                    <campo name="folio_operacion_instancia" texto="Folio Operación" columna-visible="false" visible="false" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamComp.folio_operacion%" calc="%pasoParamNivel.pasoParamComp.folio_operacion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

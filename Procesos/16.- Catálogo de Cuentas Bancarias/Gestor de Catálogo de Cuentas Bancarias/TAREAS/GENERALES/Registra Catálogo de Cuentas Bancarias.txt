@@ -1,0 +1,99 @@
+<tarea id="registraCuentasBancarias" nombre="Registra Cuentas Bancarias" version="1">
+    <pagina id="1">
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN LEGO TIPO CURSOR -->
+        <nivel id="capturaP" nombre="Captura Periodo" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="capturaP" nombre="Gestión de Catálogo de Cuentas Bancarias" tipo="formulario">
+                <tabla schema="entity" nombre="cuenta_bancaria_folio">
+                    <campo name="ur" text="UR" calc="$config.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" columnas="4" margen-izquierdo="3" margen-derecho="3" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" validacion="%periodo%==null" validacionMensaje="Favor de llenar el campo Periodo"/>
+                    <campo name="folio_operacion" text="Folio Operación" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" visible="false"/>
+                </tabla>
+                  <estilos>
+                        <boton nombre="grabar" visible="true" texto="Agregar" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                </estilos>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+
+            </componente>
+        </nivel>
+        
+        
+        <!--INICIO NIVEL DE TABLA GESTION CATALOGO CUENTA BANCARIA-->
+        <nivel id="uno" nombre="Gestión de Catálogo de Cuentas Bancarias" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+            <componente id="uno" nombre="Registra Catálogo de Cuentas Bancarias " tipo="tabla" mostrarImportacion="true" filtro="true">
+                <tabla schema="entity" nombre="cuenta_bancaria">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" cellsalign="left" width="100" calc="$config.ur$" llaveForanea="false" visible="false" columna-visible="false" importacion="true" columnaImportacion="id_unidad_responsable" />
+                    <campo name="id_periodo" text="Periodo" cellsalign="left" width="100" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false" importacion="true" columnaImportacion="id_periodo" />
+                    <campo name="fecha_registro" text="Fecha Registro" cellsalign="left" width="165" columnas="3" margen-izquierdo="2" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" visible="true" columna-visible="false" habilitado="false" importacion="true"/>
+                    <campo name="id_tipo_cuenta" text="Tipo de Cuenta" cellsalign="left" width="115" columnas="3" margen-derecho="2" validacion="%id_tipo_cuenta%==null" validacionMensaje="Favor de Seleccionar algún tipo de cuenta" importacion="true" columnaImportacion="id_tipo_cuenta"/>
+                    <campo name="id_banco" text="Institución Bancaria" cellsalign="left" columnas="3" margen-izquierdo="2" descripcionForanea="nombre" descripcionForaneaTabla="nombre" validacion="%id_banco%==null" validacionMensaje="Favor de seleccionar alguna institución bancaria" width="270" importacion="true" columnaImportacion="id_banco"/>
+                    <campo name="clabe" text="Clabe Interbancaria" cellsalign="left" columnas="3" margen-derecho="2" width="170" mascara="##################" validacion="%clabe%==null" validacionMensaje="Favor de ingresar una clabe interbancaria, máximo 18 dígitos" importacion="true" columnaImportacion="clabe"/>
+                    <campo name="cuenta_bancaria" text="Cuenta Bancaria" cellsalign="left" mascara="###########" columnas="3" margen-izquierdo="2" width="125" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" validacion="%cuenta_bancaria%==null" validacionMensaje="Favor de ingresar una cuenta bancaria, o verificar si ya esta registrada, máximo 11 dígitos" importacion="true" columnaImportacion="cuenta_bancaria"/>
+                    <campo name="numero_sucursal" text="Número de Sucursal" cellsalign="left" mascara="####" columnas="3" margen-derecho="2" columna-visible="false" validacion="%numero_sucursal%==null" validacionMensaje="Favor de ingresar el número de Sucursal, máximo 4 dígitos" importacion="true" columnaImportacion="numero_sucursal"/>
+                    <campo name="numero_plaza" text="Número de Plaza" cellsalign="left" mascara="###" columnas="3" margen-izquierdo="2" columna-visible="false" validacion="%numero_plaza%==null" validacionMensaje="Favor de ingresar el número de plaza, máximo 3 digitos" importacion="true" columnaImportacion="numero_plaza"/>
+                    <campo name="cuenta_contable" text="Cuenta Contable" cellsalign="left" columnas="3" margen-derecho="2" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" validacion="%cuenta_contable%==null" validacionMensaje="Favor de capturar el campo de Cuenta Contable" autoFiltrado="true" llavesFijas="tipo_cuenta=2" width="615" importacion="true" columnaImportacion="cuenta_contable"/>
+                   <campo name="descripcion" text="Descripción" cellsalign="left" columnas="3" margen-izquierdo="2" width="440" validacion="%descripcion%==null" validacionMensaje="Favor de ingresar la descripción de la cuenta" importacion="true" columnaImportacion="descripcion"/>
+                    <campo name="id_catalogo" text="Id Católogo" cellsalign="left" llaveForanea="false" visible="false" calc="5" columna-visible="false" mascara="C" importacion="true"/> 
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" mascara="C" cellsalign="left" width="305" columnas="3" margen-derecho="2" validacion="%fuente_financiamiento%==null" validacionMensaje="Debe de capturar el campo de Fuente de Financiamiento" llavesFijas="afectable=true" descripcionForanea="id_cat,descripcion" importacion="true" columnaImportacion="fuente_financiamiento"/>
+                   <campo name="id_estatus" text="Estatus" llavesFijas="id_estatus_cuenta=3" calc="3" width="110" columnas="3" margen-izquierdo="2" validacion="%id_estatus%==null" validacionMensaje="Favor de Seleccionar un Estatus" importacion="true"/> <!-- filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"-->
+                    <campo name="observaciones" text="Notas de la Cuenta"  cellsalign="left" columnas="3" margen-derecho="2" columna-visible="false" mascara="C" importacion="true" columnaImportacion="observaciones"/>  
+                    <campo name="id_ultimo_usuario_modificador" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" cellsalign="left" width="100" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="folio_operacion_instancia" texto="Folio Operación" columna-visible="false" calc="%capturaP.capturaP.folio_operacion%" visible="false" importacion="true"/>
+                    
+                </tabla>
+                <!--<acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="avanzar a nivel" />
+                </estilos>-->
+            </componente>
+        </nivel>
+        
+        
+                    <!--RQ 155 filtradoInteractivo="@ifThenElse(%id_tipo_cuenta%==1, 'clave_cuenta LIKE \\'[37]112[37]\\'', 'clave_cuenta LIKE \\'[37]111[37]\\''  )" PASARLO CUANDO LO LIBEREN EN DESARROLLO-->
+
+                    <!-- llavesFijas="clave_cuenta like %111%" -->
+                    <!--filtradoInteractivo="@ifThenElse(%id_tipo_cuenta%==1, 'clave_cuenta LIKE \\'[37]112[37]\\'', 'clave_cuenta LIKE \\'[37]111[37]\\''  )"--> <!-- filtradoInteractivo="@ifThenElse(%id_tipo_cuenta%==1, 'clave_cuenta LIKE \\'1.1.1.2[37]\\'', 'clave_cuenta LIKE \\'1.1.1.4[37]\\''  )"-->
+        <!--FIN INICIO NIVEL DE TABLA GESTION CATALOGO CUENTA BANCARIA-->
+        <!--NIVEL INSTANCIA-->
+        
+        <!--@ValidarRegistro('entity','cuenta_bancaria','cuenta_bancaria='+%cuenta_bancaria%+'AND id_periodo='+%id_periodo%+'AND id_tipo_cuenta='+%id_tipo_cuenta%+'AND id_unidad_responsable='+%id_unidad_responsable%,'MAGNITUS') OR-->
+        
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'484689fb-b4fd-4047-99cf-d7c8021517c3'"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%capturaP.capturaP.ur%"/>
+                    <parametro name="out_id_periodo" calc="%capturaP.capturaP.periodo%"/>
+                    <parametro name="out_folio_operacion" calc="%capturaP.capturaP.folio_operacion%"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--FIN NIVEL INSTANCIA-->
+    </pagina>
+</tarea>
