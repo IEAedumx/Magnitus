@@ -1,0 +1,171 @@
+<tarea id="modificaDevengado" nombre="Modifica Registro de Devengado de Ingresos" autor="Froylán Alanís" version="2">
+    <pagina id="1">
+        <nivel id="inParams" nombre="inParams" interactivo="false">
+            <componente id="inParams" nombre="inParams" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" text="UR" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" text="Periodo" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="folio_devengado_ingreso" local="true" type="string" calc="$inParam.folio_devengado_ingreso$" />
+                    <campo name="fecha_registro" local="true" type="string" calc="$inParam.fecha_registro$"/>
+                    <campo name="tipo_ingreso" local="true" type="string" calc="$inParam.tipo_ingreso$"/>
+                    <campo name="caja_recaudacion" local="true" type="string" calc="$inParam.caja_recaudacion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--TIPO DE DEVENGADO DE INGRESO-->
+        <nivel id="registraDevengadoIngresos" nombre="Consulta Tipo de Devengado de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="registraDevengadoIngresos" nombre="Consulta Tipo de Devengado de Ingresos" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="tipo_devengado_ingreso">
+                    <campo name="ur" text="ur" llaveForanea="false" calc="%inParams.inParams.ur%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Año" llaveForanea="false" calc="%inParams.inParams.periodo%" columnas="2" margen-izquierdo="1"  habilitado="false"/>
+                    <campo name="tipo_ingreso" text="Tipo de Ingreso" calc="%inParams.inParams.tipo_ingreso%" columnas="2" margen-izquierdo="1"  habilitado="false"/>
+                    <campo name="caja_recaudacion" text="Caja de Recaudación" calc="%inParams.inParams.caja_recaudacion%" columnas="2" margen-izquierdo="1"  habilitado="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!--SERVICIOS GENERALES-->
+        <nivel id="mdRegisDevIngrEscolares" nombre="Modifica Devengado de Ingresos Servicios Escolares"  mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==1">
+            <componente id="mdRegisDevIngrEscolares" nombre="Modifica Devengado de Ingresos Servicios Escolares" tipo="maestroDetalle"  >
+                <encabezado accionDefault="editar"> 
+                    <tabla schema="operation" nombre="devengado_ingreso">
+                        <campo name="ur" text="Unidad Responsable" calc="%registraDevengadoIngresos.registraDevengadoIngresos.ur%" llaveForanea="false" visible="false" />
+                        <campo name="periodo" text="Periodo Contable" calc="%registraDevengadoIngresos.registraDevengadoIngresos.periodo%" llaveForanea="false" visible="false"/>
+                        <campo name="tipo_ingreso" text="Tipo de Ingreso" calc="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%" llaveForanea="false" visible="false"/>
+                        <campo name="folio_devengado_ingreso" text="Folio" generacion="@prox()+1" autogenerado="true" columnas="2" margen-izquierdo="1"  visible="false"/>
+                        <campo name="devengado_ingreso" text="Folio" calc="%inParams.inParams.folio_devengado_ingreso%" columnas="2" margen-izquierdo="1" />
+                        <campo name="grado" text="Grado"  mascara="##" validacion="%grado%==null" validacionMensaje="Ingresa el Grado que cursa Alumno."  columnas="2" margen-izquierdo="1"  marcador="Grado" />
+                        <campo name="fecha_registro" text="Fecha" calc="@fechaSistema()" habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true" columnas="2" margen-izquierdo="1"  />
+                        <campo name="grupo" text="Grupo" validacion="%grupo%==null" validacionMensaje="Ingresa el Grupo del Alumno." columnas="2" margen-izquierdo="1"  marcador="Grupo" />
+                        <campo name="referencia" text="Referencia"  mascara="########" validacion="%referencia%==null" validacionMensaje="Capture Referencia." columnas="2" margen-izquierdo="1" marcador="Referencia" />
+                        <campo name="factura" text="Factura" columnas="2" margen-izquierdo="1"  habilitado="false"/>
+                        <campo name="beneficiario" text="Cliente/Beneficiario" descripcionForanea="folio_beneficiario,razon_social" columnas="2" margen-izquierdo="1"  marcador="Beneficiario" llavesFijas="id_tipo_beneficiario=3"/>
+                        <campo name="fecha_factura" text="Fecha de Factura" calc="@fechaSistema()" columnas="2" margen-izquierdo="1"  marcador="Fecha de Factura"/>
+                        <campo name="matricula" text="Número de Matrícula"  columnas="2" margen-izquierdo="1"  descripcionForanea="folio_matricula" validacion="%matricula%==null OR %matricula%==' '" validacionMensaje="Seleccione la matricula" />
+                        <campo name="receptor_cfdi" text="Receptor CFDI" habilitado="false" calcCliente="%beneficiario%" descripcionForanea="rfc,razon_social" columnas="2" margen-izquierdo="1" />
+                        <campo name="nombre_alumno" text="Nombre del Alumno" columnas="2" margen-izquierdo="1"   habilitado="false" />
+                         <campo name="estatus" text="Estatus" calc="1" habilitado="false" columnas="2" margen-izquierdo="1"  />
+                        <campo name="carrera" text="Carrera" habilitado="false" columnas="2" margen-izquierdo="1"  descripcionForanea="descripcion"/>
+                        <campo name="concepto" text="Concepto" validacion="%concepto%==null" validacionMensaje="Ingresa el concepto." height="300" marcador="Ingresa un concepto" columnas="2" margen-izquierdo="1" />
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="devengado_ingreso_detalle" tituloDetalle="Renglones" >
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" width="150"/>
+                        <campo name="periodo" text="Periodo Contable" llaveForanea="false"  visible="false" columna-visible="false" width="150"/>
+                        <campo name="folio_devengado_ingreso" text="Folio" llaveForanea="false" visible="false" width="150"/>
+                        <campo name="folio_devengado_ingreso_det" text="Número de Bloque" generacion="@prox()+1" autogenerado="true" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="cantidad" text="Cantidad" validacion="%cantidad%==null" validacionMensaje="Ingresa la cantidad." columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_clasificador_rubro_ingreso" text="cat_clafi_rubro" llaveForanea="false" calc="11" visible="false" columna-visible="false" llavesFijas="afectable=true"/> 
+                        <campo name="id_clasificador_rubro_ingreso" text="Clasificador Rubro Ingreso" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" maxlength="50" marcador="Clasificador por Rubro del Ingreso" llavesFijas="afectable=true" validacion="%id_clasificador_rubro_ingreso%==null" validacionMensaje="Favor de seleccionar un fondo contable para continuar" columnas="3" margen-izquierdo="2" width="150"/>
+                        <campo name="importe" text="Importe" validacion="%importe%==null" validacionMensaje="Ingresa el importe." columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" marcador="Fondo Contable" autoFiltradoDescripcion="id_cat,descripcion"  columnas="3" margen-izquierdo="2" width="150" autoFiltrado="true" maxlength="50"/>
+                        <campo name="descuento" text="Descuento" columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" calc="2" llaveForanea="false" width="150"/>
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" maxlength="50" validacion="%id_unidad_ejecutora_gasto%==null" validacionMensaje="Favor de seleccionar una Unidad Ejecutora" marcador="Selecciona una Unidad Ejecutora" columnas="3" margen-izquierdo="2" width="150"/>
+                        <campo name="iva" text="Impuesto al valor Agregado" habilitado="false" validacion="%iva%==null" validacionMensaje="Ingresa el IVA." muestraAcumulado="true" calcCliente="((%importe%-%descuento%)*0.16)" columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="mes_cve_ingreso" visible="false" columna-visible="false" text="Mes" llaveForanea="false" calc="@fechaSistema(&quot;MM&quot;)"/>
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" descripcionForanea="clave_presupuestal" columna-visible="true" columnas="3"  margen-izquierdo="2" width="150"/>
+                        <campo name="total" text="Total" columnas="3"  habilitado="false" columna-visible="true" width="150" muestraAcumulado="true" calcCliente="((%cantidad%)*((%importe%-%descuento%)+%iva%))" margen-derecho="2"/>
+                        <!--<campo name="caratula" text="Caratula" local="true" type="file" update="true" fileType="normal" url="" nombreDocumento="CaratulaCuentaBancaria" grupo="" expediente="" columnas="3"  margen-izquierdo="2"/>-->
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel> 
+        <!--OTROS SERVICIOS-->
+        <nivel id="mdRegisDevIngrOt" nombre="Modifica Devengado de Ingresos" ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==2" mostrarNivelAnterior="false" mostrarProximoNivel="true">    
+            <componente id="mdRegisDevIngrOt" nombre="Modifica Devengado de Ingresos" tipo="maestroDetalle" >
+                <encabezado accionDefault="editar"> 
+                    <tabla schema="operation" nombre="devengado_ingreso">
+                        <campo name="ur" text="Unidad Responsable" calc="%registraDevengadoIngresos.registraDevengadoIngresos.ur%" llaveForanea="false" visible="false" />
+                        <campo name="periodo" text="Periodo Contable" calc="%registraDevengadoIngresos.registraDevengadoIngresos.periodo%" llaveForanea="false" visible="false"/>
+                        <campo name="tipo_ingreso" text="Tipo de Ingreso" calc="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%" llaveForanea="false" visible="false"/>
+                        <campo name="devengado_ingreso" text="Folio"  columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="folio_devengado_ingreso" text="Folio Prueba" calc="%inParams.inParams.folio_devengado_ingreso%" visible="false"/>
+                        <campo name="factura" text="Factura" columnas="2" margen-izquierdo="1"  habilitado="false"/>
+                        <campo name="fecha_registro" text="Fecha" columnas="2" margen-izquierdo="1"  />
+                        <campo name="fecha_factura" text="Fecha de Factura"  columnas="2" margen-izquierdo="1"  marcador="Fecha de Factura"/>
+                        <campo name="referencia" text="Referencia"  mascara="########"  columnas="2" margen-izquierdo="1"  marcador="Referencia" />
+                        <campo name="receptor_cfdi" text="Receptor CFDI" habilitado="false" descripcionForanea="rfc,razon_social" columnas="2" margen-izquierdo="1" />
+                        <campo name="beneficiario" text="Cliente/Beneficiario" descripcionForanea="folio_beneficiario,razon_social" columnas="2" margen-izquierdo="1"  habilitado="false"/>
+                        <campo name="estatus" text="Estatus" calc="1" habilitado="false" columnas="2" margen-izquierdo="1"  />
+                        <campo name="concepto" text="Concepto" validacion="%concepto%==null" validacionMensaje="Ingresa el concepto." height="300" marcador="Ingresa un concepto" columnas="2" margen-izquierdo="1" />
+                        <campo name="caja_recaudacion" text="caja" calc="%registraDevengadoIngresos.registraDevengadoIngresos.caja_recaudacion%" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="devengado_ingreso_detalle" tituloDetalle="Renglones" >
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" width="150"/>
+                        <campo name="periodo" text="Periodo Contable" llaveForanea="false"  visible="false" columna-visible="false" width="150"/>
+                        <campo name="folio_devengado_ingreso" text="Folio" llaveForanea="false" visible="false" width="150"/>
+                        <campo name="folio_devengado_ingreso_det" text="Renglón" generacion="@prox()+1" autogenerado="true" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="cantidad" text="Cantidad" validacion="%cantidad%==null" validacionMensaje="Ingresa la cantidad." columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_clasificador_rubro_ingreso" text="cat_clafi_rubro" llaveForanea="false" calc="11" visible="false" columna-visible="false" llavesFijas="afectable=true"/> 
+                        <campo name="id_clasificador_rubro_ingreso" text="Clasificador Rubro Ingreso" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true" autoFiltrado="true" maxlength="50" marcador="Clasificador por Rubro del Ingreso" validacion="%id_clasificador_rubro_ingreso%==null" validacionMensaje="Favor de seleccionar un fondo contable para continuar" columnas="3" margen-izquierdo="2" width="150"/>
+                        <campo name="importe" text="Importe" validacion="%importe%==null" validacionMensaje="Ingresa el importe." columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" marcador="Fondo Contable" autoFiltradoDescripcion="id_cat,descripcion"  columnas="3" margen-izquierdo="2" width="150" autoFiltrado="true" maxlength="50"/>
+                        <campo name="descuento" text="Descuento" columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" calc="2" llaveForanea="false" width="150"/>
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" maxlength="50" validacion="%id_unidad_ejecutora_gasto%==null" validacionMensaje="Favor de seleccionar una Unidad Ejecutora" marcador="Selecciona una Unidad Ejecutora" columnas="3" margen-izquierdo="2" width="150"/>
+                        <campo name="iva" text="Impuesto al valor Agregado" habilitado="false" validacion="%iva%==null" validacionMensaje="Ingresa el IVA." muestraAcumulado="true" calcCliente="((%importe%-%descuento%)*0.16)" columna-visible="true" columnas="3"  margen-derecho="2" width="150"/>
+                        <campo name="mes_cve_ingreso" visible="false" columna-visible="false" text="Mes" llaveForanea="false" calc="@fechaSistema(&quot;MM&quot;)"/>
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" descripcionForanea="clave_presupuestal" columna-visible="true" columnas="3"  margen-izquierdo="2" width="150"/>
+                        <campo name="total" text="Total" columnas="3" margen-derecho="2" habilitado="false" columna-visible="true" width="150" muestraAcumulado="true" calcCliente="((%cantidad%)*((%importe%-%descuento%)+%iva%))" />
+                        <!--<campo name="caratula" text="Caratula" local="true" type="file" update="true" fileType="normal" url="" nombreDocumento="CaratulaCuentaBancaria" grupo="" expediente="" columnas="3"  margen-izquierdo="2"/>-->
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <!--<nivel id="repReDeVi" nombre="Reporte Único del Ejericicio del Presupuesto"  mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==1">
+            <componente id="repReDeViEscolares" nombre="Reporte de Devengado de Ingresos de Servicios Escolares" tipo="reporte">
+                <reporte nombre="R_Dev_Serv_Escolares_IJ" expediente="Expediente Devengado Ingresos/Servicios Escolares" nombreDocumento="'Servicios Escolares'"  grupo="$inParam.folio_devengado_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" local="true" type="long" calc="%mdRegisDevIngrEscolares.mdRegisDevIngrEscolares.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%mdRegisDevIngrEscolares.mdRegisDevIngrEscolares.periodo%"/>
+                    <campo name="folio_devengado_ingreso" local="true" type="long" calc="%mdRegisDevIngrEscolares.mdRegisDevIngrEscolares.folio_devengado_ingreso%"/>
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+        </nivel>-->
+        <nivel id="repReDeVi1" nombre="Reporte Único del Ejericicio del Presupuesto" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==2">
+            <componente id="repReDeViOtros" nombre="Documento de Devengado de Ingresos" tipo="reporte">
+                <reporte nombre="Dev_Otros_Ingresos_AL" expediente="Expediente de Ingresos/Devengado de Ingresos" nombreDocumento="'Otros Ingresos'" grupo="$inParam.folio_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" local="true" type="long" calc="%inParams.inParams.ur%" />
+                    <campo name="periodo" local="true" type="long" calc="%inParams.inParams.periodo%" />
+                    <campo name="folio_devengado" local="true" type="long" calc="%inParams.inParams.folio_devengado_ingreso%" />
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente> 
+        </nivel>
+    </pagina>
+</tarea>    

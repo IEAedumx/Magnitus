@@ -1,0 +1,219 @@
+<tarea id="registraDevengado" nombre="Registra Devengado de Ingresos" autor="Froylán Alanís" version="2">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="GFE" nombre="generaFolioExpediente" interactivo="false">
+            <componente id="GFE" nombre="generaFolioExpediente" tipo="altaDirect">
+                <tabla schema="entity" nombre="ingresos">
+                    <campo name="ur" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                    <campo name="folio_ingreso" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/> 
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--TIPO DE DEVENGADO DE INGRESO-->
+        <nivel id="registraDevengadoIngresos" nombre="Tipo de Devengado de Ingresos" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="registraDevengadoIngresos" nombre="Devengado del Ingreso" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="tipo_devengado_ingreso">
+                    <campo name="ur" calc="$config.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="id_tipo_ingreso" text="tipo ingreso" calc="1" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" validacion="%periodo%==null" validacionMensaje="Selecciona Período contable." marcador="Periodo" columnas="2" margen-izquierdo="1" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llavesFijas="id_estatus=3 AND estatus=true" descripcionForanea="id_periodo"/>
+                    <campo name="tipo_ingreso" text="Tipo de Ingreso" marcador="Tipo de Ingreso" validacion="%tipo_ingreso%==null"  validacionMensaje="Selecciona Tipo de Ingreso." columnas="2" margen-izquierdo="1" descripcionForanea="descripcion"   llavesFijas="id_tipo_ingreso=2" />
+                    <campo name="caja_recaudacion" text="Caja de Recaudación" marcador="Caja de Recaudación" validacion="%caja_recaudacion%==null" validacionMensaje="Selecciona la caja de recaudación." autoFiltradoDescripcion="descripcion" autoFiltrado="true" maxlength="50" columnas="2" margen-izquierdo="1" />
+                    <campo name="serie" text="serie" local="true" type="string" referenciaForanea="caja_recaudacion" visible="false" celdaForanea="serie" autocompletar="true"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!--SERVICIOS GENERALES-->
+        <nivel id="mdRegisDevIngrEscolares" nombre="Devengado de Ingresos"  mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==1">
+            <componente id="mdRegisDevIngrEscolares" nombre="Devengado de Ingresos" tipo="maestroDetalle"  >
+                <encabezado>
+                    <tabla schema="operation" nombre="devengado_ingreso">
+                        <campo name="ur" text="Unidad Responsable" calc="%registraDevengadoIngresos.registraDevengadoIngresos.ur%" llaveForanea="false" visible="false" />
+                        <campo name="periodo" text="Periodo Contable" calc="%registraDevengadoIngresos.registraDevengadoIngresos.periodo%" llaveForanea="false" visible="false"/>
+                        <campo name="tipo_ingreso" text="Tipo de Ingreso" calc="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%" llaveForanea="false" visible="false"/>
+                        <campo name="folio_devengado_ingreso" text="Folio" generacion="@prox()+1" autogenerado="true" columnas="2" margen-izquierdo="1" visible="false"/>
+                        <campo name="devengado_ingreso" text="Folio" calc="@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS')==null,'DEV-'+%registraDevengadoIngresos.registraDevengadoIngresos.serie%+'-000001',@concatenar('DEV-'+%registraDevengadoIngresos.registraDevengadoIngresos.serie%+'-'+@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;10,'00000',@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;100,'0000',@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;1000,'000', @ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;10000,'00',@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS')))" columnas="2" margen-izquierdo="1"/>
+                        <campo name="grado" text="Grado"  mascara="##" validacion="%grado%==null" validacionMensaje="Ingresa el Grado que cursa Alumno."  columnas="2" margen-izquierdo="1" marcador="Grado" />
+                        <campo name="fecha_registro" text="Fecha" calc="@fechaSistema()" habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true" columnas="2" margen-izquierdo="1" />
+                        <campo name="grupo" text="Grupo" validacion="%grupo%==null" validacionMensaje="Ingresa el Grupo del Alumno." columnas="2" margen-izquierdo="1" marcador="Grupo" />
+                        <campo name="referencia" text="Referencia del Ingreso"  mascara="########" validacion="%referencia%==null" validacionMensaje="Capture Referencia." columnas="2" margen-izquierdo="1" marcador="Referencia" />
+                        <campo name="factura" text="Factura" columnas="2" margen-izquierdo="1" calc="@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS')==null,'000001',@concatenar(@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;10,'00000',@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;100,'0000',@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;1000,'000',@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;10000,'00',@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS')))"/>
+                        <campo name="beneficiario" text="Cliente/Beneficiario" descripcionForanea="folio_beneficiario,razon_social" columnas="2" margen-izquierdo="1" marcador="Beneficiario" llavesFijas="id_tipo_beneficiario=3"/>
+                        <campo name="fecha_factura" text="Fecha de Factura" calc="@fechaSistema()" columnas="2" margen-izquierdo="1" marcador="Fecha de Factura"/>
+                        <campo name="matricula" text="Número de Matrícula"  columnas="2" margen-izquierdo="1" descripcionForanea="folio_matricula" validacion="%matricula%==null OR %matricula%==' '" validacionMensaje="Seleccione la matricula" />
+                        <campo name="receptor_cfdi" text="Receptor CFDI" habilitado="false" calcCliente="%beneficiario%" descripcionForanea="rfc,razon_social" columnas="2" margen-izquierdo="1" />
+                        <campo name="nombre_alumno" text="Nombre del Alumno" columnas="2" margen-izquierdo="1" calcCliente="@ifThenElse(%matricula%==null,'',@consultaDirec('SELECT nombre_completo as resultado FROM entity.matriculas WHERE folio_matricula='+'\\''+%matricula%+'\\'','resultado','string','MAGNITUS'))" habilitado="false" />
+                         <campo name="estatus" text="Estatus" calc="1" habilitado="false" columnas="2" margen-izquierdo="1" />
+                        <campo name="carrera" text="Carrera" calcCliente="@ifThenElse(%matricula%==null,'',@consultaDirec('SELECT carrera as resultado FROM entity.matriculas
+                        WHERE folio_matricula='+'\\''+%matricula%+'\\'','resultado','string','MAGNITUS'))" habilitado="false" columnas="2" margen-izquierdo="1" descripcionForanea="descripcion"/>
+                        <campo name="concepto" text="Concepto" validacion="%concepto%==null" validacionMensaje="Ingresa el concepto." height="300" marcador="Ingresa un concepto" columnas="2" margen-izquierdo="1"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" />
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="devengado_ingreso_detalle" tituloDetalle="Bloques" >
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" width="150"/>
+                        <campo name="periodo" text="Periodo Contable" llaveForanea="false"  visible="false" columna-visible="false" width="150"/>
+                        <campo name="folio_devengado_ingreso" text="Folio" llaveForanea="false" visible="false" width="150"/>
+                        <campo name="folio_devengado_ingreso_det" text="Número de Bloque" generacion="@prox()+1" autogenerado="true" columna-visible="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="cantidad" text="Cantidad" validacion="%cantidad%==null" validacionMensaje="Ingresa la cantidad." columna-visible="true" columnas="2" margen-izquierdo="1" width="150"/>
+                        <campo name="id_cat_clasificador_rubro_ingreso" text="cat_clafi_rubro" llaveForanea="false" calc="11" visible="false" columna-visible="false" llavesFijas="afectable=true"/> 
+                        <campo name="id_clasificador_rubro_ingreso" text="Clasificador Rubro Ingreso" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" maxlength="50" marcador="Clasificador por Rubro del Ingreso" validacion="%id_clasificador_rubro_ingreso%==null" validacionMensaje="Favor de seleccionar un fondo contable para continuar" columnas="2" margen-izquierdo="1" width="150" llavesFijas="afectable=true"/>
+                        <campo name="importe" text="Importe" validacion="%importe%==null" validacionMensaje="Ingresa el importe." columna-visible="true" columnas="2" margen-izquierdo="1" width="150"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" marcador="Fondo Contable" autoFiltradoDescripcion="id_cat,descripcion"  columnas="3" width="150" margen-izquierdo="2" autoFiltrado="true" maxlength="50"/>
+                        <campo name="descuento" text="Descuento" columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" calc="2" llaveForanea="false" width="150"/>
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" maxlength="50" validacion="%id_unidad_ejecutora_gasto%==null" validacionMensaje="Favor de seleccionar una Unidad Ejecutora" marcador="Selecciona una Unidad Ejecutora" columnas="3" margen-izquierdo="2" width="150"/>
+                        <campo name="iva" text="Impuesto al valor Agregado" habilitado="true" validacion="%iva%==null" validacionMensaje="Ingresa el IVA." calcCliente="((%importe%-%descuento%)*0.16)" columna-visible="true" columnas="2" margen-izquierdo="1" width="150"/>
+                        <campo name="mes_cve_ingreso" visible="false" columna-visible="false" text="Mes" llaveForanea="false" calc="@fechaSistema(&quot;MM&quot;)"/>
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" descripcionForanea="clave_presupuestal" columna-visible="true" columnas="2" margen-izquierdo="1" width="150"/>
+                        <campo name="total" text="Total" columnas="2" margen-izquierdo="1" habilitado="true" columna-visible="true" width="150" muestraAcumulado="true" calcCliente="((%cantidad%)*((%importe%-%descuento%)+%iva%))" />
+                        <!--<campo name="caratula" text="Caratula" local="true" type="file" update="true" fileType="normal" url="" nombreDocumento="CaratulaCuentaBancaria" grupo="" expediente="" columnas="3"  margen-izquierdo="2"/>-->
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <!--OTROS SERVICIOS-->
+        <nivel id="mdRegisDevIngrOtros" nombre="Registra Devengado de Ingresos" ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==2"  mostrarNivelAnterior="false" mostrarProximoNivel="true"> 
+            <componente id="mdRegisDevIngrOtros" nombre="Devengado de Ingresos" tipo="maestroDetalle" >
+                <encabezado>
+                    <tabla id="tablaEncabezadoDevengado" schema="operation" nombre="devengado_ingreso">
+                        <campo name="ur" text="Unidad Responsable" calc="%registraDevengadoIngresos.registraDevengadoIngresos.ur%" llaveForanea="false" visible="false" />
+                        <campo name="periodo" text="Periodo Contable" calc="%registraDevengadoIngresos.registraDevengadoIngresos.periodo%" llaveForanea="false" visible="false"/>
+                        <campo name="tipo_ingreso" text="Tipo de Ingreso" calc="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%" llaveForanea="false" visible="false"/>
+                        <campo name="folio_devengado_ingreso" text="Folio" generacion="@prox()+1" autogenerado="true" columnas="2" margen-izquierdo="1" visible="false"/>
+                        <campo name="devengado_ingreso" text="Folio" calc="@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS')==null,''+%registraDevengadoIngresos.registraDevengadoIngresos.serie%+'-000001',@concatenar(''+%registraDevengadoIngresos.registraDevengadoIngresos.serie%+'-'+@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;10,'00000',@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;100,'0000',@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;1000,'000',@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;10000,'00',@ifThenElse(@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT MAX(folio_devengado_ingreso)+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS')))" columnas="2" margen-izquierdo="1"/>
+                        <campo name="factura" text="Factura" columnas="2" margen-izquierdo="1" marcador="Factura" calc="@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS')==null,'000001',@concatenar(@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;10,'00000',@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;100,'0000',@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;1000,'000',@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;10000,'00',@ifThenElse(@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT MAX(factura)::int+1 max FROM operation.devengado_ingreso WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS')))"/>
+                        <campo name="fecha_registro" text="Fecha" calc="@fechaSistema()" habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true" columnas="2" margen-izquierdo="1" />
+                        <campo name="fecha_factura" text="Fecha de Factura" calc="@fechaSistema()" columnas="2" margen-izquierdo="1" marcador="Fecha de Factura"/>
+                        <campo name="referencia" text="Referencia del Ingreso"  mascara="########" validacion="%referencia%==null" validacionMensaje="Capture Referencia." columnas="2" margen-izquierdo="1" marcador="Referencia" />
+                        <campo name="receptor_cfdi" text="Receptor CFDI" habilitado="false" calcCliente="%beneficiario%" descripcionForanea="rfc,razon_social" columnas="2" margen-izquierdo="1"/>
+                        <campo name="beneficiario" text="Cliente/Beneficiario" descripcionForanea="folio_beneficiario,razon_social" columnas="2" margen-izquierdo="1" marcador="Beneficiario" autoFiltrado="true" autoFiltradoDescripcion="folio_beneficiario,razon_social" llavesFijas="id_tipo_beneficiario=3"/>
+                        <campo name="estatus" text="Estatus" calc="1" habilitado="false" columnas="2" margen-izquierdo="1" />
+                        <campo name="concepto" text="Concepto" validacion="%concepto%==null" validacionMensaje="Ingresa el concepto." height="300" marcador="Ingresa un concepto" columnas="2" margen-izquierdo="1"/>
+                        <campo name="caja_recaudacion" text="caja" calc="%registraDevengadoIngresos.registraDevengadoIngresos.caja_recaudacion%" visible="false"/>
+                        <campo name="exp_ingreso" text="Expediente ingreso" calc="%GFE.GFE.folio_ingreso%" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="devengado_ingreso_detalle" tituloDetalle="Renglones" >
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" width="150"/>
+                        <campo name="periodo" text="Periodo Contable" llaveForanea="false"  visible="false" columna-visible="false" width="150"/>
+                        <campo name="folio_devengado_ingreso" text="Folio" llaveForanea="false" visible="false" width="150"/>
+                        <campo name="folio_devengado_ingreso_det" text="Renglón" generacion="@prox()+1" autogenerado="true" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="cantidad" text="Cantidad" validacion="%cantidad%==null" validacionMensaje="Ingresa la cantidad." columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_clasificador_rubro_ingreso" text="cat_clafi_rubro" llaveForanea="false" calc="11" visible="false" columna-visible="false" llavesFijas="afectable=true"/> 
+                        <campo name="id_clasificador_rubro_ingreso" text="Clasificador Rubro Ingreso" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" maxlength="50" marcador="Clasificador por Rubro del Ingreso" llavesFijas="afectable=true" validacion="%id_clasificador_rubro_ingreso%==null" validacionMensaje="Favor de seleccionar un fondo contable para continuar" columnas="3" margen-izquierdo="2" width="150"/>
+                        <campo name="importe" text="Importe" validacion="%importe%==null" validacionMensaje="Ingresa el importe." columna-visible="true" columnas="3" margen-derecho="2" width="150" formatoMoneda="true"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" marcador="Fondo Contable" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" width="150" margen-izquierdo="2" autoFiltrado="true" maxlength="50" llavesFijas="afectable=true"/>
+                        <campo name="descuento" text="Descuento" columna-visible="true" columnas="3" margen-derecho="2" width="150"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" calc="2" llaveForanea="false" width="150"/>
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" maxlength="50" validacion="%id_unidad_ejecutora_gasto%==null" validacionMensaje="Favor de seleccionar una Unidad Ejecutora" marcador="Selecciona una Unidad Ejecutora" columnas="3" margen-izquierdo="2" width="150" llavesFijas="afectable=true"/>
+                        <campo name="iva" text="Impuesto al Valor Agregado" habilitado="false" validacion="%iva%==null" validacionMensaje="Ingresa el IVA." muestraAcumulado="true" calcCliente="((%importe%-%descuento%)*0.16)" columna-visible="true" columnas="3" margen-derecho="2" margenwidth="150" formatoMoneda="true"/>
+                        <campo name="mes_cve_ingreso" visible="false" columna-visible="false" text="Mes" llaveForanea="false" calc="@fechaSistema(&quot;MM&quot;)"/>
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" descripcionForanea="clave_presupuestal" columna-visible="true" columnas="3" width="150" margen-izquierdo="2" descripcionForaneaTabla="clave_presupuestal"/>
+                        <campo name="total" text="Total" columnas="3"  habilitado="false" columna-visible="true" width="150" muestraAcumulado="true" calcCliente="((%cantidad%)*((%importe%-%descuento%)+%iva%))" margen-derecho="2" formatoMoneda="true"/>
+                        <!--<campo name="caratula" text="Caratula" local="true" type="file" update="true" fileType="normal" url="" nombreDocumento="CaratulaCuentaBancaria" grupo="" expediente="" columnas="3"  margen-izquierdo="2"/>-->
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <!-- Instancia Proceso-->
+        <nivel id="lanzaInstanciaOt" nombre="lanzaInstancia" interactivo="false" ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==2">
+            <componente id="lanzaInstanciaOt" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'ce761a18-4a10-47b5-9cac-1de960fd5c58'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%mdRegisDevIngrOtros.mdRegisDevIngrOtros.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%mdRegisDevIngrOtros.mdRegisDevIngrOtros.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_folio_devengado_ingreso" calc="%mdRegisDevIngrOtros.mdRegisDevIngrOtros.folio_devengado_ingreso%" mostrarEsc="true"/>
+                    <parametro name="out_fecha_registro" calc="%mdRegisDevIngrOtros.mdRegisDevIngrOtros.fecha_registro%" mostrarEsc="true"/>
+                    <parametro name="out_tipo_ingreso" calc="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%" mostrarEsc="true"/>
+                    <parametro name="out_caja_recaudacion" calc="%registraDevengadoIngresos.registraDevengadoIngresos.caja_recaudacion%" mostrarEsc="true"/>
+                    <parametro name="out_folio_ingreso" calc="%GFE.GFE.folio_ingreso%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false" ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==1">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'ce761a18-4a10-47b5-9cac-1de960fd5c58'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%mdRegisDevIngrEscolares.mdRegisDevIngrEscolares.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%mdRegisDevIngrEscolares.mdRegisDevIngrEscolares.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_folio_devengado_ingreso" calc="%mdRegisDevIngrEscolares.mdRegisDevIngrEscolares.folio_devengado_ingreso%" mostrarEsc="true"/>
+                    <parametro name="out_fecha_registro" calc="%mdRegisDevIngrEscolares.mdRegisDevIngrEscolares.fecha_registro%" mostrarEsc="true"/>
+                    <parametro name="out_tipo_ingreso" calc="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%" mostrarEsc="false"/>
+                    <parametro name="out_caja_recaudacion" calc="%registraDevengadoIngresos.registraDevengadoIngresos.caja_recaudacion%" mostrarEsc="false"/>
+                    <parametro name="out_folio_ingreso" calc="%GFE.GFE.folio_ingreso%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--REPORTES -->
+        <nivel id="repReDeVi" nombre="Reporte Único del Ejericicio del Presupuesto" mostrarNivelAnterior="false" mostrarProximoNivel="false"  ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==1">
+            <componente id="repReDeViEscolares" nombre="Documento del Devengado de Ingresos de Servicios Escolares" tipo="reporte" >
+                <reporte nombre="R_Dev_Serv_Escolares_IJ" expediente="Expediente de Ingresos/Servicios Escolares" nombreDocumento="'Servicios Escolares'" grupo="%GFE.GFE.folio_ingreso%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" local="true" type="long" calc="%registraDevengadoIngresos.registraDevengadoIngresos.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%registraDevengadoIngresos.registraDevengadoIngresos.periodo%"/>
+                    <campo name="folio_devengado_ingreso" local="true" type="long" calc="%mdRegisDevIngrEscolares.mdRegisDevIngrEscolares.folio_devengado_ingreso%"/>
+                    
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+        </nivel>
+       <nivel id="repReDeViOtros" nombre="Reporte Único del Ejericicio del Presupuesto" mostrarNivelAnterior="false" mostrarProximoNivel="false"  ejecutar="%registraDevengadoIngresos.registraDevengadoIngresos.tipo_ingreso%==2">
+            <componente id="repReDeViOtros" nombre="Documento del Devengado de Ingresos" tipo="reporte" >
+                <reporte nombre="Dev_Otros_Ingresos_AL" expediente="Expediente de Ingresos/Devengado de Ingresos" nombreDocumento="'Otros Ingresos'" grupo="%GFE.GFE.folio_ingreso%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" local="true" type="long" calc="%registraDevengadoIngresos.registraDevengadoIngresos.ur%" />
+                    <campo name="periodo" local="true" type="long" calc="%registraDevengadoIngresos.registraDevengadoIngresos.periodo%" />
+                    <campo name="folio_devengado" local="true" type="long" calc="%mdRegisDevIngrOtros.mdRegisDevIngrOtros.folio_devengado_ingreso%" />
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente> 
+        </nivel>
+    </pagina>
+</tarea>
