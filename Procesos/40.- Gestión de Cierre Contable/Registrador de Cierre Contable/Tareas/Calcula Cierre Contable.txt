@@ -1,0 +1,109 @@
+<tarea id="calculoCierreContable" nombre="Calcula Cierre Contable">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo" /> <!-- filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"-->
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+					<campo name="autoriza_estructura_programatica"/>
+					<campo name="autoriza_estructura_presupuestal"/>
+					<campo name="auto_estruct_cve_presupuestal_e"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="nlCierreContable" nombre="Póliza de Cierre Contable" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+		    <componente id="cpCierreContable" nombre="Póliza de Cierre Contable" tipo="formulario" accionDefault="seleccionar">
+		        <tabla schema="catalog" nombre="periodo">
+		            <campo name="id_unidad_responsable" llaveForanea="false" calc="$config.ur$" visible="false" />
+		            <campo name="id_periodo" text="Periodo" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"  habilitado="false" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+		            <campo name="id_separador" text="Separación de la Clave" visible="false"/>
+		            <campo name="autoriza" text="Cierre Contable" local="true" type="bool" validacion="@ifThenElse(%autoriza%==true,  @ifThenElse(@consultaDirec('SELECT * FROM reportes.genera_polizas_cierre_contable('+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\''+','+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\''+','+'\\''+%barreUsuarios.barreUsuarios.id_usuario%+'\\''+') AS result','result','string','MAGNITUS')=='ERROR'  , true , false),false)" validacionMensaje="Error en el Cierre Contable" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+		        </tabla>
+		        <estilos>
+		            <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+		        </estilos>
+		        <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+		    </componente>
+        </nivel>
+        <nivel id="instancia" nombre="instancia" interactivo="false">
+            <componente id="instancia" nombre="instancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'de5c2089-e84c-431f-8ec5-0f7b1777dffb'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="$config.ur$"/>
+                    <parametro name="out_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel id="nlAutorizaCierre2" nombre="Pólizas de cierre contable por fondo" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpreporteCierreCont" nombre="Reporte Saldos Antes del Cierre Contable" tipo="reporte">
+                <reporte nombre="comp_cierre_con_mag" expediente="Expediente Cierre Contable/Saldos Antes del Cierre" nombreDocumento="'Saldos Antes del Cierre Contable'"  grupo="'Cierre Contable'" url="$config.repository_upload_file$" update="true"><!--expediente="Expediente Cierre Contable/Cuentas de Ingreso" nombreDocumento="'Saldos Antes del Cierre Contable'"  grupo="'Cierre'" url="$config.repository_upload_file$" update="true"-->
+                    <campo name="parametro1" local="true" type="long" calc="2"/>
+                    <campo name="parametro2" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                </reporte>
+            </componente>
+            <componente id="reporteEstructuraIngreso" nombre="Pólizas de Cierre Contable por Fondo" tipo="reporte">
+                <reporte nombre="pol_cierrfoncon_mag" expediente="Expediente Cierre Contable/Cierre Contable por Fondo" nombreDocumento="'Pólizas de Cierre Contable por Fondo'" grupo="'Cierre Contable'" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="reporteEstructuraIngreso2" nombre="Pólizas de Cierre Contable Globalizadas por Cuenta Contable" tipo="reporte">
+                <reporte nombre="pol_cierrglobcon_mag" expediente="Expediente Cierre Contable/Cierre Contable Globalizadas por Cuenta Contable" nombreDocumento="'Pólizas de Cierre Contable Globalizadas por Cuenta Contable'" grupo="'Cierre Contable'" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="reporteEstructuraIngreso2" nombre="Resumen por Cuenta Contable de los Saldos Acumulados de las Pólizas de Cierre Contable" tipo="reporte">
+                <reporte nombre="Res_ctas_saldos_acum_mag" expediente="Expediente Cierre Contable/Resumen de los Saldos Acumulados" nombreDocumento="'Resumen de los Saldos Acumulados de Polizas de Cierre Contable'" grupo="'Cierre Contable'" url="$config.repository_upload_file$" update="true">
+                    <campo name="parametro1" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                </reporte>
+            </componente>
+        </nivel>
+            <!--<componente id="cpreporteCierreCont1" nombre="Reporte Polizas de Cuentas de Gasto" tipo="reporte">
+                <reporte nombre="poliza_cierre_1" expediente="Expediente Cierre Contable/Cuentas de Gasto" nombreDocumento="'Cuentas de Gasto'"  grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="4"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="2"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreCont2" nombre="Reporte Polizas de Cuentas de Ahorro y Desahorro" tipo="reporte">
+                <reporte nombre="poliza_cierre_1" expediente="Expediente Cierre Contable/Cuentas de Ahorro y Desahorro" nombreDocumento="'Cuentas de Ahorro y Desahorro'"  grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="4"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="3"/>
+                </reporte>
+            </componente> 
+            <componente id="cpreporteCierreCont3" nombre="Reporte Polizas de Cuentas Patrimoniales" tipo="reporte">
+                <reporte nombre="poliza_cierre_1" expediente="Expediente Cierre Contable/Cuentas Patrimoniales" nombreDocumento="'Cuentas Patrimoniales'"  grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="4"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="4"/>
+                </reporte>
+            </componente> -->     
+    </pagina>
+</tarea>

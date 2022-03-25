@@ -1,0 +1,165 @@
+<tarea id="calculoCierreContable" nombre="Calcula Cierre Presupuestal">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo" /> <!-- filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"-->
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+					<campo name="autoriza_estructura_programatica"/>
+					<campo name="autoriza_estructura_presupuestal"/>
+					<campo name="auto_estruct_cve_presupuestal_e"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="nlCierreContable" nombre="Póliza de Cierre Presupuestal" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+		    <componente id="cpCierreContable" nombre="Póliza de Cierre Presupuestal" tipo="formulario" accionDefault="seleccionar">
+		        <tabla schema="catalog" nombre="periodo">
+		            <campo name="id_unidad_responsable" llaveForanea="false" calc="$config.ur$" visible="false" />
+		            <campo name="id_periodo" text="Periodo" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"  habilitado="false" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+		            <campo name="id_separador" text="Separación de la Clave" visible="false"/>
+		            <campo name="cierre_contable" text="Cierre Presupuestal" local="true" type="bool" validacion="@ifThenElse(%cierre_contable%==true,  @ifThenElse(@consultaDirec('SELECT * FROM reportes.genera_polizas_cierre_presupuestal('+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\''+','+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\''+','+'\\''+%barreUsuarios.barreUsuarios.id_usuario%+'\\''+') AS result','result','string','MAGNITUS')=='ERROR'  , true , false),false)" validacionMensaje="Error en el Cierre Contable" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+		        </tabla>
+		        <estilos>
+		            <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+		        </estilos>
+		        <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+		    </componente>
+        </nivel>
+        <nivel id="instancia" nombre="instancia" interactivo="false">
+            <componente id="instancia" nombre="instancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'efd609a8-17a9-4f21-af14-d2517d14e1f1'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="$config.ur$"/>
+                    <parametro name="out_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel id="reporteCierreC" nombre="Reporte Polizas Cierre Contable">
+            <componente id="cpreporteCierreP" nombre="Pólizas de cierre presupuestal por fondo" tipo="reporte">
+                <reporte nombre="pol_cierrfonppt_mag" expediente="Expediente/Cierre Presupuestal por Fondo" nombreDocumento="'Cierre Presupuestal por Fondo'" grupo="'Cierre Presupuestal'" url="$config.repository_upload_file$" update="true"><!--expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Claves Presupuestales con Saldo por Recaudar'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true"-->
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP1" nombre="Pólizas de cierre presupuestal Globalizadas por Cuenta" tipo="reporte">
+                <reporte nombre="pol_cierrglobppt_mag" expediente="Expediente/Cierre Presupuestal Globalizadas por Cuenta" nombreDocumento="'Cierre Presupuestal Globalizadas por Cuenta'" grupo="'Cierre Presupuestal'" url="$config.repository_upload_file$" update="true"><!--expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Claves Presupuestales con Saldo por Recaudar'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true"-->
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP2" nombre="Reporte para obtener los saldos antes del cierre presupuestal" tipo="reporte">
+                <reporte nombre="comp_cierre_pre_mag" expediente="Expediente/Saldos Antes del Cierre Presupuestal" nombreDocumento="'Saldos Antes del Cierre Presupuestal'" grupo="'Cierre Presupuestal'" url="$config.repository_upload_file$" update="true"><!--expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Claves Presupuestales con Saldo por Recaudar'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true"-->
+                    <campo name="parametro1" local="true" type="long" calc="2"/>
+                    <campo name="parametro2" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP3" nombre="Reporte para obtener el resumen por cuenta de los saldos acumulados de las pólizas de cierre presupuestal" tipo="reporte">
+                <reporte nombre="Res_ctas_saldos_acum_pre_mag" expediente="Expediente/Cierre Saldos Acumulados" nombreDocumento="'Saldos Acumulados'" grupo="'Cierre Presupuestal'" url="$config.repository_upload_file$" update="true"><!--expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Claves Presupuestales con Saldo por Recaudar'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true"-->
+                    <campo name="parametro1" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                </reporte>
+            </componente>
+            <!--<componente id="cpreporteCierreP11b" nombre="Reporte de Claves Presupuestales con Saldo por Recaudar" tipo="reporte">
+                <reporte nombre="Disponible_por_recaudar" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Claves Presupuestales con Saldo por Recaudar'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP1" nombre="Reporte de Reducciones Presupuestales a la Ley de Ingresos" tipo="reporte">
+                <reporte nombre="Reducc_pres_ingreso" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Reducciones Presupuestales a la ley de ingresos'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP2" nombre="Reporte de Ampliaciones Presupuestales a la Ley de Ingresos" tipo="reporte">
+                <reporte nombre="Amplia_pres_ingreso" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Ampliaciones Presupuestales a la ley de ingresos'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP11a" nombre="Reporte de Claves Presupuestales con Saldo Disponible por Ejercer No Comprometidos" tipo="reporte">
+                <reporte nombre="Disponible_por_ejercer" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Claves Presupuestales con Saldo Disponible por Ejercer No Comprometidos'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP11" nombre="Reporte de Folios de Egresos Comprometidos No Devengados" tipo="reporte">
+                <reporte nombre="Compro_no_devengado" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Folios de Egresos Comprometidos No Devengados'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP4" nombre="Reporte de Modificaciones Negativas al Presupuesto de Egresos" tipo="reporte">
+                <reporte nombre="Reducc_pres_egreso" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Modificaciones Negativas al Presupuesto de Egresos'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP3" nombre="Reporte de Modificaciones Positivas al Presupuesto de Egresos" tipo="reporte">
+                <reporte nombre="Amplia_pres_egreso" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Modificaciones Positivas al Presupuesto de Egresos'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP4" nombre="Reporte de Folios Devengados y Ejercidos No Pagados (Adefas)" tipo="reporte">
+                <reporte nombre="Ejercido_no_pagado" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Folios Devengados y Ejercidos No Pagados (Adefas)'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP10" nombre="Reporte Póliza de Cierre Presupuestal de Egresos" tipo="reporte">
+                <reporte nombre="poliza_cierre_pre1" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Póliza de Cierre Presupuestal de Egresos'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="5"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="5"/>
+                </reporte>
+            </componente> 
+            <componente id="cpreporteCierreP11" nombre="Reporte Póliza de Cierre Presupuestal de Ingresos" tipo="reporte">
+                <reporte nombre="poliza_cierre_pre1" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Póliza de Cierre Presupuestal de Ingresos'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="5"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="6"/>
+                </reporte>
+            </componente>
+            <componente id="cpreporteCierreP12" nombre="Reporte Póliza de Deficit/Superavit Financiero" tipo="reporte">
+                <reporte nombre="poliza_cierre_pre1" expediente="Expediente de Cierre Presupuestal" nombreDocumento="'Póliza de Deficit/Superavit Financiero'" grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="5"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="7"/>
+                </reporte>
+            </componente>-->
+        </nivel>
+    </pagina>
+</tarea>

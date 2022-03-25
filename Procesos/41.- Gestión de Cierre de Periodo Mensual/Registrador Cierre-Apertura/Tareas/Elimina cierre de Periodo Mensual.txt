@@ -1,0 +1,90 @@
+<tarea id="RegistraCierre" nombre="ELIMINA CIERRE-APERTURA DE PERIODO MENSUAL" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel id="periodo" nombre="periodo" interactivo="false">   
+            <componente id="periodo" nombre="periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/> 
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlRegCierreM" nombre="Elimina Cierre - Apertura de Período Mensual" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpRegCierreM" nombre="Elimina Cierre-Apertura de Período Mensual" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="cierre_mensual">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" visible="false" habilitado="false" calc="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="id_periodo" text="AÑO" columnas="3" margen-izquierdo="3" margen-derecho="3" visible="true" llaveForanea="false" calc="$inParam.periodo$"/> <!--descripcionForanea="id_periodo" llavesFijas="id_estatus=3 AND estatus=true"-->
+                    <campo name="mes" text="MES" visible="true" descripcionForanea="nombre" columnas="3" margen-izquierdo="3" margen-derecho="3" calc="$inParam.mes$" habilitado="false"/>
+                    <campo name="accion" text="ACCIÓN" visible="true" descripcionForanea="descripcion" columnas="3" margen-izquierdo="3" margen-derecho="3" habilitado="false"/>
+                    <campo name="observaciones" text="OBSERVACIONES" visible="true" columnas="3" margen-izquierdo="3" margen-derecho="3" habilitado="false"/>
+                    <campo name="estatus" text="ESTATUS" visible="true" descripcionForanea="descripcion" columnas="3" margen-izquierdo="3" margen-derecho="3" habilitado="false"/>
+                    <campo name="usuario_registra" text="Usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" columnas="3" margen-izquierdo="3" margen-derecho="3" llaveForanea="false"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="reporteCierre" nombre="Reporte de Estatus de Perído Mensual" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="reporteCierre" nombre="Reporte de Estatus de Perído Mensual" tipo="reporte">
+                <reporte nombre="Cierre_mensual"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="%periodo.periodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" type="long" calc="%periodo.periodo.id_periodo%"/>
+                    <campo name="nombre_usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="cpEliminaCierre" nombre="Elimina Cierre" tipo="formulario" accionDefault="seleccionar"  colapsado="NO">
+                <tabla schema="catalog" nombre="cierre_mensual">
+                    <campo name="mes" text="MES" habilitado="false" visible="true" calc="$inParam.mes$" columnas="3" margen-izquierdo="2"/>
+                    </tabla>
+                 <estilos>
+                   <boton nombre="grabar" visible="true" texto="Eliminar Cierre Mensual" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <confirmaciones>
+                    <confirmacion confirmacionTitulo="'Elimina Cierre'" confirmacionMensaje="'¿Está seguro de eliminar Cierre Mensual?'" tipo="avanzar"/>
+                </confirmaciones>
+            </componente>
+        </nivel>
+        <nivel id="EliminaCierre" nombre="EliminaCierre" interactivo="false">
+            <componente id="EliminaCierre" nombre="EliminaCierre" tipo="cursor">
+                <tabla schema="catalog" nombre="cierre_mensual">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="$inParam.mes$"/>
+                    <campo name="seleccion" calc="null"/>
+                    <campo name="observaciones" calc="null"/>
+                    <campo name="accion" calc="null"/>
+                    </tabla>
+            </componente>
+        </nivel>
+        <!--TERMINA INSTANCIA-->
+        <nivel id="terminarInstancia" nombre="Terminar Instancia" interactivo="false">
+            <componente id="terminarInstancia" nombre="Terminar Instancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

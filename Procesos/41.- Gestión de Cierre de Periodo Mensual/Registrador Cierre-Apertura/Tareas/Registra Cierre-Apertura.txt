@@ -1,0 +1,128 @@
+<tarea id="RegistraCierre" nombre="REGISTRA CIERRE-APERTURA" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel id="periodo" nombre="periodo" interactivo="false">   
+            <componente id="periodo" nombre="periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="fecha" text="FECHA" local="true" type="string" calc="@fechaSistema()"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="fecha" text="FECHA" local="true" type="long" calc="@subCadena(%periodo.periodo.fecha%,5,7)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="BarreMes" nombre="BarreMes" interactivo="false">
+            <componente id="BarreMes" nombre="BarreMes" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo_mensual">
+                    <campo name="id_periodo_mensual" text="MES"/>
+                    <campo name="nombre" text="Nombre"/>
+                </tabla>
+                <nivel id="BarreMes1" nombre="BarreMes1" interactivo="false">
+                    <componente id="BarreMes1" nombre="BarreMes1" tipo="altaDirect">
+                        <tabla schema="catalog" nombre="cierre_mensual">
+                            <campo name="id_unidad_responsable" text="MES" calc="%periodo.periodo.id_unidad_responsable%"/>
+                            <campo name="id_periodo" text="Periodo" calc="%periodo.periodo.id_periodo%"/>
+                            <campo name="mes" text="MES" calc="%BarreMes.BarreMes.id_periodo_mensual%"/>
+                            <campo name="estatus" text="Estatus" calc="@ifThenElse(%BarreMes.BarreMes.id_periodo_mensual%&lt;%barreUsuarios.barreUsuarios.fecha%,4,5)"/>
+                            <campo name="usuario_registra" text="Usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="BarreEstatusMA" nombre="BarreEstatusMA" interactivo="false">
+            <componente id="BarreEstatusMA" nombre="BarreEstatusMA" tipo="cursor">
+                <tabla schema="catalog" nombre="cierre_mensual">
+                    <campo name="id_unidad_responsable" text="MES" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%periodo.periodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%periodo.periodo.id_periodo%"/>
+                    <campo name="mes" text="MES" filtroCampo="mes" filtroOperador="=" filtroValor="%barreUsuarios.barreUsuarios.fecha%"/>
+                    <campo name="estatus" text="Estatus"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="BarreEstatusMS" nombre="BarreEstatusMS" interactivo="false">
+            <componente id="BarreEstatusMS" nombre="BarreEstatusMS" tipo="cursor">
+                <tabla schema="catalog" nombre="cierre_mensual">
+                    <campo name="id_unidad_responsable" text="MES" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%periodo.periodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%periodo.periodo.id_periodo%"/>
+                    <campo name="mes" text="MES" filtroCampo="mes" filtroOperador="=" filtroValor="%barreUsuarios.barreUsuarios.fecha%+1"/>
+                    <campo name="estatus" text="Estatus"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlRegCierreM" nombre="Registra Cierre - Apertura de Período Mensual" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpRegCierreM" nombre="Registra Cierre-Apertura de Período Mensual" tipo="tabla" mostrarAgregar="false" mostrarEditar="true" mostrarEliminar="false">
+                <tabla schema="catalog" nombre="cierre_mensual">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" visible="false" habilitado="false" columna-visible="false" calc="%periodo.periodo.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="id_periodo" text="AÑO" columnas="4" margen-izquierdo="3" margen-derecho="3" visible="true" columna-visible="false" llaveForanea="false" calc="%periodo.periodo.id_periodo%" habilitado="false"/> <!--descripcionForanea="id_periodo" llavesFijas="id_estatus=3 AND estatus=true"-->
+                    <campo name="mes" text="MES" habilitado="false" ordenar="asc" descripcionForanea="nombre" descripcionForaneaTabla="nombre" visible="true" columna-visible="true" columnas="3" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="estatus" text="ESTATUS" habilitado="false" visible="true" columna-visible="true" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" columnas="3" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="accion" text="ACCIÓN" habilitado="false" interaccion-visible="%mes_c%==%mes% OR %mes_a%==%mes% OR (%mes_s%==%mes% AND %BarreEstatusMA.BarreEstatusMA.estatus%==3)" calcCliente="@ifThenElse(%mes%==%mes_c% OR %mes%==%mes_a%,@ifThenElse(%BarreEstatusMA.BarreEstatusMA.estatus%==5,1,@ifThenElse(%BarreEstatusMA.BarreEstatusMA.estatus%==3,2,%BarreEstatusMA.BarreEstatusMA.estatus%)),@ifThenElse(%BarreEstatusMS.BarreEstatusMS.estatus%==5,1,@ifThenElse(%BarreEstatusMS.BarreEstatusMS.estatus%==3,2,%BarreEstatusMS.BarreEstatusMS.estatus%)))" visible="true" descripcionForanea="descripcion" columnas="3" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="observaciones" text="OBSERVACIONES" visible="true" columnas="3" margen-izquierdo="3" margen-derecho="3" interaccion-visible="%mes_c%==%mes% OR %mes_a%==%mes% OR (%mes_s%==%mes% AND %BarreEstatusMA.BarreEstatusMA.estatus%==3)" validacionModificacion="%observaciones%==null" validacionModificacionMensaje="Observaciones es un campo Obligatorio"/>
+                    <campo name="seleccion" text="Seleccion" columnas="3" margen-izquierdo="3" margen-derecho="3" interaccion-visible="%mes_c%==%mes% OR %mes_a%==%mes% OR (%mes_s%==%mes% AND %BarreEstatusMA.BarreEstatusMA.estatus%==3)" columna-visible="false"/>
+                    <campo name="val_seleccion" text="ValSEl" type="long" local="true" calc="%seleccion%" validacionModificacion="@ValidarRegistro('catalog','cierre_mensual','id_periodo='+%id_periodo%+' AND'+' seleccion='+'\\''+'true'+'\\'',';','MAGNITUS')" validacionModificacionMensaje="Solo se puede seleccionar un MES"  visible="false" columna-visible="false"/>
+                    <!--<campo name="val_seleccion" text="ValSEl" type="long" local="true" calc="%seleccion%" validacionModificacion="@ValidarRegistro('catalog','cierre_mensual','seleccion='+'\\''+%seleccion%+'\\''+' AND'+' id_periodo='+'\\''+%id_periodo%+'\\''+' AND'+' mes='+'\\''+%mes%+'\\'',';','MAGNITUS')" validacionModificacionMensaje="Solo se puede seleccionar un MES"  visible="false" columna-visible="false"/>-->
+                    <campo name="usuario_registra" text="Usuario" visible="false" calcCliente="$protocolarios.user$" columna-visible="false" columnas="4" margen-izquierdo="3" margen-derecho="3" llaveForanea="false"/>
+                    <campo name="mes_c" text="Mes Corriente" local="true" type="long" calc="%barreUsuarios.barreUsuarios.fecha%" visible="false" columna-visible="false" columnas="3" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="mes_s" text="Mes Siguiente" local="true" type="long" calc="%barreUsuarios.barreUsuarios.fecha%+1" visible="false" columna-visible="false" columnas="3" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="mes_a" text="Mes Anterior" local="true" type="long" calc="%barreUsuarios.barreUsuarios.fecha%-1" visible="false" columna-visible="false" columnas="3" margen-izquierdo="3" margen-derecho="3"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                    <boton nombre="formulario" visible="true" texto="Guardar" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="nlCursor" nombre="nlCursor" interactivo="false" >
+            <componente id="nlCursor" nombre="nlCursor" tipo="cursor">
+                <tabla schema="catalog" nombre="cierre_mensual">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%periodo.periodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%periodo.periodo.id_periodo%"/>
+                    <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%nlRegCierreM.cpRegCierreM.mes%"/>
+                    <campo name="estatus" text="ESTATUS"/>
+                    <campo name="accion" text="ACCIÓN"/>
+                    <campo name="observaciones" text="OBSERVACIONES"/>
+                    <campo name="seleccion" text="Seleccion"/>
+                </tabla> 
+                <nivel id="nlAgrCierre" nombre="nlAgrCierre" interactivo="false" ejecutar="%nlRegCierreM.cpRegCierreM.seleccion%==true">
+                    <componente id="nlAgrCierre" nombre="nlAgrCierre" tipo="solicitud">
+                        <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                        <parametro name="enterprise" calc="'MAGNITUS'"/>
+                        <parametro name="process" calc="'619747fb-66e2-4bc3-b33d-ada0279258d8'"/>
+                        <parametro name="user" calc="$protocolarios.user$"/>
+                        <parametro name="out_ur" calc="%periodo.periodo.id_unidad_responsable%" mostrarEsc="true"/>
+                        <parametro name="out_periodo" calc="%nlCursor.nlCursor.id_periodo%" mostrarEsc="true"/>
+                        <parametro name="out_mes" calc="%nlCursor.nlCursor.mes%" mostrarEsc="true"/>
+                        <parametro name="out_accion" calc="%nlCursor.nlCursor.accion%" mostrarEsc="true"/>
+                        <parametro name="out_estatus" calc="%nlCursor.nlCursor.estatus%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        </componente>
+        </nivel>
+        <!--619747fb-66e2-4bc3-b33d-ada0279258d8-->
+        
+        <nivel id="reporteCierre" nombre="Reporte de Estatus de Perído Mensual">
+            <componente id="reporteCierre" nombre="Reporte de Estatus de Perído Mensual" tipo="reporte">
+                <reporte nombre="Cierre_mensual" update="true" nombreDocumento="'Estatus de Perído Mensual'" expediente="Estatus de Perído Mensual"  grupo="%periodo.periodo.id_periodo%" url="$config.repository_upload_file$"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="%periodo.periodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" type="long" calc="%periodo.periodo.id_periodo%"/>
+                    <campo name="nombre_usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

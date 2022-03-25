@@ -1,0 +1,273 @@
+<tarea id="AutCatPro" nombre="Autoriza Catálogos Programaticos" autor="Monserrat Gerardo" version="1">
+    <pagina id="1">
+        <nivel id="nlAutCatPro" nombre="Autoriza Catálogos Programaticos" mostrarProximoNivel="false">
+            <componente id="cpAutCatPro" nombre="Autoriza Catálogos Programaticos" tipo="reporte">
+                <reporte nombre="Cons_cat_program" expediente="Expediente de Catalogos Programáticos" nombreDocumento="'Catálogos Programáticos'" grupo="$inParam.id_catalogo$" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" text="Ejercicio Fiscal" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="tabla" text="tabla" local="true" type="long" calc="0"/>
+                    <campo name="id_catalogo" text="Id Catalogo" local="true" type="long" calc="$inParam.id_catalogo$"/>
+                    <campo name="id_cat" text="Id Cat" local="true" type="string" calc="'0'"/>
+                    <campo name="folio_operacion" local="true" type="long" text="Folio" calc="$inParam.folio_operacion$"/>
+                </reporte>
+            </componente>
+            <componente id="cpAutCatPro1" nombre="Autoriza Catálogos Programaticos" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="observaciones_estructura_programatica" text="Observaciones" height="250" columnas="6" margen-izquierdo="2"/>
+                    <campo name="autorizar_programatica" text="Autorizar" local="true" type="bool" visible="true" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!--
+        EQUIPO IEA - 20/05/2021 - QUERY DETECCIÓN DE CLAVE DE EGRESOS
+        SELECT id_presupuesto_egresos, id_presupuesto_egresos_det, id_clave_egreso
+        FROM (SELECT *, COUNT(*) OVER(PARTITION BY id_presupuesto_egresos) N 
+              FROM operation.presupuesto_egresos_det) AS A
+        WHERE N > 1
+        ORDER BY id_presupuesto_egresos_det ASC;
+        -->
+        
+        <nivel id="nlAutCatPro2" nombre="Listado de Catálogos Aux" interactivo="false" ejecutar="%nlAutCatPro.cpAutCatPro1.autorizar_programatica%==true">
+            <componente id="nlAutCatPro2" tipo="cursor">
+                <tabla schema="catalog" nombre="catalogos_aux">
+                    <campo name="ur" text="Unidad Responsable" descripcionForanea="descripcion" filtroCampo="ur" filtroOperador="=" filtroValor="@castTo($inParam.ur$,'long')" llaveForane="false"/>
+                    <campo name="id_periodo" text="Periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_cat" text="Id Cat"/>
+                    <campo name="descripcion" text="Descripción"/>
+                    <campo name="id_catalogo" text="Id Catalogo" filtroCampo="id_catalogo" filtroOperador="=" filtroValor="$inParam.id_catalogo$" llaveForanea="false" />
+                    <campo name="fecha_registro" text="Fecha Registro"/>
+                    <campo name="usuario_modificador" text="Usuario"/>
+                    <campo name="nivel" text="Nivel"/>
+                    <campo name="estatus" text="Estatus"/>
+                    <campo name="clasificador_economico" text="Clasificador"/>
+                    <campo name="clave_cuenta" text="Clave"/>
+                    <campo name="folio_operacion" text="Folio Operacion"/>
+                    <campo name="estatus_registro" text="Estatus" calc="@ifThenElse($inParam.opcion$=='Agregar',2,5)"/>
+                    <campo name="id_catalogo_ref1" text="Catálogo fuente"/>
+                    <campo name="id_cat_ref1" text="Clave fuente"/>
+                    <campo name="folio_operacion_instancia" text="Folio Instancia" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="$inParam.folio_operacion$"/>
+                </tabla>
+                <nivel id="nlAutCatPro3" nombre="Listado de Catálogos" interactivo="false" ejecutar="$inParam.opcion$=='Agregar'">
+                    <componente id="nlAutCatPro3" tipo="altaDirect">
+                        <tabla schema="catalog" nombre="catalogos">
+                            <campo name="ur" text="Unidad Responsable" calc="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                            <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                            <campo name="id_cat" text="Id Cat" calc="%nlAutCatPro2.nlAutCatPro2.id_cat%"/>
+                            <campo name="descripcion" text="Descripción" calc="%nlAutCatPro2.nlAutCatPro2.descripcion%"/>
+                            <campo name="id_catalogo" text="Id Catalogo" calc="%nlAutCatPro2.nlAutCatPro2.id_catalogo%"/>
+                            <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                            <campo name="nivel" text="Nivel" calc="%nlAutCatPro2.nlAutCatPro2.nivel%"/>
+                            <campo name="estatus" text="Estatus" calc="%nlAutCatPro2.nlAutCatPro2.estatus%"/>
+                            <campo name="clasificador_economico" text="Clasificador" calc="%nlAutCatPro2.nlAutCatPro2.clasificador_economico%"/>
+                            <campo name="clave_cuenta" text="Clave" calc="%nlAutCatPro2.nlAutCatPro2.clave_cuenta%"/>
+                            <campo name="usuario_modificador" text="Usuario" calc="%nlAutCatPro2.nlAutCatPro2.usuario_modificador%" />
+                            <campo name="estatus_registro" text="Estatus" calc="2"/>
+                            <campo name="afectable" text="Detalle" calc="@consultaDirec('SELECT afectable AS result FROM catalog.segmento_mascara WHERE id_unidad_responsable= '+$inParam.ur$+' AND id_periodo='+$inParam.periodo$+' AND id_catalogo='+$inParam.id_catalogo$+ ' AND nivel='+%nlAutCatPro2.nlAutCatPro2.nivel%,'result','bool','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="nlAutCatPro31" nombre="Alta de Catálogos Foráneos" interactivo="false" ejecutar="$inParam.opcion$=='Agregar' AND %nlAutCatPro2.nlAutCatPro2.id_catalogo%==3 AND %nlAutCatPro2.nlAutCatPro2.id_cat_ref1%!=null">
+            <componente id="nlAutCatPro31" tipo="altaDirect">
+                <tabla schema="catalog" nombre="catalogos_foraneos">
+                    <campo name="ur" text="Unidad Responsable" calc="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_catalogo" text="Id Catalogo" calc="%nlAutCatPro2.nlAutCatPro2.id_catalogo%"/>
+                    <campo name="id_cat" text="Id Cat" calc="%nlAutCatPro2.nlAutCatPro2.id_cat%"/>
+                    <campo name="id_catalogo_foraneo" text="Id Catalogo Foraneo" calc="%nlAutCatPro2.nlAutCatPro2.id_catalogo_ref1%"/>
+                    <campo name="id_foranea" text="Id Cat Foránea" calc="%nlAutCatPro2.nlAutCatPro2.id_cat_ref1%"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="usuario_modificador" text="Usuario" calc="%nlAutCatPro2.nlAutCatPro2.usuario_modificador%" />
+                    <campo name="estatus" text="Estatus" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlAutCatPro41" nombre="Elimina CatálogosForáneos" interactivo="false" ejecutar="$inParam.opcion$=='Eliminar' AND %nlAutCatPro2.nlAutCatPro2.id_catalogo%==3 AND %nlAutCatPro2.nlAutCatPro2.id_cat_ref1%!=null">
+            <componente id="nlAutCatPro4" tipo="bajaDirect">
+                <tabla schema="catalog" nombre="catalogos_foraneos">
+                    <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_cat" text="Id Cat" calc="%nlAutCatPro2.nlAutCatPro2.id_cat%"/>
+                    <campo name="id_catalogo" text="Id Catalogo" calc="$inParam.id_catalogo$"/>
+                    <campo name="id_catalogo_foraneo" text="Id Catalogo Foraneo" calc="%nlAutCatPro2.nlAutCatPro2.id_catalogo_ref1%"/>
+                    <campo name="id_foranea" text="Id Cat Foránea" calc="%nlAutCatPro2.nlAutCatPro2.id_cat_ref1%"/>
+                </tabla>
+            </componente>
+        </nivel>
+
+        <nivel id="BarreInd" nombre="Actualiza Cuentas AUX" interactivo="false" ejecutar="%nlAutCatPro.cpAutCatPro1.autorizar_programatica%==true">
+            <componente id="BarreInd" tipo="cursor">
+                <tabla schema="catalog" nombre="ficha_indicador_aux">
+                    <campo name="ur" text="UR" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_cat" />
+                    <campo name="nombre" text="nombre"/>
+                    <campo name="objetivo" text="objetivo"/>
+                    <campo name="definicion" text="definicion"/>
+                    <campo name="tipo" text="tipo"/>
+                    <campo name="dimension" text="dimension"/>
+                    <campo name="unidad_medida" text="unidad_medida"/>
+                    <campo name="frecuencia_medicion" text="frecuencia_medicion"/>
+                    <campo name="linea_base" text="linea_base"/>
+                    <campo name="medio_verificacion" text="medio_verificacion"/>
+                    <campo name="asignacion_financiera" text="asignacion_financiera"/>
+                    <campo name="anios_meta_multianual" text="anios_meta_multianual"/>
+                    <campo name="meta_multianual" text="meta_multianual"/>
+                    <campo name="metodo_calculo" text="metodo_calculo"/>
+                    <campo name="numerador" text="numerador"/>
+                    <campo name="denominador" text="denominador"/>
+                    <campo name="observaciones" text="observaciones"/>
+                    <campo name="folio_operacion" text="folio_operacion"/>
+                </tabla>
+                <nivel id="BarreInd1" nombre="Actualiza Cuentas AUX" interactivo="false" ejecutar="$inParam.opcion$=='Agregar'">
+                    <componente id="BarreInd1" tipo="altaDirect">
+                        <tabla schema="catalog" nombre="ficha_indicador">
+                            <campo name="ur" text="UR" calc="%BarreInd.BarreInd.ur%" llaveForanea="false"/>
+                            <campo name="periodo" text="Periodo" calc="%BarreInd.BarreInd.periodo%" llaveForanea="false"/>
+                            <campo name="id_cat" text="id_cat" calc="%BarreInd.BarreInd.id_cat%"/>
+                            <campo name="nombre" text="nombre" calc="%BarreInd.BarreInd.nombre%"/>
+                            <campo name="objetivo" text="objetivo" calc="%BarreInd.BarreInd.objetivo%"/>
+                            <campo name="definicion" text="definicion" calc="%BarreInd.BarreInd.definicion%"/>
+                            <campo name="tipo" text="tipo" calc="%BarreInd.BarreInd.tipo%"/>
+                            <campo name="dimension" text="dimension" calc="%BarreInd.BarreInd.dimension%"/>
+                            <campo name="unidad_medida" text="unidad_medida" calc="%BarreInd.BarreInd.unidad_medida%"/>
+                            <campo name="frecuencia_medicion" text="frecuencia_medicion" calc="%BarreInd.BarreInd.frecuencia_medicion%"/>
+                            <campo name="linea_base" text="linea_base" calc="%BarreInd.BarreInd.linea_base%"/>
+                            <campo name="medio_verificacion" text="medio_verificacion" calc="%BarreInd.BarreInd.medio_verificacion%"/>
+                            <campo name="asignacion_financiera" text="asignacion_financiera" calc="%BarreInd.BarreInd.asignacion_financiera%"/>
+                            <campo name="anios_meta_multianual" text="anios_meta_multianual" calc="%BarreInd.BarreInd.anios_meta_multianual%"/>
+                            <campo name="meta_multianual" text="meta_multianual" calc="%BarreInd.BarreInd.meta_multianual%"/>
+                            <campo name="metodo_calculo" text="metodo_calculo" calc="%BarreInd.BarreInd.metodo_calculo%"/>
+                            <campo name="numerador" text="numerador" calc="%BarreInd.BarreInd.numerador%"/>
+                            <campo name="denominador" text="denominador" calc="%BarreInd.BarreInd.denominador%"/>
+                            <campo name="observaciones" text="observaciones" calc="%BarreInd.BarreInd.observaciones%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+
+        <nivel id="BarreProg" nombre="BarreProg" interactivo="false" ejecutar="%nlAutCatPro.cpAutCatPro1.autorizar_programatica%==true">
+            <componente id="BarreProg" tipo="cursor">
+                <tabla schema="catalog" nombre="programa_presupuestario_aux">
+                    <campo name="ur" text="UR" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_catalogo" text="Catálogo" />
+                    <campo name="id_cat" text="Clave del Registro" />
+                    <campo name="tipificacion" text="tipificacion"/>
+                    <campo name="clave_plan_institucional" text="clave_plan_institucional"/>
+                    <campo name="id_sector" text="id_sector"/>
+                    <campo name="clave_plan_sectorial" text="clave_plan_sectorial"/>
+                    <campo name="clave_plan_estatal" text="clave_plan_estatal"/>
+                    <campo name="clave_plan_nacional" text="clave_plan_nacional"/>
+                    <campo name="categoria_programatica" text="Categoria Programatica"/>
+                    <campo name="pps_federal" text="pps_federal"/>
+                    <campo name="ramo" text="ramo"/>
+                    <campo name="subfuncion" text="subfuncion"/>
+                    <campo name="actividad_institucional" text="actividad_institucional"/>
+                    <campo name="folio_operacion" text="folio_operacion"/>
+                </tabla>
+                <nivel id="BarreProg1" nombre="BarreProg" interactivo="false" ejecutar="$inParam.opcion$=='Agregar'">
+                    <componente id="BarreProg1" tipo="altaDirect">
+                        <tabla schema="catalog" nombre="programa_presupuestario">
+                            <campo name="ur" text="UR" calc="%BarreProg.BarreProg.ur%" llaveForanea="false"/>
+                            <campo name="id_periodo" text="Periodo" calc="%BarreProg.BarreProg.id_periodo%" llaveForanea="false"/>
+                            <campo name="id_catalogo" text="Catálogo" calc="%BarreProg.BarreProg.id_catalogo%" llaveForanea="false"/>
+                            <campo name="id_cat" text="Clave del Registro" calc="%BarreProg.BarreProg.id_cat%" llaveForanea="false" />
+                            <campo name="tipificacion" text="tipificacion" calc="%BarreProg.BarreProg.tipificacion%"/>
+                            <campo name="clave_plan_institucional" text="clave_plan_institucional" calc="%BarreProg.BarreProg.clave_plan_institucional%"/>
+                            <campo name="id_sector" text="id_sector" calc="%BarreProg.BarreProg.id_sector%"/>
+                            <campo name="clave_plan_sectorial" text="clave_plan_sectorial" calc="%BarreProg.BarreProg.clave_plan_sectorial%"/>
+                            <campo name="clave_plan_estatal" text="clave_plan_estatal" calc="%BarreProg.BarreProg.clave_plan_estatal%"/>
+                            <campo name="clave_plan_nacional" text="clave_plan_nacional" calc="%BarreProg.BarreProg.clave_plan_nacional%"/>
+                            <campo name="categoria_programatica" text="Categoria Programatica" calc="%BarreProg.BarreProg.categoria_programatica%"/>
+                            <campo name="pps_federal" text="pps_federal" calc="%BarreProg.BarreProg.pps_federal%"/>
+                            <campo name="ramo" text="ramo" calc="%BarreProg.BarreProg.ramo%"/>
+                            <campo name="subfuncion" text="subfuncion" calc="%BarreProg.BarreProg.subfuncion%"/>
+                            <campo name="actividad_institucional" text="actividad_institucional" calc="%BarreProg.BarreProg.actividad_institucional%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="nlAutCatProP" nombre="Elimina Catálogos" interactivo="false" ejecutar="$inParam.opcion$=='Eliminar'">
+            <componente id="nlAutCatProP" tipo="bajaDirect">
+                <tabla schema="catalog" nombre="programa_presupuestario">
+                    <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_catalogo" text="Id Catalogo" calc="$inParam.id_catalogo$"/>
+                    <campo name="id_cat" text="Id Cat" calc="%BarreProg.BarreProg.id_cat%"/>
+                </tabla>
+                <nivel id="nlAutCatPro4" nombre="Elimina Catálogos" interactivo="false">
+                    <componente id="nlAutCatPro4" tipo="bajaDirect">
+                        <tabla schema="catalog" nombre="catalogos">
+                            <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" llaveForanea="false"/>
+                            <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                            <campo name="id_cat" text="Id Cat" calc="%nlAutCatProP.nlAutCatProP.id_cat%"/>
+                            <campo name="id_catalogo" text="Id Catalogo" calc="%nlAutCatProP.nlAutCatProP.id_catalogo%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="nlAutCatProF" nombre="Elimina Catálogos" interactivo="false" ejecutar="$inParam.opcion$=='Eliminar'">
+            <componente id="nlAutCatProF" tipo="bajaDirect">
+                <tabla schema="catalog" nombre="ficha_indicador">
+                    <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                    <campo name="id_cat" text="Id Cat" calc="%nlAutCatProP.nlAutCatProP.id_cat%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%nlAutCatPro.cpAutCatPro1.autorizar_programatica%==false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado">
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/>
+                    <parametro name="message" calc="%nlAutCatPro.cpAutCatPro1.observaciones_estructura_programatica%"/>
+                    <parametro name="type" calc="'1'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="negociacionInstancia" id="negociacionInstancia" interactivo="false" ejecutar="%nlAutCatPro.cpAutCatPro1.autorizar_programatica%==false">
+            <componente tipo="solicitud" nombre="negociacionInstancia" id="negociaInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="out_observaciones" calc="%nlAutCatPro.cpAutCatPro1.observaciones_estructura_programatica%" mostrarEsc="true"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlAutCatPro.cpAutCatPro1.autorizar_programatica%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

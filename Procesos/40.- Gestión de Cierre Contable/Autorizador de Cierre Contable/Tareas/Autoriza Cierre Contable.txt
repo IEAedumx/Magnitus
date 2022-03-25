@@ -1,0 +1,156 @@
+<tarea id="ConsultaCiereC" nombre="CONSULTA CIERRE CONTABLE" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlAutorizaCierre" nombre="Reporte Cierre Contable" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+             <componente id="cpreporteCierreCont" nombre="Reporte Saldos Antes del Cierre Contable" tipo="reporte">
+                <reporte nombre="comp_cierre_con_mag" ><!--expediente="Expediente Cierre Contable/Cuentas de Ingreso" nombreDocumento="'Saldos Antes del Cierre Contable'"  grupo="'Cierre'" url="$config.repository_upload_file$" update="true"-->
+                    <campo name="parametro1" local="true" type="long" calc="2"/>
+                    <campo name="parametro2" local="true" type="long" calc="$inParam.periodo$"/>
+                </reporte>
+            </componente>
+             <componente id="reporteEstructuraIngreso" nombre="Pólizas de Cierre Contable por Fondo" tipo="reporte">
+                <reporte nombre="pol_cierrfoncon_mag">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="reporteEstructuraIngreso2" nombre="Pólizas de Cierre Contable Globalizadas por Cuenta Contable" tipo="reporte">
+                <reporte nombre="pol_cierrglobcon_mag">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="reporteEstructuraIngreso2" nombre="Resumen por Cuenta Contable de los Saldos Acumulados de las Pólizas de Cierre Contable" tipo="reporte">
+                <reporte nombre="Res_ctas_saldos_acum_mag">
+                    <campo name="parametro1" local="true" type="long" calc="$inParam.periodo$"/>
+                </reporte>
+            </componente>
+           <!-- <componente id="reporteEstructuraIngreso" nombre="Reporte Polizas de Cuentas de Gasto" tipo="reporte">
+                <reporte nombre="poliza_cierre_1">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="4"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="2"/>
+                </reporte>
+            </componente>
+            <componente id="reporteEstructuraIngreso" nombre="Reporte Polizas de Cuentas de Ahorro y Desahorro" tipo="reporte">
+                <reporte nombre="poliza_cierre_1">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="4"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="3"/>
+                </reporte>
+            </componente> 
+            <componente id="reporteEstructuraIngreso" nombre="Reporte Polizas de Cuentas Patrimoniales" tipo="reporte">
+                <reporte nombre="poliza_cierre_1">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="4"/>
+                    <campo name="id_tipo_poliza_cierre" local="true" type="long" calc="4"/>
+                </reporte>
+            </componente>-->
+            <componente id="cpAutorizaCierre" nombre="Autoriza Cierre Contable" tipo="formulario" accionDefault="editar"  colapsado="NO">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+		            <campo name="id_periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" habilitado="false" visible="false" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+		            <campo name="id_separador" text="Separación de la Clave" visible="false"/>
+		            <campo name="observaciones" text="observaciones" local="true" type="memo" height="250" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+		             <campo name="autoriza" text="Cierre Contable" local="true" type="bool" validacion="@ifThenElse(%autoriza%==true,  @ifThenElse(@consultaDirec('SELECT * FROM reportes.actualiza_polizas_cierre_contable_ant('+'\\''+$inParam.ur$+'\\''+','+'\\''+$inParam.periodo$+'\\''+','+'\\''+%barreUsuarios.barreUsuarios.id_usuario%+'\\''+') AS result','result','string','MAGNITUS')=='ERROR'  , true , false),false)" validacionMensaje="Error en el Cierre Contable" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </tabla>
+                <estilos>
+                   <boton nombre="grabar" visible="true" texto="Autoriza" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <confirmaciones>
+                    <confirmacion confirmacionTitulo="'Autoriza Cierre Contable'" confirmacionMensaje="'¿Está seguro de Autorizar Cierre Contable?'" tipo="avanzar"/>
+                </confirmaciones>
+            </componente>
+        </nivel>
+        <!--Acción Agregar Mensaje-->
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%nlAutorizaCierre.cpAutorizaCierre.autoriza%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAutorizaCierre.cpAutorizaCierre.observaciones%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+        </nivel>
+        <!--Acción Negocia Instancia-->
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%nlAutorizaCierre.cpAutorizaCierre.autoriza%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                    <parametro name="out_observaciones" calc="%nlAutorizaCierre.cpAutorizaCierre.observaciones%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlAutorizaCierre.cpAutorizaCierre.autoriza%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+         <nivel id="nlAutorizaCierre2" nombre="Pólizas de cierre contable por fondo" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlAutorizaCierre.cpAutorizaCierre.autoriza%==true">
+            <componente id="reporteEstructuraIngreso" nombre="Pólizas de Cierre Contable por Fondo" tipo="reporte">
+                <reporte nombre="pol_cierrfoncon_mag" expediente="Expediente Cierre Contable/Cierre Contable por Fondo" nombreDocumento="'Pólizas de Cierre Contable por Fondo'" grupo="'Cierre Contable'" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="reporteEstructuraIngreso2" nombre="Pólizas de Cierre Contable Globalizadas por Cuenta Contable" tipo="reporte">
+                <reporte nombre="pol_cierrglobcon_mag" expediente="Expediente Cierre Contable/Cierre Contable Globalizadas por Cuenta Contable" nombreDocumento="'Pólizas de Cierre Contable Globalizadas por Cuenta Contable'" grupo="'Cierre Contable'" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    <campo name="id_tipo_poliza" local="true" type="long" calc="1"/>
+                </reporte>
+            </componente>
+            <componente id="reporteEstructuraIngreso2" nombre="Resumen por Cuenta Contable de los Saldos Acumulados de las Pólizas de Cierre Contable" tipo="reporte">
+                <reporte nombre="Res_ctas_saldos_acum_mag" expediente="Expediente Cierre Contable/Resumen de los Saldos Acumulados" nombreDocumento="'Resumen de los Saldos Acumulados de Polizas de Cierre Contable'" grupo="'Cierre Contable'" url="$config.repository_upload_file$" update="true">
+                    <campo name="parametro1" local="true" type="long" calc="$inParam.periodo$"/>
+                </reporte>
+            </componente>
+             <componente id="reporteEstructuraIngreso3" nombre="Saldos Despues del Cierre Contable" tipo="reporte">
+                <reporte nombre="comp_cierredesp_con_mag" expediente="Expediente Cierre Contable/Saldos Despues del Cierre Contable" nombreDocumento="'Saldos Despues del Cierre Contable'" grupo="'Cierre Contable'" url="$config.repository_upload_file$" update="true">
+                    <campo name="parametro2" local="true" type="long" calc="$inParam.periodo$"/>
+                </reporte>
+            </componente>
+        </nivel>    
+    </pagina>
+</tarea>
