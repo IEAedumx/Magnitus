@@ -1,0 +1,105 @@
+<!--BARRIDO-->
+<tarea autor="Jared" fechaModificacion="" id="Modifica_Dispercion_Recaudación" modificacionEfectuada="Versión Inicial" nombre="Modifica de Dispersión de Recaudación" requisitosInstalacion="No" version="1.0.1">
+    <pagina nombre="Registra Disrpesión de Recaudación" id="1">
+        <nivel interactivo="false" id="params" nombre="parametros">
+            <componente tipo="cursor" id="params" nombre="parametros">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/> <!-- -->
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$" />
+                    <campo name="id_cc" local="true" type="string" calc="$inParam.corte$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="obtTrue" nombre="Obtener True" interactivo="false">
+            <componente id="obtTrue" nombre="Obtener true" tipo="cursor">
+                <tabla schema="operation" nombre="corte_caja">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%params.params.periodo%"/>
+                    <!--<campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>-->
+                    <!--<campo name="id_corte_caja" />-->
+                    <!--<campo name="importe_efectivo"/>-->
+                    <!--<campo name="cuenta_bancaria_efectivo"/>-->
+                    <!--<campo name="cobros_cheque"/>-->
+                    <!--<campo name="cuenta_bancaria_cheque"/>-->
+                    <!--<campo name="formas_cobro"/>-->
+                    <!--<campo name="cuenta_bancaria_formas"/>-->
+                    <!--<campo name="cobros_tarjeta"/>-->
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--TABLA-->
+        <nivel id="regDisRec" nombre="Registra Dispersión de Recaudación" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="etiquetaCD" nombre="Instrucciones" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" visible="false" text="ID" calc="1" />
+                    <etiqueta nombre="accionCD1" texto="ACCIÓN DE CLIC DERECHO PRESENTE EN LA TABLA" color="black" bold="normal" tamaño="28px" alineacion="center" interlineado="25px" width="500px" margen-izquierdo="2" columnas="6" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="false" />
+                </estilos>
+            </componente>
+            <componente id="tabRegDisRec" nombre="Registra Dispersión de Recaudación (acción de Click Derecho)" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="dispersion_recaudacion">
+                   <campo name="ur" text="ur" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="%params.params.ur%"/>
+                    <campo name="periodo" text="periodo" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%params.params.periodo%"/>
+                    <campo name="id_dispersion_recaudacion" text="id_dispersion" columna-visible="false"/>
+                    <campo name="id_corte_caja"  text="id_corte" columna-visible="true" llaveForanea="false" filtroCampo="id_corte_caja" filtroOperador="=" filtroValor="%params.params.id_cc%"/> 
+                    
+                    <campo name="forma_cobro" text="Forma de Cobro"/>
+                    <campo name="importe" text="Importe" formatoMoneda="true"/>
+                    <campo name="cuenta_bancaria" text="Cuenta Bancaria" columna-visible="false" visible="false"/>
+                    <campo name="cuenta_contable" text="Cuenta Contable"/> <!-- filtroCampo="cuenta_contable" filtroOperador="!=" filtroValor="null"-->
+                    <tareas>
+                        <tarea nombre="Dispersión de Recaudación" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_dispersion_recaudacion,cuenta_bancaria,cuenta_contable,forma_cobro,ur,periodo,importe" ref="task=0f88cea0-961b-447d-a0da-87afdf27fe05" />
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        <!--MUESTRA REPORTE-->
+        <nivel nombre="Carga Evidencia" id="carEv" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+           <componente tipo="formulario" nombre="Carga Evidencia" id="carEv" accionDefault="editar">
+                    <tabla schema="operation" nombre="corte_caja">
+                        <campo name="ur" calc="$inParam.ur$" visible="false" llaveForanea="false"/>
+                        <campo name="id_periodo" calc="$inParam.periodo$" visible="false" llaveForanea="false"/>
+                        <campo name="id_corte_caja" calc="$inParam.corte$" visible="false"/>
+                        <campo name="seleccion" calc="false" visible="false"/>
+                        <campo name="uno" text="Evidencia Efectivo" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Efectivo'" grupo="$inParam.corte$" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="dos" text="Evidencia Cheque Nominativo" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Cheque Nominativo'" grupo="$inParam.corte$" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="tres" text="Evidencia Transferencia Electrónica" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Transferencia Electrónica'" grupo="$inParam.corte$" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="cuatro" text="Evidencia Tarjeta Crédito" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Tarjeta de Crédito'" grupo="$inParam.corte$" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="cinco" text="Evidencia Tarjeta Debito" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Tarjeta de Debito'" grupo="$inParam.corte$" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                       <campo name="seis" text="Evidencia Donación Pago" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia Cobro Donación de Pago'" grupo="$inParam.corte$" expediente="Dispersión de Recaudación" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                       
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="Guardar" columnas="4" margen-izquierdo="3"/>
+                    </estilos>
+                    <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte de dispersión de recaudación" id="el_rec" mostrarNivelAnterior="false" mostrarSiguienteNivel="false">
+            <componente tipo="reporte" nombre="Reporte de recaudaciones" id="el_rec">
+                <reporte nombre="repor_dispRec_jsus" update="true" nombreDocumento="'Reporte de recaudaciones'" expediente="Dispersión de Recaudación"  grupo="$inParam.corte$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" local="true" calc="%params.params.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%params.params.periodo%" />
+                    <campo name="id_corte_caja" type="long" calc="%params.params.id_cc%" />
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
