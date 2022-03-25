@@ -1,0 +1,288 @@
+<tarea autor="Marisela" fechaModificacion="" id="1" modificacionEfectuada="Versión Inicial" nombre="Registra Solicitud de Cancelación de Orden de Compra" requisitosInstalacion="No" version="1.0.1">
+    <pagina id="1" nombre="Registra Solicitud de Cancelación de Contrato">
+
+        <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="permisos_especiales"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <nivel id="CS" nombre="Cambia Selección" interactivo="false">
+            <componente id="CS" nombre="Cambia Selección"  tipo="cursor" >
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="seleccion_cancelacion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Consulta de Contratos" id="cCon" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" nombre="Ordenes de Compra" id="cCon" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false" filtro="true">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text="" visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" columna-visible="false"/>
+                    <campo name="periodo" text="" visible="false" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" columna-visible="false"/>
+                    <campo name="id_duep_contrato_pedido" text="" visible="false" columna-visible="false"/>
+                    <campo name="autoriza" text="" filtroCampo="autoriza" filtroOperador="=" filtroValor="true" visible="false" columna-visible="false"/>
+                    <campo name="tipo_documento" text="" filtroCampo="tipo_documento" filtroOperador="=" filtroValor="2" visible="false" columna-visible="false"/>
+                    <campo name="folio_con_ordecom" text="Orden de Compra" width="110" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="proveedor" text="Beneficiario" width="250" descripcionForaneaTabla="razon_social" columnas="3" margen-derecho="2"/>
+                    
+                    <!--<campo name="proyecto_compra" text="Proyecto Compra" width="150" habilitado="false" columnas="3" margen-izquierdo="2"/>-->
+                    <campo name="proceso" text="Proceso Origen" width="170" descripcionForaneaTabla="nombre" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_cat_fondo" text="" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" width="170" marcador="Fondo Contable" llavesFijas="afectable='true'" descripcionForaneaTabla="id_cat,descripcion" columnas="3" margen-izquierdo="2"/>
+                    <campo name="total" text="Importe Total Comprometido" width="125" cellsalign="right" formatoMoneda="true"/>
+                    <campo name="importe_devengado" text="Importe Devengado" width="165" cellsalign="right" formatoMoneda="true" filtroCampo="importe_devengado" filtroOperador="=" filtroValor="0.00"/>
+                    
+                    <!--<campo name="estatus" text="Estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="2" width="90" habilitado="false" columnas="3" margen-izquierdo="2"/>-->
+                    <campo name="seleccion_cancelacion" text="Selección" width="110" editable="true" filtroCampo="seleccion_cancelacion" filtroOperador="=" filtroValor="false"/>
+                    <!--<campo name="estatus_contrato" text="estatus_contrato" filtroCampo="estatus_contrato" filtroOperador="=" filtroValor="'Activo'" columna-visible="false"/>-->
+                    <campo name="estatus" text="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="2" columna-visible="false"/>
+                    <campo name="autoriza_cancelar_oc" text="" filtroCampo="autoriza_cancelar_oc" filtroOperador="=" filtroValor="false"/>
+                    <campo name="orden_compra_cancelar" text="" filtroCampo="orden_compra_cancelar" filtroOperador="=" filtroValor="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+           <!-- <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*)  AS resultado
+                     FROM operation.duep_contrato_pedido WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' AND seleccion_cancelacion=true AND autoriza=true AND tipo_documento=2 AND estatus_contrato=\\'Activo\\'','resultado','int','MAGNITUS')==0 
+                     OR @consultaDirec('SELECT count(*)  AS resultado FROM operation.duep_contrato_pedido WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' AND seleccion_cancelacion=true AND autoriza=true AND tipo_documento=2 AND estatus_contrato=\\'Activo\\'','resultado','int','MAGNITUS')&gt;1" validacionMensaje="'Debe seleccionar un registro'" />
+                </validaciones>-->
+        </nivel>
+        
+        
+        <nivel id="bsoc" nombre="bsoc" interactivo="false">
+                <componente tipo="cursor" id="bsoc" nombre="bsoc">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                        <campo name="seleccion_cancelacion" filtroCampo="seleccion_cancelacion" filtroOperador="=" filtroValor="true"/>
+                        <campo name="tipo_documento" filtroCampo="tipo_documento" filtroOperador="=" filtroValor="2"/>
+                        <campo name="folio_con_ordecom"/>
+                        <campo name="proyecto_compra"/>
+                        <campo name="id_duep_contrato_pedido"/>
+                         <campo name="total"/>
+                         <campo name="total"/>
+                        <campo name="folio_cancela" local="true" type="string" calc="@concatenar('COM-'+@ifThenElse(
+                        @consultaDirec('
+                        SELECT (folio_cancela) AS resultado
+                        FROM operation.duep_contrato_pedido
+                        WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                        ,
+                        '000001'
+                        ,
+                        @consultaDirec('
+                        SELECT to_char((((substring(folio_cancela from char_length(folio_cancela)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                        FROM operation.duep_contrato_pedido
+                        WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' ORDER BY folio_cancela DESC limit 1','resultado','string','MAGNITUS')
+                        ))" habilitado="false"/>
+                        
+                        <campo name="letras" local="true" type="string" text="Contrato" calc="@subCadena(%bsoc.bsoc.folio_cancela%,0,5)"/>
+                        <campo name="numeros" local="true" type="string" text="Contrato" calc="@subCadena(%bsoc.bsoc.folio_cancela%,6,10)"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            
+        <nivel id="cCC" mostrarNivelAnterior="false" mostrarProximoNivel="false" nombre="Visualiza Orden de Compra/Pedido">
+            <componente id="cCC" nombre="Visualiza Orden de Compra" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" calc="%bsoc.bsoc.ur%" visible="false"/>
+                        <campo name="periodo" calc="%bsoc.bsoc.periodo%" visible="false"/>
+                        <campo name="id_duep_contrato_pedido" calc="%bsoc.bsoc.id_duep_contrato_pedido%" visible="false"/>
+                        <campo name="tipo_documento" calc="2" visible="false"/>
+                        <campo name="id_pais" text="id_pais" calc="1" visible="false"/>
+                        
+                        <campo name="folio_con_ordecom" text="Contrato" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="proveedor" text="Proveedor" descripcionForanea="razon_social" habilitado="false" columnas="3" />
+                        <campo name="folio_cancela" text="DDEP" calc="%bsoc.bsoc.folio_cancela%" columnas="3" />
+                        
+                        <campo name="nombre_comercial" text="Nombre Comercial" columnas="3" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="proyecto_compra" text="Proyecto Compra" habilitado="false" visible="false"/>
+                        <campo name="direccion_prov" text="Dirección" columnas="3" habilitado="false"/>
+                        <campo name="proceso" text="Proceso Origen" descripcionForanea="nombre" habilitado="false" columnas="3"/>
+                        
+                        <campo name="estado_prov" text="Estado" descripcionForanea="nombre" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="id_cat_fondo" text="ID Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false" habilitado="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable *" marcador="Fondo Contable" habilitado="false" descripcionForaneaTabla="id_cat,descripcion" validacion="%id_fondo_contable%==null" validacionMensaje="Debe Capturarse Fondo Contable" visible="true" columna-visible="false" columnas="3"/>
+                        <campo name="tel_prov" text="Teléfono" marcador="Teléfono" columnas="3" habilitado="false"/>
+                        
+                        <campo name="fecha_contrato_pedido" text="Fecha *" calc="@fechaSistema()" validacion="@after(%fecha_contrato_pedido%,@fechaSistema())==true" validacionMensaje="No se puede asignar fechas posteriores" habilitado="true" columnas="3" margen-izquierdo="1"/>
+                        <campo name="representante_prov" text="Representante Legal" marcador="Representante Legal" columnas="3" habilitado="false"/>
+                        <campo name="estatus" text="Estatus" calc="1" habilitado="false" columnas="3"/>
+                        
+                        <campo name="lugar_entrega" text="Lugar Entrega" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="contacto_recepcion" text="Contacto de Recepción *" marcador="Contacto de Recepción*" habilitado="false" validacion="%contacto_recepcion%==null" validacionMensaje="Contacto de Recepción es requerido" columnas="3" />
+                        <campo name="tiempo_entrega" text="Tiempo de Entrega" habilitado="false" columnas="3" />
+                        <campo name="id_cat_area_requiriente" text="id_cat_area_requiriente" calc="2" llaveForanea="false" visible="false" columnas="3" />
+                        <campo name="area_requiriente" text="Área Requirente" marcador="Área Requirente" descripcionForanea="descripcion" columnas="3" margen-izquierdo="1"/>
+                        <campo name="condiciones_pago" text="Condiciones de Pago" columnas="3"  habilitado="false"/>
+                        <campo name="requiere_anticipo" text="Requiere anticipo" columnas="3"  habilitado="false"/>
+                        <campo name="anticipo" text="Anticipo" mascara="##" habilitado="false" interaccion-visible="%requiere_anticipo%==true" visible="false" columnas="3" margen-izquierdo="1"/>
+                       
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det" id="dCon" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_duep_contrato_pedido_det" text="Renglón" width="75" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="clave_articulo" text="Clave Artículo" width="200" habilitado="false" descripcionForanea="descripcion_articulo" descripcionForaneaTabla="descripcion_articulo" columnas="3" margen-derecho="2"/>
+                        <campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="clasificador_objeto_gasto" text="Clasificador por Objeto del Gasto" descripcionForanea="descripcion" width="350" columnas="3" margen-izquierdo="2" />
+                        <campo name="caracteristica" text="Características Específicas" width="200" columnas="3" margen-derecho="2"/>
+                        <campo name="id_cat_programa_presupuestal" text="" columna-visible="false" visible="false"/>
+                        <campo name="programa_presupuestal" text="Clave Presupuestal"  width="200" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_centro_registro" text="" columna-visible="false" visible="false"/>
+                        <campo name="centro_registro" text="Centro de Registro" width="200" columna-visible="false" columnas="3" margen-derecho="2"/>
+                        <campo name="cantidad" text="Cantidad" columna-visible="true" columnas="3" width="100" margen-izquierdo="2"/>
+                        <campo name="unidad_medida" text="Unidad de Medida" columnas="3" width="150" margen-derecho="2"/>
+                        <campo name="importe_unitario" text="Costo Unitario" columnas="3" width="150" margen-izquierdo="2" formatoMoneda="true"/>
+                        <campo name="descuento" text="Descuento" columnas="3" margen-derecho="2" width="150" formatoMoneda="true"/>
+                        <campo name="imp_valor_agregado" text="Impuesto al Valor Agregado" columnas="3" width="200" margen-izquierdo="2" formatoMoneda="true"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos" columnas="3" margen-derecho="2" width="150" formatoMoneda="true"/>
+                        <campo name="importe_total" text="Total"  columnas="3" margen-derecho="2" width="150" muestraAcumulado="true" formatoMoneda="true"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Guardar"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </detalles>
+            </componente>
+        </nivel>
+        
+        <nivel id="dcp" nombre="dcp" interactivo="false">
+                <componente id="dcp" nombre="dcp" tipo="cursor">
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                        <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%bsoc.bsoc.id_duep_contrato_pedido%"/>
+                        <campo name="presupuesto_comprometido"/>
+                        <campo name="presupuesto_devengado"/>
+                        <campo name="importe_total"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            
+            
+        <nivel id="fc" nombre="Cancelación de Orden de Compra" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                <componente tipo="formulario" id="fc" nombre="Cancelación de Orden de Compra" accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" calc="$config.ur$" visible="false" llaveForanea="false"/>
+                        <campo name="periodo" calc="%per.per.id_periodo%" visible="false" llaveForanea="false"/>
+                        <campo name="id_duep_contrato_pedido" calc="%bsoc.bsoc.id_duep_contrato_pedido%" visible="false"/>
+                        <campo name="folio_con_ordecom" text="Contrato a Cancelar" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                        <campo name="proveedor" text="Beneficiario" columnas="3" margen-derecho="2" descripcionForanea="razon_social" habilitado="false"/>
+                        <campo name="fecha_cancelacion" text="Fecha de Cancelación" columnas="3" margen-izquierdo="2" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true"/>
+                        <campo name="total" text="Importe a Cancelar" columnas="3" margen-derecho="2" habilitado="false" calc="%dcp.dcp.importe_total%"/>
+                        <!--<campo name="total" text="Importe a Cancelar" columnas="3" margen-derecho="2" habilitado="false" calc="%dcp.dcp.presupuesto_comprometido%-%dcp.dcp.presupuesto_devengado%"/>-->
+                        
+                        <!--calc="@consultaDirec('-->
+                        <!--SELECT sum(presupuesto_comprometido) AS resultado-->
+                        <!--FROM operation.duep_contrato_pedido_det-->
+                        <!--WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' AND id_duep_contrato_pedido='+%bsoc.bsoc.id_duep_contrato_pedido%+'','resultado','numeric','MAGNITUS') - @consultaDirec('-->
+                        <!--SELECT sum(presupuesto_devengado) AS resultado-->
+                        <!--FROM operation.duep_contrato_pedido_det-->
+                        <!--WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' AND id_duep_contrato_pedido='+%bsoc.bsoc.id_duep_contrato_pedido%+'','resultado','numeric','MAGNITUS')" -->
+                        <campo name="motivo_cancelacion" text="Motivo de Cancelación" height="100" columnas="6" margen-izquierdo="2"/>
+                        <campo name="desea_cancelar" text="Desea Cancelar Orden de Compra" columnas="3" margen-izquierdo="2"/>
+                        <campo name="autoriza_cancelar_oc" text="usuario" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Guardar Contrato" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </componente>
+                <!--<componente tipo="tabla" id="fc" nombre="Detalle de Orden de Compra a Cancelar" accionDefault="editar" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">-->
+                <!--    <tabla schema="operation" nombre="duep_contrato_pedido_det" id="dCon" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">-->
+                <!--        <campo name="ur" text="ur" llaveForanea="false" calc="$config.ur$" columna-visible="false" visible="false"/>-->
+                <!--        <campo name="periodo" text="periodo" calc="%per.per.id_periodo%" llaveForanea="false" columna-visible="false" visible="false"/>-->
+                <!--        <campo name="id_duep_contrato_pedido" calc="%bsoc.bsoc.id_duep_contrato_pedido%" text="id_duep_contrato_pedido" llaveForanea="false" columna-visible="false"/>-->
+                <!--        <campo name="id_duep_contrato_pedido_det" text="Bloque" width="60" habilitado="false"/>-->
+                <!--        <campo name="clave_articulo" text="Clave Artículo" habilitado="false" descripcionForanea="clave_articulo" descripcionForaneaTabla="clave_articulo"/>-->
+                <!--        <campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false"/>-->
+                <!--        <campo name="clasificador_objeto_gasto" text="Clasificador por Objeto del Gasto" descripcionForanea="descripcion" width="350"/>-->
+                <!--        <campo name="clave_presup" text="Clave Presupuestal"/>-->
+                        
+                <!--        <campo name="presupuesto_comprometido" text="Importe Comprometido" muestraAcumulado="true"/>-->
+                <!--        <campo name="presupuesto_devengado" text="Importe Devengado" muestraAcumulado="true"/>-->
+                <!--        <campo name="devengado_en_proceso" text="Importe Comprometido no Devengado" muestraAcumulado="true"/>-->
+                        
+                <!--    </tabla>-->
+                <!--    <estilos>-->
+                <!--        <boton nombre="grabar" visible="true" texto="Guardar Contrato" columnas="3" margen-izquierdo="4" margen-derecho="4"/>-->
+                <!--    </estilos>-->
+                <!--    <acciones>-->
+                <!--        <accion nombre="grabar" hacer="saltar siguiente nivel"/>-->
+                <!--    </acciones>-->
+                <!--</componente>-->
+            </nivel>
+            <nivel id="ce" nombre="ce" interactivo="false">
+                <componente tipo="cursor" id="ce" nombre="ce">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%cCC.cCC.ur%"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%cCC.cCC.id_periodo%"/>
+                        <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%cCC.cCC.id_duep_contrato_pedido%"/>
+                        <campo name="estatus_contrato" calc="'Porcancelar'"/>
+                        <campo name="orden_compra_cancelar" calc="true"/>
+                    </tabla>
+                </componente>
+            </nivel>
+        <nivel nombre="EnvioParametrosDynamo" id="pi" interactivo="false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="pi">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'59dba3c2-60eb-4efc-a7a2-faba18c52763'"/>
+                    <parametro name="out_ur" calc="$config.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%per.per.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_proyecto_compra" calc="%bsoc.bsoc.proyecto_compra%" mostrarEsc="false"/>
+                    <parametro name="out_folio_con_ordecom" calc="%bsoc.bsoc.folio_con_ordecom%" mostrarEsc="false"/>
+                    <parametro name="out_id_duep_contrato_pedido" calc="%bsoc.bsoc.id_duep_contrato_pedido%" mostrarEsc="false"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="CANCELACIÓN DE ORDEN DE COMPRA" id="re" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="reporte" nombre="CANCELACIÓN DE ORDEN DE COMPRA" id="re">
+                <reporte nombre="R_Cancela_Orden_Com_IJ" update="true" nombreDocumento="'CANCELACIÓN DE ORDEN DE COMPRA'" expediente="CANCELACIÓN DE ORDEN DE COMPRA"  grupo="%bsoc.bsoc.id_duep_contrato_pedido%" url="$config.repository_upload_file$">
+                     <campo name="duep_asociado" text="" type="string" calc="%bsoc.bsoc.id_duep_contrato_pedido%"/>
+                     <campo name="folio_duep" text="" type="long" calc="%bsoc.bsoc.id_duep_contrato_pedido%"/>
+                     <campo name="periodo" text="" type="long" calc="%per.per.id_periodo%"/>
+                     <campo name="poliza_cancelada" text="string" type="" calc=""/>
+                     <campo name="ur" text="" type="long" calc="$config.ur$"/>
+                     <campo name="usuario" text="" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

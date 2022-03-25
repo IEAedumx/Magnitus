@@ -1,0 +1,79 @@
+<tarea id="elimina" nombre="Eliminar Solicitud de Cancelación de Orden de Compra" autor="Gustavo Escalante">
+    <pagina id="elim" nombre="Consulta Solicitud de Cancelación de Orden de Compra">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    </tabla>
+                </componente>
+            </nivel>
+        <nivel id="eli" nombre="Consulta Solicitud de Cancelación de Orden de Compra" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Cancelación de Orden de Compra" id="Rc">
+                <reporte nombre="R_Cancela_Orden_Com_IJ" update="true" nombreDocumento="'CANCELACIÓN DE ORDEN DE COMPRA'" expediente="CANCELACIÓN DE ORDEN DE COMPRA"  grupo="$inParam.id_duep_contrato_pedido$" url="$config.repository_upload_file$">
+                     <campo name="duep_asociado" text="" type="string" calc="$inParam.id_duep_contrato_pedido$"/>
+                     <campo name="folio_duep" text="" type="long" calc="$inParam.id_duep_contrato_pedido$"/>
+                     <campo name="periodo" text="" type="long" calc="$inParam.periodo$"/>
+                     <campo name="poliza_cancelada" text="string" type="" calc=""/>
+                     <campo name="ur" text="" type="long" calc="$config.ur$"/>
+                     <campo name="usuario" text="" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="elidos" nombre="Eliminar Solicitud de Cancelación de Orden de Compra" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="formulario" nombre="Elimina Cancelación de Orden de Compra" id="elidos" filtro="true" accionDefault="seleccionar">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text="ur" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="periodo" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="folio_con_ordecom" text="folio_con_ordecom" calc="$inParam.folio_con_ordecom$" visible="false" columna-visible="false"/>
+                    <campo name="eliminar" text="Elimina" llaveforanea="true" local="true" type="bool" margen-izquierdo="4" columnas="3"/>
+                    <campo name="observaciones_eliminar" text="Observaciones *" columnas="6" maxlength="500" mascara="C" margen-izquierdo="2" margen-derecho="2" widht="200" height="200" interaccion="%eliminar%==false" validacion="%eliminar%==false and %observaciones_eliminar%"/>
+                    </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" margen-derecho="4" margen-izquierdo="4" columnas="3"/>
+                </estilos>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <confirmaciones>
+                    <confirmacion confirmacionInteraccion="%elidos.elidos.eliminar%!=true" confirmacionTitulo="'La cancelación no ha sido eliminada'" confirmacionMensaje="'desea continuar'" tipo="avanzar"/>
+                </confirmaciones>
+            </componente>
+        </nivel>
+        
+        <!--cursor para cambiar de estatus los campos filtro para poder volver a seleccionar la orden -->
+        <nivel id="barreUsuario" nombre="barreUsuario" interactivo="false" ejecutar="%elidos.elidos.eliminar%==true">
+                <componente id="barreUsuario" nombre="barreUsuario" tipo="cursor">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                        <campo name="folio_con_ordecom" filtroCampo="folio_con_ordecom" filtroOperador="=" filtroValor="$inParam.folio_con_ordecom$"/>
+                        <campo name="seleccion_cancelacion" calc="false"/>
+                        <campo name="estatus_contrato" calc="'Activo'"/>
+                    </tabla>
+                </componente>
+            </nivel>
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%elidos.elidos.eliminar%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel id="nomandeerror" nombre="nomandeerror" interactivo="false" ejecutar="%elidos.elidos.eliminar%==false">
+                <componente id="nomandeerror" nombre="nomandeerror" tipo="cursor">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                        <campo name="folio_con_ordecom" filtroCampo="folio_con_ordecom" filtroOperador="=" filtroValor="$inParam.folio_con_ordecom$"/>
+                        <campo name="seleccion_cancelacion"/>
+                        <campo name="estatus_contrato"/>
+                    </tabla>
+                </componente>
+            </nivel>
+    </pagina>
+</tarea>
