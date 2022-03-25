@@ -1,0 +1,77 @@
+<tarea id="RegPropuestaEITP" nombre="Registra Propuesta Económica de ITP por Excepción" autor="Monserrat Gerardo">
+    <pagina id="1">
+        <nivel nombre="periodo" id="periodo" interactivo="false">   
+            <componente nombre="periodo" id="periodo" tipo="cursor">
+                <tabla nombre="periodo" schema="catalog">
+                    <campo filtroValor="$inParam.ur$" filtroOperador="=" filtroCampo="id_unidad_responsable" name="id_unidad_responsable"/>
+                    <campo name="id_periodo"/>
+                    <campo filtroValor="true" filtroOperador="=" filtroCampo="estatus" name="estatus"/>
+                    <campo filtroValor="3" filtroOperador="=" filtroCampo="id_estatus" name="id_estatus"/>
+                    <campo name="folio" text="Folio" local="true" type="long" calc="@consultaDirec('SELECT folio_add AS result FROM operation.proc_add WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND proyecto_compra='+'\\''+$inParam.id_compras$+'\\''+' AND id_tipo_adjudicacion='+$inParam.adjudicacion$,'result','long','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlSelOfertantes" nombre="Selección de Ofertantes" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpSelOfertantes" nombre="Selección de Ofertantes" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false" exportarExcel="false" exportarPDF="false"> <!--ejecutarComponente="%nlGesAdjDirecta.cpGesAdjDirecta.no_ofertantes%!=null"-->
+                <tabla schema="operation" nombre="add_oferentes">
+                    <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="$inParam.periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo" calc="$inParam.adjudicacion$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio" calc="%periodo.periodo.folio%" visible="false" columna-visible="false"/>
+                    <campo name="id_beneficiario" text="Ofertante" marcador="Ofertante" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" columnas="4" margen-izquierdo="3" visible="true" columna-visible="true" llavesFijas="id_clasificacion_beneficiario=1"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" visible="false" columna-visible="false"/>
+                    <campo name="id_compras" text="Proyecto de Compra" local="true" type="string" calc="$inParam.id_compras$" visible="false" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Registra Ofertas" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_tipo_adjudicacion,folio_add,id_beneficiario,id_compras" ref="task=b51bf309-8c95-43b0-9986-596c25dab0c0"/>                          
+                    </tareas>
+                    <validaciones>
+                        <!--<validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(id_beneficiario) AS result FROM operation.add_oferentes WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND folio_add='+%GrabaPC.GrabaPC.Folio%,'result','long','MAGNITUS')&lt;=2 OR @consultaDirec('SELECT COUNT(id_beneficiario) AS result FROM operation.add_oferentes WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND folio_add='+%GrabaPC.GrabaPC.Folio%,'result','long','MAGNITUS') * @consultaDirec('SELECT COUNT(tipo_adjudicacion) AS result FROM operation.proc_add_detalle WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND folio_add='+%GrabaPC.GrabaPC.Folio%,'result','long','MAGNITUS')!=@consultaDirec('SELECT COUNT(id_beneficiario) AS result FROM operation.add_oferentes_propuestas WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND folio_add='+%GrabaPC.GrabaPC.Folio%,'result','long','MAGNITUS')" validacionMensaje="'Falta Registrar Propuestas de Ofertantes'"/>-->
+                        <validacion tipo="borrar" validacion="@consultaDirec('SELECT COUNT(id_beneficiario) AS result FROM operation.add_oferentes_propuestas WHERE ur= '+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND folio_add='+%GrabaPC.GrabaPC.Folio%+' AND id_beneficiario='+%id_beneficiario%,'result','long','MAGNITUS')&gt;=1" validacionMensaje="'Ofertante no puede ser borrado'"/>
+                    </validaciones>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Datos Complementarios"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="nlSelOfertantes1" tipo="tabla" nombre="Datos Complementarios" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpSelOfertantes1" tipo="tabla" nombre="Datos Complementarios" mostrarEditar="true" mostrarAgregar="false" mostrarEliminar="false" exportarExcel="false" exportarPDF="false">
+                <tabla schema="operation" nombre="add_oferentes">
+                    <campo name="ur" text="Unidad Responsable" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="$inParam.periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo" calc="$inParam.adjudicacion$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="folio_add" text="Folio" calc="%periodo.periodo.folio%" visible="false" columna-visible="false"/>
+                    <campo name="id_beneficiario" text="Ofertante" marcador="Ofertante" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" columnas="3" margen-izquierdo="2" visible="true" columna-visible="true" editarHabilitado="false"/>
+                    <campo name="fecha_cotizacion" text="Fecha de Cotización" validacionModificacion="%fecha_cotizacion%==null" validacionModificacionMensaje="Debe Capturarse Fecha Cotización" visible="true" columna-visible="true" columnas="3" margen-derecho="2" marcador="Fecha de Cotización"/>
+                    <campo name="tiempo_entrega" text="Tiempo de Entrega" validacionModificacion="%tiempo_entrega%==null" validacionModificacionMensaje="Debe Capturarse Tiempo Entrega" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" marcador="Tiempo de Entrega"/>
+                    <campo name="condiciones_pago" text="Condiciones de Pago" validacionModificacion="%condiciones_pago%==null" validacionModificacionMensaje="Condiciones de Pago es un campo Obligatorio" marcador="Condiciones de Pago" columnas="3"  margen-derecho="2"/>
+                    <campo name="lugar_entrega" text="Lugar de Entrega" validacionModificacion="%lugar_entrega%==null" validacionModificacionMensaje="Debe Capturarse Lugar de Entrega" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" marcador="Lugar de Entrega"/>
+                    <campo name="vigencia_cotizacion" text="Vigencia de la Cotización" validacionModificacion="%vigencia_cotizacion%==null" validacionModificacionMensaje="Debe Capturarse Vigencia Cotización" visible="true" columna-visible="true" columnas="3" margen-derecho="2" marcador="Vigencia Cotización"/>
+                    <campo name="referencia" text="Referencia" visible="true" validacionModificacion="%referencia%==null" validacionModificacionMensaje="Referencia es un campo obligatorio" columna-visible="true" columnas="3" margen-izquierdo="2" marcador="Referencia"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar"/>
+                    <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="nlConAdjRep" nombre="Reporte Cuadro Comparativo" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpConAdjRep" tipo="reporte" nombre="Reporte Cuadro Comparativo" colapsado="NO">
+                <reporte nombre="Cuadro_comp"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_add" type="long" calc="%periodo.periodo.folio%"/>
+                    <campo name="id_tipo_adquisicion" type="long" calc="$inParam.adjudicacion$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
