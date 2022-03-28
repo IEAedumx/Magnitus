@@ -1,0 +1,209 @@
+<tarea id="Registra_PlanCue" nombre="Plan de Cuentas Contables" autor="Monserrat Gerardo" version="1">
+    <pagina id="1">
+        <nivel id="nlBuscaPeriodo" nombre="Busca Periodo" interactivo="false">
+            <componente id="cpBuscaPeriodo" nombre="Busca Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlBarreUsuarios" nombre="Barre Usuarios" interactivo="false">
+            <componente id="cpBarreUsuarios" nombre="Barre Usuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlRegPlanCue" nombre="Plan de Cuentas" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpRegPlanCue" nombre="Plan de Cuentas" tipo="formulario" accionDefault="seleccionar">
+                 <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="UR" llaveForanea="false" calc="%nlBuscaPeriodo.cpBuscaPeriodo.id_unidad_responsable%" visible="false"/>
+                    <campo name="id_periodo" text="Ejercicio Fiscal" llaveForanea="false" calc="%nlBuscaPeriodo.cpBuscaPeriodo.id_periodo%" visible="true" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="usuario" text="Usuario" local="true" type="string" calc="%nlBarreUsuarios.cpBarreUsuarios.id_usuario%" visible="false" />
+                    <campo name="selecOpcion" text="Selecciona" local="true" type="long" validacion="%selecOpcion%==null" validacionMensaje="Selecciona una opción para continuar..." columnas="4" margen-izquierdo="3" margen-derecho="3">
+                        <opciones>
+                            <opcion texto="Importación" valor="1"/>
+                            <opcion texto="Alta" valor="2"/>
+                            <opcion texto="Elimina" valor="3"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="cpRegPlanCue1" nombre="Importar Plan de Cuentas" ejecutar="%nlRegPlanCue.cpRegPlanCue.selecOpcion%==1" mostrarProximoNivel="true" mostrarNivelAnterior="false">    
+            <componente id="cpRegPlanCue1" nombre="Importar Plan de Cuentas" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" mostrarImportacion="true" >
+                <tabla schema="entity" nombre="plan_cuentas">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" columnaImportacion="Unidad Responsable" validacionImportacion="@ifThenElse(%Unidad Responsable%==' ', true, false)" columnaImportacionVisible="false" importacion="true" calc="%nlBuscaPeriodo.cpBuscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" llaveForanea="false" visible="false" columna-visible="false" columnaImportacion="Periodo" validacionImportacion="@ifThenElse(%Periodo%==' ', true, false)" columnaImportacionVisible="false" importacion="true" calc="%nlBuscaPeriodo.cpBuscaPeriodo.id_periodo%"/>
+                    <campo name="clave_cuenta" text="Cuenta Contable" columnaImportacion="Cuenta" validacionImportacion="@ifThenElse(%Cuenta%=='false', true, false )" validacion="%clave_cuenta%==null" validacionMensaje="Ingresar la clave de cuenta" importacion="true"  />
+                    <campo name="nombre" text="Nombre Cuenta Contable" columnaImportacion="Nombre"  validacionImportacion="@ifThenElse(%nombre%==' ', true, false)" validacion="%nombre%==null" validacionMensaje="Favor de ingresar el nombre del nivel" mascara="C" importacion="true"/>
+                    <campo name="nivel" text="Nivel" columnaImportacion="Nivel" validacionImportacion="@ifThenElse(%Nivel%&gt;=6, true, false)" importacion="true" />
+                    <campo name="naturaleza" text="Naturaleza" columnaImportacion="Naturaleza" validacionImportacion="@ifThenElse(%naturaleza%==' ', true, false )" validacion="%naturaleza%==null" validacionMensaje="Naturaleza es un campo Obligatorio" importacion="true"/>
+                    <campo name="tipo_cuenta" text="Detalle" columnaImportacion="Tipo" validacionImportacion="@ifThenElse(%tipo_cuenta%==' ', true, false )" validacion="%tipo_cuenta%==null" validacionMensaje="Tipo de Cuenta es un campo Obligatorio" importacion="true"/>
+                    <campo name="clasificacion_cuenta" text="Clasificación" columnaImportacion="Clasificacion" validacionImportacion="@ifThenElse(%clasificacion_cuenta%==' ', true, false )" validacion="%clasificacion_cuenta%==null" validacionMensaje="Clasificacion de Cuenta es un campo Obligatorio" importacion="true"/>
+                    <campo name="tipo_transaccion" text="Tipo Operación" columnaImportacion="Tipo Transaccion" validacionImportacion="@ifThenElse(%tipo_transaccion%==' ', true, false )" validacion="%tipo_transaccion%==null" validacionMensaje="Tipo de Transaccion es un campo Obligatorio" importacion="true"/>
+                    <campo name="fecha_registro" text="Fecha de Registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" visible="false" habilitado="false" columna-visible="false" importacion="true"/>
+                    <campo name="ultimo_usuario_modificador" text="Ultimo Usuario" calc="%nlBarreUsuarios.cpBarreUsuarios.id_usuario%" columna-visible="false" visible="false" importacion="true"/>
+                </tabla>
+                <acciones>
+                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Grabar"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <!--<nivel id="nlBarreCuenta" nombre="BarreCuentas" interactivo="false">
+            <componente id="cpBarreCuenta" tipo="cursor">
+                <tabla schema="entity" nombre="plan_cuentas">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlRegPlanCue.cpRegPlanCue.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegPlanCue.cpRegPlanCue.id_periodo%"/>
+                    <campo name="clave_cuenta" text="Clave Cuenta"/>
+                    <campo name="nivel" text="Nivel"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+        <nivel id="nlRegPlanCue2" nombre="Captura Plan de Cuentas" ejecutar="%nlRegPlanCue.cpRegPlanCue.selecOpcion%==2" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpRegPlanCue2" nombre="Captura Plan de Cuentas" tipo="tabla" mostrarAgregar="true" mostrarEditar="true" mostrarEliminar="false">
+                <tabla schema="entity" nombre="plan_cuentas">
+                    <campo name="ur" text="Unidad Responsable" calc="%nlRegPlanCue.cpRegPlanCue.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" calc="%nlRegPlanCue.cpRegPlanCue.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    
+                    <campo name="clave_cuenta" text="Cuenta Contable" validacion="%clave_cuenta%==null" validacionMensaje="Cuenta Contable es un campo Obligatorio" marcador="Cuenta Contable" editarHabilitado="false" columnas="2" margen-izquierdo="1" />
+                    
+                    <campo name="longitud_cuenta" text="Longitud" local="true" type="long" calcCliente="@longitudCadena(%clave_cuenta%)" visible="false" columna-visible="false"/>
+                    <campo name="subcadena_cuenta" text="Subcadena" local="true" type="string" calcCliente="@subCadena(%clave_cuenta%,0,(@ifThenElse(%longitud_cuenta% &gt; 1,(%longitud_cuenta%-2),0)))" visible="false" columna-visible="false"/>
+                    <campo name="validacion" text="VRQ" type="string" local="true" visible="false" columna-visible="false"
+         	          calcCliente="@consultaDirec('select count(clave_cuenta) &gt;0 as resultado from entity.plan_cuentas where ur='+'\\''+%nlRegPlanCue.cpRegPlanCue.id_unidad_responsable%+'\\''+' AND periodo='+'\\''+%nlRegPlanCue.cpRegPlanCue.id_periodo%+'\\''+' AND clave_cuenta='+'\\''+%subcadena_cuenta%+'\\'','resultado','bool','MAGNITUS')" validacion="%validacion%=='false'" validacionMensaje="La Cuenta que quiere dar de Alta no tiene cuenta Ancestra, favor de capturarlas antes"/>
+                    
+                    <campo name="nombre" text="Nombre Cuenta Contable" validacion="%nombre%==null" validacionMensaje="Nombre Cuenta Contable es un campo Obligatorio" marcador="Nombre Cuenta Contable" columnas="2" margen-izquierdo="1"/>
+                    <campo name="nivel" text="Nivel" validacion="%nivel%==null AND %nivel%&lt;7" validacionMensaje="Nivel no puede estar vacio" marcador="Nivel" editarHabilitado="false" columnas="2" margen-izquierdo="1" />
+                    <campo name="naturaleza" text="Naturaleza" descripcionForanea="nombre" marcador="Naturaleza" validacion="%naturaleza%==null" validacionMensaje="Naturaleza es un campo Obligatorio" editarHabilitado="false" columnas="2" margen-izquierdo="4"/>
+                    
+                    <campo name="tipo_cuenta" text="Detalle" descripcionForanea="descripcion" marcador="Tipo de Cuenta"  columnas="3" margen-izquierdo="2" columna-visible="false" validacion="%tipo_cuenta%==null AND %nivel%==6" interaccion-visible="%nivel%&gt;=6" validacionMensaje="Detalle es un campo Obligatorio" /><!--  -->
+                    <campo name="clasificacion_cuenta" text="Clasificación" descripcionForanea="descripcion" marcador="Clasificación de Cuenta" columnas="3" margen-derecho="2" columna-visible="false" validacion="%clasificacion_cuenta%==null AND %nivel%==6" interaccion-visible="%nivel%&gt;=6" validacionMensaje="Clasificación de Cuenta es un campo Obligatorio"/><!-- -->
+                    <campo name="tipo_transaccion" text="Tipo de Operación" marcador="Tipo de Operación"  descripcionForanea="descripcion" columnas="3" margen-izquierdo="2" columna-visible="false" validacion="%tipo_transaccion%==null AND %nivel%==6" validacionMensaje="Tipo de Operación es un campo Obligatorio " interaccion-visible="%nivel%&gt;=6"/> <!-- -->
+                    <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Ultimo Usuario" calc="%nlBarreUsuarios.cpBarreUsuarios.id_usuario%" columna-visible="false" visible="false"/>
+                    <!--<campo name="val_cuenta" type="string" local="true" calc="%clave_cuenta%" validacion="@ifThenElse(@consultaDirec('SELECT * FROM reportes.valida_cuenta1('+'\\''+%nlBuscaPeriodo.cpBuscaPeriodo.id_unidad_responsable%+'\\''+','+'\\''+%nlBuscaPeriodo.cpBuscaPeriodo.id_periodo%+'\\''+','+'\\''+%clave_cuenta%+'\\''+','+'\\''+%nivel%+'\\''+','+'\\''+%nombre%+'\\''+','+'\\''+%naturaleza%+'\\''+','+'\\''+%tipo_cuenta%+'\\''+','+'\\''+'AGREGAR'+'\\''+') AS result','result','string','MAGNITUS')=='ERROR', true , false)" validacionMensaje="Cuenta Contable No Valida" visible="false" columna-visible="false"/>--> 
+                </tabla>
+                <acciones>
+                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Grabar"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="nlRegPlanCue3" nombre="Eliminar Plan de Cuentas" ejecutar="%nlRegPlanCue.cpRegPlanCue.selecOpcion%==3" mostrarProximoNivel="true" mostrarNivelAnterior="false">    
+            <componente id="cpRegPlanCue3" nombre="Eliminar Plan de Cuentas" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="true">
+                <tabla schema="entity" nombre="plan_cuentas">
+                    <campo name="ur" text="Unidad Responsable" calc="%nlRegPlanCue.cpRegPlanCue.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Ejercicio Fiscal" calc="%nlRegPlanCue.cpRegPlanCue.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="clave_cuenta" text="Cuenta Contable" validacion="%clave_cuenta%==null" validacionMensaje="Cuenta Contable es un campo Obligatorio" marcador="Cuenta Contable"/>
+                    <campo name="nombre" text="Nombre Cuenta Contable" validacion="%nombre%==null" validacionMensaje="Nombre Cuenta Contable es un campo Obligatorio" marcador="Nombre Cuenta Contable" mascara="C"/>
+                    <campo name="nivel" text="Nivel" validacion="%nivel%==null OR %nivel%&gt;=6" validacionMensaje="Nivel no puede estar vacio y debe ser menor que 5" marcador="Nivel" habilitado="false"/>
+                    <campo name="naturaleza" text="Naturaleza" descripcionForanea="nombre" marcador="Naturaleza" validacion="%naturaleza%==null" validacionMensaje="Naturaleza es un campo Obligatorio" habilitado="false"/>
+                    <campo name="tipo_cuenta" text="Detalle" descripcionForanea="descripcion" marcador="Detalle" habilitado="false"/>
+                    <campo name="clasificacion_cuenta" text="Clasificación" marcador="Clasificación" /> 
+                    <campo name="tipo_transaccion" text="Tipo de Operación" marcador="Tipo de Operación" />
+                    <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Ultimo Usuario" calc="%nlBarreUsuarios.cpBarreUsuarios.id_usuario%" columna-visible="false" visible="false"/>
+                </tabla>
+                <validaciones>
+                	<validacion tipo="borrar" validacion="@ifThenElse(@consultaDirec('SELECT count(clave_cuenta)=1 AS result FROM entity.plan_cuentas WHERE ur='+%ur%+' AND periodo='+%periodo%+' AND clave_cuenta ~ '+'\\'^'+%clave_cuenta%+'+\\'','result','bool','MAGNITUS') AND @consultaDirec('SELECT count(clave_cuenta)&lt;=1 AS result FROM catalog.cuentas_contables_aux WHERE ur='+%ur%+' AND periodo='+%periodo%+' AND clave_cuenta ~ '+'\\'^'+%clave_cuenta%+'+\\'','result','bool','MAGNITUS') AND @consultaDirec('SELECT count(clave_cuenta)&lt;=0 AS result FROM catalog.cuentas_contables WHERE ur='+%ur%+' AND periodo='+%periodo%+' AND clave_cuenta ~ '+'\\'^'+%clave_cuenta%+'+\\'','result','bool','MAGNITUS'),false,true)"
+			            validacionMensaje="'Existen niveles subsecuentes o esta siendo utilizado en otro proceso'"/>
+                </validaciones>
+                 
+            </componente>
+        </nivel><!--
+        <nivel id="RegPlanCue4" nombre="nlRegPlanCue4" interactivo="false">
+            <componente id="RegPlanCue4" tipo="cursor">
+                <tabla schema="entity" nombre="plan_cuentas">
+                    <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%nlRegPlanCue.cpRegPlanCue.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegPlanCue.cpRegPlanCue.id_periodo%" llaveForanea="false"/>
+                    <campo name="clave_cuenta"/>
+                    <campo name="nombre"/>
+                    <campo name="nivel" filtroCampo="nivel" filtroOperador="=" filtroValor="5"/>
+                    <campo name="naturaleza" />
+                    <campo name="tipo_cuenta" />
+                    <campo name="clasificacion_cuenta"/>
+                    <campo name="tipo_transaccion"/>
+                    <campo name="fecha_registro"/>
+                    <campo name="ultimo_usuario_modificador"/>
+                </tabla>
+                <nivel id="nlRegPlanCue5" nombre="nlRegPlanCue5" interactivo="false">
+                    <componente id="nlRegPlanCue5" tipo="altaDirect">
+                        <tabla schema="catalog" nombre="cuentas_contables_aux">
+                            <campo name="ur" text="Unidad Responsable" calc="%RegPlanCue4.RegPlanCue4.ur%" llaveForanea="false"/>
+                            <campo name="periodo" text="Periodo" calc="%RegPlanCue4.RegPlanCue4.periodo%" llaveForanea="false"/>
+                            <campo name="clave_cuenta" text="Clave de Cuenta" calc="%RegPlanCue4.RegPlanCue4.clave_cuenta%"/>
+                            <campo name="folio_operacion" text="Folio" generacion="@prox()+1" autogenerado="true"/> 
+                            <campo name="descripcion" text="Nombre Cuenta" calc="%RegPlanCue4.RegPlanCue4.nombre%"/>
+                            <campo name="nivel" text="Nivel" calc="%RegPlanCue4.RegPlanCue4.nivel%"/>
+                            <campo name="naturaleza_cuenta" text="Naturaleza de la Cuenta" calc="%RegPlanCue4.RegPlanCue4.naturaleza%"/>
+                            <campo name="vigente" text="Vigente" calc="true"/>
+                            <campo name="tipo_cuenta" text="Tipo de Cuenta" calc="%RegPlanCue4.RegPlanCue4.tipo_cuenta%"/>
+                            <campo name="clasificacion_cuenta" text="Clasificacion Cuenta" calc="%RegPlanCue4.RegPlanCue4.clasificacion_cuenta%" />
+                            <campo name="tipo_transaccion" text="Tipo de Transacción" calc="%RegPlanCue4.RegPlanCue4.tipo_transaccion%" />
+                            <campo name="estatus_cuenta" text="Estatus de Cuenta" calc="2"/>
+                            <campo name="estatus" text="Estatus" calc="@ifThenElse(%RegPlanCue4.RegPlanCue4.nivel%==5, 1, null)"/>
+                            <campo name="fecha_registro" text="Fecha de Registro" calc="%RegPlanCue4.RegPlanCue4.fecha_registro%"/>
+                            <campo name="ultimo_usuario_modificador" text="Usuario Modificador" calc="%nlBarreUsuarios.cpBarreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>-->
+        
+        <!-- BARRIDO PARA AUTORIZACIÓN DE CUENTAS CONTABLES DE NIVEL 5 -->
+        <nivel id="RegPlanCue6" nombre="nlRegPlanCue6" interactivo="false">
+            <componente id="RegPlanCue6" tipo="cursor">
+                <tabla schema="entity" nombre="plan_cuentas">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlRegPlanCue.cpRegPlanCue.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegPlanCue.cpRegPlanCue.id_periodo%" llaveForanea="false"/>
+                    <campo name="clave_cuenta"/>
+                    <campo name="nombre" />
+                    <campo name="nivel" filtroCampo="nivel" filtroOperador="=" filtroValor="5"/>
+                    <campo name="naturaleza" />
+                    <campo name="tipo_cuenta" />
+                    <campo name="clasificacion_cuenta"/>
+                    <campo name="tipo_transaccion"/>
+                    <campo name="fecha_registro"/>
+                    <campo name="ultimo_usuario_modificador"/>
+                </tabla>
+                <nivel id="nlRegPlanCue7" nombre="nlRegPlanCue7" interactivo="false">
+                    <componente id="nlRegPlanCue7" tipo="altaDirect">
+                        <tabla schema="catalog" nombre="cuentas_contables">
+                            <campo name="ur" calc="%RegPlanCue6.RegPlanCue6.ur%" llaveForanea="false"/>
+                            <campo name="periodo" calc="%RegPlanCue6.RegPlanCue6.periodo%" llaveForanea="false"/>
+                            <campo name="clave_cuenta" calc="%RegPlanCue6.RegPlanCue6.clave_cuenta%"/>
+                            <campo name="descripcion" calc="%RegPlanCue6.RegPlanCue6.nombre%"/>
+                            <campo name="nivel" calc="%RegPlanCue6.RegPlanCue6.nivel%"/>
+                            <campo name="naturaleza_cuenta" calc="%RegPlanCue6.RegPlanCue6.naturaleza%"/>
+                            <campo name="vigente" calc="true"/>
+                            <campo name="tipo_cuenta" calc="%RegPlanCue6.RegPlanCue6.tipo_cuenta%"/>
+                            <campo name="clasificacion_cuenta" calc="%RegPlanCue6.RegPlanCue6.clasificacion_cuenta%" />
+                            <campo name="tipo_transaccion" calc="%RegPlanCue6.RegPlanCue6.tipo_transaccion%" />
+                            <campo name="estatus_cuenta" calc="2"/>
+                            <campo name="estatus" calc="1"/>
+                            <campo name="fecha_registro" calc="%RegPlanCue6.RegPlanCue6.fecha_registro%"/>
+                            <campo name="ultimo_usuario_modificador" text="Usuario Modificador" calc="%nlBarreUsuarios.cpBarreUsuarios.id_usuario%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
