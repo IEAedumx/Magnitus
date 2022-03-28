@@ -1,0 +1,97 @@
+<tarea id="regRepObPb" nombre="Registra Recepción de Obra Pública" requisitosInstalacion="N/A" fechaModificacion="10-JULIO-2020" autor="Froylán Alanís">
+    <pagina nombre="Registra Recepción de Obra Pública" id="1">
+        <nivel nombre="getPeriodo" id="getPeriodo" interactivo="false">
+            <componente tipo="cursor" nombre="getPeriodo" id="getPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="getUsuario" id="getUsuario" interactivo="false">
+            <componente tipo="cursor" nombre="getUsuario" id="getUsuario">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario" />
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="changeEstatus" id="changeEstatus" interactivo="false">
+            <componente tipo="cursor" nombre="changeEstatus" id="changeEstatus">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%getPeriodo.getPeriodo.id_periodo%"/>
+                    <campo name="id_fuop"/>
+                    <campo name="seleccion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Selecciona Folio Único de Obra Pública" id="selFUOP" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" nombre="Selecciona Folio Único de Obra Pública" id="selFUOP" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica">
+                    <campo name="ur" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%getPeriodo.getPeriodo.id_periodo%"/>
+                    <campo name="id_fuop" columna-visible="false"/>
+                    <campo name="fuop" text="Folio"/>
+                    <campo name="contrato" text="Contrato" descripcionForaneaTabla="contrato"/>
+                    <campo name="descripcion" text="Descripción"/>
+                    <campo name="beneficiario" text="Contratista" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social"/>
+                    <campo name="fecha_con" text="Fecha Contratación"/>
+                    <campo name="modalidad" text="Modalidad"/>
+                    <campo name="codigo_estatal" text="Código Estatal"/>
+                    <campo name="tipo_obra" text="Tipo de Obra" />
+                    <campo name="ubicacion_fisica" text="Ubicación Fisica"/>
+                    <campo name="observaciones_evidencia" text="Observaciones"/>
+                    <campo name="clave_inmueble" text="Clave Inmueble"/>
+                    <campo name="estatus" text="Estatus" filtroCampo="estatus" filtroOperador="!=" filtroValor="4" columna-visible="false"/>
+                    <campo name="seleccion" text="Selección" habilitado="true" editable="true" />
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" margen-derecho="4" columnas="2"/>
+                </estilos>
+                 <acciones>
+                    <accion nombre="grabar"  hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) AS contador FROM operation.capitalizacion_obra_publica WHERE seleccion=true','contador','long','MAGNITUS')==0 OR @consultaDirec('SELECT count(*) AS contador FROM operation.capitalizacion_obra_publica WHERE seleccion=true','contador','long','MAGNITUS')&gt;1" validacionMensaje="'Debe seleccionar solo un registro'"/>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) AS existencia FROM operation.recepcion_obra_publica WHERE fuop=(SELECT fuop FROM operation.capitalizacion_obra_publica WHERE seleccion=true)','existencia','long','MAGNITUS')" validacionMensaje="'Ya cuenta con recepción'"/>
+                </validaciones>
+        </nivel>
+        <nivel nombre="getSeleccion" id="getSeleccion" interactivo="false">
+            <componente tipo="cursor" nombre="getSeleccion" id="getSeleccion">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%getPeriodo.getPeriodo.id_periodo%"/>
+                    <campo name="id_fuop"/>
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+         <nivel nombre="Visualiza Detalle Folio Único de Obra Pública" id="verDetFUOP" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" nombre="Visualiza Detalle Folio Único de Obra Pública" id="verDetFUOP" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica">
+                    <campo name="ur" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%getPeriodo.getPeriodo.id_periodo%"/>
+                    <campo name="id_fuop" columna-visible="false" filtroCampo="id_fuop" filtroOperador="=" filtroValor="%getSeleccion.getSeleccion.id_fuop%"/>
+                    <campo name="folio_duep" text="Folio"/>
+                    <campo name="importe_inical_cont" text="Importe Inicial Contratado"/>
+                    <campo name="ampliaciones" text="Ampliaciones"/>
+                    <campo name="reducciones" text="Reducciones"/>
+                    <campo name="total_contratado" text="Total Contratado"/>
+                    <campo name="programa_presupuestal" text="Programa Presupuestal" descripcionForaneaTabla="id_cat,descripcion"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" descripcionForaneaTabla="id_cat,descripcion"/>
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" margen-derecho="4" columnas="2"/>
+                </estilos>
+                 <acciones>
+                    <accion nombre="grabar"  hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
