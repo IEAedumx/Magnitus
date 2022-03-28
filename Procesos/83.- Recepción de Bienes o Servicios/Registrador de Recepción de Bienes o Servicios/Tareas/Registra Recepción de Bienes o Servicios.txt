@@ -1,0 +1,948 @@
+<tarea id="RegistraRecepcionBienesServicios" nombre="Registra Recepción de Bienes y Servicios">
+     <pagina id="1">
+          <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+               <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                         <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                         <campo name="id_usuario" />
+                         <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                    </tabla>
+               </componente>
+          </nivel>
+          <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+               <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                    <tabla schema="catalog" nombre="periodo">
+                         <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                         <campo name="id_periodo" />
+                         <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true" />
+                         <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" />
+                    </tabla>
+               </componente>
+          </nivel>
+          <nivel id="contratoCerrado" nombre="FolioBS" interactivo="false">
+               <componente tipo="cursor" id="contratoCerrado" nombre="FolioBS">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                         <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                         <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                         <campo name="tipo_contrato" filtroCampo="tipo_contrato" filtroOperador="=" filtroValor="2" />
+                         <campo name="id_duep_contrato_pedido" />
+                         <!--<campo name="folio_rbs" calc="@ifThenElse(@consultaDirec('SELECT COALESCE(SUM(cantidad_recibida),0.00) as rbs FROM operation.duep_contrato_pedido_det_calendario WHERE id_duep_contrato_pedido='+%contratoCerrado.contratoCerrado.id_duep_contrato_pedido%,'rbs','long','MAGNITUS')==@consultaDirec('SELECT COALESCE(SUM(cantidad_recibida_rbs),0.00) as rbs FROM operation.duep_contrato_pedido_det WHERE id_duep_contrato_pedido='+%contratoCerrado.contratoCerrado.id_duep_contrato_pedido%,'rbs','long','MAGNITUS'),%contratoCerrado.contratoCerrado.folio_rbs%,null)"/>-->
+                         <campo name="seleccion_rbs" calc="false" />
+                         <campo name="folio_rbs" calc="null" />
+                         <campo name="total" />
+                         <campo
+                              name="comprometido_no_devengado"
+                              calc="@ifThenElse(%contratoCerrado.contratoCerrado.total%==null,0,%contratoCerrado.contratoCerrado.total%)-@consultaDirec('SELECT COALESCE(SUM(total),0) as dev FROM operation.duep WHERE listo_para_pago=true AND id_contrato='+%contratoCerrado.contratoCerrado.id_duep_contrato_pedido%,'dev','decimal','MAGNITUS')"
+                         />
+                    </tabla>
+               </componente>
+          </nivel>
+          <nivel id="BarreDUEPBS" nombre="FolioBS" interactivo="false">
+               <componente tipo="cursor" id="BarreDUEPBS" nombre="FolioBS">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                         <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                         <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                         <campo name="id_duep_contrato_pedido" />
+                         <campo name="folio_rbs" />
+                         <campo name="seleccion_rbs" calc="false" />
+                    </tabla>
+                    <!--<nivel id="BarreDUEPBSDD" nombre="FolioBS" interactivo="false" ejecutar="%BarreDUEPBS.BarreDUEPBS.seleccion_rbs%==false OR %BarreDUEPBS.BarreDUEPBS.seleccion_rbs%==null">
+                        <componente tipo="cursor" id="BarreDUEPBSDD" nombre="FolioBS">        
+                            <tabla schema="operation" nombre="duep_contrato_pedido">
+                                <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                                <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                                <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%BarreDUEPBS.BarreDUEPBS.id_duep_contrato_pedido%"/>
+                                <campo name="folio_rbs"/>
+                                <campo name="seleccion_rbs" calc="false"/>
+                            </tabla>
+                        </componente>
+                    </nivel>-->
+               </componente>
+          </nivel>
+          <nivel id="AsignaFolioRBS" nombre="FolioRBS" interactivo="false">
+               <componente tipo="cursor" id="AsignaFolioRBS" nombre="FolioRBS">
+                    <tabla schema="catalog" nombre="dummy">
+                         <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" />
+                         <campo
+                              name="folio_duep"
+                              local="true"
+                              type="string"
+                              calc="@ifThenElse(@consultaDirec('select max(folio_duep) AS result from operation.duep','result','string','MAGNITUS')==null,1,@consultaDirec('select max(folio_duep) AS result from operation.duep','result','string','MAGNITUS'))"
+                         />
+                    </tabla>
+               </componente>
+          </nivel>
+
+          <nivel id="cp" nombre="cp" interactivo="false">
+               <componente id="cp" nombre="cp" tipo="cursor">
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                         <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                         <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                         <campo name="id_duep_contrato_pedido" />
+                         <campo name="clave_articulo" />
+                    </tabla>
+                    <nivel id="ar" nombre="ar" interactivo="false">
+                         <componente id="ar" nombre="ar" tipo="cursor">
+                              <tabla schema="catalog" nombre="articulos_aux">
+                                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                                   <campo name="clave_articulo" filtroCampo="clave_articulo" filtroOperador="=" filtroValor="%cp.cp.clave_articulo%" />
+                                   <campo name="control_patrimonial" filtroCampo="control_patrimonial" filtroOperador="=" filtroValor="true" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+                    <nivel id="cpe" nombre="cpe" interactivo="false" ejecutar="%ar.ar.control_patrimonial%==true">
+                         <componente id="cpe" nombre="cpe" tipo="cursor">
+                              <tabla schema="operation" nombre="duep_contrato_pedido">
+                                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                                   <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%cp.cp.id_duep_contrato_pedido%" />
+                                   <campo name="control_patrimonial" calc="true" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+               </componente>
+          </nivel>
+          <nivel id="fd" nombre="fd" interactivo="false">
+               <componente id="fd" nombre="fd" tipo="cursor">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                         <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                         <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                         <campo name="id_duep_contrato_pedido" />
+                         <campo name="folio_rbs" />
+                         <campo name="folio_adquisiciones" />
+                    </tabla>
+                    <nivel id="ddd" nombre="ddd" interactivo="false">
+                         <componente id="ddd" nombre="ddd" tipo="cursor">
+                              <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                                   <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%fd.fd.id_duep_contrato_pedido%" />
+                                   <campo name="id_duep_contrato_pedido_det" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+                    <nivel id="dd" nombre="dd" interactivo="false" ejecutar="%ddd.ddd.id_duep_contrato_pedido%!=null">
+                         <componente id="dd" nombre="dd" tipo="cursor">
+                              <tabla schema="operation" nombre="duep_contrato_pedido">
+                                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                                   <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%fd.fd.id_duep_contrato_pedido%" />
+                                   <campo name="detalles" calc="true" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+               </componente>
+          </nivel>
+
+          <nivel nombre="x" id="X" interactivo="false">
+               <componente tipo="cursor" nombre="x" id="X">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                         <campo name="ur" text="" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" columna-visible="false" />
+                         <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" columna-visible="false" />
+                         <campo name="id_duep_contrato_pedido" />
+                         <campo name="seleccion_rbs" calc="false" />
+                    </tabla>
+               </componente>
+          </nivel>
+          <nivel id="RRB2" nombre="Registra Recepción de Bienes y Servicios" interactivo="false">
+               <componente id="RRB2" nombre="Registra Recepción de Bienes y Servicios" tipo="cursor">
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det_calendario">
+                         <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                         <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                         <campo name="id_duep_contrato_pedido" text="Pedido" />
+                         <campo name="id_duep_contrato_pedido_det" text="Renglon" />
+                         <campo name="numero_entrega" text="Renglon" />
+                         <campo name="seleccion" calc="false" />
+                    </tabla>
+               </componente>
+          </nivel>
+          <nivel id="nlGesRecepcionBS" nombre="Gestión de Recepción de Bienes o Servicio" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+               <componente tipo="tabla" id="cpGesRecepcionBS" nombre="Gestión de Recepción de Bienes o Servicio" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false" filtro="true">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                         <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false" columna-visible="false" />
+                         <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" columna-visible="false" />
+                         <campo name="id_duep_contrato_pedido" visible="false" columna-visible="false" />
+                         <campo name="contrato" text="Folio" width="150" />
+                         <campo name="proveedor" text="Beneficiario" width="300" descripcionForaneaTabla="folio_beneficiario,razon_social" />
+                         <campo name="folio_con_ordecom" text="Contrato/Orden de Compra" width="200" />
+                         <campo name="fecha_contrato_pedido" text="Fecha" width="120" />
+                         <campo name="id_cat_area_requiriente" text="ID Centro Registro" calc="2" columna-visible="false" />
+                         <campo name="area_requiriente" text="Centro de Registro" width="350" descripcionForaneaTabla="id_cat,descripcion" />
+                         <campo name="total" text="Total Comprometido" width="170" formatoMoneda="true" />
+                         <campo name="comprometido_no_devengado" text="Comprometido No Devengado" width="240" formatoMoneda="true" />
+                         <campo name="seleccion_rbs" text="Selección" width="80" editable="true" />
+                         <campo name="autoriza" text="autoriza" columna-visible="false" filtroCampo="autoriza" filtroOperador="=" filtroValor="true" />
+                         <campo name="folio_rbs" text="Folio RBS" filtroCampo="folio_rbs" filtroOperador="=" filtroValor="null" columna-visible="false" />
+                         <campo name="tipo_contrato" text="tipo_contrato" columna-visible="false" filtroCampo="tipo_contrato" filtroOperador="=" filtroValor="2" />
+                    </tabla>
+                    <acciones>
+                         <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                    </acciones>
+                    <estilos>
+                         <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                    </estilos>
+               </componente>
+
+               <validaciones>
+                    <validacion
+                         tipo="avanzar"
+                         validacion="@consultaDirec('SELECT seleccion_rbs  AS resultado FROM operation.duep_contrato_pedido
+                        WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND seleccion_rbs=true','resultado','string','MAGNITUS')==null OR @consultaDirec('SELECT count(*)  AS resultado FROM operation.duep_contrato_pedido
+                        WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND seleccion_rbs=true','resultado','string','MAGNITUS')&gt;1"
+                         validacionMensaje="'Debe Seleccionar un Registro'"
+                    />
+               </validaciones>
+          </nivel>
+          <nivel id="BarreDUEPBS2" nombre="FolioBS" interactivo="false">
+               <componente tipo="cursor" id="BarreDUEPBS2" nombre="FolioBS">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                         <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                         <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                         <campo name="id_duep_contrato_pedido" />
+                         <campo name="folio_rbs" calc="%AsignaFolioRBS.AsignaFolioRBS.folio_duep%" />
+                         <campo name="seleccion_rbs" filtroCampo="seleccion_rbs" filtroOperador="=" filtroValor="true" />
+                         <campo name="folio_adquisiciones" />
+                         <campo name="tipo_contrato" />
+                    </tabla>
+                    <nivel id="BarreDUEPBSDD2" nombre="FolioBSDD" interactivo="false">
+                         <componente tipo="cursor" id="BarreDUEPBSDD2" nombre="FolioBSDD">
+                              <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%BarreDUEPBS2.BarreDUEPBS2.ur%" />
+                                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%BarreDUEPBS2.BarreDUEPBS2.periodo%" />
+                                   <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%" />
+                                   <campo name="cantidad_recibida_rbs" calc="0" />
+                                   <campo name="folio_rbs" calc="%AsignaFolioRBS.AsignaFolioRBS.folio_duep%" />
+                                   <campo name="seleccion_rbs" calc="false" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+               </componente>
+          </nivel>
+
+          <nivel id="nlGesRecepcionBSDet" nombre="Registra Recepción de Bienes o Servicio" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%BarreDUEPBS2.BarreDUEPBS2.tipo_contrato%!=2">
+               <componente tipo="tabla" id="cpGesRecepcionBSDet" nombre="Registra Recepción de Bienes o Servicio" mostrarEditar="true" mostrarAgregar="false" mostrarEliminar="false" filtro="true">
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                         <campo
+                              name="ur"
+                              text="Unidad Responsable"
+                              filtroCampo="ur"
+                              filtroOperador="="
+                              filtroValor="%BarreDUEPBS2.BarreDUEPBS2.ur%"
+                              calc="%BarreDUEPBS2.BarreDUEPBS2.ur%"
+                              llaveForanea="false"
+                              visible="false"
+                              columna-visible="false"
+                         />
+                         <campo
+                              name="periodo"
+                              text="Periodo"
+                              filtroCampo="periodo"
+                              filtroOperador="="
+                              filtroValor="%BarreDUEPBS2.BarreDUEPBS2.periodo%"
+                              calc="%BarreDUEPBS2.BarreDUEPBS2.periodo%"
+                              llaveForanea="false"
+                              visible="false"
+                              columna-visible="false"
+                         />
+                         <campo
+                              name="id_duep_contrato_pedido"
+                              text="Contrato Pedido"
+                              filtroCampo="id_duep_contrato_pedido"
+                              filtroOperador="="
+                              filtroValor="%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%"
+                              llaveForanea="false"
+                              visible="false"
+                              columna-visible="false"
+                              calc="%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%"
+                         />
+                         <campo name="id_duep_contrato_pedido_det" text="Renglón" width="100" habilitado="false" visible="false" columna-visible="true" />
+                         <campo
+                              name="clave_articulo"
+                              text="Clave del articulo"
+                              width="200"
+                              descripcionForanea="descripcion_articulo"
+                              descripcionForaneaTabla="descripcion_articulo"
+                              habilitado="false"
+                              visible="true"
+                              columna-visible="true"
+                              columnas="3"
+                              margen-izquierdo="2"
+                              margen-derecho="5"
+                         />
+                         <campo name="fecha_registro" text="Fecha de Recepción" calc="@fechaSistema()" habilitado="false" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+                         <campo name="cantidad" text="Cantidad Solicitada" width="200" habilitado="false" visible="false" columna-visible="true" />
+                         <campo name="unidad_medida" text="Unidad Medida" width="200" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" habilitado="false" visible="false" columna-visible="true" />
+                         <campo name="recepcion_acumulada" text="Recepción Acumulada" width="200" habilitado="false" visible="false" columna-visible="true" />
+                         <campo name="cantidad_recibida" text="Cantidad Recibida" width="200" habilitado="false" visible="false" columna-visible="false" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+
+                         <campo
+                              name="cantidad_recibida_rbs"
+                              text="Cantidad Recibidas"
+                              width="200"
+                              visible="true"
+                              habilitado="true"
+                              columna-visible="true"
+                              columnas="3"
+                              margen-izquierdo="2"
+                              margen-derecho="5"
+                              validacion="%cantidad_recibida_rbs%==0"
+                              validacionMensaje="Cantidad no puede ser 0"
+                         />
+                         <!--interaccion-visible="%seleccion_rbs%==true"-->
+                         <campo name="cantidad_por_recibir" text="Por Recibir" width="200" habilitado="false" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+                         <!--validacion="%cantidad_por_recibir%==0.00" validacionMensaje="Ya no existen piezas por recibir" validacionModificacion="%cantidad_por_recibir%==0.00" validacionModificacionMensaje="Ya no existen piezas por recibir"-->
+                         <!--calcCliente="%cantidad%-%cantidad_recibida_rbs%-%cantidad_en_proceso%"-->
+
+                         <!--<campo name="cantidad_porrecibir" text="Por Recibir" width="200" calcCliente="%cantidad%-%cantidad_recibida_rbs%" habilitado="false" visible="true" columna-visible="false" columnas="3" margen-izquierdo="2" margen-derecho="5" local="true" type="long"/>-->
+
+                         <campo name="seleccion_rbs" text="Campo de Selección" editable="true" habilitado="true" width="200" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+                         <campo name="folio_rbs" text="Folio Temporal" calc="%AsignaFolioRBS.AsignaFolioRBS.folio_duep%" visible="false" columna-visible="false" />
+                    </tabla>
+                    <acciones>
+                         <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                    </acciones>
+                    <estilos>
+                         <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                         <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                    </estilos>
+               </componente>
+               <validaciones>
+                    <validacion
+                         tipo="avanzar"
+                         validacion="@consultaDirec('SELECT seleccion_rbs  AS resultado FROM operation.duep_contrato_pedido_det
+                        WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND seleccion_rbs=true','resultado','string','MAGNITUS')==null"
+                         validacionMensaje="'Debe Seleccionar un Registro'"
+                    />
+                    <!-- OR @consultaDirec('SELECT count(*)  AS resultado FROM operation.duep_contrato_pedido_det-->
+                    <!--WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND seleccion_rbs=true','resultado','string','MAGNITUS')&gt;1-->
+               </validaciones>
+          </nivel>
+
+          <!---->
+          <nivel id="nlGesRecepcionBSDet2" nombre="Registra Recepción de Bienes o Servicio" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%BarreDUEPBS2.BarreDUEPBS2.tipo_contrato%==2">
+               <componente tipo="tabla" id="cpGesRecepcionBSDet2" nombre="Registra Recepción de Bienes o Servicio" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false" filtro="true">
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                         <campo
+                              name="ur"
+                              text="Unidad Responsable"
+                              filtroCampo="ur"
+                              filtroOperador="="
+                              filtroValor="%BarreDUEPBS2.BarreDUEPBS2.ur%"
+                              calc="%BarreDUEPBS2.BarreDUEPBS2.ur%"
+                              llaveForanea="false"
+                              visible="false"
+                              columna-visible="false"
+                         />
+                         <campo
+                              name="periodo"
+                              text="Periodo"
+                              filtroCampo="periodo"
+                              filtroOperador="="
+                              filtroValor="%BarreDUEPBS2.BarreDUEPBS2.periodo%"
+                              calc="%BarreDUEPBS2.BarreDUEPBS2.periodo%"
+                              llaveForanea="false"
+                              visible="false"
+                              columna-visible="false"
+                         />
+                         <campo
+                              name="id_duep_contrato_pedido"
+                              text="Contrato Pedido"
+                              filtroCampo="id_duep_contrato_pedido"
+                              filtroOperador="="
+                              filtroValor="%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%"
+                              llaveForanea="false"
+                              visible="false"
+                              columna-visible="false"
+                              calc="%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%"
+                         />
+                         <campo name="id_duep_contrato_pedido_det" text="Renglón" width="100" habilitado="false" visible="false" columna-visible="true" />
+                         <campo
+                              name="clave_articulo"
+                              text="Clave del articulo"
+                              width="200"
+                              descripcionForanea="descripcion_articulo"
+                              descripcionForaneaTabla="descripcion_articulo"
+                              habilitado="false"
+                              visible="true"
+                              columna-visible="true"
+                              columnas="3"
+                              margen-izquierdo="2"
+                              margen-derecho="5"
+                         />
+                         <campo name="fecha_registro" text="Fecha de Recepción" calc="@fechaSistema()" habilitado="false" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+                         <campo name="cantidad" text="Cantidad Solicitada" width="200" habilitado="false" visible="false" columna-visible="true" />
+                         <campo name="unidad_medida" text="Unidad Medida" width="200" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" habilitado="false" visible="false" columna-visible="true" />
+                         <campo name="recepcion_acumulada" text="Recepción Acumulada" width="200" habilitado="false" visible="false" columna-visible="true" />
+                         <campo name="cantidad_recibida" text="Cantidad Recibida" width="200" habilitado="false" visible="false" columna-visible="false" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+
+                         <campo
+                              name="cantidad_recibida_rbs"
+                              text="Cantidad Recibidas"
+                              width="200"
+                              visible="true"
+                              habilitado="true"
+                              columna-visible="true"
+                              columnas="3"
+                              margen-izquierdo="2"
+                              margen-derecho="5"
+                              validacion="%cantidad_recibida_rbs%==0"
+                              validacionMensaje="Cantidad no puede ser 0"
+                         />
+                         <!--interaccion-visible="%seleccion_rbs%==true"-->
+                         <campo name="cantidad_por_recibir" text="Por Recibir" width="200" habilitado="false" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+                         <!--validacion="%cantidad_por_recibir%==0.00" validacionMensaje="Ya no existen piezas por recibir" validacionModificacion="%cantidad_por_recibir%==0.00" validacionModificacionMensaje="Ya no existen piezas por recibir"-->
+                         <!--calcCliente="%cantidad%-%cantidad_recibida_rbs%-%cantidad_en_proceso%"-->
+
+                         <!--<campo name="cantidad_porrecibir" text="Por Recibir" width="200" calcCliente="%cantidad%-%cantidad_recibida_rbs%" habilitado="false" visible="true" columna-visible="false" columnas="3" margen-izquierdo="2" margen-derecho="5" local="true" type="long"/>-->
+
+                         <campo name="seleccion_rbs" text="Campo de Selección" editable="true" habilitado="true" width="200" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+                         <campo name="folio_rbs" text="Folio Temporal" calc="%AsignaFolioRBS.AsignaFolioRBS.folio_duep%" visible="false" columna-visible="false" />
+                         <tareas>
+                              <tarea
+                                   nombre="Subpartidas"
+                                   imagen="resources/img/button-default.png"
+                                   imagen-sobre="resources/img/button-default-rollover.png"
+                                   params="ur,periodo,id_duep_contrato_pedido,id_duep_contrato_pedido_det"
+                                   ref="task=95fd7416-2a1b-4d27-8f8d-5b7943d29237"
+                              />
+                              <!-- id_pedido, click derecho para las Subpartidas -->
+                         </tareas>
+                    </tabla>
+                    <acciones>
+                         <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                    </acciones>
+                    <estilos>
+                         <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                         <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                    </estilos>
+               </componente>
+               <validaciones>
+                    <validacion
+                         tipo="avanzar"
+                         validacion="@consultaDirec('SELECT seleccion_rbs  AS resultado FROM operation.duep_contrato_pedido_det
+                        WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND seleccion_rbs=true','resultado','string','MAGNITUS')==null"
+                         validacionMensaje="'Debe Seleccionar un Registro'"
+                    />
+                    <!-- OR @consultaDirec('SELECT count(*)  AS resultado FROM operation.duep_contrato_pedido_det-->
+                    <!--WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND seleccion_rbs=true','resultado','string','MAGNITUS')&gt;1-->
+               </validaciones>
+          </nivel>
+          <!---->
+
+          <nivel id="GrabaDuepBS" nombre="GrabaDuepBS" interactivo="false">
+               <componente tipo="cursor" id="GrabaDuepBS" nombre="GrabaDuepBS">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                         <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" />
+                         <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" />
+                         <campo name="id_duep_contrato_pedido" text="Contrato Pedido" />
+                         <campo name="proveedor" text="Beneficiario" llaveForanea="false" />
+                         <campo name="id_fondo_contable" text="Fondo Contable" llaveForanea="false" />
+                         <campo name="area_requiriente" text="Unidad Ejecutora" llaveForanea="false" />
+                         <campo name="fuente_financiamiento" text="Fuente Financiamiento" llaveForanea="false" />
+                         <campo name="id_tipo_comprobante" text="Tipo Comprobante" llaveForanea="false" />
+                         <campo name="folio_con_ordecom" />
+                         <campo name="concepto" />
+                         <campo name="requiere_anticipo" />
+                         <campo name="anticipo" />
+                         <campo
+                              name="cantidad_recibida"
+                              calc="@consultaDirec('SELECT COALESCE(sum(cantidad_recibida_rbs),0)  AS cantidad FROM operation.duep_contrato_pedido_det
+                        WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_duep_contrato_pedido='+%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%,'cantidad','long','MAGNITUS')"
+                         />
+                         <campo
+                              name="cantidad_por_recibir"
+                              calc="@consultaDirec('SELECT COALESCE(sum(cantidad_recibida_rbs),0)  AS cantidad FROM operation.duep_contrato_pedido_det
+                        WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_duep_contrato_pedido='+%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%,'cantidad','long','MAGNITUS')
+                        -
+                        @consultaDirec('SELECT COALESCE(sum(cantidad_recibida),0)  AS cantidad FROM operation.duep_contrato_pedido_det
+                        WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_duep_contrato_pedido='+%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%,'cantidad','int','MAGNITUS')"
+                         />
+                         <campo name="seleccion_rbs" text="Campo de Selección" filtroCampo="seleccion_rbs" filtroOperador="=" filtroValor="true" />
+                         <campo name="folio_rbs" text="Folio DUEP" filtroCampo="folio_rbs" filtroOperador="=" filtroValor="%AsignaFolioRBS.AsignaFolioRBS.folio_duep%" />
+                         <campo name="folio_adquisiciones" />
+                         <campo name="folio_req" />
+                         <campo name="total" />
+                         <!--<campo name="cantidad_recibida"/>-->
+                    </tabla>
+                    <nivel id="GrabaDuepBS1" nombre="GrabaDuepBS1" interactivo="false" ejecutar="%GrabaDuepBS.GrabaDuepBS.ur%!=null">
+                         <componente tipo="altaDirect" id="GrabaDuepBS1" nombre="GrabaDuepBS1">
+                              <tabla schema="operation" nombre="duep">
+                                   <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$config.ur$" />
+                                   <campo name="periodo" text="Periodo" visible="false" calc="%GrabaDuepBS.GrabaDuepBS.periodo%" llaveForanea="false" />
+                                   <campo name="folio_duep" text="Folio" visible="true" generacion="@prox()+1" autogenerado="true" />
+
+                                   <campo
+                                        name="folio_duep_a"
+                                        text="folio_duep_a"
+                                        calc="%GrabaDuepBS.GrabaDuepBS.folio_con_ordecom%+'-'+(@consultaDirec('SELECT count(folio_duep_a) AS resultado
+                                FROM operation.duep
+                                WHERE ur='+$config.ur$+' AND folio_solicitud='+'\\''+%GrabaDuepBS.GrabaDuepBS.folio_con_ordecom%+'\\''+' AND  periodo='+%buscaPeriodo.buscaPeriodo.id_periodo% ,'resultado','int','MAGNITUS')+1)"
+                                   />
+                                   <campo name="folio_solicitud" text="folio_solicitud" calc="%GrabaDuepBS.GrabaDuepBS.folio_con_ordecom%" />
+                                   <campo name="tramite" text="Trámite" calc="8" />
+                                   <campo name="beneficiario" text="Beneficiario" calc="%GrabaDuepBS.GrabaDuepBS.proveedor%" />
+                                   <campo name="proveedor" text="Beneficiario" calc="%GrabaDuepBS.GrabaDuepBS.proveedor%" />
+                                   <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" />
+                                   <campo name="id_fondo_contable" text="Fondo Contable" calc="%GrabaDuepBS.GrabaDuepBS.id_fondo_contable%" />
+                                   <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" calc="2" llaveForanea="false" />
+                                   <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" calc="%GrabaDuepBS.GrabaDuepBS.area_requiriente%" />
+                                   <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" calc="5" />
+                                   <campo name="id_cat_fuente_financiamiento" visible="false" text="id cat fuente" calc="%GrabaDuepBS.GrabaDuepBS.fuente_financiamiento%" />
+                                   <campo name="fecha_solicitud" text="Fecha" calc="@fechaSistema()" />
+                                   <campo name="id_contrato" text="Contrato" calc="%GrabaDuepBS.GrabaDuepBS.id_duep_contrato_pedido%" />
+                                   <campo name="folio_origen" text="FolioRBS" calc="%GrabaDuepBS.GrabaDuepBS.folio_rbs%" />
+                                   <!--<campo name="tipo_comprobante" text="Tipo de Comprobante" calc="%GrabaDuepBS.GrabaDuepBS.id_duep_contrato_pedido%" llaveForanea="descripcion" validacion="%tipo_comprobante%==null" validacionMensaje="Debe de Capturar el Tipo de Comprobante" columnas="3" margen-izquierdo="2" margen-derecho="5"/>
+                               <campo name="folio_comprobante" text="Folio de Comprobante" visible="true" habilitado="true" validacion="%folio_comprobante%==null" validacionMensaje="Debe de Capturar el Folio de Comprobante" columnas="3" margen-izquierdo="2"/>
+                               <campo name="fecha_autorizacion" text="Fecha de Autorización" habilitado="false" marcador="Fecha de Autorización" visible="false" columnas="3" margen-derecho="2"/>-->
+                                   <campo name="concepto" text="Concepto" calc="%GrabaDuepBS.GrabaDuepBS.concepto%" />
+                                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                                   <campo name="estatus_duep" text="Estatus" calc="1" llaveForanea="false" />
+                                   <campo name="folio_adquisiciones" calc="%GrabaDuepBS.GrabaDuepBS.folio_adquisiciones%" />
+                                   <campo name="folio_expediente" calc="%GrabaDuepBS.GrabaDuepBS.folio_adquisiciones%" />/>
+                                   <campo name="total_comprometido" calc="%GrabaDuepBS.GrabaDuepBS.total%" />
+                                   <campo name="importe_devengar" calc="%GrabaDuepBS.GrabaDuepBS.cantidad_recibida%" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+               </componente>
+          </nivel>
+
+          <nivel id="barredcp" nombre="barredcp" interactivo="false">
+               <componente tipo="cursor" id="barredcp" nombre="barredcp">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                         <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" />
+                         <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" />
+                         <campo name="id_duep_contrato_pedido" text="Contrato Pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%" />
+                         <campo name="proveedor" text="Beneficiario" llaveForanea="false" />
+                         <campo name="id_fondo_contable" text="Fondo Contable" llaveForanea="false" />
+                         <campo name="area_requiriente" text="Unidad Ejecutora" llaveForanea="false" />
+                         <campo name="fuente_financiamiento" text="Fuente Financiamiento" llaveForanea="false" />
+                         <campo name="id_tipo_comprobante" text="Tipo Comprobante" llaveForanea="false" />
+                         <campo name="folio_con_ordecom" />
+                         <campo name="concepto" />
+                         <campo name="requiere_anticipo" />
+                         <campo name="anticipo" />
+                    </tabla>
+               </componente>
+          </nivel>
+
+          <nivel id="GrabaDuepBSD" nombre="GrabaDuepBSD" interactivo="false">
+               <componente tipo="cursor" id="GrabaDuepBSD" nombre="GrabaDuepBSD">
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                         <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" />
+                         <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" />
+                         <campo name="id_duep_contrato_pedido" text="Contrato Pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%BarreDUEPBS2.BarreDUEPBS2.id_duep_contrato_pedido%" />
+                         <campo name="id_duep_contrato_pedido_det" text="Renglón" />
+                         <campo name="clave_articulo" text="Articulo" />
+                         <campo name="cantidad_recibida" text="Cantidad Recibida" />
+                         <campo name="cantidad_recibida_rbs" text="Cantidad Recibida" />
+                         <campo name="id_cat_cog" text="COG" />
+                         <campo name="clasificador_objeto_gasto" text="COG" />
+                         <campo name="unidad_medida" text="Unidad de Medida" />
+                         <campo name="precio_unitario" text="PU" />
+                         <campo name="importe_unitario" text="IU" />
+                         <campo name="programa_presupuestal" text="PP" />
+                         <campo name="descuento" text="Descuento" />
+                         <campo name="tasa_iva" text="Tasa IVA" />
+                         <campo name="clave_presup" text="Clave Presupuestal" />
+                         <campo name="imp_valor_agregado" text="Impuesto al Valor Agregado" />
+                         <campo name="otros_impuestos" text="Otros Impuestos" />
+                         <campo name="seleccion_rbs" text="Campo de Selección" filtroCampo="seleccion_rbs" filtroOperador="=" filtroValor="true" />
+                         <campo name="folio_rbs" text="Folio" filtroCampo="folio_rbs" filtroOperador="=" filtroValor="%AsignaFolioRBS.AsignaFolioRBS.folio_duep%" />
+                         <campo name="caracteristica" text="descripcion" />
+                         <campo name="mes" />
+                    </tabla>
+                    <nivel id="GrabaDuepBSD1" nombre="GrabaDuepBSD1" interactivo="false" ejecutar="%GrabaDuepBSD.GrabaDuepBSD.ur%!=null">
+                         <componente tipo="altaDirect" id="GrabaDuepBSD1" nombre="GrabaDuepBSD1">
+                              <tabla schema="operation" nombre="duep_detalle">
+                                   <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%GrabaDuepBSD.GrabaDuepBSD.ur%" />
+                                   <campo name="periodo" text="Periodo" llaveForanea="false" calc="%GrabaDuepBSD.GrabaDuepBSD.periodo%" />
+                                   <campo name="folio_duep" text="Folio" calc="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%" />
+                                   <campo name="folio_duep_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" />
+                                   <campo name="tipo_detalle" text="Tipo de Renglón" calc="1" />
+                                   <campo name="proveedor" text="Proveedor" calc="%barredcp.barredcp.proveedor%" />
+                                   <campo name="articulo" text="Artículo" calc="%GrabaDuepBSD.GrabaDuepBSD.clave_articulo%" />
+                                   <campo name="id_cat_objeto_gasto" text="COG" llaveForanea="false" calc="%GrabaDuepBSD.GrabaDuepBSD.id_cat_cog%" />
+                                   <campo name="c_objeto_gasto" text="Objeto del Gasto" calc="%GrabaDuepBSD.GrabaDuepBSD.clasificador_objeto_gasto%" />
+
+                                   <campo name="mes_cve_presupuestal" calc="%GrabaDuepBSD.GrabaDuepBSD.mes%" />
+                                   <campo name="clave_presupuestal" text="clave presupuestal" llaveForanea="false" calc="%GrabaDuepBSD.GrabaDuepBSD.clave_presup%" />
+
+                                   <campo name="descripcion_especifica" text="Descripción Específica" calc="%GrabaDuepBSD.GrabaDuepBSD.caracteristica%" />
+                                   <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" />
+                                   <campo name="programa_presupuestal" text="Programa Presupuestal" calc="%GrabaDuepBSD.GrabaDuepBSD.programa_presupuestal%" />
+                                   <campo
+                                        name="indicador"
+                                        text="Indicador"
+                                        calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat 
+                              INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat
+                              INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat
+                              INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo
+                              WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')"
+                                        habilitado="false"
+                                        columna-visible="false"
+                                        interaccion-visible="%tipo_detalle%==1"
+                                        columnas="3"
+                                        margen-izquierdo="2"
+                                   />
+                                   <campo name="cantidad" text="Cantidad" calc="@castTo(%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%,'long')" />
+                                   <campo name="u_medida" text="U.M." calc="%GrabaDuepBSD.GrabaDuepBSD.unidad_medida%" />
+                                   <campo name="unidad_medida" text="U.M." calc="%GrabaDuepBSD.GrabaDuepBSD.unidad_medida%" />
+                                   <campo name="precio_unitario" text="Importe Unitario" calc="%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%" />
+                                   <campo name="descuento" text="Descuento" />
+                                   <campo
+                                        name="iva"
+                                        text="Impuesto al Valor Agregado"
+                                        calc="@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.tasa_iva%==null,0, %GrabaDuepBSD.GrabaDuepBSD.tasa_iva%)*@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%==null,0, %GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%)*@ifThenElse (%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%==0,null, %GrabaDuepBSD.GrabaDuepBSD.precio_unitario%)"
+                                   />
+                                   <campo name="otros_impuestos" text="Otros Impuestos" />
+                                   <campo
+                                        name="importe"
+                                        text="Importe"
+                                        calc="(@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%==null,0,%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%)*@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%==null,0,%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%))"
+                                   />
+                                   <campo
+                                        name="total"
+                                        text="Total"
+                                        calc="(@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%==null,0,%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%)*@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%==null,0,%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%))+(@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.tasa_iva%==null,0,%GrabaDuepBSD.GrabaDuepBSD.tasa_iva%)*@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%==null,0,%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%)*@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%==null,0,%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%))"
+                                   />
+                                   <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" />
+                                   <campo name="id_duep_contrato_pedido" text="Contrato" calc="%GrabaDuepBSD.GrabaDuepBSD.id_duep_contrato_pedido%" />
+                                   <campo name="id_duep_contrato_pedido_det" text="Contrato" calc="%GrabaDuepBSD.GrabaDuepBSD.id_duep_contrato_pedido_det%" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+                    <nivel id="dda" nombre="dda" interactivo="false">
+                         <componente tipo="cursor" id="dda" nombre="dda">
+                              <tabla schema="operation" nombre="duep_detalle">
+                                   <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%GrabaDuepBSD.GrabaDuepBSD.ur%" />
+                                   <campo name="periodo" text="Periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%GrabaDuepBSD.GrabaDuepBSD.periodo%" />
+                                   <campo name="folio_duep_detalle" text="Contrato Pedido" filtroCampo="folio_duep_detalle" filtroOperador="=" filtroValor="%GrabaDuepBSD1.GrabaDuepBSD1.folio_duep_detalle%" />
+                                   <campo name="agrupador" text="agrupador" calc="%GrabaDuepBSD1.GrabaDuepBSD1.folio_duep_detalle%" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+                    <nivel id="GrabaDuepBSD11" nombre="GrabaDuepBSD11" interactivo="false">
+                         <componente tipo="cursor" id="GrabaDuepBSD11" nombre="GrabaDuepBSD11">
+                              <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                                   <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%GrabaDuepBSD.GrabaDuepBSD.ur%" />
+                                   <campo name="periodo" text="Periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%GrabaDuepBSD.GrabaDuepBSD.periodo%" />
+                                   <campo name="id_duep_contrato_pedido" text="Contrato Pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%GrabaDuepBSD.GrabaDuepBSD.id_duep_contrato_pedido%" />
+                                   <campo name="estatus_seleccion" calc="true" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+                    <nivel id="GrabaDuepBSD2" nombre="GrabaDuepBSD2" interactivo="false" ejecutar="%barredcp.barredcp.requiere_anticipo%==true">
+                         <componente tipo="altaDirect" id="GrabaDuepBSD2" nombre="GrabaDuepBSD2">
+                              <tabla schema="operation" nombre="duep_detalle">
+                                   <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%GrabaDuepBSD.GrabaDuepBSD.ur%" />
+                                   <campo name="periodo" text="Periodo" llaveForanea="false" calc="%GrabaDuepBSD.GrabaDuepBSD.periodo%" />
+                                   <campo name="folio_duep" text="Folio" calc="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%" />
+                                   <campo name="folio_duep_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" />
+                                   <campo name="tipo_detalle" text="Tipo de Renglón" calc="3" />
+                                   <campo name="proveedor" text="Proveedor" calc="%barredcp.barredcp.proveedor%" />
+                                   <campo name="articulo" text="Artículo" calc="%GrabaDuepBSD.GrabaDuepBSD.clave_articulo%" />
+                                   <campo name="id_cat_objeto_gasto" text="COG" llaveForanea="false" calc="%GrabaDuepBSD.GrabaDuepBSD.id_cat_cog%" />
+                                   <campo name="c_objeto_gasto" text="Objeto del Gasto" calc="%GrabaDuepBSD.GrabaDuepBSD.clasificador_objeto_gasto%" />
+                                   <campo name="clave_presupuestal" text="clave presupuestal" calc="%GrabaDuepBSD.GrabaDuepBSD.clave_presup%" />
+                                   <campo name="descripcion_especifica" text="Descripción Específica" calc="%GrabaDuepBSD.GrabaDuepBSD.caracteristica%" />
+                                   <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" />
+                                   <campo name="programa_presupuestal" text="Programa Presupuestal" calc="%GrabaDuepBSD.GrabaDuepBSD.programa_presupuestal%" />
+                                   <campo
+                                        name="indicador"
+                                        text="Indicador"
+                                        calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat 
+                              INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat
+                              INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat
+                              INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo
+                              WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')"
+                                        habilitado="false"
+                                        columna-visible="false"
+                                        interaccion-visible="%tipo_detalle%==1"
+                                        columnas="3"
+                                        margen-izquierdo="2"
+                                   />
+                                   <campo name="folio_comprobante" text="Folio Comprobante" />
+                                   <campo name="tipo_comprobante" text="Tipo de Comprobante" />
+                                   <campo name="importe" text="Importe" calc="%GrabaDuepBS.GrabaDuepBS.anticipo%" />
+                                   <!--0-((%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%*%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%)*(%GrabaDuepBS.GrabaDuepBS.anticipo%/100))-->
+                                   <campo
+                                        name="total"
+                                        text="Total"
+                                        calc="0-(((@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%==null,0,%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%)*@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%==null,0,%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%))+(@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.tasa_iva%==null,0,%GrabaDuepBSD.GrabaDuepBSD.tasa_iva%)*@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%==null,0,%GrabaDuepBSD.GrabaDuepBSD.cantidad_recibida_rbs%)*@ifThenElse(%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%==null,0,%GrabaDuepBSD.GrabaDuepBSD.precio_unitario%)))*(@ifThenElse(%GrabaDuepBS.GrabaDuepBS.anticipo%==null,0,%GrabaDuepBS.GrabaDuepBS.anticipo%/100)))"
+                                   />
+                                   <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" />
+                                   <campo name="id_duep_contrato_pedido" text="Contrato" calc="%GrabaDuepBSD.GrabaDuepBSD.id_duep_contrato_pedido%" />
+                                   <campo name="id_duep_contrato_pedido_det" text="Contrato" calc="%GrabaDuepBSD.GrabaDuepBSD.id_duep_contrato_pedido_det%" />
+                                   <campo name="agrupador" text="agrupador" calc="%GrabaDuepBSD1.GrabaDuepBSD1.folio_duep_detalle%" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+               </componente>
+          </nivel>
+
+          <nivel id="nlRecepcionBS" nombre="Recepción de Bienes o Servicios" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+               <componente id="cpRecepcionBS" nombre="Recepción Bienes o Servicios" tipo="maestroDetalle" colapsado="NO">
+                    <encabezado accionDefault="editar">
+                         <tabla id="tablaEncabezadoDUEP" schema="operation" nombre="duep">
+                              <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$config.ur$" />
+                              <campo name="periodo" text="Periodo" visible="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" />
+                              <campo name="folio_duep" text="Folio" visible="false" calc="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%" />
+
+                              <campo name="folio_duep_a" text="Folio" columnas="3" margen-izquierdo="2" habilitado="false" />
+
+                              <campo name="tramite" text="Trámite" habilitado="false" marcador="Trámite" descripcionForanea="siglas,nombre" calc="8" columnas="3" margen-derecho="2" />
+                              <campo name="beneficiario" text="Beneficiario" habilitado="false" descripcionForanea="folio_beneficiario, razon_social" marcador="Seleccionar un Beneficiario" columnas="3" margen-izquierdo="2" />
+                              <!-- validacion="%beneficiario%==null" validacionMensaje="Favor de seleccionar un Beneficiario" -->
+                              <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" visible="false" />
+                              <campo name="id_fondo_contable" text="Fondo Contable" habilitado="false" marcador="Seleccione un Fondo Contable" columnas="3" margen-derecho="2" />
+                              <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" calc="2" llaveForanea="false" />
+                              <campo name="id_unidad_ejecutora_gasto" habilitado="false" text="Centro de Registro" marcador="Selecciona un Centro de Registro" visible="true" columnas="3" margen-izquierdo="2" />
+                              <campo name="id_fuente_financiamiento" text="ID Fuente de Financiamiento" visible="false" />
+                              <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento" habilitado="false" visible="true" columnas="3" margen-derecho="2" />
+                              <campo name="fecha_solicitud" text="Fecha" columnas="3" margen-izquierdo="2" margen-derecho="5" />
+                              <!--<campo name="id_contrato" text="Contrato" habilitado="false" visible="true" descripcionForanea="folio_con_ordecom" columnas="3" margen-derecho="2"/>-->
+                              <campo
+                                   name="tipo_comprobante"
+                                   text="Tipo de Comprobante"
+                                   visible="true"
+                                   habilitado="true"
+                                   descripcionForanea="descripcion"
+                                   validacion="%tipo_comprobante%==null"
+                                   validacionMensaje="Debe de Capturar el Tipo de Comprobante"
+                                   columnas="3"
+                                   margen-izquierdo="2"
+                              />
+                              <campo
+                                   name="folio_comprobante"
+                                   text="Folio de Comprobante"
+                                   visible="true"
+                                   habilitado="true"
+                                   validacion="%folio_comprobante%==null"
+                                   validacionMensaje="Debe de Capturar el Folio de Comprobante"
+                                   columnas="3"
+                                   margen-derecho="2"
+                                   mascara="XXXXXXXXXXXX"
+                              />
+                              <campo name="fecha_autorizacion" text="Fecha de Autorización" habilitado="false" marcador="Fecha de Autorización" visible="false" />
+                              <campo name="concepto" text="Concepto" height="100" marcador="Ingresa un Concepto" columnas="6" margen-izquierdo="2" />
+                              <campo name="total" text="Total" visible="false" />
+                              <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" />
+                              <campo name="estatus_duep" text="Estatus" calc="1" visible="false" llaveForanea="false" />
+                         </tabla>
+                         <estilos>
+                              <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                         </estilos>
+                    </encabezado>
+                    <detalles>
+                         <tabla id="detalle_bloques" schema="operation" nombre="duep_detalle" tituloDetalle="Renglones" mostrarEliminar="false">
+                              <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" calc="$config.ur$" />
+                              <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                              <campo name="folio_duep" text="Folio" llaveForanea="false" visible="false" columna-visible="false" calc="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%" />
+                              <campo name="folio_duep_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" width="100" columnas="3" margen-izquierdo="2" />
+                              <!--<campo name="agrupador" text="Renglón" calc="(@consultaDirec('SELECT (agrupador) AS resultado-->
+                              <!--        FROM operation.duep_detalle-->
+                              <!--        WHERE ur='+$config.ur$+' AND folio_duep='+%GrabaDuepBS1.GrabaDuepBS1.folio_duep%+' AND  periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'resultado','long','MAGNITUS')+1)" habilitado="false" visible="false" />-->
+
+                              <campo name="tipo_detalle" text="Tipo de Renglón" calc="2" width="100" columnas="3" margen-derecho="2" />
+
+                              <campo
+                                   name="proveedor"
+                                   text="Proveedor"
+                                   marcador="Seleccione un proveedor"
+                                   descripcionForanea="folio_beneficiario, razon_social"
+                                   descripcionForaneaTabla="folio_beneficiario, razon_social"
+                                   columna-visible="false"
+                                   columnas="3"
+                                   margen-izquierdo="2"
+                                   calc="%nlRecepcionBS.cpRecepcionBS.beneficiario%"
+                                   habilitado="false"
+                              />
+
+                              <campo name="articulo" text="Artículo" descripcionForaneaTabla="descripcion_articulo" width="100" visible="false" />
+
+                              <campo name="id_cat_objeto_gasto" text="Cat Objeto del Gasto" visible="false" columna-visible="false" llaveForanea="false" />
+
+                              <campo name="c_objeto_gasto" text="Objeto del Gasto" width="150" visible="false" />
+
+                              <campo name="clave_presupuestal" text="clave presupuestal" columna-visible="false" visible="false" />
+
+                              <campo
+                                   name="tipo_operacion"
+                                   text="Tipo de Operación"
+                                   columnas="3"
+                                   margen-derecho="2"
+                                   columna-visible="false"
+                                   descripcionForanea="tipo_operacion"
+                                   validacion="%tipo_operacion%==null"
+                                   validacionMensaje="Seleccione un tipo de operación extrapresupuestal"
+                              />
+                              <campo name="descripcion_especifica" text="Descripción Específica" columna-visible="false" referenciaForanea="tipo_operacion" celdaForanea="tipo_operacion" autocompletar="true" visible="false" />
+                              <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false" />
+                              <campo name="programa_presupuestal" text="Programa Presupuestal" visible="false" width="150" />
+                              <campo name="indicador" text="Indicador" columna-visible="false" visible="false" />
+                              <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" habilitado="false" visible="false" columna-visible="false" />
+                              <campo name="folio_comprobante" text="Folio Comprobante" columna-visible="false" visible="false" />
+
+                              <campo
+                                   name="tipo_comprobante"
+                                   text="Tipo de Comprobante"
+                                   columna-visible="false"
+                                   columnas="3"
+                                   margen-izquierdo="2"
+                                   calc="@consultaDirec('SELECT tipo_comprobante AS result FROM operation.duep WHERE ur= '+%nlRecepcionBS.cpRecepcionBS.ur%+' AND periodo='+%nlRecepcionBS.cpRecepcionBS.periodo%+' AND folio_duep='+%nlRecepcionBS.cpRecepcionBS.folio_duep%,'result','long','MAGNITUS')"
+                              />
+
+                              <campo name="cantidad" text="Cantidad" width="100" visible="false" />
+
+                              <campo name="u_medida" text="U.M." width="100" visible="false" />
+
+                              <campo name="precio_unitario" text="Precio Unitario" width="100" visible="false" formatoMoneda="true" />
+
+                              <campo name="importe" text="Importe Unitario" width="100" visible="false" formatoMoneda="true" />
+
+                              <campo name="descuento" text="Descuento" columna-visible="false" visible="false" />
+
+                              <campo name="iva" text="Impuesto al Valor Agregado" muestraAcumulado="true" visible="false" columna-visible="false" />
+
+                              <campo name="otros_impuestos" text="Otros Impuestos" muestraAcumulado="true" width="100" columna-visible="false" visible="false" />
+
+                              <campo
+                                   name="total"
+                                   text="Importe Total"
+                                   muestraAcumulado="true"
+                                   width="100"
+                                   columnas="3"
+                                   margen-derecho="2"
+                                   formatoMoneda="true"
+                                   validacion="%total%==null"
+                                   validacionMensaje="Ingrese el Importe total"
+                                   
+                              />
+
+                              <campo
+                                   name="genero_contable"
+                                   text="Genero Contable"
+                                   validacion="%tipo_detalle%==2 AND %tipo_detalle%==null"
+                                   validacionMensaje="Capture el Genero Contable"
+                                   width="100"
+                                   columnas="3"
+                                   margen-derecho="2"
+                                   referenciaForanea="tipo_operacion"
+                                   celdaForanea="genero_contable"
+                                   autocompletar="true"
+                              />
+                         </tabla>
+                         <acciones>
+                              <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                         </acciones>
+                         <estilos>
+                              <!--<boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                        <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>-->
+                         </estilos>
+                    </detalles>
+               </componente>
+               <validaciones>
+                    <validacion tipo="editar" validacion="%tipo_comprobante%==3" validacionMensaje="'No se puede editar'" />
+                    <!--<validacion tipo="formulario" validacion="%campo5%" validacionMensaje="'mensaje de validacion'"/>-->
+               </validaciones>
+          </nivel>
+          <nivel id="BarreDuepSuma" nombre="BarreDuepSuma" interactivo="false">
+               <componente tipo="cursor" id="BarreDuepSuma" nombre="BarreDuepSuma">
+                    <tabla schema="operation" nombre="duep_detalle">
+                         <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                         <campo name="periodo" text="Periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%GrabaDuepBS.GrabaDuepBS.periodo%" />
+                         <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%" />
+                         <campo name="importe" />
+                         <campo name="total" />
+                         <campo name="acumula" local="true" type="double" calc="$sumatoria.importe$" />
+                         <campo name="acumula_total" local="true" type="double" calc="$sumatoria.total$" />
+                    </tabla>
+                    <nivel id="BarreDuepSumaE" nombre="BarreDuepSumaE" interactivo="false">
+                         <componente tipo="cursor" id="BarreDuepSumaE" nombre="BarreDuepSumaE">
+                              <tabla schema="operation" nombre="duep">
+                                   <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                                   <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GrabaDuepBS.GrabaDuepBS.periodo%" llaveForanea="false" />
+                                   <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%BarreDuepSuma.BarreDuepSuma.folio_duep%" />
+                                   <campo name="total_importe" text="Total Importe" calc="%BarreDuepSuma.BarreDuepSuma.acumula%" />
+                                   <campo name="total" text="Total" calc="%BarreDuepSuma.BarreDuepSuma.acumula_total%" />
+                                   <campo name="total_letra" text="Total Letra" calc="@numeroAletra(%BarreDuepSuma.BarreDuepSuma.acumula_total%,'pesos M.N.')" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+               </componente>
+          </nivel>
+          <nivel id="BarreTotal" nombre="BarreTotal" interactivo="false">
+               <componente tipo="cursor" id="BarreTotal" nombre="BarreTotal">
+                    <tabla schema="operation" nombre="duep">
+                         <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+                         <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GrabaDuepBS.GrabaDuepBS.periodo%" llaveForanea="false" />
+                         <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%" />
+                         <!-- @consultaDirec('SELECT MAX(folio_duep) AS resultado FROM operation.duep
+                  WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'resultado','int','MAGNITUS')-->
+                         <campo name="total" text="Total" />
+                         <campo name="tipo_comprobante" text="TC" />
+                         <campo name="folio_comprobante" text="FC" />
+                    </tabla>
+                    <nivel id="GrabaTotal" nombre="GrabaTotal" interactivo="false">
+                         <componente tipo="cursor" id="GrabaTotal" nombre="GrabaTotal">
+                              <tabla schema="operation" nombre="duep_detalle">
+                                   <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%BarreTotal.BarreTotal.ur%" />
+                                   <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%BarreTotal.BarreTotal.periodo%" llaveForanea="false" />
+                                   <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%BarreTotal.BarreTotal.folio_duep%" />
+                                   <campo name="folio_duep_detalle" />
+                                   <campo name="tipo_comprobante" text="TC" calc="%BarreTotal.BarreTotal.tipo_comprobante%" />
+                                   <campo name="folio_comprobante" text="FC" calc="%BarreTotal.BarreTotal.folio_comprobante%" />
+                              </tabla>
+                         </componente>
+                    </nivel>
+               </componente>
+          </nivel>
+          <!--
+        <nivel id="SITD" nombre="Suma Importe Total Duep"  interactivo="false">
+            <componente id="SITD" nombre="Suma Importe Total Duep" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%"/>
+                    <campo name="total_importe" calc="@consultaDirec('SELECT SUM(total) AS importe_total FROM operation.duep_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_duep='+%GrabaDuepBS1.GrabaDuepBS1.folio_duep%+' AND tipo_detalle=1','importe_total','decimal','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        -->
+          <nivel nombre="Agregar Instancia RBS" id="nlAgrInsRBS" interactivo="false">
+               <componente tipo="solicitud" nombre="Agregar Instancia RBS" id="nlAgrInsRBS">
+                    <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                         <parametro name="enterprise" calc="'MAGNITUS'" />
+                         <parametro name="process" calc="'3e757336-47df-41b9-9b2d-125f276f6802'" />
+                         <parametro name="user" calc="$protocolarios.user$" />
+                         <parametro name="out_ur" calc="$config.ur$" mostrarEsc="true" />
+                         <parametro name="out_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" mostrarEsc="true" />
+                         <parametro name="out_duep" calc="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%" mostrarEsc="true" />
+                         <parametro name="out_contrato" calc="%nlRecepcionBS.cpRecepcionBS.id_contrato%" mostrarEsc="true" />
+                         <parametro name="out_importe" calc="%BarreTotal.BarreTotal.total%" mostrarEsc="true" />
+                         <parametro name="out_adquisicion" calc="%BarreDUEPBS2.BarreDUEPBS2.folio_adquisiciones%" mostrarEsc="true" />
+                    </parametros>
+               </componente>
+          </nivel>
+
+          <nivel id="reporteRBS" nombre="Documento Unico del Ejercicio del Presupuesto" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+               <componente id="reporteSEDS" nombre="Documento Unico del Ejercicio del Presupuesto" tipo="reporte" colapsado="NO">
+                    <reporte
+                         nombre="Rbs"
+                         expediente="Expediente Adquisiciones/Recepcion de Materiales o Servicios"
+                         nombreDocumento="'Reporte de Recepción'"
+                         grupo="%BarreDUEPBS2.BarreDUEPBS2.folio_adquisiciones%"
+                         url="$config.repository_upload_file$"
+                         update="true"
+                    >
+                         <campo name="id_unidad_responsable" text="ur" type="long" calc="$config.ur$" />
+                         <campo name="id_periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                         <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$" />
+                         <campo name="folio_duep" type="long" calc="%GrabaDuepBS1.GrabaDuepBS1.folio_duep%" />
+                    </reporte>
+               </componente>
+          </nivel>
+     </pagina>
+</tarea>
