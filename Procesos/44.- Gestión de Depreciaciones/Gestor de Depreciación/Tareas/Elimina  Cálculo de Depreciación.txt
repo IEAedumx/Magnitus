@@ -1,0 +1,131 @@
+<tarea id="tar_ECD" nombre="Cálcula Depreciación" autor="" version="1">
+    <pagina id="pag_ECD">
+            <nivel id="per" nombre="per" interactivo="false">
+                <componente tipo="cursor" id="per" nombre="per">
+                    <tabla schema="catalog" nombre="periodo">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_periodo"/>
+                        <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                        <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                        <campo name="periodicidad" calc="$inParam.periodicidad$" local="true" type="string" columnas="3" visible="false"/>
+                    </tabla>
+                </componente>
+            </nivel>
+        <nivel nombre="dep" id="dep" interactivo="false">
+            <componente tipo="cursor" nombre="dep" id="dep">
+                <tabla schema="operation" nombre="porcentaje_depreciacion">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="activo" text="activo:" filtroCampo="activo" filtroOperador="=" filtroValor="true"/>
+                    <campo name="periodicidad"/>
+                     <campo name="fecha" calc="@subCadena(@fechaSistema(&quot;YYYY/MM/dd&quot;),5,7)" local="true" type="string" columnas="3" visible="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+    
+        <nivel id="nl_ECD" nombre="Registro de Gestión de Depreciaciones" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cp_ECD" nombre="Visualiza Artículos a Depreciar" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                    <campo name="ur" text="ur" calc="$config.ur$" columnas="3" margen-izquierdo="2" visible="false" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo" calc="%per.per.id_periodo%" columnas="3" margen-izquierdo="2" visible="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_inventario" text="Bloque" width="50"/>
+                    <campo name="clave_inventario" text="Clave Inventario" width="150"/>
+                    <campo name="descripcion_especifica" text="Descripción específica" width="170"/>
+                    <campo name="clasificacion_objeto_gasto" text="Clasificador por OG" width="150"/>
+                    <campo name="ano_vida_util" text="Años Vida Util" width="110"/>
+                    <campo name="porcentaje_deprecicion" text="Porcentaje depreciación" width="180"/>
+                    <campo name="fecha_adquisicion" text="Fecha adquisición" width="150"/>
+                    <campo name="valor_historico" text="Valor historico" width="50" columna-visible="false"/>
+                    <campo name="anos_vida" text="Años de vida a la fecha" width="50"/>
+                    <campo name="anos_por_depreciar" text="Años por depreciar" width="50" columna-visible="false"/>
+                    <campo name="importe_depre_anual" text="Importe a depreciar" width="50"/>
+                    <campo name="deprecicion_acumulada" text="Depreciación acumulada" width="50"/>
+                    <campo name="valor_libros" text="Valor en libros" width="120"/>
+                    <campo name="estatus" text="Estatus" width="90"/>
+                    <campo name="depreciacion" text="depreciacion" columna-visible="false" filtroCampo="depreciacion" filtroOperador="=" filtroValor="'Depreciable'"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar"  columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                 </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nl_ECD_Rep" nombre="Reporte Cálculo de Depreciación" mostrarNivelAnterior="false" ejecutar="%per.per.periodicidad%=='Anual'">
+            <componente id="cp_ECD_Rep" nombre="Reporte Cálculo de Depreciación Anual" tipo="reporte">
+                <reporte nombre="R_Depreciacion_Anual_IJ">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%per.per.id_periodo%"/>
+                    <campo name="id_inventario" type="long" calc="$inParam.id_inventario_activofijo_folio$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="mes" type="string" calc="%dep.dep.fecha%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="nl_ECD_Rep_2" nombre="Reporte Cálculo de Depreciación" mostrarNivelAnterior="false" ejecutar="%per.per.periodicidad%=='Mensual'">
+           <componente id="cp_ECD_Rep_2" nombre="Reporte Cálculo de Depreciación Mensual" tipo="reporte">
+               <reporte nombre="repor_depreciacionMensual_jsus">
+                   <campo name="ur" type="long" calc="$config.ur$"/>
+                   <campo name="periodo" type="long" calc="%per.per.id_periodo%"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                   <campo name="mes" type="string" calc="%dep.dep.fecha%"/>
+               </reporte>
+           </componente>
+        </nivel>
+        <nivel id="eli" nombre="Elimina Cálculo de Depreciación" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="eli" nombre="Elimina Cálculo de Depreciación" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="inventario_activofijo_folio">
+                    <campo name="ur" text="ur" calc="$config.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%per.per.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="id_inventario_activofijo_folio" text="Bloque" calc="$inParam.id_inventario_activofijo_folio$" visible="false"/>
+                    <campo name="elimina" text="Elimina" columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                    <campo name="observaciones_elimina" text="Observaciones" interaccion="%elimina%==true" columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar"  columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                 </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="elisuma" id="elisuma" interactivo="false" ejecutar="%eli.eli.elimina%==true and %dep.dep.periodicidad%=='Mensual'">
+            <componente tipo="cursor" nombre="elisuma" id="elisuma">
+                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="depreciacion" filtroCampo="depreciacion" filtroOperador="=" filtroValor="'Depreciable'"/>
+                    <campo name="folio_inventario"/>
+                     <campo name="resta_depreciacion"/>
+                     <campo name="id_inventario"/>
+                     <campo name="importe_depre_anual"/>
+                </tabla>
+                <nivel nombre="belisuma" id="belisuma" interactivo="false" ejecutar="%eli.eli.elimina%==true and %dep.dep.periodicidad%=='Mensual'">
+                    <componente tipo="cursor" nombre="belisuma" id="belisuma">
+                        <tabla schema="operation" nombre="inventario_activofijo_aux">
+                            <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                            <campo name="depreciacion" filtroCampo="depreciacion" filtroOperador="=" filtroValor="'Depreciable'"/>
+                            <campo name="id_inventario" filtroCampo="id_inventario" filtroOperador="=" filtroValor="%elisuma.elisuma.id_inventario%"/>
+                            <campo name="folio_inventario" filtroCampo="folio_inventario" filtroOperador="=" filtroValor="%elisuma.elisuma.folio_inventario%"/>
+                            <campo name="resta_depreciacion" calc="%elisuma.elisuma.resta_depreciacion%+@truncarDecimal(((%elisuma.elisuma.importe_depre_anual%)/12),2)"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="turnar_instancia" interactivo="false" ejecutar="%eli.eli.elimina%==true">
+                       <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

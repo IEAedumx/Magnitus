@@ -1,0 +1,644 @@
+<tarea id="Integra_Proyecto_De_Compra" nombre="Integra Proyecto de Compra"  autor="Marisela" autorModificacion="HMVG" version="2">
+    <pagina id="1" nombre="Registro">
+        
+        <!-- FILTRA PERIODO-->
+        <nivel id="FP" nombre="Filtra Periodo" interactivo="false">
+            <componente id="FP" nombre="Filtra Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- FILTRA USUARIO -->
+        <nivel id="FU" nombre="Filtra Usuarios" interactivo="false">
+            <componente id="FU" nombre="Filtra Usuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- FILTRAR REQUISICIONES NO CONCLUIDAS -->
+        <nivel id="FRNC" nombre="Filtra Requisiciones No Concluidas" interactivo="false">
+            <componente id="FRNC" nombre="Filtra Requisiciones No Concluidas" tipo="cursor">
+                <tabla schema="operation" nombre="requisicion_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="seleccion_compra" filtroCampo="seleccion_compra" filtroOperador="=" filtroValor="true"/>
+                    <campo name="seleccion_compra_proceso" filtroCampo="seleccion_compra_proceso" filtroOperador="=" filtroValor="false"/>
+                    <campo name="folio_req"/>
+                </tabla>
+                <nivel id="ARNC" nombre="Actualiza Requisiciones No Concluidas" interactivo="false" ejecutar="%FRNC.FRNC.folio_req%!=null">
+                    <componente id="ARNC" nombre="Actualiza Requisiciones No Concluidas" tipo="cursor">
+                        <tabla schema="operation" nombre="requisicion_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FRNC.FRNC.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FRNC.FRNC.periodo%"/>
+                            <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="%FRNC.FRNC.folio_req%"/>
+                            <campo name="seleccion_compra" calc="false"/>
+                            <campo name="seleccion_compra_proceso" calc="false"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- GENERA FOLIO DEL EXPEDIENTE -->                    
+        <nivel id="GFE" nombre="Genera Folio Expediente" interactivo="false">
+            <componente id="GFE" nombre="Genera Folio Expediente" tipo="altaDirect">
+                <tabla schema="entity" nombre="adquisiciones">
+                    <campo name="ur" calc="%FP.FP.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="periodo" calc="%FP.FP.id_periodo%" llaveForanea="false"/>
+                    <campo name="folio_adquisicion" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/> 
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- SELECCION DETALLES DE REQUISICIONES -->
+        <nivel id="SDR" nombre="Selección Detalles De Requisición" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="etiquetaCD" nombre="Instrucciones" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" visible="false" text="ID" calc="1" />
+                    <etiqueta nombre="accionCD1" texto="PARA SELECCIONAR, DE DOBLE CLIC Y UN TERCERO FUERA DEL RECUADRO DE SELECCIÓN" color="black" bold="normal" tamaño="18px" alineacion="center" interlineado="10px" width="250px" margen-izquierdo="2" columnas="8"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="false" />
+                </estilos>
+            </componente>
+            <componente id="SDR" nombre="Integra Proyecto de Compra - Selección de Detalles De Requisición" tipo="tabla" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false" filtro="true">
+                <tabla schema="operation" nombre="requisicion_detalle">
+                    <campo name="ur" text="ur" llaveForanea="false" columna-visible="false" columnas="2" margen-izquierdo="3" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false" columnas="2" margen-derecho="3" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="folio_req" text="No. Requisición" width="120" llaveForanea="false"/>
+                    <campo name="folio_req_detalle" text="Renglón" width="70"/>
+                    <campo name="id_suficiencia" text="Suficiencia" columna-visible="true" filtroCampo="id_suficiencia" filtroOperador="!=" filtroValor="'0'" width="120"/>
+                    <campo name="articulo"  text="Clave del Artículo" width="250" descripcionForaneaTabla="clave_articulo,descripcion_articulo"/>
+                    <campo name="cantidad" text="Cantidad"  width="90" cellsalign="center"/>
+                    <campo name="fecha_registro" text="Fecha"  width="190" habilitado="%FU.FU.permisos_especiales%==true"/>
+                    <campo name="id_cat_fondo_contable" text="Fondo Contable" columna-visible="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" width="270"/>
+                    <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento" columna-visible="false"/>
+                    <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento"  width="280"/>
+                    <campo name="importe" text="Importe Total"  width="150" formatoMoneda="true" columna-visible="false"/>
+                    <campo name="importe_total" text="Importe Total"  width="120" formatoMoneda="true"/>
+                    <campo name="seleccion_compra" text="Selección" editable="true" filtroCampo="seleccion_compra" filtroOperador="=" filtroValor="false"/>
+                    <campo name="seleccion_compra_proceso" text="" columna-visible="false" filtroCampo="seleccion_compra_proceso" filtroOperador="=" filtroValor="false"/>
+                    <campo name="id_compra" columna-visible="false" filtroCampo="id_compra" filtroOperador="=" filtroValor="'0'"/>
+                    <campo name="autorizado" columna-visible="false" filtroCampo="autorizado" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) AS resultado FROM operation.requisicion_detalle WHERE ur='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%+' AND seleccion_compra=true AND id_compra=\\'0\\'','resultado','int','MAGNITUS')==0" validacionMensaje="'Debe seleccionar un registro'"/>
+            </validaciones>
+            <!--
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) AS resultado FROM (SELECT (id_fuente_financiamiento) FROM operation.requisicion_detalle WHERE ur='+$config.ur$+' AND periodo='+%FP.FP.id_periodo%+' AND seleccion_compra=true AND seleccion_compra_proceso=false group by id_fuente_financiamiento) AS resultado','resultado','int','MAGNITUS')==2" validacionMensaje="'Fuente de Financiamiento son distintas, debe de seleccionar Fuente de Financiamiento iguales'"/>
+            </validaciones>
+            -->
+        </nivel>
+        
+        <!-- FILTRAR DETALLE DE REQUISICIONES SELECCIONADAS -->
+        <nivel id="FRDS" nombre="Filtra Requisición Detalle Seleccionada" interactivo="false" mostrarProximoNivel="false">
+            <componente id="FRDS" nombre="Filtra Requisición Detalle Seleccionada" tipo="cursor">
+                <tabla schema="operation" nombre="requisicion_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="seleccion_compra" filtroCampo="seleccion_compra" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_compra" filtroCampo="id_compra" filtroOperador="=" filtroValor="'0'"/>
+                    <campo name="folio_req"/>
+                    <campo name="folio_req_detalle"/>
+                    <campo name="folio_compras" local="true" type="string" calc="@concatenar('PCOM-'+@ifThenElse(
+                        @consultaDirec('SELECT (id_compras) AS resultado FROM operation.compras WHERE ur='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null,'000001',@consultaDirec('SELECT to_char((((substring(id_compras from char_length(id_compras)-4)::int)+1)),\\''+'00000'+'\\') as resultado FROM operation.compras WHERE ur='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%+' ORDER BY id_compras DESC limit 1','resultado','string','MAGNITUS')))" habilitado="false"/>
+                    <campo name="letras" local="true" type="string" text="Contrato" calc="@subCadena(%FRDS.FRDS.folio_compras%,0,5)"/>
+                    <campo name="numeros" local="true" type="string" text="Contrato" calc="@subCadena(%FRDS.FRDS.folio_compras%,6,11)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="APC" nombre="Alta Proyecto de Compras" interactivo="false">
+            <componente id="APC" nombre="Alta Proyecto de Compras" tipo="altaDirect">
+                <tabla schema="operation" nombre="compras">
+                    <campo name="ur" calc="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" calc="%FP.FP.id_periodo%"/>
+                    <campo name="id_compras" text="Folio Proyecto Compra" calc="%FRDS.FRDS.letras%+%FRDS.FRDS.numeros%"/>
+                    <campo name="fecha_elaboracion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="estatus" calc="'Generado'" />
+                    <campo name="ultimo_usuario_modificador"  calc="%FU.FU.id_usuario%"/> 
+                </tabla>
+            </componente>
+        </nivel>
+       
+        
+        
+        
+        <!-- FILTRA DETALLES DE REQUISICIONES SELECCIONADAS -->
+        <nivel id="FDRS" nombre="Filtra Detalles de Requisiciones Seleccionadas" interactivo="false">
+            <componente id="FDRS" nombre="Filtra Detalles de Requisiciones Seleccionadas" tipo="cursor">
+                <tabla schema="operation" nombre="requisicion_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="seleccion_compra" filtroCampo="seleccion_compra" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_compra" filtroCampo="id_compra" filtroOperador="=" filtroValor="'0'"/>
+                    <campo name="folio_req"/>
+                    <campo name="folio_req_detalle"/>
+                    <campo name="articulo"/>
+                    <campo name="cantidad"/>
+                    <campo name="id_cat_programa_presupuestal"/>
+                    <campo name="programa_presupuestal"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto"/>
+                    <campo name="id_unidad_ejecutora_gasto"/>
+                    <campo name="id_cat_fondo_contable"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="descripcion_especifica"/>
+                    <campo name="id_cat_fuente_financiamiento"/>
+                    <campo name="id_fuente_financiamiento"/>
+                    <campo name="id_cat_cog"/> 
+                    <campo name="id_cog"/>
+                    <campo name="importe_total"/>
+                    <campo name="importe"/>
+                    <campo name="precio_unitario"/>
+                </tabla>
+                <nivel id="RDC" nombre="Registra Detalles de Compras" interactivo="false">
+                    <componente id="RDC" nombre="Registra Detalles de Compras" tipo="altaDirect">
+                        <tabla schema="operation" nombre="compras_det">
+                            <campo name="ur" calc="%FDRS.FDRS.ur%"/>
+                            <campo name="periodo" calc="%FDRS.FDRS.periodo%"/>
+                            <campo name="id_compras" calc="%APC.APC.id_compras%"/>
+                            <campo name="id_compras_det" autogenerado="true" generacion="@prox()+1"/>
+                            <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                            <campo name="clave_articulo" calc="%FDRS.FDRS.articulo%"/>
+                            <campo name="id_cat_unidad_ejecutora_gasto" calc="%FDRS.FDRS.id_cat_unidad_ejecutora_gasto%"/>
+                            <campo name="id_unidad_ejecutora_gasto" calc="%FDRS.FDRS.id_unidad_ejecutora_gasto%"/>
+                            <campo name="id_cat_fondo_contable" calc="3"/>
+                            <campo name="fondo_contable" calc="%FDRS.FDRS.id_fondo_contable%"/>
+                            <campo name="id_cat_cog" calc="4"/>
+                            <campo name="clasificador_objeto_gasto" calc="%FDRS.FDRS.id_cog%"/>
+                            <campo name="id_cat_fuente_financiamiento" calc="5"/>
+                            <campo name="id_fuente_financiamiento" calc="%FDRS.FDRS.id_fuente_financiamiento%"/>
+                            <campo name="cantidad" calc="%FDRS.FDRS.cantidad%"/>
+                            <campo name="importe_unitario" calc="%FDRS.FDRS.importe%"/>
+                            <campo name="importe_total" calc="%FDRS.FDRS.importe_total%"/>
+                            <campo name="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%"/>
+                            <campo name="folio_req" calc="%FDRS.FDRS.folio_req%"/>
+                            <campo name="folio_req_detalle" calc="%FDRS.FDRS.folio_req_detalle%"/>
+                            <campo name="total" calc="%FDRS.FDRS.importe_total%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="ADR" nombre="Actualiza Detalles de Requisición" interactivo="false">
+                    <componente id="ADR" nombre="Actualiza Detalles de Requisición" tipo="cursor">
+                        <tabla schema="operation" nombre="requisicion_detalle">
+                           <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FDRS.FDRS.ur%"/>
+                           <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FDRS.FDRS.periodo%"/>
+                           <campo name="seleccion_compra" filtroCampo="seleccion_compra" filtroOperador="=" filtroValor="true"/>
+                           <campo name="id_compra" filtroCampo="id_compra" filtroOperador="=" filtroValor="'0'"/>
+                           <campo name="id_compra" calc="%APC.APC.id_compras%"/>
+                        </tabla>
+                   </componente>
+                </nivel>
+            </componente>
+        </nivel>
+    
+        <nivel id="ARPC" nombre="Actualiza Referencia de Proyecto de Compra"  interactivo="false">
+            <componente id="ARPC" nombre="Actualiza Referencia de Proyecto de Compra" tipo="cursor">
+                <tabla schema="operation" nombre="compras">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%APC.APC.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%APC.APC.periodo%"/>
+                    <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%APC.APC.id_compras%"/>
+                    <campo name="referencia" calc="@consultaDirec('SELECT STRING_AGG(DISTINCT \\'Req.\\' || folio_req::text, \\', \\') AS requisiciones FROM operation.compras_det WHERE ur='+%APC.APC.ur%+' AND periodo='+%APC.APC.periodo%+' AND id_compras=\\''+%APC.APC.id_compras%+'\\' GROUP BY id_compras','requisiciones','string','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+    
+    
+   
+        
+        <nivel id="ipcmd" nombre="Integra Proyecto de Compra" mostrarProximoNivel="false"  mostrarNivelAnterior="false"> 
+            <componente tipo="maestroDetalle" id="ipcmd" nombre="Integra Proyecto de Compra">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="compras">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="%FP.FP.id_unidad_responsable%" habilitado="false"/>
+                        <campo name="periodo" text="Periodo" visible="false" calc="%FP.FP.id_periodo%" habilitado="false"/>
+                        <campo name="id_compras" text="Folio Proyecto Compra" calc="%APC.APC.id_compras%" columnas="3" />
+                        <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columnas="3"  habilitado="%FU.FU.permisos_especiales%==true"/>
+                        <campo name="estatus" text="Estatus *" calc="'Generado'" validacion="%estatus%==null" validacionMensaje="Campo Estatus es requerido" columnas="3" />
+                        <campo name="referencia" text="Referencia" width="50" height="100"  columnas="6" habilitado="true"/>
+                        <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%" visible="false" columna-visible="false"/>
+                    </tabla>
+                    <estilos >
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla schema="operation" nombre="compras_det" tituloDetalle="Renglones" id="detalle_uno" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="eliminar" text="Elimina" width="90" editable="true" /> 
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="true" columna-visible="false" calc="%FP.FP.id_unidad_responsable%"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="true" columna-visible="false" calc="%FP.FP.id_periodo%"/>
+                        <campo name="folio_req" text="folio_req" calc="%FRDS.FRDS.folio_req%" llaveForanea="false" visible="true" columna-visible="false"/>
+                        <campo name="id_compras" text="id_compras" calc="%APC.APC.id_compras%" llaveForanea="false" visible="true" columna-visible="false"  />
+                        <campo name="id_compras_det" text="Renglón" visible="true" columna-visible="true" width="70"  /> 
+                        <campo name="fecha_registro" text="Fecha de Registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" width="50" columna-visible="false"/> 
+                        <campo name="clave_articulo" text="Clave del Artículo" descripcionForaneaTabla="clave_articulo,descripcion_articulo" width="400"/> 
+                        <campo name="id_cat_cog" text="Clasificador por Objeto del Gasto" calc="4" visible="false" columna-visible="false"/> 
+                        <campo name="clasificador_objeto_gasto" text="Clasificador por Objeto del Gasto *" width="350" validacion="%clasificador_objeto_gasto%==null" validacionMensaje="Clasificador por Objeto del Gasto, es requerido"/> 
+                        <campo name="cantidad" text="Cantidad *" width="100" validacion="%cantidad%==null" validacionMensaje="Cantidad, es requerido"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" columna-visible="false" llaveForanea="false"/> 
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" width="200"/> 
+                        <campo name="id_cat_fondo_contable" text="Fondo Contable" calc="3" visible="false" columna-visible="false"/>
+                        <campo name="fondo_contable" text="Fondo Contable" width="200"/> 
+                        <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento" calc="5" visible="false" columna-visible="false"/> 
+                        <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" width="230"/>
+                        <campo name="importe_unitario" text="Importe Unitario" width="130" formatoMoneda="true"/> 
+                        <campo name="importe_total" text="Importe Total" width="140" muestraAcumulado="true" formatoMoneda="true"/> 
+                        <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%" visible="false" columna-visible="false"/> 
+                    </tabla>
+                    <estilos >
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </detalles>
+            </componente>
+                <!--
+                <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*)  AS resultado
+                    FROM operation.compras_det
+                    WHERE ur='+$config.ur$+' AND periodo='+%FP.FP.id_periodo%+' AND id_compras=\\'%APC.APC.id_compras%\\'','resultado','int','MAGNITUS')==@consultaDirec('SELECT count(*)  AS resultado
+                    FROM operation.compras_det
+                    WHERE ur='+$config.ur$+' AND periodo='+%FP.FP.id_periodo%+' AND eliminar=true AND id_compras=\\'%APC.APC.id_compras%\\'','resultado','int','MAGNITUS')" validacionMensaje="'No puede eliminar todos los bloques'" />
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*)  AS resultado
+                    FROM operation.compras_det
+                    WHERE ur='+$config.ur$+' AND periodo='+%FP.FP.id_periodo%+' AND eliminar=true AND id_compras=\\'%APC.APC.id_compras%\\'','resultado','int','MAGNITUS')==0" validacionMensaje="'No puede eliminar todos los bloques'" />
+                </validaciones>
+            -->
+        </nivel>
+        
+        
+        <nivel id="FCDE" nombre="Filtra Compra Detalle a Eliminar" interactivo="false">
+            <componente id="FCDE" nombre="Filtra Compra Detalle a Eliminar" tipo="cursor">
+                <tabla schema="operation" nombre="compras_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="eliminar" filtroCampo="eliminar" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%APC.APC.id_compras%" /> 
+                    <campo name="id_compras_det" /> 
+                    <campo name="folio_req" />
+                    <campo name="folio_req_detalle"/>
+                </tabla>
+                <nivel id="RRD" nombre="Restablece Requisición Detalle" interactivo="false">
+                    <componente id="RRD" nombre="Restablece Requisición Detalle" tipo="cursor"> 
+                        <tabla schema="operation" nombre="requisicion_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                            <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="%FCDE.FCDE.folio_req%"/> 
+                            <campo name="folio_req_detalle" filtroCampo="folio_req_detalle" filtroOperador="=" filtroValor="%FCDE.FCDE.folio_req_detalle%"/>
+                            <campo name="seleccion_compra" calc="false"/>
+                            <campo name="id_compra" calc="'0'"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="ECDS" nombre="Elimina Compra Detalle Seleccionado" interactivo="false">
+                    <componente id="ECDS" nombre="Elimina Compra Detalle Seleccionado" tipo="bajaDirect">
+                        <tabla schema="operation" nombre="compras_det">
+                            <campo name="ur" calc="%FCDE.FCDE.ur%"/>
+                            <campo name="periodo" calc="%FCDE.FCDE.periodo%"/>
+                            <campo name="id_compras" calc="%FCDE.FCDE.id_compras%"/>
+                            <campo name="id_compras_det" calc="%FCDE.FCDE.id_compras_det%" /> 
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="SUMCD" nombre="Sumatoria Compra Detalles" interactivo="false">
+            <componente id="SUMCD" nombre="Sumatoria Compra Detalles" tipo="cursor">
+                <tabla schema="operation" nombre="compras_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%APC.APC.id_compras%"/>
+                    <campo name="importe_total"/>
+                    <campo name="acumulado" local="true" type="double" calc="$sumatoria.importe_total$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="ASUMC" nombre="ASUMC" interactivo="false">
+            <componente id="ASUMC" nombre="ASUMC" tipo="cursor">
+                <tabla schema="operation" nombre="compras">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%APC.APC.id_compras%"/>
+                    <campo name="total" calc="%SUMCD.SUMCD.acumulado%"/>
+                    <campo name="importe_letra" text="Cantidad con Letra" calc="@numeroAletra(%SUMCD.SUMCD.acumulado%,'Pesos M.N.')"/>
+					<campo name="sum_bloque" text="sum_bloque" calc="@consultaDirec('SELECT count(id_compras_det) AS resultado
+                        FROM operation.compras_det
+                        WHERE ur='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%+' AND id_compras=\\''+%APC.APC.id_compras%+'\\'','resultado','int','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- LANZA INSTANCIA -->
+        <nivel id="LI" nombre="Lanza Instancia"  interactivo="false">
+            <componente id="LI" nombre="Lanza Instancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'9e6ad80f-bad1-4eca-9d6a-5ff39784b572'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%FP.FP.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%FP.FP.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_compras" calc="%APC.APC.id_compras%" mostrarEsc="false"/>
+                    <parametro name="out_adquisicion" calc="%GFE.GFE.folio_adquisicion%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!-- ACTUALIZAR DETALLES DE REQUISICION EN PROCESO DE PROYECTO DE COMPRA -->
+        <nivel id="FCDP" nombre="Filtra Compras Detalle en Proceso"  interactivo="false">
+            <componente id="FCDP" nombre="Filtra Compras Detalle en Proceso" tipo="cursor">
+                <tabla schema="operation" nombre="compras_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%APC.APC.id_compras%"/>
+                    <campo name="id_compras_det"/>
+                    <campo name="folio_req"/>
+                    <campo name="folio_req_detalle"/>
+                </tabla>
+                <nivel id="ADRPC" nombre="Actualiza Detalles de Requisición en Proceso de Proyecto de Compra" interactivo="false">
+                    <componente id="ADRPC" nombre="Actualiza Detalles de Requisición en Proceso de Proyecto de Compra" tipo="cursor">
+                        <tabla schema="operation" nombre="requisicion_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FP.FP.id_unidad_responsable%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                            <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="%FCDP.FCDP.folio_req%"/>
+                            <campo name="folio_req_detalle" filtroCampo="folio_req_detalle" filtroOperador="=" filtroValor="%FCDP.FCDP.folio_req_detalle%"/>
+                            <campo name="seleccion_compra_proceso" calc="true"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo -->
+        <nivel id="buscaFondo" nombre="buscaFondo" interactivo="false">
+            <componente id="buscaFondo" nombre="buscaFondo" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccion" nombre="buscaSeccion" interactivo="false">
+            <componente id="buscaSeccion" nombre="buscaSeccion" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerie" nombre="buscaSerie" interactivo="false">
+            <componente id="buscaSerie" nombre="buscaSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerie" nombre="buscaSubSerie" interactivo="false">
+            <componente id="buscaSubSerie" nombre="buscaSubSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpediente" nombre="concatenaExpediente" interactivo="false">
+            <componente id="concatenaExpediente" nombre="concatenaExpediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondo.buscaFondo.abreviatura%+'/'+%buscaSeccion.buscaSeccion.abreviatura%+'/'+%buscaSerie.buscaSerie.abreviatura%+'/'+%buscaSubSerie.buscaSubSerie.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo-->
+        
+        <!-- ESTO NO FUNCIONA PARA SUBIR REPORTES AL EXPEDIENTE -->
+        <!-- Barre Requisiciones y suficiencias Presupuestales y las Agrega al expediente 
+        <nivel id="barreRequiReporte" nombre="barreRequiReporte" interactivo="false">
+            <componente tipo="cursor" id="barreRequiReporte" barreRequiReporte="barreRequiReporte">
+                <tabla schema="operation" nombre="compras_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%APC.APC.id_compras%"/>
+                    <campo name="folio_req"/>
+                </tabla>
+                <nivel id="reporteRequisicion" nombre="Reporte de Requisición" interactivo="false">
+                    <componente id="cpConsReq" nombre="Reporte Consulta Requisición de Bienes o Servicios" tipo="reporte">
+                        <reporte nombre="Requisicion" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Requisición'" 
+                         grupo="%GFE.GFE.folio_adquisicion%" url="$config.repository_upload_file$" update="true"> 
+                            <campo name="id_unidad_responsable" text="ur" type="long" calc="@castTo($config.ur$,'long')"/>
+                            <campo name="id_periodo" type="long" calc="%FP.FP.id_periodo%"/>
+                            <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                            <campo name="folio_req" type="long" calc="%barreRequiReporte.barreRequiReporte.folio_req%"/>
+                </reporte>
+            </componente>
+        </nivel>
+            </componente>
+        </nivel>
+        -->
+        <!-- Inicio Estructura de Cursores Expediente de Suficiencia-->
+        
+        <nivel id="buscaFondoS" nombre="buscaFondoS" interactivo="false">
+            <componente id="buscaFondoS" nombre="buscaFondoS" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccionS" nombre="buscaSeccionS" interactivo="false">
+            <componente id="buscaSeccionS" nombre="buscaSeccionS" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="2"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerieS" nombre="buscaSerieS" interactivo="false">
+            <componente id="buscaSerieS" nombre="buscaSerieS" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="2"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerieS" nombre="buscaSubSerieS" interactivo="false">
+            <componente id="buscaSubSerieS" nombre="buscaSubSerieS" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="2"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpedienteS" nombre="concatenaExpedienteS" interactivo="false">
+            <componente id="concatenaExpedienteS" nombre="concatenaExpedienteS" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondoS.buscaFondoS.abreviatura%+'/'+%buscaSeccionS.buscaSeccionS.abreviatura%+'/'+%buscaSerieS.buscaSerieS.abreviatura%+'/'+%buscaSubSerieS.buscaSubSerieS.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- Fin Estructura de Cursores Expediente de Suficiencia -->
+        
+        <!-- ESTO NO FUNCIONA PARA SUBIR REPORTES AL EXPEDIENTE -->
+        <!--
+        <nivel id="barreRequiReporteS" nombre="barreRequiReporteS" interactivo="false">
+            <componente tipo="cursor" id="barreRequiReporteS" barreRequiReporte="barreRequiReporteS">
+                <tabla schema="operation" nombre="compras_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                    <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%APC.APC.id_compras%"/>
+                    <campo name="folio_req"/>
+                </tabla>
+                <nivel id="buscaSuficiencia" nombre="buscaSuficiencia" interactivo="false" ejecutar="%barreRequiReporteS.barreRequiReporteS.ur%!=null">
+                    <componente tipo="cursor" id="buscaSuficiencia" nombre="buscaSuficiencia">
+                        <tabla schema="operation" nombre="suficiencia">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"/>
+                            <campo name="id_suficiencia"/>
+                            <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="%barreRequiReporteS.barreRequiReporteS.folio_req%"/>
+                        </tabla>    
+                        <nivel id="nlReporte" nombre="Reporte" interactivo="false" ejecutar="%buscaSuficiencia.buscaSuficiencia.id_suficiencia%!=null">
+                            <componente id="cpReporte" nombre="Reporte" tipo="reporte">
+                                <reporte nombre="suficiencia" expediente="%concatenaExpedienteS.concatenaExpedienteS.expediente%" nombreDocumento="'Suficiencia Presupuestal'" 
+                                    grupo="%GFE.GFE.folio_adquisicion%" url="$config.repository_upload_file$" update="true">
+                                    <campo name="ur" local="true" type="long" calc="$config.ur$"/>
+                                    <campo name="periodo" local="true" type="long" calc="%FP.FP.id_periodo%"/>
+                                    <campo name="nombre_usuario" local="true" type="string" calc="%protocoloarios.user%"/>
+                                    <campo name="folio_suf" local="true" type="long" calc="%buscaSuficiencia.buscaSuficiencia.id_suficiencia%"/>
+                                </reporte>
+                            </componente> 
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        -->
+        <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo DOS -->
+        
+        <nivel id="buscaFondoDos" nombre="buscaFondoDos" interactivo="false">
+            <componente id="buscaFondoDos" nombre="buscaFondoDos" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccionDos" nombre="buscaSeccionDos" interactivo="false">
+            <componente id="buscaSeccionDos" nombre="buscaSeccionDos" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerieDos" nombre="buscaSerieDos" interactivo="false">
+            <componente id="buscaSerieDos" nombre="buscaSerieDos" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerieDos" nombre="buscaSubSerieDos" interactivo="false">
+            <componente id="buscaSubSerieDos" nombre="buscaSubSerieDos" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="2"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpedienteDos" nombre="concatenaExpedienteDos" interactivo="false">
+            <componente id="concatenaExpedienteDos" nombre="concatenaExpedienteDos" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondoDos.buscaFondoDos.abreviatura%+'/'+%buscaSeccionDos.buscaSeccionDos.abreviatura%+'/'+%buscaSerieDos.buscaSerieDos.abreviatura%+'/'+%buscaSubSerieDos.buscaSubSerieDos.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo DOS-->
+        
+        <nivel id="ReportePC" nombre="PROYECTO DE COMPRA" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="ReportePC" tipo="reporte" nombre="Proyecto de Compra">
+                <reporte nombre="repor_integra_Proyecto_Compra_jsus" id="compras" expediente="%concatenaExpedienteDos.concatenaExpedienteDos.expediente%" nombreDocumento="'Proyecto de Compra'" grupo="%GFE.GFE.folio_adquisicion%" url="$config.repository_upload_file$">
+                   <campo name="ur" type="long"  calc="%FP.FP.id_unidad_responsable%"/>
+                   <campo name="id_periodo" type="long" calc="%FP.FP.id_periodo%"/>
+                   <campo name="id_compras" type="string" calc="%APC.APC.id_compras%"/>
+                   <campo name="usuario" type="string" calc="%FU.FU.nombre_usuario%"/>
+               </reporte>
+           </componente>
+       </nivel> 
+           
+    </pagina>
+</tarea>

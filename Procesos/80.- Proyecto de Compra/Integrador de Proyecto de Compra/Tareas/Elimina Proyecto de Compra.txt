@@ -1,0 +1,117 @@
+<tarea id="Elimina Proyecto de Compra" nombre="EPC" autorModificacion="HMVG" version="2">
+    <pagina id="EPCP">
+            
+            
+        <nivel id="inParam" nombre="Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Parametros"  tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_compras" local="true" type="string" calc="$inParam.id_compras$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        	
+        <nivel id="FU" nombre="Filtra Usuario" interactivo="false">
+            <componente id="FU" nombre="Filtra Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <nivel id="EPCN" nombre="Consulta Proyecto de Compra" mostrarNivelAnterior="false" mostrarProximoNivel="false">          
+            <componente tipo="reporte" nombre="Consulta Proyecto de Compra" id="CPCR">
+                <reporte nombre="repor_integra_Proyecto_Compra_jsus" id="CPCR2">
+                    <campo name="ur" calc="%inParam.inParam.ur%" type="long"/>
+                    <campo name="id_periodo" calc="%inParam.inParam.periodo%" type="long"/>
+                    <campo name="id_compras" calc="%inParam.inParam.id_compras%" type="string"/>
+                    <campo name="usuario" calc="%FU.FU.nombre_usuario%" type="string"/>
+                </reporte>
+            </componente> 
+        	
+            <componente id="EPCC" nombre="Elimina Proyecto de Compra" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="compras">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false"  columna-visible="false" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" columna-visible="false" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="id_compras" text="id_compras" llaveForanea="false" columna-visible="false" calc="%inParam.inParam.id_compras%" visible="false"/>
+                    <campo name="eliminar" text="Eliminar *" local="true" type="bool" columnas="2" margen-izquierdo="4" validacion="%eliminar%==false" validacionMensaje="Se debe seleccionar el Eliminar" />
+                  
+                    <campo name="ultimo_usuario_modificador" text="Usuario Autoriza" llaveForanea="false" visible="false" columna-visible="false"/>     
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Eliminar Solicitud" columnas="2" margen-izquierdo="4"  margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <confirmaciones>
+                    <confirmacion confirmacionTitulo="'Eliminar Solicitud'" confirmacionMensaje="'¿Desea eliminar el Proyecto de Compra?'" tipo="avanzar"/>
+                </confirmaciones>
+            </componente>
+        </nivel>
+
+
+        <nivel id="FDC" nombre="Filtra Detalle Compras" interactivo="false" ejecutar="%EPCN.EPCC.eliminar%==true">
+            <componente id="FDC" nombre="Filtra Detalle Compras" tipo="cursor">
+                <tabla schema="operation" nombre="compras_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%inParam.inParam.id_compras%"/>
+                    <campo name="id_compras_det" />
+                    <campo name="folio_req" />
+                    <campo name="folio_req_detalle" />
+                </tabla>
+                <nivel id="ARD" nombre="Actualiza Requisición Detalle" interactivo="false">
+                    <componente id="ARD" nombre="Actualiza Requisición Detalle" tipo="cursor"> 
+                        <tabla schema="operation" nombre="requisicion_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FDC.FDC.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FDC.FDC.periodo%"/>
+                            <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="%FDC.FDC.folio_req%"/> 
+                            <campo name="folio_req_detalle" filtroCampo="folio_req_detalle" filtroOperador="=" filtroValor="%FDC.FDC.folio_req_detalle%"/>
+                            <campo name="seleccion_compra" calc="false"/>
+                            <campo name="seleccion_compra_proceso" calc="false"/>
+                            <campo name="id_compra" calc="'0'"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="ECD" nombre="Elimina Compra Detalle" interactivo="false">
+                    <componente id="ECD" nombre="Elimina Compra Detalle" tipo="bajaDirect">
+                        <tabla schema="operation" nombre="compras_det">
+                            <campo name="ur" calc="%FDC.FDC.ur%"/>
+                            <campo name="periodo" calc="%FDC.FDC.periodo%"/>
+                            <campo name="id_compras" calc="%FDC.FDC.id_compras%"/>
+                            <campo name="id_compras_det" calc="%FDC.FDC.id_compras_det%" /> 
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="EC" nombre="Elimina Compra" interactivo="false" ejecutar="%EPCN.EPCC.eliminar%==true">
+            <componente id="EC" nombre="Elimina Compra" tipo="bajaDirect">
+                <tabla schema="operation" nombre="compras">
+                    <campo name="ur" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%"/>
+                    <campo name="id_compras" calc="%inParam.inParam.id_compras%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="terminarInstancia" nombre="Terminar Instancia" interactivo="false" ejecutar="%EPCN.EPCC.eliminar%==true" >
+            <componente id="terminarInstancia" nombre="Terminar Instancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea> 

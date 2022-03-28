@@ -1,0 +1,969 @@
+<tarea nombre="REGISTRO DE ACTIVO FIJO" id="ipc" autor="Marisela">
+    <pagina id="1" nombre="Registro">
+        <nivel nombre="Parametros" id="inParam" interactivo="false">
+            <componente tipo="cursor" nombre="Parametros" id="inParam">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" filtroCampo="id" filtroOperador="=" filtroValor="1" />
+                    <campo name="ur" text="ur" local="true" type="string" calc="$config.ur$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_usuario" />
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="cp" nombre="cp" interactivo="false">
+            <componente id="cp" nombre="cp" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="id_duep_contrato_pedido" />
+                    <campo name="clave_articulo" />
+                </tabla>
+                <nivel id="ar" nombre="ar" interactivo="false">
+                    <componente id="ar" nombre="ar" tipo="cursor">
+                        <tabla schema="catalog" nombre="articulos">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="clave_articulo" filtroCampo="clave_articulo" filtroOperador="=" filtroValor="%cp.cp.clave_articulo%" />
+                            <campo name="control_patrimonial" filtroCampo="control_patrimonial" filtroOperador="=" filtroValor="true" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="cpe" nombre="cpe" interactivo="false" ejecutar="%ar.ar.control_patrimonial%==true">
+                    <componente id="cpe" nombre="cpe" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_contrato_pedido">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%cp.cp.id_duep_contrato_pedido%" />
+                            <campo name="control_patrimonial" calc="true" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!-- Inicio Cambia a True-->
+        <nivel id="cambiarTrue" nombre="cambiar True" interactivo="false">
+            <componente id="cambiarTrue" nombre="cambiar True" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="id_duep_contrato_pedido" />
+                    <campo name="seleccion_af" calc="false" />
+                    <campo name="autoriza" filtroCampo="autoriza" filtroOperador="=" filtroValor="true" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- Fin Cambia a True -->
+        <!--tabla 1 donde muestra registros de contratos o compras  -->
+        <nivel nombre="Registra Recepcion de Bienes" id="ipc" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="tabla" id="ipc" nombre="Recepción de Activo Fijo" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false" filtro="true">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text="ur" llaveForanea="false" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" columna-visible="false" />
+                    <campo name="folio_con_ordecom" text="Folio" width="100" />
+                    <campo name="proveedor" text="Beneficiario" width="200" descripcionForaneaTabla="razon_social" />
+                    <campo name="contrato" text="Contrato / Orden de Compra" width="100" />
+                    <campo name="fecha_registro" text="Fecha" width="150" />
+                    <campo name="area_requiriente" text="Centro de Registro" width="150" />
+                    <campo name="total" text="Total Comprometido" width="150" formatoMoneda="true" />
+                    <campo name="comprometido_no_devengado" text="Comprometido No devengado" width="150" formatoMoneda="true" />
+                    <campo name="seleccion_af" text="Selección" width="100" editable="true" filtroCampo="seleccion_af" filtroOperador="=" filtroValor="false" />
+                    <campo name="autoriza" text="autoriza" columna-visible="false" filtroCampo="autoriza" filtroOperador="=" filtroValor="true" />
+                    <campo name="folio_af" text="" columna-visible="false" filtroCampo="folio_af" filtroOperador="=" filtroValor="'0'" />
+                    <campo name="control_patrimonial" text="" filtroCampo="control_patrimonial" filtroOperador="=" filtroValor="true" columna-visible="false" />
+                    
+                     <campo name="clasificador_articulo" text="Artículo" columna-visible="false" visible="false" filtroCampo="clasificador_articulo" filtroOperador="=" filtroValor="'5'"/> 
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+            <validaciones>
+                <validacion
+                    tipo="avanzar"
+                    validacion="@consultaDirec('SELECT count(*)  AS resultado FROM operation.duep_contrato_pedido WHERE ur='+%inParam.inParam.ur%+' AND periodo='+%per.per.id_periodo%+' AND seleccion_af=true AND folio_af=\\'0\\'','resultado','int','MAGNITUS')==0 OR @consultaDirec('SELECT count(*)  AS resultado FROM operation.duep_contrato_pedido WHERE ur='+%inParam.inParam.ur%+' AND periodo='+%per.per.id_periodo%+' AND seleccion_af=true AND folio_af=\\'0\\'','resultado','int','MAGNITUS')&gt;1"
+                    validacionMensaje="'Debe seleccionar un registro'"
+                />
+            </validaciones>
+        </nivel>
+
+        <nivel id="s" nombre="s" interactivo="false">
+            <componente id="s" nombre="s" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="seleccion_af" filtroCampo="seleccion_af" filtroOperador="=" filtroValor="true"/> <!-- -->
+                    <campo name="folio_af" filtroCampo="folio_af" filtroOperador="=" filtroValor="'0'"/> <!-- -->
+                    <campo  name="consecutivo" local="true" type="long" text="Contrato" calc="@consultaDirec('SELECT COUNT(id_activo_fijo) AS resultado FROM operation.activo_fijo WHERE ur='+%inParam.inParam.ur%+' AND periodo='+%per.per.id_periodo% ,'resultado','int','MAGNITUS')+1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--inicia cursor anidado -->
+        <!--cursor detalles del folio del contrato  -->
+        <nivel id="cons" nombre="cons" interactivo="false">
+            <componente id="cons" nombre="cons" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="seleccion_af" filtroCampo="seleccion_af" filtroOperador="=" filtroValor="true" />
+                    <campo name="folio_af" filtroCampo="folio_af" filtroOperador="=" filtroValor="'0'" />
+                    <campo name="fecha_registro" />
+                    <campo name="id_duep_contrato_pedido" />
+                    <campo name="folio_con_ordecom" />
+                    <campo name="folio_req" />
+                    <campo name="fecha_contrato_pedido" />
+                    <campo name="proyecto_compra" />
+                    <campo name="proceso_origen" />
+                    <campo name="proceso" />
+                    <campo name="id_cat_fondo" />
+                    <campo name="id_fondo_contable" />
+                    <campo name="id_cat_fuente" />
+                    <campo name="fuente_financiamiento" />
+                    <campo name="estatus" />
+                    <campo name="datos_facturacion" />
+                    <campo name="contacto_requis" />
+                    <campo name="id_cat_area_requiriente" />
+                    <campo name="area_requiriente" />
+                    <campo name="proveedor" />
+                    <campo name="nombre_comercial" />
+                    <campo name="direccion_prov" />
+                    <campo name="id_pais" />
+                    <campo name="estado_prov" />
+                    <campo name="tel_prov" />
+                    <campo name="representante_prov" />
+                    <campo name="lugar_entrega" />
+                    <campo name="contacto_recepcion" />
+                    <campo name="tiempo_entrega" />
+                    <campo name="condiciones_pago" />
+                    <campo name="requiere_anticipo" />
+                    <campo name="anticipo" />
+                    <campo name="autoriza" />
+                    <campo name="observaciones_auto" />
+                    <campo name="ultimo_usuario_modificador" />
+                    <campo name="total" />
+                    <campo name="cantidad_letra" />
+                    <campo name="concepto" />
+                    <campo name="fecha_gestion_anticipo" />
+                    <campo name="id_tipo_comprobante" />
+                    <campo name="folio_comprobante" />
+                    <campo name="cuenta_anticipo" />
+                    <campo name="autorizacion_anticipo" />
+                    <campo name="fecha_autorizacion_anticipo" />
+                    <campo name="usuario_autorizacion_anticipo" />
+                    <campo name="poliza" />
+                    <campo name="fecha_comprobante" />
+                    <campo name="comprometido_no_devengado" />
+                    <campo name="valor" local="true" type="string" calc="@subCadena(%cons.cons.proyecto_compra%,0,4)" />
+                </tabla>
+                <nivel id="coma" nombre="coma" interactivo="false" ejecutar="%cons.cons.ur%!=null">
+                    <componente id="coma" nombre="coma" tipo="altaDirect">
+                        <tabla schema="operation" nombre="activo_fijo">
+                            <campo name="ur" calc="%cons.cons.ur%" />
+                            <campo name="periodo" calc="%cons.cons.periodo%" />
+                            <campo name="activo_fijo" autogenerado="true" generacion="@prox()+1" />
+                            <campo name="folio_duep" calc="%cons.cons.folio_con_ordecom%" />
+                            <campo name="id_activo_fijo" calc="%cons.cons.folio_con_ordecom%+'-'+(@consultaDirec('SELECT count(folio_duep) AS resultado FROM operation.activo_fijo WHERE ur='+%inParam.inParam.ur%+' AND folio_duep='+'\\''+%cons.cons.folio_con_ordecom%+'\\''+' AND periodo='+%per.per.id_periodo% ,'resultado','int','MAGNITUS')+1)"/>
+                            <campo name="fecha_elaboracion" calc="@fechaSistema()" />
+                            <campo name="beneficiario" calc="%cons.cons.proveedor%" />
+                            <campo name="id_cat_area_requiriente" calc="%cons.cons.id_cat_area_requiriente%" />
+                            <campo name="area_requiriente" calc="%cons.cons.area_requiriente%" />
+                            <campo name="fecha_registro" calc="%cons.cons.fecha_registro%" />
+                            <campo name="id_tipo_comprobante" calc="%cons.cons.id_tipo_comprobante%" />
+                            <campo name="folio_comprobante" calc="%cons.cons.folio_comprobante%" />
+                            <campo name="tramite" />
+                            <campo name="estatus" calc="%cons.cons.estatus%" />
+                            <campo name="id_cat_fondo_contable" calc="%cons.cons.id_cat_fondo%" />
+                            <campo name="id_fondo_contable" calc="%cons.cons.id_fondo_contable%" />
+                            <campo name="id_cat_fuente_financiamiento" calc="%cons.cons.id_cat_fuente%" />
+                            <campo name="id_fuente_financiamiento" calc="%cons.cons.fuente_financiamiento%" />
+                            <campo name="id_contrato" calc="%cons.cons.id_duep_contrato_pedido%" />
+                            <campo name="orden_compra" calc="%cons.cons.folio_con_ordecom%" />
+                            <campo name="amortizacion_anticipo" />
+                            <campo name="anticipo" calc="%cons.cons.anticipo%" />
+                            <campo name="concepto" calc="%cons.cons.concepto%" />
+                            <campo name="folio_contrato_compra" calc="%cons.cons.folio_con_ordecom%" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="bcons" nombre="bcons" interactivo="false">
+            <componente id="bcons" nombre="bcons" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="seleccion_af" filtroCampo="seleccion_af" filtroOperador="=" filtroValor="true" />
+                    <campo name="folio_af" filtroCampo="folio_af" filtroOperador="=" filtroValor="'0'" />
+                    <campo name="proyecto_compra" />
+                    <campo name="folio_con_ordecom" />
+                    <campo name="id_duep_contrato_pedido" />
+                </tabla>
+                <nivel id="bcond" nombre="bcond" interactivo="false" ejecutar="%bcons.bcons.ur%!=null">
+                    <componente id="bcond" nombre="bcond" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bcons.bcons.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bcons.bcons.periodo%" />
+                            <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%bcons.bcons.id_duep_contrato_pedido%" />
+                            <campo name="id_duep_contrato_pedido_det" />
+                            <campo name="fecha_registro" />
+                            <campo name="clave_articulo" />
+                            <campo name="id_cat_cog" />
+                            <campo name="clasificador_objeto_gasto" />
+                            <campo name="caracteristica" />
+                            <campo name="clave_presup" />
+                            <campo name="mes" />
+                            <campo name="id_cat_centro_registro" />
+                            <campo name="centro_registro" />
+                            <campo name="cantidad" />
+                            <campo name="unidad_medida" />
+                            <campo name="importe_unitario" />
+                            <campo name="descuento" />
+                            <campo name="tasa_iva" />
+                            <campo name="importe_total" />
+                            <campo name="ultimo_usuario_modificador" />
+                            <campo name="precio_unitario" />
+                            <campo name="otros_impuestos" />
+                            <campo name="imp_valor_agregado" />
+                            <campo name="eliminar" />
+                            <campo name="liga_sopote_documental" />
+                            <campo name="cantidad_recibida" />
+                            <campo name="presupuesto_comprometido" />
+                            <campo name="devengado_en_proceso" />
+                            <campo name="presupuesto_devengado" />
+                            <campo name="anticipo_importe" />
+                            <campo name="amortizacion_anticipo" />
+                            <campo name="id_cat_programa_presupuestal" />
+                            <campo name="programa_presupuestal" />
+                            <campo name="folio_req" />
+                            <campo name="folio_req_detalle" />
+                            <campo name="importe_letra_anticipo" />
+                            <campo name="cantidad_por_recibir" />
+                        </tabla>
+                        <!-- Cambio a Hijo-->
+                        <nivel id="afrbd" nombre="afrbd" interactivo="false" ejecutar="@consultaDirec('select count(articulo) &gt; 0 as resultado from operation.af_receprcion_bienes_det where ur=1 AND periodo='+'\\''+%per.per.id_periodo%+'\\''+' AND id_contrato='+'\\''+%bcond.bcond.id_duep_contrato_pedido%+'\\''+' AND articulo='+'\\''+%bcond.bcond.clave_articulo%+'\\'','resultado','long','MAGNITUS') == false">
+                            <componente id="afrbd" nombre="afrbd" tipo="altaDirect">
+                                <tabla schema="operation" nombre="af_receprcion_bienes_det">
+                                    <campo name="ur" calc="%bcond.bcond.ur%" />
+                                    <campo name="periodo" calc="%bcond.bcond.periodo%" />
+                                    <campo name="id_contrato" calc="%bcond.bcond.id_duep_contrato_pedido%" />
+                                    <campo name="id_af_receprcion_bienes" calc="%bcons.bcons.folio_con_ordecom%" />
+                                    <campo name="id_af_receprcion_bienes_det" autogenerado="true" generacion="@prox()+1" />
+                                    <campo name="folio_duep" calc="%bcons.bcons.folio_con_ordecom%" />
+                                    <campo name="fecha_elaboracion" calc="@fechaSistema()" />
+                                    <campo name="articulo" calc="%bcond.bcond.clave_articulo%" />
+                                    <campo name="fecha_recepcion" calc="%bcond.bcond.fecha_registro%" />
+                                    <campo name="cantidad_solicitada" calc="%bcond.bcond.cantidad%" />
+                                    <campo name="unidad_medida" calc="%bcond.bcond.unidad_medida%" />
+                                    <campo name="por_recibir" calc="%bcond.bcond.cantidad_por_recibir%" />
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <!-- Cambio a Hijo-->
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!-- Inicio borra seleccion-->
+        <nivel id="borrasel" nombre="borrasel" interactivo="false">
+            <componente id="borrasel" nombre="borrasel" tipo="cursor">
+                <tabla schema="operation" nombre="af_receprcion_bienes_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="id_contrato" filtroCampo="id_contrato" filtroOperador="=" filtroValor="%bcons.bcons.id_duep_contrato_pedido%" />
+                    <campo name="folio" calc="'0'" />
+                    <campo name="seleccion" calc="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- Fin borra seleccion-->
+        <!--tabla 2 Registra Recepcion de Bienes detalle-->
+        <nivel nombre="Registra Recepcion de Bienes" id="ipcd" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="tabla" id="ipcd" nombre="Recepción de Activo Fijo" mostrarEliminar="false" mostrarAgregar="false" filtro="true">
+                <tabla schema="operation" nombre="af_receprcion_bienes_det">
+                    <campo name="ur" text="ur"  calc="%inParam.inParam.ur%" llaveForanea="false" visible="false" columna-visible="false" /> <!-- filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"-->
+                    <campo name="periodo" text="periodo" llaveForanea="false" visible="false" columna-visible="false" calc="%per.per.id_periodo%"/> <!-- filtroCampo="periodo" filtroOperador="=" filtroValor="" -->
+                    <campo name="id_contrato" text="id_contrato" columna-visible="false" visible="false" filtroCampo="id_contrato" filtroOperador="=" filtroValor="%bcons.bcons.id_duep_contrato_pedido%" />
+                    <campo name="id_af_receprcion_bienes" text="id_af_receprcion_bienes" columna-visible="false" visible="false" />
+                    <campo name="id_af_receprcion_bienes_det" text="Renglón" width="80" visible="false" cellsalign="center" />
+                    <campo name="articulo" text="Clave del artículo" width="200" descripcionForaneaTabla="clave_articulo,descripcion_articulo" descripcionForanea="clave_articulo,descripcion_articulo" columnas="3" margen-izquierdo="2" />
+                    <campo name="fecha_cfdi" text="Fecha de CFDI" width="100" columna-visible="false" columnas="3" margen-derecho="2" />
+                    <campo name="fecha_recepcion" text="Fecha de recepción" width="100" columnas="3" margen-izquierdo="2" />
+                    <campo name="marca" text="Marca" marcador="Captura Marca" width="100" columna-visible="false" columnas="3" margen-derecho="2" mascara="C" validacion="%marca%==false" validacionMensaje="Ingresa la marca del bien que se recibe"/>
+                    <campo name="cantidad_recibida" text="Cantidad Recibida" width="130" cellsalign="center" columnas="3" margen-izquierdo="2" />
+                    <campo name="modelo" text="Modelo" marcador="Captura Modelo" width="100" columna-visible="false" columnas="3" margen-derecho="2" validacion="%modelo%==false" validacionMensaje="Ingresa el modelo del bien que se recibe" />
+                    <campo name="por_recibir" text="Por recibir" cellsalign="center" width="100" columnas="3" margen-izquierdo="2" />
+                    <campo name="serie" text="Serie" marcador="Captura Serie" width="300" columna-visible="false" columnas="3" margen-derecho="2" validacion="%serie%==true" validacionMensaje="Ingresar el número de serie del bien que se recibe"/>
+                    <campo name="color" text="Color" marcador="Captura Color" width="300" columna-visible="false" columnas="3" margen-izquierdo="5" mascara="C" validacion="%color%==true" validacionMensaje="Ingresar el color del bien que se recibe"/>
+                    <campo name="cantidad_solicitada" text="Cantidad Solicitada" cellsalign="center" width="150" columnas="3" margen-derecho="5" visible="false"/>
+                    <campo name="comentarios" text="Comentarios" width="300" height="50" columna-visible="false" columnas="6" margen-izquierdo="2" mascara="C" />
+                    <campo name="unidad_medida" text="U.M." cellsalign="center" width="100" visible="false" />
+                    <campo name="recepcion_acumulada" text="Recepción Acumulada" cellsalign="center" width="200" visible="false" />
+                    <campo name="seleccion" text="Selección" cellsalign="center" width="100" editable="true" filtroCampo="seleccion" filtroOperador="=" filtroValor="false" visible="false" />
+                    <campo name="folio" text="folio" columna-visible="false" filtroCampo="folio" filtroOperador="=" filtroValor="'0'" visible="false" />
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="avanzar a nivel" />
+                    <boton nombre="formulario" posicion="derecha" visible="true" texto="avanzar a nivel" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                </estilos>
+            </componente>
+            <validaciones>
+                <validacion
+                    tipo="avanzar"
+                    validacion="@consultaDirec('SELECT count(*)  AS resultado FROM operation.af_receprcion_bienes_det WHERE ur='+%inParam.inParam.ur%+' AND periodo='+%per.per.id_periodo%+' AND id_af_receprcion_bienes='+'\\''+%bcons.bcons.folio_con_ordecom%+'\\''+' AND seleccion=true AND folio=\\'0\\'','resultado','int','MAGNITUS')==0" validacionMensaje="'Debe seleccionar un registro'"/>
+            </validaciones>
+        </nivel>
+
+        <!--Alta detalle activo fijo-->
+        <nivel id="cons2" nombre="cons2" interactivo="false">
+            <componente id="cons2" nombre="cons2" tipo="cursor">
+                <tabla schema="operation" nombre="af_receprcion_bienes_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true" />
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="'0'" />
+                    <campo name="id_af_receprcion_bienes" />
+                    <campo name="id_af_receprcion_bienes_det" />
+                    <campo name="folio_duep" />
+                    <campo name="fecha_cfdi" />
+                    <campo name="marca" />
+                    <campo name="modelo" />
+                    <campo name="serie" />
+                    <campo name="color" />
+                    <campo name="comentarios" />
+                    <campo name="cantidad_recibida" />
+                    <campo name="cantidad_solicitada" />
+                    <campo name="por_recibir" />
+                </tabla>
+
+                <nivel id="acf2" nombre="acf2" interactivo="false" ejecutar="%cons2.cons2.ur%!=null">
+                    <componente id="acf2" nombre="acf2" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_contrato_pedido">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="id_duep_contrato_pedido" />
+                            <campo name="proyecto_compra" />
+                            <campo name="folio_con_ordecom" filtroCampo="folio_con_ordecom" filtroOperador="=" filtroValor="%cons2.cons2.id_af_receprcion_bienes%" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="bcondd" nombre="bcondd" interactivo="false">
+                    <componente id="bcondd" nombre="bcondd" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%acf2.acf2.id_duep_contrato_pedido%" />
+                            <campo name="id_duep_contrato_pedido_det" />
+                            <campo name="fecha_registro" />
+                            <campo name="clave_articulo" />
+                            <campo name="id_cat_cog" />
+                            <campo name="clasificador_objeto_gasto" />
+                            <campo name="caracteristica" />
+                            <campo name="clave_presup" />
+                            <campo name="mes" />
+                            <campo name="id_cat_centro_registro" />
+                            <campo name="centro_registro" />
+                            <campo name="cantidad" />
+                            <campo name="unidad_medida" />
+                            <campo name="importe_unitario" />
+                            <campo name="descuento" />
+                            <campo name="tasa_iva" />
+                            <campo name="importe_total" />
+                            <campo name="ultimo_usuario_modificador" />
+                            <campo name="precio_unitario" />
+                            <campo name="otros_impuestos" />
+                            <campo name="imp_valor_agregado" />
+                            <campo name="eliminar" />
+                            <campo name="liga_sopote_documental" />
+                            <campo name="cantidad_recibida" />
+                            <campo name="presupuesto_comprometido" />
+                            <campo name="devengado_en_proceso" />
+                            <campo name="presupuesto_devengado" />
+                            <campo name="anticipo_importe" />
+                            <campo name="amortizacion_anticipo" />
+                            <campo name="id_cat_programa_presupuestal" />
+                            <campo name="programa_presupuestal" />
+                            <campo name="folio_req" />
+                            <campo name="folio_req_detalle" />
+                            <campo name="importe_letra_anticipo" />
+
+                            <campo name="retenciones" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="reqd" nombre="reqd" interactivo="false">
+                    <componente id="reqd" nombre="reqd" tipo="cursor">
+                        <tabla schema="operation" nombre="compras">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="id_compras" filtroCampo="id_compras" filtroOperador="=" filtroValor="%acf2.acf2.proyecto_compra%" />
+                            <!--<campo name="descripcion_especifica"/>-->
+                        </tabla>
+                    </componente>
+                </nivel>
+
+                <nivel id="req" nombre="req" interactivo="false">
+                    <componente id="req" nombre="req" tipo="cursor">
+                        <tabla schema="operation" nombre="requisicion_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="%reqd.reqd.folio_req%" />
+                            <campo name="descripcion_especifica" />
+                        </tabla>
+                    </componente>
+                </nivel>
+
+                <nivel id="baf" nombre="baf" interactivo="false">
+                    <componente id="baf" nombre="baf" tipo="cursor">
+                        <tabla schema="operation" nombre="activo_fijo">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="id_activo_fijo" />
+                            <campo name="orden_compra" filtroCampo="orden_compra" filtroOperador="=" filtroValor="%cons2.cons2.id_af_receprcion_bienes%" />
+                            <campo name="folio_duep" />
+                            <campo name="activo_fijo" />
+                        </tabla>
+                    </componente>
+                </nivel>
+
+                <nivel id="aacf" nombre="aacf" interactivo="false">
+                    <componente id="aacf" nombre="aacf" tipo="altaDirect">
+                        <tabla schema="operation" nombre="activo_fijo_det">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="periodo" calc="%bcondd.bcondd.periodo%" />
+                            <campo name="folio_duep" calc="%baf.baf.folio_duep%" />
+                            <campo name="activo_fijo" calc="%baf.baf.activo_fijo%" />
+                            <campo name="id_activo_fijo" calc="%coma.coma.id_activo_fijo%" />
+
+                            <campo name="id_activo_fijo_det" autogenerado="true" generacion="@prox()+1" />
+                            <campo name="fecha_elaboracion" calc='@fechaSistema("YYYY/MM/dd HH:mm:ss")' />
+                            <campo name="tipo_bloque" calc="1" />
+                            <campo name="tipo_comprobante" />
+                            <campo name="articulo" calc="%bcondd.bcondd.clave_articulo%" />
+                            <campo name="marca" calc="%cons2.cons2.marca%" />
+                            <campo name="modelo" calc="%cons2.cons2.modelo%" />
+                            <campo name="serie" calc="%cons2.cons2.serie%" />
+                            <campo name="color" calc="%cons2.cons2.color%" />
+                            <campo name="comentarios" calc="%cons2.cons2.comentarios%" />
+                            <campo name="id_cat_clasificacion_objeto_gasto" calc="%bcondd.bcondd.id_cat_cog%" />
+                            <campo name="clasificacion_objeto_gasto" calc="%bcondd.bcondd.clasificador_objeto_gasto%" />
+                            <campo name="descripcion_especifica" calc="%req.req.descripcion_especifica%" />
+                            <campo name="id_cat_programa_presupuestal" calc="%bcondd.bcondd.id_cat_programa_presupuestal%" />
+                            <campo name="programa_presupuestal" calc="%bcondd.bcondd.programa_presupuestal%" />
+                            <campo name="indicador" />
+                            <campo name="clave_presupuestal" calc="%bcondd.bcondd.clave_presup%" />
+                            <campo name="mes" calc="%bcondd.bcondd.mes%" />
+                            <campo name="cuenta_amortizacion" />
+                            <campo name="folio_comprobante" />
+                            <campo name="fecha_cfdi" />
+
+                            <campo name="unidad_medida" calc="%bcondd.bcondd.unidad_medida%" />
+                            <campo name="precio_unitario" calc="%bcondd.bcondd.precio_unitario%" />
+                            <campo name="descuento" calc="%bcondd.bcondd.descuento%" />
+                            <campo name="iva" />
+                            <campo name="impuesto_valor_agregado" calc="%bcondd.bcondd.imp_valor_agregado%" />
+                            <campo name="otros_impuestos" calc="%bcondd.bcondd.otros_impuestos%" />
+                            <campo name="importe_unitario" calc="%bcondd.bcondd.importe_unitario%" />
+                            <campo name="ruta_archivo" />
+                            <campo name="ultimo_usuario_modificador" />
+                            <campo name="genero" />
+                            <campo name="tipo_afectacion" />
+                            <campo name="operacion" />
+                            <campo name="folio_contrato_compra" calc="%acf2.acf2.folio_con_ordecom%" />
+                            <campo name="importe_total" calc="%bcondd.bcondd.importe_total%" />
+
+                            <campo name="cantidad_recibida" calc="%cons2.cons2.cantidad_recibida%" />
+                            <campo name="cantidad_solicitada" calc="%cons2.cons2.cantidad_solicitada%" />
+                            <campo name="cantidad_por_recibir" calc="%cons2.cons2.por_recibir%" />
+
+                            <campo name="pres_comprometido" calc="%bcondd.bcondd.importe_total%" />
+                        </tabla>
+                    </componente>
+                </nivel>
+
+                <nivel id="cons22" nombre="cons22" interactivo="false">
+                    <componente id="cons22" nombre="cons22" tipo="cursor">
+                        <tabla schema="operation" nombre="af_receprcion_bienes_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true" />
+                            <campo name="id_af_receprcion_bienes" filtroCampo="id_af_receprcion_bienes" filtroOperador="=" filtroValor="%cons2.cons2.id_af_receprcion_bienes%" />
+                            <campo name="folio" calc="%cons.cons.proyecto_compra%+'-'+%s.s.consecutivo%" />
+                            <campo name="id_af_receprcion_bienes_det" />
+                            <campo name="folio_duep" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--suma de totales  -->
+        <nivel id="suma" nombre="suma" interactivo="false">
+            <componente id="suma" nombre="suma" tipo="cursor">
+                <tabla schema="operation" nombre="activo_fijo_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="%baf.baf.id_activo_fijo%" />
+                    <campo name="importe_total" />
+                    <campo name="acumulado" local="true" type="double" calc="$sumatoria.importe_total$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="sumaaP" nombre="sumaa" interactivo="false">
+            <componente id="sumaaP" nombre="sumaa" tipo="cursor">
+                <tabla schema="operation" nombre="activo_fijo">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="%baf.baf.id_activo_fijo%" />
+                    <campo name="total" calc="%suma.suma.acumulado%" />
+                    <campo name="importe_letra" text="Cantidad con Letra" calc="@numeroAletra(%suma.suma.acumulado%,'Pesos M.N.')" />
+                </tabla>
+            </componente>
+        </nivel>
+
+        <nivel id="acf3" nombre="acf3" interactivo="false">
+            <componente id="acf3" nombre="acf3" tipo="cursor">
+                <tabla schema="operation" nombre="activo_fijo">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="%baf.baf.id_activo_fijo%"/>
+                    <campo name="orden_compra"/> <!-- filtroCampo="orden_compra" filtroOperador="=" filtroValor="%cons2.cons2.id_duep_contrato_pedido%" -->
+                    <campo name="folio_duep" />
+                    <campo name="beneficiario" />
+                    <campo name="area_requiriente" />
+                    <campo name="fecha_registro" />
+                    <campo name="id_tipo_comprobante" />
+                    <campo name="concepto" />
+                    <campo name="tramite" />
+                    <campo name="id_fondo_contable" />
+                    <campo name="id_fuente_financiamiento" />
+                    <campo name="folio_comprobante" />
+                    <campo name="id_contrato" />
+                    <campo name="amortizacion_anticipo" />
+                    <campo name="folio_contrato_compra" />
+                </tabla>
+            </componente>
+        </nivel>
+
+        <!--Maestro detalle -->
+
+        <nivel id="ipcmd" nombre="Recepción de Activo Fijo" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="maestroDetalle" id="ipcmd" nombre="Recepción de Activo Fijo">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="activo_fijo">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="%inParam.inParam.ur%" habilitado="false" />
+                        <campo name="periodo" text="Periodo" visible="false" calc="%per.per.id_periodo%" habilitado="false" />
+                        <campo name="id_activo_fijo" text="Folio" habilitado="false" calc="%baf.baf.id_activo_fijo%" columnas="3" margen-izquierdo="2" />
+                        <campo name="activo_fijo" text="activo_fijo" calc="%baf.baf.activo_fijo%" visible="false" />
+
+                        <campo name="fecha_elaboracion" text="Fecha" calc='@fechaSistema("YYYY/MM/dd HH:mm:ss")' habilitado="false" visible="false" />
+                        <campo name="id_cat_fondo_contable" text="Fondo Contable" calc="3" visible="false" />
+                        <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento" calc="5" visible="false" />
+                        <campo name="folio_contrato_compra" text="Folio" habilitado="false" calc="%coma.coma.id_activo_fijo%" visible="false" />
+                        <campo name="id_cat_area_requiriente" text="id_cat_area_requiriente" visible="false" />
+                        <campo name="folio_duep" text="DUEP" habilitado="false" columnas="3" margen-izquierdo="2" visible="false" />
+                        <!-- calc="%acf3.acf3.id_activo_fijo%"-->
+
+                        <campo name="tramite" text="Trámite" columnas="3" margen-derecho="2" habilitado="false" calc="'Recepción de Activo Fijo'" />
+                        <campo name="beneficiario" text="Beneficiario" columnas="3" margen-izquierdo="2" descripcionForanea="razon_social" habilitado="false" />
+                        <!--calc="%acf3.acf3.beneficiario%"-->
+
+                        <campo name="id_fondo_contable" text="Fondo Contable" columnas="3" margen-derecho="2" habilitado="false" />
+                        <!-- calc="%acf3.acf3.id_fondo_contable%"-->
+                        <campo name="area_requiriente" text="Centro de Registro" columnas="3" margen-izquierdo="2" habilitado="false" />
+                        <!-- calc="%acf3.acf3.area_requiriente%"-->
+
+                        <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" columnas="3" margen-derecho="2" habilitado="false" />
+                        <!--calc="%acf3.acf3.id_fuente_financiamiento%"-->
+
+                        <campo name="fecha_registro" text="Fecha" columnas="3" margen-izquierdo="2" habilitado="false" />
+                        <!--calc="%acf3.acf3.fecha_registro%"-->
+
+                        <campo
+                            name="contrato"
+                            text="Contrato"
+                            local="true"
+                            type="string"
+                            columnas="3"
+                            margen-derecho="2"
+                            calc="@consultaDirec('SELECT CASE WHEN \\'CT\\'= substring(folio_con_ordecom for 2) THEN folio_con_ordecom ELSE \\'\\' END AS resultado  FROM operation.duep_contrato_pedido WHERE ur='+%inParam.inParam.ur%+' AND periodo='+%per.per.id_periodo%+' AND id_duep_contrato_pedido='+%acf3.acf3.id_contrato%+'','resultado','string','MAGNITUS')"
+                        />
+
+                        <campo name="id_contrato" text="Contrato" columnas="3" margen-derecho="2" llaveForanea="false" habilitado="false" visible="false" calc="%acf3.acf3.id_contrato%" />
+                        <!--calc="%acf3.acf3.id_contrato%"-->
+                        <campo name="id_tipo_comprobante" text="Tipo de comprobante" columnas="3" margen-izquierdo="2" habilitado="true" />
+                        <!--calc="%acf3.acf3.id_tipo_comprobante%"-->
+                        <campo
+                            name="orden_compra"
+                            text="Orden de Compra"
+                            columnas="3"
+                            margen-derecho="2"
+                            habilitado="false"
+                            calc="@consultaDirec('SELECT CASE WHEN \\'OC\\'= substring(folio_con_ordecom for 2) THEN folio_con_ordecom ELSE \\'\\' END AS resultado  FROM operation.duep_contrato_pedido WHERE ur='+%inParam.inParam.ur%+' AND periodo='+%per.per.id_periodo%+' AND id_duep_contrato_pedido='+%acf3.acf3.id_contrato%+'','resultado','string','MAGNITUS')"
+                        />
+                        <campo name="folio_comprobante" text="Folio de comprobante" columnas="3" margen-izquierdo="2" />
+                        <campo name="amortizacion_anticipo" text="Amoritización de Anticipo" columnas="3" margen-derecho="2" habilitado="false" calc="%acf3.acf3.amortizacion_anticipo%" />
+                        <campo name="anticipo" text="% Anticipo" columnas="3" margen-izquierdo="2" />
+                        <campo name="concepto" text="Concepto" columnas="3" margen-derecho="2" habilitado="false" calc="%acf3.acf3.concepto%" />
+                        <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Grabar" columnas="3" margen-derecho="4" margen-izquierdo="4" />
+                        <!--<boton nombre="formulario" visible="true" texto="Grabar" columnas="3" margen-derecho="4" margen-izquierdo="4"/>-->
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla schema="operation" nombre="activo_fijo_det" tituloDetalle="Renglones" id="detalle_uno" mostrarEditar="true">
+                        <!--Bloque Presupuestal-->
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" calc="%inParam.inParam.ur%" />
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false" calc="%per.per.id_periodo%" />
+                        <campo name="folio_duep" text="folio_duep" calc="%ipcmd.ipcmd.folio_duep%" llaveForanea="false" columna-visible="false" visible="false" />
+                        <campo name="activo_fijo" text="activo_fijo" calc="%ipcmd.ipcmd.activo_fijo%" llaveForanea="false" visible="false" columna-visible="false" />
+                        <campo name="id_activo_fijo" text="id_activo_fijo" calc="%coma.coma.id_activo_fijo%" llaveForanea="false" visible="false" columna-visible="false" />
+                        <campo name="id_cat_clasificacion_objeto_gasto" text="Clasificador por Objeto del Gasto" width="100" calc="4" visible="false" columna-visible="false" />
+                        <campo name="id_activo_fijo_det" text="Renglón" autogenerado="true" generacion="@prox()+1" width="50" columnas="3" margen-izquierdo="2" habilitado="false" />
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" width="100" columnas="3" margen-derecho="2" habilitado="false" />
+
+                        <campo
+                            name="tipo_bloque"
+                            text="Tipo de Renglón"
+                            validacion="%tipo_bloque%==null or (%tipo_bloque%==1 and %id_activo_fijo_det%==null)"
+                            llavesFijas="id_detalle_duep=1 OR id_detalle_duep=2"
+                            validacionMensaje="no puede de Capturar el Tipo Bloque presupuestal"
+                            width="100"
+                            columnas="3"
+                            margen-izquierdo="2"
+                            habilitado="%tipo_bloque%!=1"
+                        />
+                        <campo name="genero" text="Género" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==2" visible="false" columna-visible="false" />
+                        <!--Bloque No Presupuestal-->
+                        <campo name="tipo_afectacion" text="Tipo de Afectación" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==2" visible="true" columna-visible="false" />
+                        <!--Bloque No Presupuestal-->
+
+                        <campo
+                            name="cuenta_amortizacion"
+                            text="Cuenta de Amortización"
+                            width="100"
+                            columnas="3"
+                            margen-derecho="2"
+                            visible="false"
+                            interaccion-visible="%tipo_bloque%==1"
+                            calc="%ipcmd.ipcmd.amortizacion_anticipo%"
+                            columna-visible="false"
+                        />
+
+                        <campo name="tipo_comprobante" text="Tipo de Comprobante" width="100" columnas="3" margen-izquierdo="2" visible="false" habilitado="false" columna-visible="false" descripcionForanea="descripcion" calc="1" />
+                        <!-- calc="%ipcmd.ipcmd.id_tipo_comprobante%"  -->
+
+                        <campo name="operacion" text="Operación" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==2" visible="false" columna-visible="false" />
+                        <!--Bloque No Presupuestal -->
+
+                        <campo name="folio_comprobante" text="Folio de Comprobante" width="100" columnas="3" margen-derecho="2" visible="false" calc="%ipcmd.ipcmd.folio_comprobante%" columna-visible="false" />
+
+                        <campo
+                            name="articulo"
+                            text="Artículo"
+                            width="100"
+                            columnas="3"
+                            margen-izquierdo="2"
+                            interaccion-visible="%tipo_bloque%==1"
+                            visible="false"
+                            habilitado="false"
+                            descripcionForanea="clave_articulo,descripcion_articulo"
+                            descripcionForaneaTabla="clave_articulo,descripcion_articulo"
+                        />
+                        <campo name="fecha_cfdi" text="Fecha de CFDI" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="marca" text="Marca" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="cantidad_recibida" text="Cantidad Recibida" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" />
+                        <campo name="modelo" text="Modelo" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="unidad_medida" text="Unidad de Medida" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" />
+                        <campo name="serie" text="Serie" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="precio_unitario" text="Precio Unitario" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="color" text="Color" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="descuento" text="Descuento" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="comentarios" text="Comentarios" width="100" height="100" columnas="6" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+
+                        <campo name="iva" text="% IVA" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+
+                        <campo
+                            name="clasificacion_objeto_gasto"
+                            text="Clasificador por Objeto del Gasto"
+                            width="100"
+                            columnas="3"
+                            margen-derecho="2"
+                            descripcionForanea="id_cat"
+                            descripcionForaneaTabla="id_cat"
+                            interaccion-visible="%tipo_bloque%==1"
+                            visible="false"
+                            habilitado="false"
+                        />
+
+                        <campo name="descripcion_especifica" text="Descripción Específica" width="100" height="100" columnas="6" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1 OR %tipo_bloque%==2" visible="false" />
+                        <!--Bloque 2-->
+                        <campo name="impuesto_valor_agregado" text="Impuesto al Valor Agregado" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="otros_impuestos" text="Otros Impuestos" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" columna-visible="false" />
+                        <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false" />
+                        <campo
+                            name="programa_presupuestal"
+                            text="Programa Presupuestal"
+                            width="150"
+                            columnas="3"
+                            margen-izquierdo="2"
+                            interaccion-visible="%tipo_bloque%==1"
+                            visible="true"
+                            descripcionForaneaTabla="id_cat,descripcion"
+                            descripcionForanea="id_cat,descripcion"
+                            habilitado="false"
+                        />
+                        <campo name="importe_unitario" text="Importe Unitario" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1 OR %tipo_bloque%==2" visible="false" formatoMoneda="true" />
+                        <!-- Bloque 2-->
+                        <campo name="indicador" text="Indicador" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" habilitado="false" />
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                    </acciones>
+                </detalles>
+            </componente>
+        </nivel>
+
+        <nivel nombre="actualizafolio" id="cr" interactivo="false">
+            <componente tipo="cursor" nombre="actualizafolio" id="cr" accionDefault="editar">
+                <tabla schema="operation" nombre="activo_fijo_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="%coma.coma.id_activo_fijo%" />
+                    <campo name="id_activo_fijo_det" />
+                    <campo name="tipo_comprobante" calc="%ipcmd.ipcmd.comprobante%" />
+                    <campo name="folio_comprobante" calc="%ipcmd.ipcmd.folio_comp%" />
+                </tabla>
+            </componente>
+        </nivel>
+
+        <nivel id="acfd" nombre="acfd" interactivo="false">
+            <componente tipo="cursor" id="acfd" nombre="acfd">
+                <tabla schema="operation" nombre="activo_fijo_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="folio_duep" />
+                    <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="%coma.coma.id_activo_fijo%" />
+                    <campo name="activo_fijo" />
+                    <campo name="id_activo_fijo_det" />
+                    <campo name="fecha_elaboracion" />
+                    <campo name="tipo_bloque" />
+                    <campo name="tipo_comprobante" />
+                    <campo name="articulo" />
+                    <campo name="marca" />
+                    <campo name="modelo" />
+                    <campo name="serie" />
+                    <campo name="color" />
+                    <campo name="comentarios" />
+                    <campo name="id_cat_clasificacion_objeto_gasto" />
+                    <campo name="clasificacion_objeto_gasto" />
+                    <campo name="descripcion_especifica" />
+                    <campo name="id_cat_programa_presupuestal" />
+                    <campo name="programa_presupuestal" />
+                    <campo name="indicador" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="cuenta_amortizacion" />
+
+                    <campo name="fecha_cfdi" />
+                    <campo name="cantidad_recibida" />
+                    <campo name="unidad_medida" />
+                    <campo name="precio_unitario" />
+                    <campo name="descuento" />
+                    <campo name="iva" />
+                    <campo name="impuesto_valor_agregado" />
+                    <campo name="otros_impuestos" />
+                    <campo name="importe_unitario" />
+                    <campo name="ruta_archivo" />
+                    <campo name="ultimo_usuario_modificador" />
+                    <campo name="genero" />
+                    <campo name="tipo_afectacion" />
+                    <campo name="operacion" />
+                    <campo name="folio_contrato_compra" />
+                    <campo name="importe_total" />
+                    <campo name="pres_comprometido" />
+                    <campo name="pres_devengado" />
+                    <campo name="pres_no_devengado" />
+                </tabla>
+                <nivel id="acfda" nombre="acfda" interactivo="false">
+                    <componente tipo="altaDirect" id="acfda" nombre="acfda" repeticiones="%acfd.acfd.cantidad_recibida%">
+                        <tabla schema="operation" nombre="inventario_activofijo_aux">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="periodo" calc="%per.per.id_periodo%" />
+                            <campo name="folio_inventario" calc="%coma.coma.id_activo_fijo%" />
+                            <campo name="id_inventario" autogenerado="true" generacion="@prox()+1" />
+                            <campo name="folio_resguardo" />
+                            <campo name="folio_activo_fijo" />
+                            <campo name="fecha_elaboracion" />
+                            <campo name="articulo" calc="%acfd.acfd.articulo%" />
+                            <campo name="cantidad" calc="1" />
+                            <campo name="valor_historico" />
+                            <campo name="unidad_medida" calc="%acfd.acfd.unidad_medida%" />
+                            <campo name="descripcion_especifica" calc="%acfd.acfd.descripcion_especifica%" />
+                            <campo name="beneficiario" />
+                            <campo name="resguardante_destino" />
+                            <campo name="corresguardante" />
+                            <campo name="clave_inventario" />
+                            <campo name="ubicacion_fisica" />
+                            <campo name="tipo" />
+                            <campo name="asignacion" />
+                            <campo name="ultimo_usuario_modificador" />
+                            <campo name="id_cat_clasificacion_objeto_gasto" />
+                            <campo name="clasificacion_objeto_gasto" />
+                            <campo name="ano_vida_util" />
+                            <campo name="porcentaje_deprecicion" />
+                            <campo name="fecha_adquisicion" />
+                            <campo name="anos_vida" />
+                            <campo name="anos_por_depreciar" />
+                            <campo name="importe_depre_anual" />
+                            <campo name="deprecicion_acumulada" />
+                            <campo name="valor_libros" />
+                            <campo name="estatus" />
+                            <campo name="id_cat_area_requiriente" />
+                            <campo name="area_requiriente" />
+                            <campo name="costo_total" />
+                            <campo name="poliza_contable" />
+                            <campo name="costo_total_unitario" />
+                            <campo name="id_inventario_activofijo_folio" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="aacf2" nombre="aacf2" interactivo="false">
+            <componente id="aacf2" nombre="aacf2" tipo="cursor">
+                <tabla schema="operation" nombre="activo_fijo_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%bcondd.bcondd.periodo%" />
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%baf.baf.folio_duep%" />
+                    <campo name="activo_fijo" />
+                    <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="%coma.coma.id_activo_fijo%" />
+                    <campo name="importe_unitario" />
+
+                    <campo name="cantidad_recibida" />
+                    <campo name="cantidad_solicitada" />
+                    <campo name="cantidad_por_recibir" />
+
+                    <campo name="pres_comprometido" />
+                    <campo name="pres_devengado" />
+                    <campo name="pres_no_devengado" />
+                    <campo name="importe_total" />
+                </tabla>
+
+                <nivel id="acfd1" nombre="acfd1" interactivo="false">
+                    <componente tipo="cursor" id="acfd1" nombre="acfd1">
+                        <tabla schema="operation" nombre="activo_fijo_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                            <campo name="folio_duep" />
+                            <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="%coma.coma.id_activo_fijo%" />
+                            <campo name="activo_fijo" filtroCampo="activo_fijo" filtroOperador="=" filtroValor="%aacf2.aacf2.activo_fijo%" />
+                            <campo name="id_activo_fijo_det" />
+
+                            <campo name="pres_devengado" />
+                            <campo name="pres_no_devengado" calc="@ifThenElse(%aacf2.aacf2.pres_comprometido%==null,0,%aacf2.aacf2.pres_comprometido%) - @ifThenElse(%aacf2.aacf2.pres_devengado%==null,0,%aacf2.aacf2.pres_devengado%)" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel nombre="" id="pi" interactivo="false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="pi">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'" />
+                    <parametro name="process" calc="'49962c33-92f5-4970-9c25-26d949dee285'" />
+                    <parametro name="out_ur" calc="%per.per.id_unidad_responsable%" mostrarEsc="true" />
+                    <parametro name="out_periodo" calc="%per.per.id_periodo%" mostrarEsc="true" />
+                    <parametro name="out_duep" calc="%coma.coma.id_activo_fijo%" mostrarEsc="true" />
+                    <parametro name="out_proyecto_compra" calc="%bcons.bcons.proyecto_compra%" mostrarEsc="false" />
+                    <parametro name="out_folio_con_ordecom" calc="%bcons.bcons.folio_con_ordecom%" mostrarEsc="false" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="out_activo_fijo" calc="%baf.baf.activo_fijo%" mostrarEsc="false" />
+                </parametros>
+            </componente>
+        </nivel>
+
+        <!-- Inicio Concecutivo definitivo Pablo-->
+
+        <nivel id="bconsP" nombre="bconsP" interactivo="false">
+            <componente id="bconsP" nombre="bconsP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="seleccion_af" filtroCampo="seleccion_af" filtroOperador="=" filtroValor="true" />
+                    <campo name="folio_af" filtroCampo="folio_af" filtroOperador="=" filtroValor="'0'" />
+                    <campo name="proyecto_compra" />
+                    <campo name="folio_con_ordecom" />
+                    <campo name="id_duep_contrato_pedido" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="bcons2" nombre="bcons2" interactivo="false">
+            <componente id="bcons2" nombre="bcons2" tipo="cursor">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%" />
+                    <campo name="seleccion_af" filtroCampo="seleccion_af" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%bconsP.bconsP.id_duep_contrato_pedido%" />
+                    <campo name="folio_af" calc="%coma.coma.id_activo_fijo%" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- Fin Consecutivo definitivo Pablo-->
+
+        <!--Reportes -->
+ 
+                <!-- REPORTES -->
+                
+        <nivel nombre="Reporte DDEP" id="actifijre" mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Reporte DDEP" id="DUEPC">
+                <reporte nombre="R_duep_IJ" id="DUEPR" nombreDocumento="'Reporte DDEP'" expediente="Activo/Fijo" grupo="%coma.coma.id_activo_fijo%" url="$config.repository_upload_file$">
+                    <campo name="activo_fijo" calc="%coma.coma.activo_fijo%" type="long" />
+                    <campo name="periodo" calc="%per.per.id_periodo%" type="long" />
+                    <campo name="ur" calc="%inParam.inParam.ur%" type="long" />
+                </reporte>
+            </componente>
+            <!--CTTO-00001-1-->
+            <componente tipo="reporte" nombre="Estado de Cuenta Detallado del DDEP" id="ECDDC">
+                <reporte nombre="R_edo_cta_DUEP_Asm" id="ECDDR" nombreDocumento="'Estado de Cuenta Detallado del DDEP'" expediente="Activo/Fijo" grupo="%coma.coma.id_activo_fijo%" url="$config.repository_upload_file$">
+                    <campo name="id_activo_fijo" calc="%coma.coma.id_activo_fijo%" type="string" />
+                    <campo name="periodo" calc="%per.per.id_periodo%" type="long" />
+                    <campo name="ur" calc="%inParam.inParam.ur%" type="long" />
+                </reporte>
+            </componente>
+            <componente tipo="reporte" nombre="Vale de Recepción" id="DRAFC">
+                <reporte nombre="estado_Detallado_ij" id="DRAFR" update="true" nombreDocumento="'Vale de Recepción'" expediente="Activo/Fijo" grupo="%coma.coma.id_activo_fijo%" url="$config.repository_upload_file$">
+                    <campo name="id_activo_fijo" calc="%coma.coma.id_activo_fijo%" type="string" />
+                    <campo name="periodo" calc="%per.per.id_periodo%" type="long" />
+                    <campo name="ur" calc="%inParam.inParam.ur%" type="long" />
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
