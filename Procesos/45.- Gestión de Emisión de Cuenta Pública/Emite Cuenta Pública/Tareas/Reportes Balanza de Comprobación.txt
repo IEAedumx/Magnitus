@@ -1,0 +1,135 @@
+<tarea nombre="Reportes de Balanza de Comprobación" requisitosInstalacion="">
+    <pagina nombre="1" id="1">
+        <nivel id="p" nombre="Periodo" interactivo="false">
+            <componente id="p" nombre="Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" />
+                    <campo name="id_periodo" />
+                    <campo name="id_separador" />
+                </tabla>
+                <nivel id="ps" nombre="Separador" interactivo="false">
+                    <componente id="ps" nombre="Separador" tipo="cursor">
+                        <tabla schema="catalog" nombre="separador">
+                            <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%p.p.id_separador%" />
+                            <campo name="caracter"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="u" nombre="Usuario" interactivo="false">
+            <componente id="u" nombre="Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%p.p.id_unidad_responsable%" />
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                    <campo name="id_usuario" />
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel nombre="Seleccion de rangos" id="selRan" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Seleccion de rangos" id="selRan" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="cuenta_publica_mov_aux">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="%p.p.id_periodo%" llaveForanea="false" columnas="4" margen-izquierdo="1"/>
+                    <campo name="id_mov_aux" autogenerado="true" generacion="@prox()+1" visible="false"/>
+
+
+                    <campo name="nivel" text="Nivel" validacion="%nivel%==null" validacionMensaje="Indique nivel" columnas="4" margen-derecho="1" llaveForanea="false"  habilitado="true" type="long" local="true">  
+                        <opciones>
+                            <!--<opcion texto="Todos" valor="0"/>-->
+                            <opcion texto="Cuenta de Mayor" valor="5"/>
+                            <opcion texto="Primer Nivel" valor="6"/>
+                            <opcion texto="Segundo Nivel" valor="7"/>
+                            <opcion texto="Detalle" valor="8"/> 
+                       </opciones>
+                    </campo> 
+                   
+                   <campo name="cuenta_c_inical" text="Cuenta Contable Inicial" columnas="4" margen-izquierdo="1" autoFiltrado="true" autoFiltradoDescripcion="clave_cuenta,descripcion" visible="true" llavesDinamicas="'nivel=\\''+%nivel%+'\\''" />
+                   <!--filtradoInteractivo="'clave_cuenta LIKE \\'nivel[37]\\''"-->
+                   
+                    <campo name="prueba" text="Numero de cuenta Inicial" type="long" local="true" calcCliente="@castTo(@reemplazarTexto(%cuenta_c_inical%, %ps.ps.caracter%, ''),'long')" visible="false"  />
+                   
+                   <campo name="cuenta_c_final" text="Cuenta Contable Final" columnas="4" margen-derecho="1"  autoFiltrado="true" autoFiltradoDescripcion="clave_cuenta,descripcion" validacion="@ifThenElse(@castTo(@reemplazarTexto(%cuenta_c_inical%, %ps.ps.caracter%, ''),'long')&gt;@castTo(@reemplazarTexto(%cuenta_c_final%, %ps.ps.caracter%, ''),'long'),true,false)==true"  validacionMensaje="La cuenta final no puede ser menor que la inicial"  visible="true"/>
+                   
+                    <campo name="valida_cuenta_c_final" type="string" local="true" validacion="%prueba%!=null AND %cuenta_c_final%==null" validacionMensaje="La cuenta contable final no puede ir vacia" visible="false" />
+
+                    <campo name="prueba2" text="Numero de cuenta final" type="long" local="true" calcCliente="@castTo(@reemplazarTexto(%cuenta_c_final%,%ps.ps.caracter%, ''),'long')" visible="false" />
+                     
+
+                    <campo name="mes_inicio" text="Mes Inicio" local="true" type="long" columnas="4" margen-izquierdo="1" validacion="%mes_inicio%==null" validacionMensaje="Seleccione el mes de inicio" > 
+                        <opciones>
+                            <opcion texto="Enero" valor="1"/>
+                            <opcion texto="Febrero" valor="2"/>
+                            <opcion texto="Marzo" valor="3"/>
+                            <opcion texto="Abril" valor="4"/>
+                            <opcion texto="Mayo" valor="5"/>
+                            <opcion texto="Junio" valor="6"/>
+                            <opcion texto="Julio" valor="7"/>
+                            <opcion texto="Agosto" valor="8"/>
+                            <opcion texto="Septiembre" valor="9"/>
+                            <opcion texto="Octubre" valor="10"/>
+                            <opcion texto="Noviembre" valor="11"/>
+                            <opcion texto="Diciembre" valor="12"/>
+                       </opciones>
+                    </campo>
+                    <campo name="mes_fin" text="Mes Fin" local="true" type="long" columnas="4" margen-derecho="1" validacion="%mes_fin%==null" validacionMensaje="Seleccione un mes de fin" > 
+                        <opciones>
+                            <opcion texto="Enero" valor="1"/>
+                            <opcion texto="Febrero" valor="2"/>
+                            <opcion texto="Marzo" valor="3"/>
+                            <opcion texto="Abril" valor="4"/>
+                            <opcion texto="Mayo" valor="5"/>
+                            <opcion texto="Junio" valor="6"/>
+                            <opcion texto="Julio" valor="7"/>
+                            <opcion texto="Agosto" valor="8"/>
+                            <opcion texto="Septiembre" valor="9"/>
+                            <opcion texto="Octubre" valor="10"/>
+                            <opcion texto="Noviembre" valor="11"/>
+                            <opcion texto="Diciembre" valor="12"/>
+                       </opciones>
+                    </campo>  
+                    <campo name="movimientos" text="Solo con movimientos" columnas="4" margen-izquierdo="3" llaveForanea="false"  habilitado="true" type="long" local="true">  
+                        <opciones>
+                            <opcion texto="Si" valor="1"/>
+                            <opcion texto="No" valor="2"/>
+                       </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="8" margen-izquierdo="1" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="Reportes de Balanza de Comprobación" id="rbc" mostrarNivelAnterior="false" mostrarProximoNivel="false"> 
+            <!--<componente tipo="reporte" nombre="Balanza de Comprobación Anual - Cuentas a nivel superior" id="bc_p">-->
+            <!--    <reporte nombre="BC_P"  >-->
+            <!--        <campo name="ur" local="true" type="long" calc="%p.p.id_unidad_responsable%"/>-->
+            <!--        <campo name="periodo" local="true" type="long" calc="%p.p.id_periodo%"/> -->
+            <!--    </reporte>-->
+            <!--</componente>-->
+            <!--<componente tipo="reporte" nombre="Balanza de Comprobación Anual - Cuentas en todos los niveles" id="bc_d">-->
+            <!--    <reporte nombre="BC_D"  >-->
+            <!--        <campo name="ur" local="true" type="long" calc="%p.p.id_unidad_responsable%"/>-->
+            <!--        <campo name="periodo" local="true" type="long" calc="%p.p.id_periodo%"/> -->
+            <!--    </reporte>-->
+            <!--</componente>-->
+            <componente tipo="reporte" nombre="Balanza de Comprobación" id="bc_p">
+                <reporte nombre="BC"  >
+                    <campo name="ur" local="true" type="long" calc="%selRan.selRan.ur%"/>
+                    <campo name="periodo" local="true" type="long" calc="%selRan.selRan.periodo%"/> 
+                    <campo name="nivel" local="true" type="long" calc="%selRan.selRan.nivel%"/> 
+                    <campo name="cuenta_contable_inicio" local="true" type="string" calc="@ifThenElse(%selRan.selRan.cuenta_c_inical%==null,'9999',%selRan.selRan.cuenta_c_inical%)"  /> 
+                    <campo name="cuenta_contable_fin" local="true" type="string" calc="@ifThenElse(%selRan.selRan.cuenta_c_final%==null,'9999',%selRan.selRan.cuenta_c_final%)"/> 
+                    <campo name="mes_inicio" local="true" type="long" calc="%selRan.selRan.mes_inicio%"/> 
+                    <campo name="mes_fin" local="true" type="long" calc="%selRan.selRan.mes_fin%"/> 
+                    <campo name="movimientos" local="true" type="long" calc="%selRan.selRan.movimientos%"/> 
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

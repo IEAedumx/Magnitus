@@ -1,0 +1,1873 @@
+<tarea id="instanciadora" nombre="Instanciadora" autor="Froylán Alanís" version="1.0.0" fechaModificacion="19/07/2019" modificacionEfectuada="Versión Inicial">
+    <pagina id="1" nombre="Instanciadora">
+    
+        <nivel id="p" nombre="Periodo" interactivo="false">
+            <componente id="p" nombre="Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" />
+                    <campo name="id_periodo" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="u" nombre="Usuario" interactivo="false">
+            <componente id="u" nombre="Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%p.p.id_unidad_responsable%" />
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                    <campo name="id_usuario" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="alta" nombre="alta" interactivo="false">
+            <componente id="alta" nombre="alta" tipo="altaDirect">
+                <tabla schema="operation" nombre="cuenta_publica">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" autogenerado="true" generacion="@prox()+1" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="uno" nombre="Datos Generales de Consulta" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="unoDG" nombre="Datos Generales de Consulta" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="cuenta_publica">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%" columnas="4" margen-derecho="3" margen-izquierdo="3" llaveForanea="false" />
+                    <campo name="folio_cuenta_publica" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                    <campo name="tipo_periodicidad" text="Periodicidad" columnas="4" margen-derecho="3" margen-izquierdo="3" />
+                    <campo name="periodicidad_des" text="Periodo" ordenarPor="id_periodicidad" columnas="4" margen-derecho="3" margen-izquierdo="3" />
+                    
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario_modificador" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="estatus" calc="'GENERADA'" visible="false" />
+                    <campo name="mes" visible="false" local="true" type="string" calcCliente="@consultaDirec('SELECT descripcion AS MES FROM catalog.periodicidad_cuenta_publica WHERE id_tipo_periodicidad='+'\\''+@ifThenElse(%tipo_periodicidad%==1,%tipo_periodicidad%,0)+'\\''+' AND id_periodicidad='+'\\''+@ifThenElse(%periodicidad_des%!=null,%periodicidad_des%,0)+'\\'','MES','string','MAGNITUS')"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="4" margen-derecho="3" margen-izquierdo="3" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="uno_dos" nombre="Oficio de Emisión de Cuenta Pública" mostrarProximoNivel="false" mostrarNivelAnterior="false" >
+            <componente id="dosDG" nombre="Oficio de Emisión de Cuenta Pública" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="cuenta_publica">
+                <campo name="ur" calc="%p.p.id_unidad_responsable%" llaveForanea="false" visible="false" />
+                <campo name="periodo" calc="%p.p.id_periodo%" llaveForanea="false" visible="false"/>
+                <campo name="folio_cuenta_publica" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                <campo name="encabezado" text="Encabezado" calc="@consultaDirec('SELECT texto AS ENCA FROM reportes.oficio_cuenta_publica WHERE campo='+'\\''+'encabezado'+'\\'','ENCA','string','MAGNITUS')" columnas="4" margen-derecho="6" height="110" habilitado="true"/>
+                <campo name="asunto" text="Asunto" calc="@ifThenElse(%uno.unoDG.tipo_periodicidad%==1,@concatenar('Asunto: Informe Mensual '+%uno.unoDG.mes%+' '+%p.p.id_periodo%),@ifThenElse(%uno.unoDG.tipo_periodicidad%==3,@concatenar('Asunto: Informe Anual '+%p.p.id_periodo%),'Asunto: Infrome Trimestral'))" habilitado="false" columnas="4" margen-izquierdo="6"/>
+                <campo name="folio_oficio" text="Folio" calc="@ifThenElse(%uno.unoDG.tipo_periodicidad%==1,@concatenar('MAGNITUS-INF-MENSUAL-'+@ifThenElse(%alta.alta.folio_cuenta_publica%&lt;10,000,@ifThenElse(%alta.alta.folio_cuenta_publica%&lt;100,00,''))+%alta.alta.folio_cuenta_publica%+' '+%uno.unoDG.periodo%),@ifThenElse(%uno.unoDG.tipo_periodicidad%==3,@concatenar('MAGNITUS-CTAP_P-'+@ifThenElse(%alta.alta.folio_cuenta_publica%&lt;10,000,@ifThenElse(%alta.alta.folio_cuenta_publica%&lt;100,00,''))+%alta.alta.folio_cuenta_publica%+' '+%uno.unoDG.periodo%),@concatenar('MAGNITUS-INF_TRIM-'+@ifThenElse(%alta.alta.folio_cuenta_publica%&lt;10,000,@ifThenElse(%alta.alta.folio_cuenta_publica%&lt;100,00,''))+%alta.alta.folio_cuenta_publica%+' '+%uno.unoDG.periodo%)))" habilitado="true" columnas="4" margen-izquierdo="6"/>
+                <campo name="cuerpo_oficio" text="Cuerpo" calc="@ifThenElse(%uno.unoDG.tipo_periodicidad%==3,@consultaDirec('SELECT texto AS OFC FROM reportes.oficio_cuenta_publica WHERE campo='+'\\''+'cuerpo_anual'+'\\'','OFC','string','MAGNITUS'),@consultaDirec('SELECT texto AS OFC FROM reportes.oficio_cuenta_publica WHERE campo='+'\\''+'cuerpo_mensual'+'\\'','OFC','string','MAGNITUS'))" columnas="8" margen-izquierdo="1" margen-derecho="1" height="300" habilitado="true"/>
+                <campo name="firma_oficio" text="Firma" calc="@consultaDirec('SELECT texto AS FIR from reportes.oficio_cuenta_publica WHERE campo='+'\\''+'firma'+'\\'','FIR','string','MAGNITUS')" columnas="4" margen-derecho="3" margen-izquierdo="3" habilitado="true" height="110"/>
+                <campo name="fecha_oficio" text="Fecha" calc="@consultaDirec('SELECT texto AS FECHA from reportes.oficio_cuenta_publica WHERE campo='+'\\''+'fecha'+'\\'','FECHA','string','MAGNITUS')" columnas="4" margen-derecho="3" margen-izquierdo="3" habilitado="true"/>
+              </tabla>
+            <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="4" margen-derecho="3" margen-izquierdo="3" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+            </nivel>
+             <nivel id="Rep" nombre="Reporte Oficio" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Oficio de Emisión de Cuenta Pública Mensual" id="AutCP1"  ejecutarComponente="%uno.unoDG.tipo_periodicidad%!=3">
+                <reporte nombre="R_OficioCtaP_Mensual_IJ" >
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cp" type="long" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente tipo="reporte" nombre="Oficio de Emisión de Cuenta Pública Anual" id="AutCP2"  ejecutarComponente="%uno.unoDG.tipo_periodicidad%==3">
+                <reporte nombre="R_OficioCta_P_Anual_ok_AR" >
+                    <campo name="usuario" type="string" calc="@castTo($protocolarios.user$,'string')" />
+                </reporte>
+            </componente>
+           
+        </nivel>
+       <nivel id="alta2" nombre="alta" interactivo="false">
+            <componente id="alta2" nombre="alta" tipo="altaDirect">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%"  />
+                    <campo name="clasificacion" calc="100" llaveForanea="false"/>
+                    <campo name="id_notas" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    
+                    <campo name="periodicidad" text="Periodicidad" calc="%uno.unoDG.tipo_periodicidad%" />
+                    <campo name="periodicidad_des" text="Periodo"  calc=" %uno.unoDG.periodicidad_des%"/>
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="id_cp" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="I) Notas al Estado de Situación Financiera" id="NESF" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="I) Notas al Estado de Situación Financiera" id="NESF1" accionDefault="editar">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%" visible="false" />
+                    <campo name="id_notas" calc="%alta2.alta2.id_notas%" visible="false" />
+                    <campo name="notas" text="Activo" columnas="10" height="200" validacion="%notas%==null" validacionMensaje="Ingrese las notas de activo"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente tipo="tabla" nombre="INVERSIONES TEMPORALES (HASTA 3 MESES)" id="NESF2" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="102" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1" validacion="%concepto%==null" validacionMensaje="Ingrese el concepto"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" formatoMoneda="true" muestraAcumulado="true" validacion="%importe%==null" validacionMensaje="Ingrese el importe"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="FONDOS CON AFECTACIÓN ESPECÍFICA" id="NESF3" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="103" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="INVERSIONES FINANCIERAS DE CORTO PLAZO" id="NESF4" filtro="true">
+               <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="104" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="INVERSIONES A LARGO PLAZO" id="NESF5" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="105" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="CUENTAS POR COBRAR A CORTO PLAZO" id="NESF6" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="106" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vvu" text="2021" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="vv" text="2020" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vdn" text="2019" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="vdo" text="2018" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vds" text="2017" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+             <componente tipo="tabla" nombre="INGRESOS POR RECUPERAR A CORTO PLAZO" id="NESF7" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="107" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vvu" text="2021" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="vv" text="2020" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vdn" text="2019" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="vdo" text="2018" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vds" text="2017" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="DEUDORES DIVERSOS POR COBRAR A CORTO PLAZO" id="NESF8" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="108" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vvu" text="2021" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="vv" text="2020" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vdn" text="2019" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="vdo" text="2018" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vds" text="2017" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="DEUDORES POR ANTICIPOS DE LA TESORERIA A CORTO PLAZO" id="NESF9" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="109" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1" validacion="%concepto%==null" validacionMensaje="Ingrese el concepto"/>
+                    <campo name="vvu" text="2021" width="200" columnas="4" margen-derecho="1" validacion="%vvu%==null" validacionMensaje="Ingrese el valor"/>
+                    <campo name="vv" text="2020" width="200" columnas="4" margen-izquierdo="1" validacion="%vv%==null" validacionMensaje="Ingrese el valor"/>
+                    <campo name="vdn" text="2019" width="200" columnas="4" margen-derecho="1" validacion="%vdn%==null" validacionMensaje="Ingrese el valor"/>
+                    <campo name="vdo" text="2018" width="200" columnas="4" margen-izquierdo="1" validacion="%vdo%==null" validacionMensaje="Ingrese el valor"/>
+                    <campo name="vds" text="2017" width="200" columnas="4" margen-derecho="1" validacion="%vds%==null" validacionMensaje="Ingrese el valor"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="PRÉSTAMOS OTORGADOS A CORTO PLAZO" id="NESF10" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="110" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vvu" text="2021" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="vv" text="2020" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vdn" text="2019" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="vdo" text="2018" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vds" text="2017" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="OTROS DERECHOS A RECIBIR EFECTIVO O EQUIVALENTES A CORTO PLAZO" id="NESF11" filtro="true">
+               <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="111" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="n_d" text="A 90 días" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="co_d" text="A 180 días" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="tsc" text="A 365 días" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="m_tsc" text="+ 365 días" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="estatus" text="Estatus" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+             <componente tipo="tabla" nombre="DERECHOS A RECIBIR BIENES O SERVICIOS" id="NESF12" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="112" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="n_d" text="A 90 días" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="co_d" text="A 180 días" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="tsc" text="A 365 días" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="m_tsc" text="+ 365 días" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="estatus" text="Estatus" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="ALMACENES" id="NESF13" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="113" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="300" columnas="4" margen-izquierdo="1" validacion="%concepto%==null" validacionMensaje="Ingrese el concepto"/>
+                    <campo name="importe" text="Importe" width="300" columnas="4" margen-derecho="1" validacion="%importe%==null" validacionMensaje="Ingrese el importe"/>
+                    <campo name="metodo" text="Método" width="300" columnas="4" margen-izquierdo="1" validacion="%metodo%==null" validacionMensaje="Ingrese el método"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="FIDEICOMISOS, MANDATOS Y CONTRATOS ANÁLOGOS" id="NESF14" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="114" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="PARTICIPACIONES Y APORTACIONES DE CAPITAL" id="NESF15" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="115" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1" validacion="%concepto%==null" validacionMensaje="Ingrese el concepto"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true" validacion="%importe%==null" validacionMensaje="Ingrese el importe"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="BIENES INMUEBLES, INFRAESTRUCTURA Y CONSTRUCCIONES EN PROCESO" id="NESF16" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="116" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="BIENES MUEBLES" id="NESF17" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="117" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="ACTIVOS INTANGIBLES" id="NESF18" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="118" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="AMORTIZACIÓN ACUMULADA DE ACTIVOS INTANGIBLES" id="NESF19" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="119" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="ESTIMACIONES Y DETERIOROS" id="NESF20" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="120" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="OTROS ACTIVOS CIRCULANTES" id="NESF21" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="121" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="OTROS ACTIVOS NO CIRCULANTES" id="NESF22" filtro="true">
+               <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="122" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%uno.unoDG.tipo_periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%uno.unoDG.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1" muestraAcumulado="true"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%alta2.alta2.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%alta2.alta2.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="pasivo" nombre="Pasivo" interactivo="false">
+            <componente id="pasivo" nombre="Pasivo" tipo="altaDirect">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" calc="%p.p.id_periodo%" />
+                    <campo name="clasificacion" calc="200"/>
+                    <campo name="id_notas" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="periodicidad" text="Periodicidad" calc="%uno.unoDG.tipo_periodicidad%"  visible="false" />
+                    <campo name="periodicidad_des" text="Periodo" calc="%uno.unoDG.periodicidad_des%" visible="false" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="id_cp" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+         <nivel nombre="I) NOTAS AL ESTADO DE SITUACIÓN FINANCIERA" id="NESFP" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="I) NOTAS AL ESTADO DE SITUACIÓN FINANCIERA" id="NESFP1" accionDefault="editar" >
+                <tabla schema="operation" nombre="notas_cp">
+                   <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%"  visible="false"/>
+                    <campo name="clasificacion" calc="200" visible="false" llaveForanea="false"/>
+                    <campo name="id_notas" calc="%pasivo.pasivo.id_notas%" visible="false"/>
+                    <campo name="notas" text="Pasivo" columnas="4" margen-derecho="3" margen-izquierdo="3" height="200"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente tipo="tabla" nombre="CUENTAS POR PAGAR A CORTO PLAZO" id="NESFP2" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="201" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%pasivo.pasivo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%pasivo.pasivo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="n_d" text="A 90 días" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="co_d" text="A 180 días" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="tsc" text="365 días" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="m_tsc" text="+ 365 días" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%pasivo.pasivo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%pasivo.pasivo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+             <componente tipo="tabla" nombre="DOCUMENTOS POR PAGAR A CORTO PLAZO" id="NESFP3" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="202" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%pasivo.pasivo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%pasivo.pasivo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="n_d" text="A 90 días" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="co_d" text="A 180 días" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="tsc" text="365 días" width="200" columnas="4" margen-izquierdo="1"/>
+                    <campo name="m_tsc" text="+ 365 días" width="200" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%pasivo.pasivo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%pasivo.pasivo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="FONDOS Y BIENES DE TERCEROS EN GARANTIA Y/O ADMINISTRACIÓN" id="NESFP4" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="203" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%pasivo.pasivo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%pasivo.pasivo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%pasivo.pasivo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%pasivo.pasivo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="FONDOS Y BIENES DE TERCEROS EN GARANTÍA Y/O ADMINISTRACION A LARGO PLAZO" id="NESFP5" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="204" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%pasivo.pasivo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%pasivo.pasivo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%pasivo.pasivo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%pasivo.pasivo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="OTROS PASIVOS DIFERIDOS A CORTO PLAZO" id="NESFP6" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="205" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%pasivo.pasivo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%pasivo.pasivo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%pasivo.pasivo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%pasivo.pasivo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+         <nivel id="actividades" nombre="Pasivo" interactivo="false">
+            <componente id="actividades" nombre="Pasivo" tipo="altaDirect">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" calc="%p.p.id_periodo%" />
+                    <campo name="clasificacion" calc="300"/>
+                    <campo name="id_notas" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="periodicidad" text="Periodicidad" calc="%uno.unoDG.tipo_periodicidad%"  visible="false" />
+                    <campo name="periodicidad_des" text="Periodo" calc="%uno.unoDG.periodicidad_des%" visible="false" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="id_cp" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="II) NOTAS AL ESTADO DE ACTIVIDADES" id="NEA" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="II) NOTAS AL ESTADO DE ACTIVIDADES" id="NEA1" accionDefault="editar" >
+                <tabla schema="operation" nombre="notas_cp">
+                   <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%"  visible="false"/>
+                    <campo name="clasificacion" calc="300" visible="false" llaveForanea="false"/>
+                    <campo name="id_notas" calc="%actividades.actividades.id_notas%" visible="false"/>
+                    <campo name="notas" text="NOTAS" columnas="4" margen-derecho="3" margen-izquierdo="3" height="200"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente tipo="tabla" nombre="INGRESOS DE GESTIÓN" id="NEA2" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="301" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%actividades.actividades.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%actividades.actividades.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%actividades.actividades.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%actividades.actividades.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="PARTICIPACIONES, APORTACIONES, TRANSFERENCIAS, ASIGNACIONES, SUBSIDIOS Y OTRAS AYUDAS" id="NEA3" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="302" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%actividades.actividades.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%actividades.actividades.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%actividades.actividades.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%actividades.actividades.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="OTROS INGRESOS Y BENEFICIOS" id="NEA4" filtro="true">
+                 <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="304" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%actividades.actividades.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%actividades.actividades.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%actividades.actividades.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%actividades.actividades.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="GASTOS Y OTRAS PERDIDAS" id="NEA5" filtro="true">
+                 <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="305" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%actividades.actividades.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%actividades.actividades.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%actividades.actividades.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%actividades.actividades.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="variaciones" nombre="Pasivo" interactivo="false">
+            <componente id="variaciones" nombre="Pasivo" tipo="altaDirect">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" calc="%p.p.id_periodo%" />
+                    <campo name="clasificacion" calc="400"/>
+                    <campo name="id_notas" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="periodicidad" text="Periodicidad" calc="%uno.unoDG.tipo_periodicidad%"  visible="false" />
+                    <campo name="periodicidad_des" text="Periodo" calc="%uno.unoDG.periodicidad_des%" visible="false" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="id_cp" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="III) NOTAS AL ESTADO DE VARIACIONES EN LA HACIENDA PÙBLICA" id="NEVHP" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="III) NOTAS AL ESTADO DE VARIACIONES EN LA HACIENDA PÙBLICA" id="NEVHP1" accionDefault="editar" >
+                <tabla schema="operation" nombre="notas_cp">
+                   <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%"  visible="false"/>
+                    <campo name="clasificacion" calc="400" visible="false" llaveForanea="false"/>
+                    <campo name="id_notas" calc="%variaciones.variaciones.id_notas%" visible="false"/>
+                    <campo name="notas" text="NOTAS" columnas="4" margen-derecho="3" margen-izquierdo="3" height="200"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente tipo="tabla" nombre="HACIENDA PÚBLICA/PATRIMONIO CONTRIBUIDO" id="NEVHP2" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="401" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%variaciones.variaciones.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%variaciones.variaciones.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="naturaleza" text="Naturaleza" width="300" columnas="4" margen-derecho="1"/>
+                    <campo name="tipo" text="Tipo" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%variaciones.variaciones.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%variaciones.variaciones.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="HACIENDA PÚBLICA/PATRIMONIO GENERADO" id="NEVHP3" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="402" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%variaciones.variaciones.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%variaciones.variaciones.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="naturaleza" text="Naturaleza" width="300" columnas="4" margen-derecho="1"/>
+                    <campo name="tipo" text="Tipo" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%variaciones.variaciones.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%variaciones.variaciones.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="flujo" nombre="Pasivo" interactivo="false">
+            <componente id="flujo" nombre="Pasivo" tipo="altaDirect">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" calc="%p.p.id_periodo%" />
+                    <campo name="clasificacion" calc="500"/>
+                    <campo name="id_notas" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="periodicidad" text="Periodicidad" calc="%uno.unoDG.tipo_periodicidad%"  visible="false" />
+                    <campo name="periodicidad_des" text="Periodo" calc="%uno.unoDG.periodicidad_des%" visible="false" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="id_cp" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="IV) NOTAS AL ESTADO DE FLUJO DE EFECTIVO" id="NEFE" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="IV) NOTAS AL ESTADO DE FLUJO DE EFECTIVO" id="NEFE1" accionDefault="editar" >
+                <tabla schema="operation" nombre="notas_cp">
+                   <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%"  visible="false"/>
+                    <campo name="clasificacion" calc="500" visible="false" llaveForanea="false"/>
+                    <campo name="id_notas" calc="%flujo.flujo.id_notas%" visible="false"/>
+                    <campo name="notas" text="NOTAS" columnas="4" margen-derecho="3" margen-izquierdo="3" height="200"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            <componente tipo="tabla" nombre="FLUJO DE EFECTIVO" id="NEFE2" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="501" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%flujo.flujo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%flujo.flujo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vxn" text="2021" width="300" columnas="4" margen-derecho="1"/>
+                    <campo name="vxn_u" text="2020" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%flujo.flujo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%flujo.flujo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="BIENES INMUEBLES, INFRAESTRUCTURA Y CONSTRUCCIONES EN PROCESO" id="NEFE3" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="502" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%flujo.flujo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%flujo.flujo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vxn" text="2021" width="300" columnas="4" margen-derecho="1"/>
+                    <campo name="vxn_u" text="2020" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%flujo.flujo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%flujo.flujo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="BIENES MUEBLES E INTANGIBLES" id="NEFE4" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="503" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%flujo.flujo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%flujo.flujo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vxn" text="2021" width="300" columnas="4" margen-derecho="1"/>
+                    <campo name="vxn_u" text="2020" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%flujo.flujo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%flujo.flujo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="CONCILIACION DE FLUJO DE EFECTIVO" id="NEFE5" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="504" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%flujo.flujo.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%flujo.flujo.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="vxn" text="2021" width="300" columnas="4" margen-derecho="1"/>
+                    <campo name="vxn_u" text="2020" width="300" columnas="4" margen-izquierdo="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%flujo.flujo.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%flujo.flujo.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="conciliacion" nombre="Pasivo" interactivo="false">
+            <componente id="conciliacion" nombre="Pasivo" tipo="altaDirect">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" calc="%p.p.id_periodo%" />
+                    <campo name="clasificacion" calc="600"/>
+                    <campo name="id_notas" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="periodicidad" text="Periodicidad" calc="%uno.unoDG.tipo_periodicidad%"  visible="false" />
+                    <campo name="periodicidad_des" text="Periodo" calc="%uno.unoDG.periodicidad_des%" visible="false" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="id_cp" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="conciliacion1" nombre="Pasivo" interactivo="false">
+            <componente id="conciliacion1" nombre="Pasivo" tipo="altaDirect">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" calc="%p.p.id_periodo%" />
+                    <campo name="clasificacion" calc="900"/>
+                    <campo name="id_notas" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="periodicidad" text="Periodicidad" calc="%uno.unoDG.tipo_periodicidad%"  visible="false" />
+                    <campo name="periodicidad_des" text="Periodo" calc="%uno.unoDG.periodicidad_des%" visible="false" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="id_cp" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="V) CONCILIACIÓN CONTABLE PRESUPUESTAL" id="CCP" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="V) CONCILIACIÓN CONTABLE PRESUPUESTAL" id="CCP1" accionDefault="editar" >
+                <tabla schema="operation" nombre="notas_cp">
+                   <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%"  visible="false"/>
+                    <campo name="clasificacion" calc="600" visible="false" llaveForanea="false"/>
+                    <campo name="id_notas" calc="%conciliacion.conciliacion.id_notas%" visible="false"/>
+                    <campo name="notas" text="NOTAS" columnas="4" margen-derecho="3" margen-izquierdo="3" height="200"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            
+            <componente tipo="formulario" nombre="PASIVOS CONTINGENTES" id="CCP1" accionDefault="editar" >
+                <tabla schema="operation" nombre="notas_cp">
+                   <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" text="Año" calc="%p.p.id_periodo%"  visible="false"/>
+                    <campo name="clasificacion" calc="900" visible="false" llaveForanea="false"/>
+                    <campo name="id_notas" calc="%conciliacion1.conciliacion1.id_notas%" visible="false"/>
+                    <campo name="notas" text="PASIVOS CONTINGENTES" columnas="4" margen-derecho="3" margen-izquierdo="3" height="200" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <!--<componente tipo="tabla" nombre="CONCILIACIÓN  ENTRE LOS EGRESOS PRESUPUESTARIOS Y LOS GASTOS CONTABLES" id="CCP2" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="601" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%conciliacion.conciliacion.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%conciliacion.conciliacion.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%conciliacion.conciliacion.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%conciliacion.conciliacion.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="CONCILIACIÓN  ENTRE LOS INGRESOS PRESUPUESTARIOS Y LOS GASTOS CONTABLES" id="CCP3" filtro="true">
+                <tabla schema="operation" nombre="notas_tab_cp">
+                    <campo name="ur" text="ur" calc="%p.p.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%p.p.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="clasificacion" text="clasificacion" calc="602" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_tab_notas" text="id" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad" text="periodicidad" calc="%conciliacion.conciliacion.periodicidad%" visible="false" columna-visible="false"/>
+                    <campo name="periodicidad_des" text="periodicidad_descripcion" calc="%conciliacion.conciliacion.periodicidad_des%" visible="false" columna-visible="false"/>
+                    <campo name="concepto" text="Concepto" width="500" columnas="4" margen-izquierdo="1"/>
+                    <campo name="importe" text="Importe" width="500" columnas="4" margen-derecho="1"/>
+                    <campo name="usuario" calc="%u.u.id_usuario%" text="usuario" visible="false" columna-visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" text="fecha" visible="false" columna-visible="false"/>
+                    <campo name="notas" calc="%conciliacion.conciliacion.id_notas%" text="usuario" visible="false" columna-visible="false" filtroCampo="notas" filtroOperador="=" filtroValor="%conciliacion.conciliacion.id_notas%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>-->
+        </nivel>
+        <nivel id="NGA" nombre="Notas de Gestión Administrativa" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="NGA" nombre="Notas de Gestión Administrativa" tipo="formulario">
+                <tabla schema="operation" nombre="notas_cp">
+                    <campo name="ur" calc="%p.p.id_unidad_responsable%" visible="false" />
+                    <campo name="periodo" calc="%p.p.id_periodo%" visible="false"  />
+                    <campo name="clasificacion" calc="800" visible="false" llaveForanea="falss"/>
+                    <campo name="id_notas" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="periodicidad" text="Periodicidad" calc="%uno.unoDG.tipo_periodicidad%"  visible="false" />
+                    <campo name="periodicidad_des" text="Periodo" calc="%uno.unoDG.periodicidad_des%" visible="false" />
+                    <campo name="id_cp" calc="%alta.alta.folio_cuenta_publica%" visible="false" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" />
+                    <campo name="usuario" calc="%u.u.id_usuario%" visible="false" />
+                    <campo name="introduccion" text="1. INTRODUCCION" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="panorama_ef" text="2. PANORAMA ECONOMICO FINANCIERO" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="autorizacion_h" text="3. AUTORIZACION E HISTORIA" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="organiacion_os" text="4. ORGANIZACIÓN Y OBJETO SOCIAL" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="bases_pef" text="5. BASES DE PREPARACION DE LOS ESTADOS FINANCIEROS" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="politicas_cs" text="6. POLITICAS DE CONTABILIDAD SIGNIFICATIVAS" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="posicion_mprc" text="7. POSICION EM MONEDA Y PROTECCION POR RIESGO CAMBIARIO" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="reporte_aa" text="8. REPORTE ANALITICO DEL ACTIVO" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="fideicomisos_ma" text="9. FIDEICOMISOS, MANDATOS Y ANALOGOS" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="reporte_r" text="10. REPORTE DE LA RECAUDACION" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="informacion_drad" text="11. INFORMACION SOBRE LA DEUDA Y EL REPORTE ANALITICO DE LA DEUDA" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="clasificacion_o" text="12. CALIFICACIONES OTORGADAS" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="proceso_m" text="13. PROCESOS DE MEJORA" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="informacion_s" text="14. INFORMACION POR SEGMENTOS" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="eventos_pc" text="15. EVENTOS POSTERIORES AL CIERRE" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="partes_r" text="16. PARTES RELACIONADAS" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                    <campo name="responsabilidad_prsf" text="17. RESPONSABILIDAD SOBRE LA PRESENTACION RAZONABLE A LA SITUACION FINANCIERA" columnas="6" margen-derecho="2" margen-izquierdo="2" height="200"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="4" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="PER1_NIVEL1" nombre="Emisión de Cuenta Pública Mensual / Información Contable" ejecutar="%uno.unoDG.tipo_periodicidad%==1" mostrarNivelAnterior="false">
+            <componente id="EA1" nombre="Estado de Actividades" tipo="reporte" colapsado="si">
+              <reporte nombre="2R_AACT_Jo">
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="ESF1" nombre="Estado Situación Financiera" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_esf_jsus">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EVHP1" nombre="Estado de Variación en la Hacienda Pública" tipo="reporte" colapsado="si">
+                <reporte nombre="4R_EVHP"> 
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                </reporte>
+            </componente>
+            <componente id="ECSF1" tipo="reporte" nombre="Estado de Cambios en la Situación Financiera"  colapsado="si">
+                <reporte nombre="RECSF_IJ">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EFE1" nombre="Estado de Flujo de Efectivo" tipo="reporte" colapsado="si">
+                <reporte nombre="R_EFE_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="PC1" nombre="Pasivos Contigentes" tipo="reporte" colapsado="si">
+                <reporte nombre="7R_PCONT_Jo">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EAA1" nombre="Estado de Analítico del Activo" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_ea_jsus">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                </reporte>
+            </componente>
+            <componente id="EADOP1" nombre="Estado de Analítico de la Deuda y Otros Pasivos" tipo="reporte" colapsado="si">
+                <reporte nombre="9R_EADP">
+                   <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFD1" nombre="Notas a los Estados Financieros / Desglose" tipo="reporte" colapsado="si">
+                <reporte nombre="10F_N_Desglose_Jo">                
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFM1" nombre="Notas a los Estados Financieros / Memoria" tipo="reporte" colapsado="si">
+                <reporte nombre="R_F_Memoria_AR">
+                    <campo name="ur" type="long" calc="%alta.alta.ur%"/>
+                    <campo name="periodo" type="long" calc="%alta.alta.periodo%"/>
+                    <campo name="periodo_mensual" type="long" calc="%uno.unoDG.periodicidad_des%"/>
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFGA1" nombre="Notas a los Estados Financieros / Gestión Administrativa" tipo="reporte" colapsado="si">
+                <reporte nombre="30F_NGestion_Ad_Jo">                   
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                    <!-- <reporte nombre="repor_NGestionAd_jsus">-->
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER1_NIVEL2" nombre="Emisión de Cuenta Pública Mensual / Información Presupuestaria" ejecutar="%uno.unoDG.tipo_periodicidad%==1" mostrarNivelAnterior="false">
+            <componente id="EAITI1" nombre="Estado Analítico de Ingresos Tipo de Ingreso" tipo="reporte" colapsado="si">
+                <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+               <!--  <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAITI1_CF" nombre="Estado Analítico de Ingresos Tipo de Ingreso (Con Firmas)" tipo="reporte" colapsado="si">
+                <reporte nombre="13R_EAI_Tipo_Jo_cf">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+               <!--  <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+
+            <!--<componente id="EAIF1" nombre="Estado Analítico de Ingresos Fuente" tipo="reporte" colapsado="si">-->
+            <!--    <reporte nombre="repor_eaiFteFin_jsus">-->
+            <!--        <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>-->
+            <!--        <campo name="periodo" type="long" calc="%p.p.id_periodo%" />-->
+            <!--        <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>-->
+            <!--        <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />-->
+                
+            <!--    </reporte>-->
+            <!--</componente>-->
+            <!-- <reporte nombre="repor_eaiFteFin_jsus">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+            <componente id="EAEPCA1" nombre="Estado Analítico del Ejercicio del Presupuesto: Clasificación Administrativa" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_admin_hmvg"><!-- R_Clasif_Adm_IJ -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!-- <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAEPTP1" nombre="Estado Analítico del Ejercicio del Presupuesto: Tipo de Gasto" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_tg_hmvg_p"><!-- R_TipoG_AR -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!-- <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAEPCC1" nombre="Estado Analítico del Ejercicio del Presupuesto: Capítulo y Concepto" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_cog_hmvg"> <!-- R_Cog_AR -->
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <componente id="EAEPCC1_EN" nombre="Estado Analítico del Ejercicio del Presupuesto: Capítulo" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_cog_hmvg_en"> <!-- R_Cog_AR -->
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <componente id="EAEPFF1" nombre="Estado Analítico del Ejercicio del Presupuesto: Finalidad y Función" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_func_hmvg_p"><!--eape_func_hmvg repor_clasFunc_jsus -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <!--Se añadió el reporte de Flujo de Fondos-->
+            <componente id="flujo_fondos" nombre="Flujo de Fondos" tipo="reporte" colapsado="si">
+                <reporte nombre="Flujo_fondos">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%"/>
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <!-- Se añadió el reporte de Indicadores de Postura Fiscal -->
+            <componente id="IPF1" nombre="Indicadores de Postura Fiscal" tipo="reporte" colapsado="si">
+                 <reporte nombre="Posturafis_PDF2">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                    <campo name="parametro1" type="string" calc="%uno.unoDG.periodicidad_des%" />
+                    <campo name="parametro2" type="string" calc="%uno.unoDG.periodo%" />
+                    <campo name="parametro3" type="string" calc="%uno.unoDG.id_fondo%" />
+                    <campo name="parametro4" type="string" calc="'SI'"/>
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER1_NIVEL3" nombre="Emisión de Cuenta Pública Mensual / Información Programatica" ejecutar="%uno.unoDG.tipo_periodicidad%==1" mostrarNivelAnterior="false">
+            <componente id="unoMesProg" nombre="Gastos por Categoría Programática" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_infProgr_jsus">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    
+                </reporte>
+            </componente>
+        </nivel>
+
+        <!-- PERIODICIDAD TIPO 2-->
+        <nivel id="PER2_NIVEL1" nombre="Emisión de Cuenta Pública Trimestral / Información Contable" ejecutar="%uno.unoDG.tipo_periodicidad%==2" mostrarNivelAnterior="false">
+            <componente id="EA2" nombre="Estado de Actividades" tipo="reporte" colapsado="si">
+              <reporte nombre="2R_AACT_Jo">
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="ESF2" nombre="Estado Situación Financiera" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_esf_jsus">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EVHP2" nombre="Estado de Variación en la Hacienda Pública" tipo="reporte" colapsado="si">
+                <reporte nombre="4R_EVHP"> 
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                </reporte>
+            </componente>
+            <componente id="ECSF2" tipo="reporte" nombre="Estado de Cambios en la Situación Financiera"  colapsado="si">
+                <reporte nombre="RECSF_IJ">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EFE2" nombre="Estado de Flujo de Efectivo" tipo="reporte" colapsado="si">
+                <reporte nombre="R_EFE_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="PC2" nombre="Pasivos Contigentes" tipo="reporte" colapsado="si">
+               <reporte nombre="7R_PCONT_Jo">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EAA2" nombre="Estado de Analítico del Activo" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_ea_jsus">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                </reporte>
+            </componente>
+            <componente id="EADOP2" nombre="Estado de Analítico de la Deuda y Otros Pasivos" tipo="reporte" colapsado="si">
+                <reporte nombre="9R_EADP">
+                   <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFD2" nombre="Notas a los Estados Financieros / Desglose" tipo="reporte" colapsado="si">
+                <reporte nombre="10F_N_Desglose_Jo">                
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFM2" nombre="Notas a los Estados Financieros / Memoria" tipo="reporte" colapsado="si">
+                 <reporte nombre="R_F_Memoria_AR">
+                    <campo name="ur" type="long" calc="%alta.alta.ur%"/>
+                    <campo name="periodo" type="long" calc="%alta.alta.periodo%"/>
+                    <campo name="periodo_mensual" type="long" calc="%uno.unoDG.periodicidad_des%"/>
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFGA2" nombre="Notas a los Estados Financieros / Gestión Administrativa" tipo="reporte" colapsado="si">
+                <reporte nombre="30F_NGestion_Ad_Jo">                   
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <!-- <reporte nombre="repor_NGestionAd_jsus">-->
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER2_NIVEL2" nombre="Emisión de Cuenta Pública Trimestral / Información Presupuestaria" ejecutar="%uno.unoDG.tipo_periodicidad%==2" mostrarNivelAnterior="false">
+            <componente id="EAITI2" nombre="Estado Analítico de Ingresos Tipo de Ingreso" tipo="reporte" colapsado="si">
+                <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+               <!--  <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAITI2_CF" nombre="Estado Analítico de Ingresos Tipo de Ingreso (Con Firmas)" tipo="reporte" colapsado="si">
+                <reporte nombre="13R_EAI_Tipo_Jo_cf">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+               <!--  <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAIF2" nombre="Estado Analítico de Ingresos Fuente" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_eaiFteFin_jsus">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                <!-- <reporte nombre="repor_eaiFteFin_jsus">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAEPCA2" nombre="Estado Analítico del Ejercicio del Presupuesto: Clasificación Administrativa" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_admin_hmvg"><!-- R_Clasif_Adm_IJ -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!-- <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAEPTP2" nombre="Estado Analítico del Ejercicio del Presupuesto: Tipo de Gasto" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_tg_hmvg_p"><!-- R_TipoG_AR -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!-- <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAEPCC2" nombre="Estado Analítico del Ejercicio del Presupuesto: Capítulo y Concepto" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_cog_hmvg"> <!-- R_Cog_AR -->
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <componente id="EAEPCC2_EN" nombre="Estado Analítico del Ejercicio del Presupuesto: Capítulo" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_cog_hmvg_en"> <!-- R_Cog_AR -->
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <componente id="EAEPFF2" nombre="Estado Analítico del Ejercicio del Presupuesto: Finalidad y Función" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_func_hmvg_p"><!--eape_func_hmvg repor_clasFunc_jsus -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <!-- Se añadió el reporte de Indicadores de Postura Fiscal -->
+            <componente id="IPF2" nombre="Indicadores de Postura Fiscal" tipo="reporte" colapsado="si">
+                <reporte nombre="Posturafis_PDF2">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                    <campo name="parametro1" type="string" calc="%uno.unoDG.periodicidad_des%" />
+                    <campo name="parametro2" type="string" calc="%uno.unoDG.periodo%" />
+                    <campo name="parametro3" type="string" calc="%uno.unoDG.id_fondo%" />
+                    <campo name="parametro4" type="string" calc="'SI'"/>
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER2_NIVEL3" nombre="Emisión de Cuenta Pública Trimestral / Información Programática" ejecutar="%uno.unoDG.tipo_periodicidad%==2" mostrarNivelAnterior="false">
+            <componente id="GCP1" nombre="Gasto por Categoría Programática" tipo="reporte" colapsado="si">
+               <reporte nombre="repor_infProgr_jsus">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER2_NIVEL4" nombre="Emisión de Cuenta Pública Trimestral / Ley de Disciplina Financiera" ejecutar="%uno.unoDG.tipo_periodicidad%==2" mostrarNivelAnterior="false">
+            <componente id="ESFD_LDF" nombre="Estado de Situación Financiera Detallado-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="Est_Sit_Fin_Det">
+                    <!-- R_ESF_LDF_IJ -->
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="IADPOP_LDF" nombre="Informe Analítico de la Deuda Pública y Otros Pasivos-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="R_EADP_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="IAODF_LDF" nombre="Informe Analítico de Obligaciones Diferentes de Financiamientos-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="70R_Oblig_Dif_Jo">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="BP_LDF" nombre="Balance Presupuestario-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_balancePptario_jsus">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="EAID_LDF" nombre="Estado Analítico de Ingresos Detallado-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="Est_Ana_Ing_Det">
+                    <!-- 72R_EAI_Detalle -->
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="EAEPED_COG_LDF" nombre="Estado Analítico del ejercicio del Presupuesto de Egresos Detallado-LDF (Clasificación por Objeto del Gasto)" tipo="reporte" colapsado="si">
+                <reporte nombre="R_EAP_Cog_IJ">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="EAEPED_CA_LDF" nombre="Estado Analítico del ejercicio del Presupuesto de Egresos Detallado-LDF (Clasificación Administrativa)" tipo="reporte" colapsado="si">
+                <reporte nombre="R_Clasif_Admin_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="EAPEED_CF_LDF" nombre="Estado Analítico del ejercicio del Presupuesto de Egresos Detallado-LDF (Clasificación Funcional)" tipo="reporte" colapsado="si">
+                <reporte nombre="75R_Clasif_Funcional_Jo">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="EAEPED_LDF" nombre="Estado Analítico del ejercicio del Presupuesto de Egresos Detallado-LDF (Clasificación de Servicios Personales por Categoría)" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_serv_personal_jsus">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="GC_LDF" nombre="Guía de Cumplimiento" tipo="reporte" colapsado="si">
+                <reporte nombre="F_Guia_Cumplimiento_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER3_NIVEL1" nombre="Emisión de Cuenta Pública Anual / Información Contable" ejecutar="%uno.unoDG.tipo_periodicidad%==3" mostrarNivelAnterior="false">
+            <componente id="EA3" nombre="Estado de Actividades" tipo="reporte" colapsado="si">
+              <reporte nombre="2R_AACT_Jo">
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="ESF3" nombre="Estado Situación Financiera" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_esf_jsus">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EVHP3" nombre="Estado de Variación en la Hacienda Pública" tipo="reporte" colapsado="si">
+                <reporte nombre="4R_EVHP"> 
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                </reporte>
+            </componente>
+            <componente id="ECSF3" tipo="reporte" nombre="Estado de Cambios en la Situación Financiera"  colapsado="si">
+                <reporte nombre="RECSF_IJ">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EFE3" nombre="Estado de Flujo de Efectivo" tipo="reporte" colapsado="si">
+                <reporte nombre="R_EFE_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="PC3" nombre="Pasivos Contigentes" tipo="reporte" colapsado="si">
+               <reporte nombre="7R_PCONT_Jo">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="EAA3" nombre="Estado de Analítico del Activo" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_ea_jsus">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                </reporte>
+            </componente>
+            <componente id="EADOP3" nombre="Estado de Analítico de la Deuda y Otros Pasivos" tipo="reporte" colapsado="si">
+                <reporte nombre="9R_EADP">
+                   <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFD3" nombre="Notas a los Estados Financieros / Desglose" tipo="reporte" colapsado="si">
+                <reporte nombre="10F_N_Desglose_Jo">                
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFM3" nombre="Notas a los Estados Financieros / Memoria" tipo="reporte" colapsado="si">
+                <reporte nombre="R_F_Memoria_AR">
+                    <campo name="ur" type="long" calc="%alta.alta.ur%"/>
+                    <campo name="periodo" type="long" calc="%alta.alta.periodo%"/>
+                    <campo name="periodo_mensual" type="long" calc="%uno.unoDG.periodicidad_des%"/>
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            <componente id="NEFGA3" nombre="Notas a los Estados Financieros / Gestión Administrativa" tipo="reporte" colapsado="si">
+                <reporte nombre="30F_NGestion_Ad_Jo">                   
+                    <campo name="ur" type="long" local="true" calc="%alta.alta.ur%" />
+                    <campo name="periodo" type="long" local="true" calc="%alta.alta.periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                    <!-- <reporte nombre="repor_NGestionAd_jsus">-->
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER3_NIVEL2" nombre="Emisión de Cuenta Pública Anual / Información Presupuestaria" ejecutar="%uno.unoDG.tipo_periodicidad%==3" mostrarNivelAnterior="false">
+            <componente id="EAITI3" nombre="Estado Analítico de Ingresos Tipo de Ingreso" tipo="reporte" colapsado="si">
+                <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+               <!--  <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAITI3_CF" nombre="Estado Analítico de Ingresos Tipo de Ingreso (Con Firmas)" tipo="reporte" colapsado="si">
+                <reporte nombre="13R_EAI_Tipo_Jo_cf">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+               <!--  <reporte nombre="13R_EAI_Tipo_Jo">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAIF3" nombre="Estado Analítico de Ingresos Fuente" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_eaiFteFin_jsus">
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                <!-- <reporte nombre="repor_eaiFteFin_jsus">
+                    <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAEPCA3" nombre="Estado Analítico del Ejercicio del Presupuesto: Clasificación Administrativa" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_admin_hmvg"><!-- R_Clasif_Adm_IJ -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!-- <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAEPTP3" nombre="Estado Analítico del Ejercicio del Presupuesto: Tipo de Gasto" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_tg_hmvg_p"><!-- R_TipoG_AR -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!-- <campo type="string" calc="$protocolarios.user$" /> -->
+                </reporte>
+            </componente>
+            <componente id="EAEPCC3" nombre="Estado Analítico del Ejercicio del Presupuesto: Capítulo y Concepto" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_cog_hmvg"> <!-- R_Cog_AR -->
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <componente id="EAEPCC3_EN" nombre="Estado Analítico del Ejercicio del Presupuesto: Capítulo" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_cog_hmvg_en"> <!-- R_Cog_AR -->
+                    <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <componente id="EAEPFF3" nombre="Estado Analítico del Ejercicio del Presupuesto: Finalidad y Función" tipo="reporte" colapsado="si">
+                <reporte nombre="eape_func_hmvg_p"><!--eape_func_hmvg repor_clasFunc_jsus -->
+                     <campo name="ur" type="long" calc="%p.p.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" calc="%alta.alta.folio_cuenta_publica%"/>
+                    <!--<campo type="string" calc="$protocolarios.user$" />-->
+                </reporte>
+            </componente>
+            <!-- Se añadió el reporte de Indicadores de Postura Fiscal -->
+           <componente id="IPF3" nombre="Indicadores de Postura Fiscal" tipo="reporte" colapsado="si">
+                <reporte nombre="Posturafis_PDF2">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    <campo name="usuario" type="string" local="true" calc="$protocolarios.user$" />
+                    <campo name="parametro1" type="string" calc="'12'" /><!-- %uno.unoDG.periodicidad_des% -->
+                    <campo name="parametro2" type="string" calc="%uno.unoDG.periodo%" />
+                    <campo name="parametro3" type="string"  /><!-- %uno.unoDG.id_fondo% -->
+                    <campo name="parametro4" type="string" calc="'SI'"/>
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER3_NIVEL3" nombre="Emisión de Cuenta Pública Anual / Información Programática" ejecutar="%uno.unoDG.tipo_periodicidad%==3" mostrarNivelAnterior="false">
+            <componente id="GCP3" nombre="Gasto por Categoría Programática" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_infProgr_jsus">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="EPPI3" nombre="Egresos por Programas y Proyectos de Inversión" tipo="reporte" colapsado="si">
+                <reporte nombre="66F_Prog_y_Proy">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                    
+                </reporte>
+            </componente>
+            <componente id="IR3" nombre="Indicadores de Resultados" tipo="reporte" colapsado="si">
+                <reporte nombre="F_Indicadores_IJ">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER3_NIVEL4" nombre="Emisión de Cuenta Pública Anual / Ley de Disciplina Financiera" ejecutar="%uno.unoDG.tipo_periodicidad%==3" mostrarNivelAnterior="false">
+            <componente id="unoAnualDiscFin" nombre="Estado de Situación Financiera Detallado-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="Est_Sit_Fin_Det">
+                    <!-- R_ESF_LDF_IJ -->
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="dosAnualDiscFin" nombre="Informe Analítico de la Deuda Pública y Otros Pasivos-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="R_EADP_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="tresAnualDiscFin" nombre="Informe Analítico de Obligaciones Diferentes de Financiamientos-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="70R_Oblig_Dif_Jo">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="cuatroAnualDiscFin" nombre="Balance Presupuestario-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_balancePptario_jsus">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="cincoAnualDiscFin" nombre="Estado Analítico de Ingresos Detallado-LDF" tipo="reporte" colapsado="si">
+                <reporte nombre="Est_Ana_Ing_Det">
+                    <!-- 72R_EAI_Detalle -->
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="seisAnualDiscFin" nombre="Estado Analítico del ejercicio del Presupuesto de Egresos Detallado-LDF (Clasificación por Objeto del Gasto)" tipo="reporte" colapsado="si">
+                <reporte nombre="R_EAP_Cog_IJ">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="sieteAnualDiscFin" nombre="Estado Analítico del ejercicio del Presupuesto de Egresos Detallado-LDF (Clasificación Administrativa)" tipo="reporte" colapsado="si">
+                <reporte nombre="R_Clasif_Admin_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="ochoAnualDiscFin" nombre="Estado Analítico del ejercicio del Presupuesto de Egresos Detallado-LDF (Clasificación Funcional)" tipo="reporte" colapsado="si">
+                <reporte nombre="75R_Clasif_Funcional_Jo">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="nueveAnualDiscFin" nombre="Estado Analítico del ejercicio del Presupuesto de Egresos Detallado-LDF (Clasificación de Servicios Personales por Categoría)" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_serv_personal_jsus">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="diezAnualDiscFin" nombre="Guía de Cumplimiento" tipo="reporte" colapsado="si">
+                <reporte nombre="F_Guia_Cumplimiento_AR">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel id="PER3_NIVEL5" nombre="Emisión de Cuenta Pública Anual / Información Relativa a los Bienes Muebles e Inmuebles" ejecutar="%uno.unoDG.tipo_periodicidad%==3" mostrarNivelAnterior="false">
+            <componente id="unoAnualMueInm" nombre="Relación de Bienes Muebles que Componen el Patrimonio" tipo="reporte" colapsado="si">
+                <reporte nombre="78F_BMUEB_Jo">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+            <componente id="dosAnualMueInm" nombre="Relación de Bienes Inmuebles que Componen el Patrimonio" tipo="reporte" colapsado="si">
+                <reporte nombre="repor_binmueb_jsus">
+                    <campo name="ur" type="long" local="true" calc="%p.p.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%p.p.id_periodo%" />
+                    <campo name="folio_cuenta_publica" type="long" local="true" calc="%alta.alta.folio_cuenta_publica%" />
+                </reporte>
+            </componente>
+        </nivel>
+
+        <nivel nombre="crearNuevaInstancia" id="cI" interactivo="false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cI">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'" />
+                    <parametro name="process" calc="'0ede77e9-1da8-4272-a546-4ea74fd7dc59'" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="out_ur" calc="%p.p.id_unidad_responsable%" mostrarEsc="true" />
+                    <parametro name="out_periodo" calc="%p.p.id_periodo%" mostrarEsc="true" />
+                    <parametro name="out_folio_cuenta" calc="%alta.alta.folio_cuenta_publica%" mostrarEsc="true" />
+                    <parametro name="out_tipo_periodo" calc="%uno.unoDG.tipo_periodicidad%" mostrarEsc="true" />
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
+
