@@ -1,0 +1,279 @@
+<tarea id="tar_ECD" nombre="Cálcula Depreciación" autor="Sergio Guzman" version="1">
+    <pagina id="pag_ECD">
+         <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+              <tabla schema="catalog" nombre="periodo">
+                <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="id_periodo"/>
+                <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+              </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="dep" id="dep" interactivo="false">
+            <componente tipo="cursor" nombre="dep" id="dep">
+                <tabla schema="operation" nombre="porcentaje_depreciacion">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="activo" text="activo:" filtroCampo="activo" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_porcentaje_depreciacion" ordenar="asc"/>
+                    <campo name="periodicidad"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="dep2" id="dep2" interactivo="false">
+            <componente tipo="cursor" nombre="dep2" id="dep2">
+                <tabla schema="operation" nombre="porcentaje_depreciacion_det">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_porcentaje_depreciacion" ordenar="asc"/>
+                    <campo name="anos_vida_util"/>
+                    <campo name="clasificacion_objeto_gasto"/>
+                    <campo name="porcentaje_depreciacion"/>
+                </tabla>
+                <nivel nombre="volor_h2" id="volor_h2" interactivo="false">
+                    <componente tipo="cursor" nombre="volor_h2" id="volor_h2">
+                        <tabla schema="operation" nombre="inventario_activofijo_aux">
+                            <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%dep2.dep2.periodo%"/>
+                            <campo name="clasificacion_objeto_gasto" filtroCampo="clasificacion_objeto_gasto" filtroOperador="=" filtroValor="%dep2.dep2.clasificacion_objeto_gasto%"/>
+                            <campo name="id_inventario"/>
+                            <campo name="valor_historico"/>
+                            <campo name="valor_libros"/>
+                            <campo name="porcentaje_deprecicion"/>
+                            <campo name="anos_vida"/>
+                            <campo name="ano_vida_util" />
+                            <campo name="importe_depre_anual"/>
+                            <campo name="anos_por_depreciar"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="volor_h" id="volor_h" interactivo="false">
+                    <componente tipo="cursor" nombre="volor_h" id="volor_h">
+                        <tabla schema="operation" nombre="inventario_activofijo_aux">
+                            <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%dep2.dep2.periodo%"/>
+                            <campo name="clasificacion_objeto_gasto" filtroCampo="clasificacion_objeto_gasto" filtroOperador="=" filtroValor="%dep2.dep2.clasificacion_objeto_gasto%"/>
+                            <campo name="id_inventario" filtroCampo="id_inventario" filtroOperador="=" filtroValor="%volor_h2.volor_h2.id_inventario%"/>
+                            <campo name="valor_historico"/>
+                            <campo name="valor_libros" calc="@ifThenElse(%volor_h2.volor_h2.valor_historico%==null,0,%volor_h2.volor_h2.valor_historico%)-@castTo((%volor_h2.volor_h2.valor_historico%*%dep2.dep2.porcentaje_depreciacion%/100),'long')"/>
+                            <campo name="porcentaje_deprecicion" calc="%dep2.dep2.porcentaje_depreciacion%"/>
+                            <campo name="anos_vida"/>
+                            <campo name="ano_vida_util" calc="%dep2.dep2.anos_vida_util%"/>
+                            <campo name="importe_depre_anual" calc="%volor_h2.volor_h2.valor_historico%*%dep2.dep2.porcentaje_depreciacion%/100"/>
+                            <campo name="anos_por_depreciar" calc="@ifThenElse(%dep2.dep2.anos_vida_util%==null,0,%dep2.dep2.anos_vida_util%)-@ifThenElse(%volor_h2.volor_h2.anos_vida%==null,0,%volor_h2.volor_h2.anos_vida%)"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="volor_hi" id="volor_hi" interactivo="false">
+                    <componente tipo="cursor" nombre="volor_hi" id="volor_hi">
+                        <tabla schema="operation" nombre="inventario_activofijo_aux">
+                            <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%dep2.dep2.periodo%"/>
+                            <campo name="clasificacion_objeto_gasto" filtroCampo="clasificacion_objeto_gasto" filtroOperador="=" filtroValor="%dep2.dep2.clasificacion_objeto_gasto%"/>
+                            <campo name="deprecicion_acumulada" calc="%dep2.dep2.anos_vida_util%*%volor_h.volor_h.importe_depre_anual%"/>
+                            <campo name="fecha_adquisicion"/>
+                           
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="tipo" nombre="Selección de año" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="tipo" nombre="Selección de año" tipo="formulario">
+                <tabla schema="operation" nombre="inventario_activofijo_folio">
+                    <campo name="ur" text="id_unidad_responsable" calc="$config.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" text="periodo" calc="%per.per.id_periodo%" visible="false" llaveForanea="false"/>
+                    <campo name="id_inventario_activofijo_folio" text="id_inventario_activofijo_folio" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    <campo name="ano" text="Año *" calc="%per.per.id_periodo%" habilitado="true" validacion="%periodo%==null" descripcionForanea="id_periodo" llavesFijas="id_estatus=1 OR id_estatus=3" validacionMensaje="Selecciona periodo contable" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                    <campo name="fecha" calc="@subCadena(%volor_hi.volor_hi.fecha_adquisicion%,5,7)" local="true" type="string" columnas="3" visible="false"/>
+                    <campo name="mes" calc="@fechaSistema(&quot;MM&quot;)" columnas="3" visible="false"/>
+                    
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Guardar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel nombre="est" id="est" interactivo="false">
+            <componente tipo="cursor" nombre="est" id="est">
+                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo:" filtroCampo="periodo" filtroOperador="=" filtroValor="%tipo.tipo.periodo%"/>
+                    <campo name="fecha_adquisicion"/>
+                    <campo name="mes" calc="%tipo.tipo.fecha%" columnas="3" visible="true"/>
+                    <!--<campo name="depreciacion" calc="@ifThenElse(@after(%est.est.fecha_adquisicion%,@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;))==true,'Depreciable','No depreciable')"/>-->
+                    <campo name="depreciacion" calc="@ifThenElse(@after(@sumaFecha(%est.est.fecha_adquisicion%,12,'m'),@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;))==true,'Depreciable','No depreciable')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nl_ECD" nombre="Registro de Gestión de Depreciaciones" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cp_ECD" nombre="Visualiza Artículos a Depreciar" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                    <campo name="ur" text="ur" calc="$config.ur$" columnas="3" margen-izquierdo="2" visible="false" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo" calc="%tipo.tipo.periodo%" columnas="3" margen-izquierdo="2" visible="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%tipo.tipo.periodo%"/>
+                    <campo name="id_inventario" text="Bloque" width="50"/>
+                    <campo name="clave_inventario" text="Clave Inventario" width="150"/>
+                    <campo name="descripcion_especifica" text="Descripción específica" width="170" columna-visible="false"/>
+                    <campo name="clasificacion_objeto_gasto" text="Clasificador por OG" width="150"/>
+                    <campo name="ano_vida_util" text="Años Vida Util" width="110"/>
+                    <campo name="porcentaje_deprecicion" text="Porcentaje depreciación" width="180"/>
+                    <campo name="fecha_adquisicion" text="Fecha adquisición" width="150"/>
+                    <campo name="valor_historico" text="Valor historico" width="100" />
+                    <campo name="anos_vida" text="Años de vida a la fecha" width="100"/>
+                    <campo name="anos_por_depreciar" text="Años por depreciar" width="100" />
+                    <campo name="importe_depre_anual" text="Importe a depreciar" width="100"/>
+                    <campo name="deprecicion_acumulada" text="Depreciación acumulada" width="100"/>
+                    <campo name="valor_libros" text="Valor en libros" width="120"/>
+                    <campo name="estatus" text="Estatus" width="90" filtroCampo="estatus" filtroOperador="=" filtroValor="'Generado'"/>
+                    <campo name="depreciacion" text="depreciacion" columna-visible="false" filtroCampo="depreciacion" filtroOperador="=" filtroValor="'Depreciable'"/>
+                    <campo name="id_inventario_activofijo_folio" text="id_inventario_activofijo_folio" calc="%tipo.tipo.id_inventario_activofijo_folio%" visible="false" columna-visible="false" width="90"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar"  columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                 </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="bmes" id="bmes" interactivo="false" ejecutar="%dep.dep.periodicidad%=='Mensual'">
+            <componente tipo="cursor" nombre="bmes" id="bmes" accionDefault="editar">
+                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="depreciacion" text="depreciacion" columna-visible="false" filtroCampo="depreciacion" filtroOperador="=" filtroValor="'Depreciable'"/>
+                    <campo name="id_inventario" />
+                    <campo name="resta_depreciacion"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="rest" id="rest" interactivo="false" ejecutar="%dep.dep.periodicidad%=='Mensual'">
+            <componente tipo="cursor" nombre="rest" id="rest" accionDefault="editar">
+                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%tipo.tipo.periodo%"/>
+                    <campo name="id_inventario" />
+                    <campo name="resta_depreciacion"/>
+                    <campo name="importe_depre_anual"/>
+                    <campo name="fecha_adquisicion"/>
+                    <campo name="mes" calc="@subCadena(%rest.rest.fecha_adquisicion%,5,7)" columnas="3" visible="true"/>
+                </tabla>
+                 <nivel nombre="mes" id="mes" interactivo="false" ejecutar="%dep.dep.periodicidad%=='Mensual'">
+                    <componente tipo="cursor" nombre="mes" id="mes">
+                        <tabla schema="operation" nombre="inventario_activofijo_aux">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                            <campo name="id_inventario" filtroCampo="id_inventario" filtroOperador="=" filtroValor="%rest.rest.id_inventario%"/>
+                            <campo name="depreciacion" filtroCampo="depreciacion" filtroOperador="=" filtroValor="'Depreciable'"/>
+                            <campo name="enero" calc="@ifThenElse(%rest.rest.mes%&lt;=1,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.enero%)"/>
+                            <campo name="febrero" calc="@ifThenElse(%rest.rest.mes%&lt;=2,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.febrero%)"/>
+                            <campo name="marzo" calc="@ifThenElse(%rest.rest.mes%&lt;=3,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.marzo%)"/>
+                            <campo name="abril" calc="@ifThenElse(%rest.rest.mes%&lt;=4,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.abril%)"/>
+                            <campo name="mayo" calc="@ifThenElse(%rest.rest.mes%&lt;=5,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.mayo%)"/>
+                            <campo name="junio" calc="@ifThenElse(%rest.rest.mes%&lt;=6,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.junio%)"/>
+                            <campo name="julio" calc="@ifThenElse(%rest.rest.mes%&lt;=7,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.julio%)"/>
+                            <campo name="agosto" calc="@ifThenElse(%rest.rest.mes%&lt;=8,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.agosto%)"/>
+                            <campo name="septiembre" calc="@ifThenElse(%rest.rest.mes%&lt;=9,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.septiembre%)"/>
+                            <campo name="octubre" calc="@ifThenElse(%rest.rest.mes%&lt;=10,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.octubre%)"/>
+                            <campo name="noviembre" calc="@ifThenElse(%rest.rest.mes%&lt;=11,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.noviembre%)"/>
+                            <campo name="diciembre" calc="@ifThenElse(%rest.rest.mes%&lt;=12,@truncarDecimal(((%rest.rest.importe_depre_anual%)/12),2),%mes.mes.diciembre%)"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+        <nivel nombre="rest2" id="rest2" interactivo="false" ejecutar="%dep.dep.periodicidad%=='Mensual'">
+            <componente tipo="cursor" nombre="rest2" id="rest2" accionDefault="editar">
+                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%tipo.tipo.periodo%"/>
+                    <campo name="id_inventario" filtroCampo="id_inventario" filtroOperador="=" filtroValor="%rest.rest.id_inventario%"/>
+                    <campo name="depreciacion" filtroCampo="depreciacion" filtroOperador="=" filtroValor="'Depreciable'"/>
+                    <campo name="id_inventario" />
+                    <campo name="resta_depreciacion" calc="%bmes.bmes.resta_depreciacion% - ((%rest.rest.importe_depre_anual%)/12)"/>
+                </tabla>
+                </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel nombre="banual" id="banual" interactivo="false" ejecutar="%dep.dep.periodicidad%=='Anual'">
+            <componente tipo="cursor" nombre="banual" id="banual" accionDefault="editar">
+                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%tipo.tipo.periodo%"/>
+                    <campo name="id_inventario" />
+                    <campo name="importe_depre_anual"/>
+                </tabla>
+                 <nivel nombre="anual" id="anual" interactivo="false" ejecutar="%dep.dep.periodicidad%=='Anual'">
+                    <componente tipo="cursor" nombre="anual" id="anual" accionDefault="editar">
+                        <tabla schema="operation" nombre="inventario_activofijo_aux">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                            <campo name="id_inventario" filtroCampo="id_inventario" filtroOperador="=" filtroValor="%bmes.bmes.id_inventario%"/>
+                            <campo name="depreciacion" filtroCampo="depreciacion" filtroOperador="=" filtroValor="'Depreciable'"/>
+                            <campo name="enero" calc="@ifThenElse(%tipo.tipo.fecha%=='01',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="febrero" calc="@ifThenElse(%tipo.tipo.fecha%=='02',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="marzo" calc="@ifThenElse(%tipo.tipo.fecha%=='03',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="abril" calc="@ifThenElse(%tipo.tipo.fecha%=='04',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="mayo" calc="@ifThenElse(%tipo.tipo.fecha%=='05',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="junio" calc="@ifThenElse(%tipo.tipo.fecha%=='06',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="julio" calc="@ifThenElse(%tipo.tipo.fecha%=='07',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="agosto" calc="@ifThenElse(%tipo.tipo.fecha%=='08',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="septiembre" calc="@ifThenElse(%tipo.tipo.fecha%=='09',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="octubre" calc="@ifThenElse(%tipo.tipo.fecha%=='10',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="noviembre" calc="@ifThenElse(%tipo.tipo.fecha%=='11',%banual.banual.importe_depre_anual%,0)"/>
+                            <campo name="diciembre" calc="@ifThenElse(%tipo.tipo.fecha%=='12',%banual.banual.importe_depre_anual%,0)"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="nl_ECD_Rep" nombre="Reporte Cálculo de Depreciación" mostrarNivelAnterior="false" ejecutar="%dep.dep.periodicidad%=='Anual'">
+            <componente id="cp_ECD_Rep" nombre="Reporte Cálculo de Depreciación Anual" tipo="reporte">
+                <reporte nombre="R_Depreciacion_Anual_IJ" update="true" nombreDocumento="'Cálculo de Depreciación Anual'" expediente="Catálogo de Cálculo de Depreciación"  grupo="%tipo.tipo.periodo%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%tipo.tipo.periodo%"/>
+                    <!--<campo name="id_inventario" type="long" calc="%tipo.tipo.id_inventario_activofijo_folio%"/>-->
+                    <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                    <campo name="mes" type="string" calc="%tipo.tipo.fecha%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="nl_ECD_Rep_2" nombre="Reporte Cálculo de Depreciación" mostrarNivelAnterior="false" ejecutar="%dep.dep.periodicidad%=='Mensual'">
+           <componente id="cp_ECD_Rep_2" nombre="Reporte Cálculo de Depreciación Mensual" tipo="reporte">
+               <reporte nombre="repor_depreciacionMensual_jsus" update="true" nombreDocumento="'Cálculo de Depreciación Mensual'" expediente="Catálogo de Cálculo de Depreciación"  grupo="%tipo.tipo.periodo%" url="$config.repository_upload_file$">
+                   <campo name="ur" type="long" calc="$config.ur$"/>
+                   <campo name="periodo" type="long" calc="%tipo.tipo.periodo%"/>
+                   <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                   <campo name="mes" type="string" calc="%tipo.tipo.fecha%"/>
+               </reporte>
+           </componente> 
+        </nivel>
+        <nivel nombre="cd" id="cd" interactivo="false">
+            <componente tipo="solicitud" nombre="cd" id="cd">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'07db9b1e-c88b-4988-bdc4-ae2909e05838'"/>
+                    <parametro name="out_año" calc="%tipo.tipo.ano%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%per.per.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_ur" calc="$config.ur$" mostrarEsc="false"/>
+                    <parametro name="out_periodicidad" calc="%dep.dep.periodicidad%" mostrarEsc="false"/>
+                    <parametro name="out_id_inventario_activofijo_folio" calc="%tipo.tipo.id_inventario_activofijo_folio%" mostrarEsc="false"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
