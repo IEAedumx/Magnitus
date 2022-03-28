@@ -1,0 +1,158 @@
+<tarea id="unidadesMedida" nombre="Unidades de Medida" version="1">
+    <pagina id="1">
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+                <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                    <tabla schema="catalog" nombre="periodo">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_periodo"/>
+                        <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                        <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    </tabla>
+                </componente>
+        </nivel>
+        
+        <nivel id="unidadesMedidaNivel" nombre="Unidades de Medida" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="unidadesMedidaComp" nombre="Unidades de Medida" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="anio" text="Ejercicio Fiscal" columnas="3" margen-izquierdo="2" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false" local="true" type="long"/> <!--  -->
+                    <campo name="id" calc="1" visible="false"/>
+                    <campo name="selecOpcion" text="Selecciona una de las siguientes opciones" columnas="3" margen-derecho="2" local="true" type="long" validacion="%selecOpcion%==null" validacionMensaje="Favor de seleccionar una opción" marcador="Opciones">
+                        <opciones>
+                            <opcion texto="Agregar" valor="1"/>
+                            <opcion texto="Importar" valor="2"/>
+                            <opcion texto="Eliminar" valor="3"/>
+                            <opcion texto="Consultar" valor="4"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            
+            <!--AGREGAR-->
+            <componente id="unidadesMedida_Agregar" nombre="Unidades de Medida" tipo="tabla" ejecutarComponente="%unidadesMedidaNivel.unidadesMedidaComp.selecOpcion%==1"  filtro="true" mostrarEliminar="false" exportarPDF="false"> 
+                <tabla schema="catalog" nombre="unidad_medida">
+                    <campo name="id_unidad_responsable" text="Identificador de Unidad Responsable" calc="$config.ur$" columna-visible="false" visible="false" llaveForanea="false"/> <!--llaveForanea="false"-->
+                    <campo name="id_periodo" text="Año" descripcionForanea="id_periodo"  calc="%buscaPeriodo.buscaPeriodo.id_periodo%"  columna-visible="false" visible="false" llaveForanea="false"/> <!-- llaveForanea="false" -->
+                    <campo name="id_unidad_medida" text="Consecutivo" columnas="3"  generacion="@prox()+1" autogenerado="true" habilitado="false" width="150" mascara="###" columna-visible="true" visible="true"/><!-- marcador="Clave"-->
+                    <!--<campo name="folio" text="Clave" calc="@concatenar(%buscaPeriodo.buscaPeriodo.id_periodo% +'-'+ @ifThenElse(%id_unidad_medida%&lt;10,'00',@ifThenElse(%id_unidad_medida%&lt;100,'0',@ifThenElse(%id_unidad_medida%&lt;100,'',null)))) + @consultaDirec('SELECT MAX(id_unidad_medida)+1 AS result FROM catalog.unidad_medida WHERE id_unidad_responsable='+$config.ur$+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')"/>-->
+                    <campo name="ft" text="Consecutivo" local="true" type="long" visible="false" columna-visible="false" calc="@ifThenElse(@consultaDirec('SELECT MAX(id_unidad_medida)+1 AS result FROM catalog.unidad_medida WHERE id_unidad_responsable='+$config.ur$+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')==null,1,@consultaDirec('SELECT MAX(id_unidad_medida)+1 AS result FROM catalog.unidad_medida WHERE id_unidad_responsable='+$config.ur$+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS'))"/>
+                    <campo name="folio" text="Clave" habilitado="false" visible="false" columna-visible="false" calcCliente="@concatenar(%buscaPeriodo.buscaPeriodo.id_periodo% +'-'+ @ifThenElse(%ft%==null,001,@ifThenElse(%ft%&lt;10,'00',@ifThenElse(%ft%&lt;100,'0',@ifThenElse(%ft%&lt;100,'',''))))) + %ft%"/>
+                    <campo name="descripcion" text="Concepto" columnas="3"  mascara="C" validacion="%descripcion%==null" validacionMensaje="Favor de ingresar la descripción" marcador="Descripción"/>
+                    <campo name="val_dup_descripcion" text="Descripción" type="string" local="true" calc="%descripcion%" visible="false" columna-visible="false" /> <!-- validacion="%descripcion%==null OR @ValidarRegistro('catalog','unidad_medida','descripcion='+'\\''+%descripcion%+'\\'',';','MAGNITUS')"--> <!-- validacion="@ValidarRegistro('catalog','unidad_medida','descripcion='+'\\''+%descripcion%+'\\'',';','MAGNITUS')" 
+                            validacionMensaje="La Descripción es repetida, Favor de ingresar una descripción diferente"-->
+                    <campo name="abreviatura" text="Siglas" columnas="3"  validacion="%abreviatura%==null" validacionMensaje="Favor de ingresar las Siglas" width="200" mascara="XXXX"  marcador="Abreviatura"/>
+                    <campo name="estatus" text="Estatus" columnas="3"  width="150" calc="true" habilitado="false" /><!--calc="true" habilitado="false" -->
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false" visible="false"/> <!--calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"-->
+                    <campo name="ultimo_usuario_modificador" text="Ultimo Usuario Modificador" validacion="%ultimo_usuario_modificador%==null" validacionMensaje="Favor de seleccionar un usuario" columna-visible="false" visible="false" calc="$config.ur$"/>
+                </tabla>
+            </componente>
+                
+            <!--IMPORTAR-->
+            <componente id="importar_unidad_medida" nombre="Importar Unidades de Medida" tipo="tabla" ejecutarComponente="%unidadesMedidaNivel.unidadesMedidaComp.selecOpcion%==2" 
+                mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" mostrarImportacion="true" exportarPDF="false">
+                <tabla schema="catalog" nombre="unidad_medida" mostrarImportacion="false">
+                    <campo name="id_unidad_responsable" text="Identificador de Unidad Responsable" visible="false" columna-visible="false" columnaImportacion="UR" validacionImportacion="@ifThenElse(%UR%!=1, true, false )" columnaImportacionVisible="true" importacion="true"/> <!--llaveForanea="false"-->
+                    <campo name="id_periodo" text="Año" columna-visible="false" visible="false" columnaImportacion="Año" validacionImportacion="@ifThenElse(%id_periodo%!=%buscaPeriodo.buscaPeriodo.anio% ,true,false)" 
+                    filtroCampo="id_periodo" filtroOperador="="  filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" columnaImportacionVisible="true" importacion="true"/>
+                    <!--<campo name="id_periodo" text="Año" columna-visible="false" visible="false" columnaImportacion="Año" validacionImportacion="@ifThenElse(%id_periodo%=='', true, false )" columnaImportacionVisible="false"/> -->
+                    <campo name="id_unidad_medida" text="Consecutivo" generacion="@prox()+1" autogenerado="true" columnaImportacion="Clave" validacionImportacion="@ifThenElse(%Clave%=='', true, false )" importacion="true"/> 
+                    <!-- columnaImportacion="Clave" validacionImportacion="@ifThenElse(%Clave%=='', true, false )" marcador="Clave"-->
+                    <!--<campo name="ft" text="Clave" local="true" type="long" visible="false" columna-visible="false" calc="@consultaDirec('SELECT MAX(id_unidad_medida)+1 AS result FROM catalog.unidad_medida WHERE id_unidad_responsable='+$config.ur$+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')"/>
+                    <campo name="folio" text="Folio" visible="false" columna-visible="false" calc="@concatenar(%buscaPeriodo.buscaPeriodo.id_periodo% +'-'+ @ifThenElse(%ft%&lt;10,'00',@ifThenElse(%ft%&lt;100,'0',@ifThenElse(%ft%&lt;100,'',1)))) +%ft%"/>-->
+                    <campo name="descripcion" text="Concepto" columnaImportacion="Descripción" validacionImportacion="@ifThenElse(%descripcion%==null,true,false)"
+                    importacion="true"/><!-- validacionImportacion="@ifThenElse(%Descripción%=='', true, false)"-->
+                    <campo name="abreviatura" text="Siglas" columnaImportacion="Abreviatura" validacionImportacion="@ifThenElse(%abreviatura%=='', true, false)" importacion="true" mascara="C"/>
+                    <campo name="estatus" text="Estatus" columnaImportacion="Estatus"  validacionImportacion="@ifThenElse(%estatus%=='', true, false)" importacion="true"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"  columna-visible="false" 
+                    columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="ultimo_usuario_modificador" text="Último Usuario Modificador" columnaImportacion="Ultimo Usuario Modificador" validacionImportacion="@ifThenElse(%ultimo_usuario_modificador%!=1, true, false)" 
+                    columna-visible="false" columnaImportacionVisible="false" importacion="true"/>   
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Asignar Folio" />
+                </estilos>
+            </componente>
+            <!--ELIMINAR-->
+            <componente id="unidadesMedida_Eliminar" nombre="Eliminar Unidades de Medida" tipo="tabla" ejecutarComponente="%unidadesMedidaNivel.unidadesMedidaComp.selecOpcion%==3" filtro="true" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="true" exportarPDF="false">
+                <tabla schema="catalog" nombre="unidad_medida">
+                    <campo name="id_unidad_responsable" text="Identificador de Unidad Responsable" calc="$config.ur$" columna-visible="false" visible="true" llaveForanea="false" /> 
+                    <campo name="id_periodo" text="Año" columna-visible="false" visible="true" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" /> <!-- llaveForanea="false" -->
+                    <campo name="id_unidad_medida" text="Consecutivo" generacion="@prox()+1" autogenerado="false" habilitado="true" width="150" mascara="###" visible="true" columnaImportacionVisible="true"/><!-- marcador="Clave"-->
+                    <campo name="descripcion" text="Concepto" mascara="C" validacion="%descripcion%==null" validacionMensaje="Favor de ingresar la descripción" marcador="Descripción" columnaImportacionVisible="true"/>
+                    <campo name="val_dup_descripcion" text="Descripción" type="string" local="true" calc="%descripcion%" visible="false" columna-visible="false" validacion="@ValidarRegistro('catalog','unidad_medida','descripcion='+'\\''+%descripcion%+'\\'',';','MAGNITUS')" 
+                    validacionMensaje="La Descripción es repetida, Favor de ingresar una descripción diferente"/> <!-- validacion="%descripcion%==null OR @ValidarRegistro('catalog','unidad_medida','descripcion='+'\\''+%descripcion%+'\\'',';','MAGNITUS')"-->
+                    <campo name="abreviatura" text="Siglas" validacion="%abreviatura%==null" validacionMensaje="Favor de ingresar Abreviatura" width="200" mascara="XXXX" marcador="Abreviatura" columnaImportacionVisible="true" habilitado="false"/>
+                    <campo name="estatus" text="Estatus"   width="150" columnaImportacionVisible="true" editable="false"/>
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Ultimo Usuario Modificador"  validacion="%ultimo_usuario_modificador%==null" validacionMensaje="Favor de seleccionar un usuario" columna-visible="false" calc="1"/>
+                </tabla>
+                
+                <validaciones>
+                    <validacion tipo="borrar"
+                    validacion="@ValidarRegistro('catalog','articulos_aux','unidad_medida='+'\\''+%id_unidad_medida%+'\\'',';','MAGNITUS')"
+                    validacionMensaje="La unidad de medida que deseas eliminar, se encuentra en uso."/>
+                </validaciones>
+            </componente>
+            
+            <!--CONSULTAR-->
+            
+            <componente nombre="Documento de Unidades de Medida" id="consultarUnidadMedida" tipo="reporte" ejecutarComponente="%unidadesMedidaNivel.unidadesMedidaComp.selecOpcion%==4">
+                <reporte nombre="catalogo_unidades_de_medida"> <!-- update="true" nombreDocumento="'reporte usuarios'" expediente=""  grupo="%%" url="$$" -->
+                    <campo name="ur" type="long" calc="$config.ur$" /><!-- -->
+                    <campo name="period" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" /><!-- calc="%buscaPeriodo.buscaPeriodo.id_periodo%" -->
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="asignarFolio" nombre="Asignar folio" interactivo="false" ejecutar="%unidadesMedidaNivel.unidadesMedidaComp.selecOpcion%==2">
+            <componente tipo="cursor" id="asignarFolio" nombre="Asignar folio" >
+                <tabla schema="catalog" nombre="unidad_medida">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="="  filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="Año" filtroCampo="id_periodo" filtroOperador="="  filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_unidad_medida"/>
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="null" calc="@concatenar(%buscaPeriodo.buscaPeriodo.id_periodo% +'-'+
+                    @ifThenElse(%asignarFolio.asignarFolio.id_unidad_medida%==null,001,
+                    @ifThenElse(%asignarFolio.asignarFolio.id_unidad_medida%&lt;10,'00',
+                    @ifThenElse(%asignarFolio.asignarFolio.id_unidad_medida%&lt;100,'0',
+                    @ifThenElse(%asignarFolio.asignarFolio.id_unidad_medida%&lt;1000,'',''))))) + %asignarFolio.asignarFolio.id_unidad_medida%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="importarN2" nombre="Asignar folio" ejecutar="%unidadesMedidaNivel.unidadesMedidaComp.selecOpcion%==2">
+            <componente id="importar_unidad_medida" nombre="Importar Catálogos Únicos de Unidades de Medida" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" exportarPDF="false">
+                <tabla schema="catalog" nombre="unidad_medida">
+                    <campo name="id_unidad_responsable" text="Identificador de Unidad Responsable" visible="false" columna-visible="false" filtroCampo="id_unidad_responsable" filtroOperador="="  filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/> <!--llaveForanea="false"-->
+                    <campo name="id_periodo" text="Año" columna-visible="false" visible="false" columnaImportacion="Año" validacionImportacion="@ifThenElse(%id_periodo%!=%buscaPeriodo.buscaPeriodo.anio% ,true,false)" 
+                    filtroCampo="id_periodo" filtroOperador="="  filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <!--<campo name="id_periodo" text="Año" columna-visible="false" visible="false" columnaImportacion="Año" validacionImportacion="@ifThenElse(%id_periodo%=='', true, false )" columnaImportacionVisible="false"/> -->
+                    <campo name="id_unidad_medida" text="Clave" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true" columnaImportacion="Clave" validacionImportacion="@ifThenElse(%Clave%=='', true, false )" importacion="true"/> 
+                    <!-- columnaImportacion="Clave" validacionImportacion="@ifThenElse(%Clave%=='', true, false )" marcador="Clave"-->
+                    
+                    <campo name="folio" text="Folio" visible="true" columna-visible="true"/>
+                    <campo name="descripcion" text="Concepto" columnaImportacion="Descripción" validacionImportacion="@ifThenElse(%descripcion%==null,true,false)"
+                    importacion="true"/><!-- validacionImportacion="@ifThenElse(%Descripción%=='', true, false)"-->
+                    <campo name="abreviatura" text="Siglas" columnaImportacion="Abreviatura" validacionImportacion="@ifThenElse(%abreviatura%=='', true, false)" importacion="true" mascara="C"/>
+                    <campo name="estatus" text="Estatus" columnaImportacion="Estatus" validacionImportacion="@ifThenElse(%estatus%=='', true, false)" importacion="true"/>
+                    <campo name="fecha_registro" text="Fecha Registro"  columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Último Usuario Modificador" columnaImportacion="Ultimo Usuario Modificador" validacionImportacion="@ifThenElse(%ultimo_usuario_modificador%!=1, true, false)" 
+                    columna-visible="false" columnaImportacionVisible="false" importacion="true"/>   
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Consulta de Catálogo Único de Artículos y su Soporte Digital" id="listado" interactivo="false">
+                <componente tipo="reporte" nombre="Parámetros de Catálogo de Artículos Unidades de Medida" id="lista">
+                    <reporte nombre="estructura_catalogo_articulos" update="true" nombreDocumento="'Listado de Artículos'" expediente="Catálogo Único de Artículos y su Soporte Digital"  grupo="%buscaPeriodo.buscaPeriodo.id_periodo%" url="$config.repository_upload_file$">
+                        <campo name="id_unidad_responsable"  type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                        <campo name="id_periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/> 
+                    </reporte>
+                </componente> 
+            </nivel>
+    </pagina>
+</tarea>
