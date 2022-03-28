@@ -1,0 +1,314 @@
+<tarea id="registro_solicitud_reduccion_contrato" nombre="Registro Solicitud de Reducción de Contrato" version="1" autor="Erick Maya" mostrarCarrusel="false">
+    <pagina id="registro_solicitud_reduccion_contrato" mostrarCarrusel="false">
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo"/>
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+        <nivel id="busca_ctto" nombre="Búsqeuda Contrato" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="busca_ctto" nombre="Búsqueda Contrato" tipo="busqueda" mostrarEliminar="false">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text="Unidad Responsable" width="120" visible="false" columna-visible="false" llaveForanea="false" calc="$config.ur$" habilitado="false" />
+					<campo name="periodo" text="Año" visible="false" width="100" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false"/>
+					<campo name="id_duep_contrato_pedido" text="Contrato" width="100" visible="false" columna-visible="false"/>
+					<campo name="folio_con_ordecom" text="Contrato" width="120" columnas="3" margen-izquierdo="1" />
+					<campo name="tipo_documento" text="tipo documento" calc="1"  width="150" visible="false" columna-visible="false" llaveForanea="false"/>
+					<campo name="proveedor" text="Beneficiario" columnas="3" width="250" descripcionForaneaTabla="razon_social" descripcionForanea="razon_social" />
+					<campo name="proyecto_compra" text="Proyecto Compra" width="170" visible="false"/>
+					<campo name="proceso_origen" text="Proceso Origen" width="160" visible="true" columnas="3" descripcionForaneaTabla="nombre" descripcionForanea="nombre" columna-visible="true"/>
+					<campo name="id_cat_fondo" text="ID Fondo Contable" width="100" visible="false" columna-visible="false" calc="3" llaveForanea="false"/>
+					<campo name="id_fondo_contable" text="Fondo Contable" width="200"  columnas="3" margen-izquierdo="1"/>
+				<!--<campo name="total" text="Importe Comprometido" width="200"  columnas="3" margen-izquierdo="2" visible="false"/>-->
+					<!--<campo name="importe_dev" text="Importe Devengado" width="200"  columnas="3" margen-izquierdo="2" local="true" type="decimal"/>-->
+					<!--<campo name="comprometido_no_devengado" text="Importe Comprometido no Devengado" width="200"  columnas="3"  visible="false" margen-derecho="2"/>-->
+					<campo name="estatus" text="Estatus" width="150" columnas="3" margen-izquierdo="2" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Buscar" columnas="4" margen-izquierdo="2"/>
+                </estilos>
+                <acciones>
+					<accion nombre="seleccionar" hacer="saltar pagina 2"/>
+				</acciones>
+            </componente>
+        </nivel>
+    </pagina>
+    <pagina id="registro_reduccion" mostrarCarrusel="false">
+        
+        
+        <!-- VERIFICAR CONTRATO -->
+        <nivel id="FRC" nombre="Filtra Reducción de Contrato" interactivo="false">
+            <componente id="FRC" nombre="Filtra Reducción de Contrato" tipo="cursor">
+                <tabla schema="operation" nombre="reduccion_contrato">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.id_duep_contrato_pedido%"/>
+                    <campo name="folio_contrato"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="PV" nombre="Pantalla de Verificación" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%FRC.FRC.folio_contrato%!=null">
+            <componente id="PV" nombre="INFORMACIÓN" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="id" visible="false" calc="1"/>
+                    <etiqueta nombre="info" texto="YA SE REALIZO UNA REDUCCIÓN A ESTE CONTRATO." color="red" bold="normal" tamaño="40px" alineacion="center" interlineado="25px" width="500px" columnas="8"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="false" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+         
+        
+        
+        <nivel id="contrato" nombre="Visualiza contrato" mostrarNivelAnterior="false">
+            <componente tipo="maestroDetalle" id="md" nombre="Visualiza contrato" mostrarEliminar="false" mostrarEdita="false">
+                <encabezado nombre="Contrato" accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="ur" habilitado="false" calc="%busca_ctto.busca_ctto.ur%" llaveForanea="false" visible="false" text="Unidad Responsable"/>
+                        <campo name="periodo" habilitado="false" calc="%busca_ctto.busca_ctto.periodo%" visible="false" text="Periodo"/>
+                        <campo name="id_duep_contrato_pedido" text="Id compra" visible="false" calc="%busca_ctto.busca_ctto.id_duep_contrato_pedido%" />
+                        <campo name="folio_con_ordecom" visible="true" text="Contrato" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="folio_req" text="Folio Requisición" columnas="3" margen-izquierdo="2" visible="false"/>
+                        <campo name="proveedor" text="Proveedor" habilitado="false" descripcionForanea="razon_social" height="100" width="100" columnas="3" />
+                        <!--<campo name="duep"  text="DUEP" columnas="3" habilitado="false" margen-izquierdo="2"/>-->
+                        <campo name="nombre_com"  text="Nombre Comercial" habilitado="false" columnas="3" local="true" type="string"/>
+                        <campo name="proyecto_compra" text="Folio Proyecto Compra"  habilitado="false" visible="false"/>
+                        <campo name="direccion_prov" text="Dirección" columnas="3" habilitado="false" margen-izquierdo="1"/>
+                        <campo name="proceso_origen" text="Proceso Origen" columnas="3" habilitado="false" descripcionForanea="nombre"/>
+                        <campo name="id_pais" text="País" llaveForanea="false" visible="false"/>
+                        <campo name="estado_prov" text="Estado" columnas="3" habilitado="false" />
+                        <campo name="id_cat_fondo" calc="3" visible="false" llaveForanea="false"  text="id_cat_fondo"/>
+                        <campo name="id_fondo_contable"  text="Fondo Contable" habilitado="false" columnas="3" margen-izquierdo="1" />
+                        <campo name="tel_prov" text="Teléfono" columnas="3" habilitado="false" />
+                        <campo name="fecha_registro" text="Fecha" columnas="3" habilitado="false" />
+                        <campo name="representante_prov" text="Representante" habilitado="false" columnas="3" margen-izquierdo="1" />
+                        <campo name="estatus"  text="Estatus" calc="1" columnas="3" habilitado="false"/>
+                        <campo name="lugar_entrega"  text="Lugar Entrega" columnas="3" habilitado="false" />
+                        <campo name="datos_facturacion"  text="Datos de Facturación" habilitado="false" columnas="3"  calc="'Blvd. Juan Pablo II No.1302. Fracc. Exhacienda la Cantera Aguascalientes, Ags. C.P. 20200 A.P.637 R.F.C. UTA9108114C9 Tel.:(449)910-50-00 Ext. 106 y 107 Fax 104'" margen-izquierdo="1"/>
+                        <campo name="tiempo_entrega"  text="Fecha Entrega" columnas="3" habilitado="false" />
+                        <campo name="condiciones_pago"  text="Condiciones de pago" columnas="3" habilitado="false" />
+                        <campo name="id_cat_area_requiriente"  text="id_cat_area" columnas="3" habilitado="false" llaveForanea="false" calc="2" visible="false"/>
+                        <campo name="requiere_anticipo"  text="Requiere Anticipo" columnas="3" habilitado="false" margen-izquierdo="1"/>
+                        <campo name="area_requiriente"  text="Area Requirente" columnas="3"  habilitado="false"/>
+                        <campo name="anticipo"  text="Anticipo" columnas="3"  habilitado="false"/>
+                        <campo name="ultimo_usuario_modificador" habilitado="false" visible="false" text="ultimo_usuario_modificador" columna-visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles id="mdDetalle">
+                    <tabla schema="operation" nombre="duep_contrato_pedido_det" id="orden_comp" mostrarEliminar="false" mostrarEditar="false">
+                        <campo name="ur" visible="false" columna-visible="false" text="Unidad Responsable" llaveForanea="false"/>
+                        <campo name="periodo" text="Periodo" visible="false" columna-visible="false" llaveForanea="false"/>
+                        <campo name="id_duep_contrato_pedido" visible="false" text="Id compra" columna-visible="false" llaveForanea="false"/>
+                        <campo name="id_duep_contrato_pedido_det" visible="true" text="Renglón" columna-visible="true" autogenerado="true" generacion="@prox()+1" columnas="3" margen-izquierdo="2" width="100"/>
+                        <campo name="clave_articulo" habilitado="false" descripcionForanea="descripcion_articulo" descripcionForaneaTabla="descripcion_articulo" text="Clave del Artículo" columnas="3" margen-derecho="2" width="200"/>
+                        <campo name="id_cat_cog" habilitado="false" text="id_cat_cog" visible="false" columna-visible="false"/>
+                        <campo name="clasificador_objeto_gasto" habilitado="false" text="Clasificador por Objeto del Gasto" width="200" columnas="3" margen-izquierdo="2"/>
+                        <campo name="caracteristica" habilitado="false" text="Caracteristicas" columnas="3" margen-derecho="2" width="200"/>
+                        <campo name="clave_presup" habilitado="false" text="Clave Presupuesto" columnas="3" margen-izquierdo="2" width="200"/>
+                        <campo name="id_cat_centro_registro" habilitado="false" text="id_cat_centro_registro" visible="false" columna-visible="false"/>
+                        <campo name="centro_registro" habilitado="false" text="Centro de Registro" columnas="3" margen-derecho="2" width="200"/>
+                        <campo name="cantidad" habilitado="false" text="Cantidad" columnas="3" margen-izquierdo="2" width="100"/> 
+                        <campo name="unidad_medida" habilitado="false" text="Unidad Medida" columnas="3" margen-derecho="2" width="150"/> 
+                        <campo name="precio_unitario" habilitado="false" text="Costo Unitario" columnas="3" margen-derecho="2" width="150" formatoMoneda="true" cellsalign="right"/> 
+                        <campo name="descuento" habilitado="false" text="Descuento" columnas="3" margen-izquierdo="2" width="100" formatoMoneda="true" cellsalign="right"/> 
+                        <campo name="imp_valor_agregado" habilitado="false" text="Impuesto" columnas="3" margen-derecho="2" width="100" formatoMoneda="true" cellsalign="right"/> 
+                        <campo name="otros_impuestos" habilitado="false" text="Otros Impuestos" columnas="3" margen-izquierdo="2" width="100" formatoMoneda="true" cellsalign="right"/>
+                        <campo name="importe_unitario" habilitado="false" text="Costo Unitario" columnas="3" margen-derecho="2" width="100" formatoMoneda="true" cellsalign="right"/>
+                        <campo name="importe_total" habilitado="false" text="Importe Total" columnas="3" margen-izquierdo="2" width="100" formatoMoneda="true" cellsalign="right"/> 
+                        <campo name="selec_reduc_cont" habilitado="true" text="Seleccionar" columnas="3" margen-derecho="2" editable="true" width="100" cellsalign="center"/> 
+                        <campo name="ultimo_usuario_modificador" visible="false" text="ultimo_usuario_modificador" columna-visible="false"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+      
+        <nivel id="alta_reduc_cont" nombre="alta_reduc_cont" interactivo="false">
+			<componente tipo="altaDirect" id="alta_reduc_cont" nombre="alta_reduc_cont">
+				<tabla schema="operation" nombre="reduccion_contrato">
+					<campo name="ur" calc="%busca_ctto.busca_ctto.ur%"/>
+					<campo name="periodo" calc="%busca_ctto.busca_ctto.periodo%"/>
+					<campo name="id_duep_contrato_pedido" calc="%busca_ctto.busca_ctto.id_duep_contrato_pedido%"/>
+					<campo name="folio_contrato" calc="%busca_ctto.busca_ctto.folio_con_ordecom%"/>
+					<campo name="proveedor" calc="%busca_ctto.busca_ctto.proveedor%"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+		<nivel id="barreDetContr" nombre="barreDetContr" interactivo="false">
+			<componente tipo="cursor" id="barreDetContr" nombre="barreDetContr">
+				<tabla schema="operation" nombre="duep_contrato_pedido_det">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.ur%"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.periodo%"/>
+					<campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.id_duep_contrato_pedido%"/>
+					<campo name="id_duep_contrato_pedido_det" />
+					<campo name="clave_articulo" />
+					<campo name="id_cat_cog" />
+					<campo name="clasificador_objeto_gasto" />
+					<campo name="id_cat_centro_registro" />
+					<campo name="clave_presup" />
+					<campo name="centro_registro" />
+					<campo name="cantidad" />
+					<campo name="importe_unitario" />
+					<campo name="importe_total" />
+					<campo name="caracteristica" />
+					<campo name="selec_reduc_cont" filtroCampo="selec_reduc_cont" filtroOperador="=" filtroValor="true"/>
+				</tabla>
+				<nivel id="alta_det" nombre="alta_det" interactivo="false">
+        			<componente tipo="altaDirect" id="alta_det" nombre="alta_det">
+        				<tabla schema="operation" nombre="reduccion_contrato_det">
+        					<campo name="ur" calc="%busca_ctto.busca_ctto.ur%"/>
+        					<campo name="periodo" calc="%busca_ctto.busca_ctto.periodo%"/>
+        					<campo name="id_duep_contrato_pedido" calc="%busca_ctto.busca_ctto.id_duep_contrato_pedido%"/>
+        					<campo name="id_duep_contrato_pedido_det" calc="%barreDetContr.barreDetContr.id_duep_contrato_pedido_det%"/>
+        					<campo name="clave_articulo" calc="%barreDetContr.barreDetContr.clave_articulo%"/>
+        					<campo name="caraceteristicas" calc="%barreDetContr.barreDetContr.caracteristica%"/>
+        					<campo name="id_cat_cog" calc="%barreDetContr.barreDetContr.id_cat_cog%"/>
+        					<campo name="clasificador_objeto_gasto" calc="%barreDetContr.barreDetContr.clasificador_objeto_gasto%"/>
+        					<campo name="clave_presup" calc="%barreDetContr.barreDetContr.clave_presup%"/>
+        					<campo name="id_cat_centro_registro" calc="%barreDetContr.barreDetContr.id_cat_centro_registro%"/>
+        					<campo name="centro_registro" calc="%barreDetContr.barreDetContr.centro_registro%"/>
+        					<campo name="cantidad" calc="%barreDetContr.barreDetContr.cantidad%"/>
+        					<campo name="cantidad_recibir" calc="%barreDetContr.barreDetContr.cantidad%"/>
+        					<campo name="importe_unitario_iva" calc="%barreDetContr.barreDetContr.importe_unitario%"/>
+        					<campo name="total" calc="%barreDetContr.barreDetContr.importe_total%"/>
+        				</tabla>
+        			</componente>
+        		</nivel>
+			</componente>
+		</nivel>
+		 <nivel id="reg_sol" nombre="Registra Solicitud de Reducción de contrato" mostrarNivelAnterior="false">
+            <componente id="reg_sol" tipo="tabla" nombre="Registra Solicitud de Reducción de contrato" filtro="true" mostrarAgregar="false"> <!--mostrarImportacion="true"-->
+                <tabla schema="operation" nombre="reduccion_contrato_det">
+                    <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" 
+                    filtroCampo="ur" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.ur%" calc="%busca_ctto.busca_ctto.ur%" habilitado="false"/>
+					<campo name="periodo" text="Periodo" visible="false" llaveForanea="false" columna-visible="false" 
+					filtroCampo="periodo" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.periodo%"  calc="%busca_ctto.busca_ctto.periodo%" habilitado="false"/>
+					<campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" visible="false" columna-visible="false" 
+					filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.id_duep_contrato_pedido%" calc="%busca_ctto.busca_ctto.id_duep_contrato_pedido%"/>
+					<campo name="id_duep_contrato_pedido_det" text="det" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true" />
+					<campo name="clave_articulo" text="Clave articulo" habilitado="false" descripcionForanea="descripcion_articulo" descripcionForaneaTabla="descripcion_articulo" width="160" visible="true" columnas="3" margen-izquierdo="1" columna-visible="true"/>
+					<campo name="caraceteristicas" text="Caracteristicas" habilitado="false" width="160" visible="true" columnas="3" columna-visible="true"/>
+					<campo name="clave_presup" text="Clave Presupuestal" visible="true" width="160" columnas="3" columna-visible="true" habilitado="false"/>
+					<campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false" calc="2" visible="false" columna-visible="false" importacion="true"/>
+					<campo name="clasificador_objeto_gasto" text="COG" columnas="3" width="160" habilitado="false" margen-izquierdo="1" visible="true" columna-visible="true" descripcionForanea="descripcion"/>
+					<campo name="id_cat_centro_registro" text="id_cat_centro_registro" llaveForanea="false" calc="4" visible="false" columna-visible="false" importacion="true"/>
+					<campo name="centro_registro" text="Centro de Registro*" columnas="3" width="160" habilitado="false" validacionModificacion="%centro_registro%==null" validacionModificacionMensaje="Campo 'Centro de Registro' no puede quedar vacío" visible="true" columna-visible="true" descripcionForanea="descripcion"
+					    validacion="%centro_registro%==null" validacionMensaje="Campo 'Centro de Registro' no puede quedar vacío"/>
+					<campo name="cantidad" habilitado="false" text="Cantidad" width="100" columnas="3" cellsalign="center" /> 
+                    <campo name="importe_unitario_iva" habilitado="false" text="Costo Unitario" width="150" columnas="3" margen-izquierdo="1" formatoMoneda="true"/> 
+                    <campo name="total" habilitado="false" text="Total" columnas="3" width="150" formatoMoneda="true" cellsalign="right"/> 
+                    <campo name="cantidad_recibir" text="Cantidad a Recibir" columnas="3" width="160" columna-visible="false" calcCliente="@ifThenElse(%reg_sol.reg_sol.cantidad%==null,0,%reg_sol.reg_sol.cantidad%)" habilitado="false"/> 
+                    <campo name="unidades_a_reducir" text="Unidades a Reducir" columnas="3" width="160" margen-izquierdo="1" validacion="%unidades_a_reducir%&gt; %cantidad_recibir%" validacionMensaje="el campo unidades a reducir no puede ser mayor a la cantidad inicial" cellsalign="center"/> 
+                    <campo name="total_cant_mod" text="Total Modificado de Unidades" columnas="3" width="160" calcCliente="@ifThenElse(%cantidad_recibir%==null,0.0,%cantidad_recibir%)-@ifThenElse(%unidades_a_reducir%==null,0.0,%unidades_a_reducir%)" habilitado="false" /> 
+                    <campo name="importe_modificado" text="Importe Modificado" columnas="3" width="160" calcCliente="@ifThenElse(%total_cant_mod%==null,0.0,%total_cant_mod%)*@ifThenElse(%importe_unitario_iva%==null,0.0,%importe_unitario_iva%)" formatoMoneda="true"/>
+                    <campo name="total_importe_reducir" text="Total Importe a Reducir" columnas="3" width="160" calcCliente="@ifThenElse(%total%==null,0.0,%total%)-@ifThenElse(%importe_modificado%==null,0.0,%importe_modificado%)" habilitado="false" margen-izquierdo="1" formatoMoneda="true"/>
+                    <campo name="ultimo_usuario_modificador" habilitado="false" text="Usuario" visible="false" columna-visible="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="reduccion_cont" nombre="Reducción de contrato" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="reduccion_cont" nombre="Reducción de contrato" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="reduccion_contrato">
+                    <campo name="ur" text="Unidad Responsable" width="120"  visible="false" columna-visible="false" llaveForanea="false" calc="%busca_ctto.busca_ctto.ur%" habilitado="false" />
+					<campo name="periodo" text="Año" visible="false" width="100"  columna-visible="false" llaveForanea="false" calc="%busca_ctto.busca_ctto.periodo%" habilitado="false"/>
+					<campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" width="100" calc="%busca_ctto.busca_ctto.id_duep_contrato_pedido%" visible="false" columna-visible="false"/>
+					<campo name="folio_contrato" text="Contrato a Reducir" width="120" columnas="3" margen-izquierdo="2" habilitado="false"/>
+					<campo name="proveedor" text="Beneficiario" columnas="3" margen-derecho="2"  width="150" habilitado="false" visible="true" descripcionForaneaTabla="razon_social" descripcionForanea="razon_social"/>
+					<campo name="fecha_reduccion" text="Fecha de Reducción" columnas="3" width="250" margen-izquierdo="2" habilitado="true" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+					<campo name="motivo_reduccion" text="Motivo de Reducción" columnas="6" width="170" height="100" margen-izquierdo="2"/>
+					<campo name="adjuntar_doc" text="Adjunta Documento" width="200" local="true" type="file" columnas="3" margen-izquierdo="2"/>
+					<campo name="reducir_monto" text="Desea Reducir el Monto del Contrato" width="200" height="100" columnas="3" margen-derecho="1"/>
+					<campo name="valid" text="Valid" width="200" height="100" local="true" type="string" visible="false" 
+					validacion="@ifThenElse(@consultaDirec('SELECT COUNT(id_contrato) AS result FROM operation.activo_fijo WHERE estatus=1 AND ur='+%busca_ctto.busca_ctto.ur%+' AND periodo='+%busca_ctto.busca_ctto.periodo%+' AND id_contrato='+%busca_ctto.busca_ctto.id_duep_contrato_pedido%,'result','long','MAGNITUS') &gt; 0,true,@ifThenElse(@consultaDirec('SELECT COUNT(contrato) AS result FROM operation.materiales_almacen WHERE ur='+%busca_ctto.busca_ctto.ur%+' AND id_periodo='+%busca_ctto.busca_ctto.periodo%+' AND contrato=\\''+%busca_ctto.busca_ctto.id_duep_contrato_pedido%+'\\'','result','long','MAGNITUS') &gt; 0,true,false))" 
+					validacionMensaje="'El Contrato tiene solicitudes de recepción pendientes de autorizar'"/>
+					<!-- <confirmaciones>
+						<confirmacion 
+						confirmacionInteraccion="@ifThenElse(@consultaDirec('SELECT COUNT(id_contrato) AS result FROM operation.activo_fijo WHERE estatus=1 AND ur='+%busca_ctto.busca_ctto.ur%+' AND periodo='+%busca_ctto.busca_ctto.periodo%+' AND id_contrato='+%busca_ctto.busca_ctto.id_duep_contrato_pedido%,'result','long','MAGNITUS')&gt; 0,true,@ifThenElse(@consultaDirec('SELECT COUNT(id_contrato) AS result FROM operation.activo_fijo WHERE ur='+%busca_ctto.busca_ctto.ur%+' AND periodo='+%busca_ctto.busca_ctto.periodo%+' AND id_contrato='+%busca_ctto.busca_ctto.id_duep_contrato_pedido%,'result','long','MAGNITUS')&gt; 0,true,false))" 
+						confirmacionTitulo="Solicitudes de recepción pendientes de autorizar" 
+						confirmacionMensaje="El Contrato tiene solicitudes de recepción pendientes de autorizar" tipo="avanzar"/>
+					</confirmaciones>-->
+                </tabla>
+                
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar"  columnas="3" margen-izquierdo="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <componente id="muestra_red" tipo="tabla" nombre="Detalle de Contrato a Cancelar" filtro="true" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false"> <!--mostrarImportacion="true"-->
+                <tabla schema="operation" nombre="reduccion_contrato_det">
+                    <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" 
+                    filtroCampo="ur" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.ur%" habilitado="false"/>
+					<campo name="periodo" text="Periodo" visible="false" llaveForanea="false" columna-visible="false" 
+					filtroCampo="periodo" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.periodo%"  calc="%busca_ctto.busca_ctto.periodo%" habilitado="false"/>
+					<campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" visible="false" columna-visible="false" 
+					filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%busca_ctto.busca_ctto.id_duep_contrato_pedido%" calc="%busca_ctto.busca_ctto.id_duep_contrato_pedido%"/>
+					<campo name="id_duep_contrato_pedido_det" text="det" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true" />
+					<campo name="clave_articulo" text="Clave articulo" habilitado="false" width="160" visible="true" columnas="3" margen-izquierdo="2" columna-visible="true"/>
+					<campo name="caraceteristicas" text="caraceteristicas" habilitado="false" width="160" visible="true" columnas="3" margen-derecho="2" columna-visible="true"/>
+					<campo name="clave_presup" text="Clave Presupuestal" visible="true" width="160" columnas="3" margen-izquierdo="2" columna-visible="true" habilitado="false"/>
+					<campo name="id_cat_cog" text="id_cat_cog" llaveForanea="false" calc="2" visible="false" columna-visible="false" importacion="true"/>
+					<campo name="clasificador_objeto_gasto" text="COG" columnas="3" width="160" habilitado="false" margen-derecho="2" visible="true" columna-visible="true" descripcionForanea="descripcion"/>
+					<campo name="id_cat_centro_registro" text="id_cat_centro_registro" llaveForanea="false" calc="4" visible="false" columna-visible="false" importacion="true"/>
+					<campo name="centro_registro" text="Centro de Registro*" columnas="3" width="160" habilitado="false" margen-izquierdo="2" validacionModificacion="%centro_registro%==null" validacionModificacionMensaje="Campo 'Centro de Registro' no puede quedar vacío" visible="true" columna-visible="true" descripcionForanea="descripcion"
+					    validacion="%centro_registro%==null" validacionMensaje="Campo 'Centro de Registro' no puede quedar vacío"/>
+					<campo name="cantidad" habilitado="false" text="Cantidad" width="160" columnas="3" margen-derecho="2"/> 
+                    <campo name="importe_unitario_iva" habilitado="false" text="Importe Unitario" width="160" columnas="3" margen-izquierdo="2"/> 
+                    <campo name="total" habilitado="false" text="Total" columnas="3" margen-derecho="2" width="160"/> 
+                    <campo name="unidades_a_reducir" text="Unidades a Reducir" columnas="3" margen-izquierdo="2" width="160"/>
+                    <campo name="cantidad_recibir" text="Cantidad a Recibir" columnas="3" margen-derecho="2" width="160" columna-visible="false"/> 
+                    <campo name="total_cant_mod" text="Total Cantidad a Modificar" columnas="3" margen-izquierdo="2" width="160"/> 
+                    <campo name="importe_modificado" text="Importe importe_modificado" columnas="3" margen-derecho="2" width="160"/>
+                    <campo name="total_importe_reducir" text="Total Importe a Reducir" columnas="3" margen-izquierdo="2" width="160"/>
+                    <campo name="ultimo_usuario_modificador" habilitado="false" text="Usuario" visible="false" columna-visible="false"/>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="false" texto="Continuar" />
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="reporte_rc" nombre="Solicitud de Reducción de Contrato" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente id="reporte_rc" nombre="Modificación de Solicitud de Reducción de Contrato" tipo="reporte">
+                <reporte nombre="repor_modRedCon_jsus" update="true" nombreDocumento="'Modificación de Solicitud de Reducción de Contrato'" expediente="SOLICITUD DE REDUCCIÓN DE CONTRATO"  grupo="%busca_ctto.busca_ctto.id_duep_contrato_pedido%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%busca_ctto.busca_ctto.ur%"/>
+                    <campo name="periodo" type="long" calc="%busca_ctto.busca_ctto.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%busca_ctto.busca_ctto.id_duep_contrato_pedido%"/>
+                    <campo name="usuario" type="String" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente> 
+        </nivel>
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false"  ejecutar="%reduccion_cont.reduccion_cont.reducir_monto%">
+			<componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+				<parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+					<parametro name="enterprise" calc="'MAGNITUS'"/>
+					<parametro name="process" calc="'e71d8054-177c-457a-b469-5484ed548462'"/>
+					<parametro name="user" calc="$protocolarios.user$"/>
+					<parametro name="out_ur" calc="%busca_ctto.busca_ctto.ur%" mostrarEsc="true"/>
+					<parametro name="out_periodo" calc="%busca_ctto.busca_ctto.periodo%" mostrarEsc="true"/>
+					<parametro name="out_id_duep_contrato_pedido" calc="%busca_ctto.busca_ctto.id_duep_contrato_pedido%" mostrarEsc="false"/>
+				</parametros>
+			</componente>
+    	</nivel>
+    </pagina>
+</tarea>
