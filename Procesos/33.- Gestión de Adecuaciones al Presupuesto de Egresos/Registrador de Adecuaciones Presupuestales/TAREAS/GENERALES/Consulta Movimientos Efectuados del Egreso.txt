@@ -1,0 +1,105 @@
+<tarea nombre="Consulta Movimientos Efectuados del Egreso" requisitosInstalacion="">
+    <pagina nombre="Consulta Movimientos Efectuados del Egreso" id="1">
+        <nivel nombre="Consulta Movimientos Efectuados del Egreso" id="cursorFiltrarPeriodo" interactivo="false">
+            <componente tipo="cursor" nombre="Consulta Movimientos Efectuados del Egreso" id="cursorFiltrarPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="FU" nombre="Filtra Usuario" interactivo="false">
+            <componente id="FU" nombre="Filtra Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="SI" nombre="Selección de Información"  mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="SI" nombre="Consulta Movimientos Efectuados del Egreso"  tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" calc="1" visible="false"/>
+                    <campo name="seleccion" text="Selecciona Opcion:" local="true" type="long" columnas="4" margen-izquierdo="3" margen-derecho="3">
+                        <opciones>
+                            <opcion texto="Consulta Por Folio de Adecuación" valor="1"/>
+                            <opcion texto="Consulta Por Clave Presupuestal" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Consulta Movimientos Efectuados del Egreso" id="movimientos" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%SI.SI.seleccion%==1">
+            <componente tipo="tabla" id="movimientos" nombre="Consulta Movimientos Efectuados del Egreso por Folio de Adecuación    -----(Incluye Acción de Click Derecho)----" 
+                filtro="true" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" text="Unidad Responsable" calc="%cursorFiltrarPeriodo.cursorFiltrarPeriodo.id_unidad_responsable%" columna-visible="false" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" calc="%cursorFiltrarPeriodo.cursorFiltrarPeriodo.id_periodo%" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_adecuacion" text="ID Adecuacion" columna-visible="false" />
+                    <campo name="fecha_registro" text="Fecha" width="170"/>
+                    <campo name="tipo_adecuacion" text="Tipo Movimiento" width="150"/>
+                    <campo name="importe_total" text="Monto" formatoMoneda="true" width="150" cellsalign="left" muestraAcumulado="true"/>
+                    <campo name="folio_adecuacion" text="Folio" width="100"/>
+                    <campo name="concepto" text="Comentarios o Referencia"/>
+                    <campo name="id_cat_centro_registro" text="ID CC" columna-visible="false" llaveForanea="false" />
+                    <campo name="centro_registro" text="Centro de Registro" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" width="500"/>
+                    <campo name="estatus" text="Estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="2" width="120" />
+                    <campo name="usuario" text="Usuario" local="true" type="string" columna-visible="false" calc="$protocolarios.user$"/>
+                    <tareas>
+                        <tarea nombre="Ver Detalles" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_adecuacion,tipo_adecuacion" ref="task=a98e8e59-722f-4b9c-8144-edabcffd18ed"/>
+                        <tarea nombre="Ver Reporte" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_adecuacion,tipo_adecuacion,usuario" ref="task=a77bca0d-8896-4ecb-a057-42c9c608e3e4"/>
+                        <tarea nombre="Ver Pólizas" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_adecuacion,tipo_adecuacion,usuario" ref="task=b94b0abc-4496-41f5-8bfc-dc291f46048d"/>
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="SCP" nombre="Selecciona Clave Presupuestal" ejecutar="%SI.SI.seleccion%==2" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" id="SCP" nombre="Consulta Movimientos Efectuados del Egreso por Clave Presupuestal  -----(Incluye Acción de Click Derecho)----" filtro="true" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" llaveForanea="false" calc="%cursorFiltrarPeriodo.cursorFiltrarPeriodo.id_unidad_responsable%" columna-visible="false"/>
+                    <campo name="id_periodo" text="Año" calc="%cursorFiltrarPeriodo.cursorFiltrarPeriodo.id_periodo%" llaveForanea="false" width="85" />
+                    <campo name="id_presupuesto_egresos" llaveForanea="false" columna-visible="false"/>
+                    <campo name="id_presupuesto_egresos_det" llaveForanea="false" columna-visible="false"/>
+                    <campo name="id_clave_egreso" text="Id Clave" width="135"/>
+                    <campo name="id_cat_centro_registro" columna-visible="false" llaveForanea="false"/>
+                    <campo name="centro_registro" text="Centro de Registro" descripcionForaneaTabla="id_cat" width="120" columna-visible="false"/>
+                    <campo name="id_cat_fondo" columna-visible="false" llaveForanea="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" descripcionForaneaTabla="id_cat" width="120" columna-visible="false"/>
+                    <campo name="id_cat_cog" columna-visible="false" llaveForanea="false"/>
+                    <campo name="cog" text="COG" descripcionForaneaTabla="id_cat" width="120" columna-visible="false" />
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" width="280" />
+                    <campo name="presupuesto_modificado" text="Presupuesto Modificado" formatoMoneda="true" cellsalign="right" muestraAcumulado="true" width="240" />
+                    <campo name="usuario" text="Usuario" local="true" type="string" calc="%FU.FU.nombre_usuario%" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Consultar Adecuaciones de Clave Presupuestal" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_presupuesto_egresos,id_presupuesto_egresos_det,usuario,clave_presupuestal" ref="task=352ef443-18df-42a0-93e7-f77bbc36c504"/>
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="false" texto="CONTINUAR"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

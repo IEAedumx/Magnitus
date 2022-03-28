@@ -1,0 +1,573 @@
+<tarea id="RegistraAdecuacion" nombre="Registra Adecuación Presupuestaria del Egreso">
+    <pagina id="1">
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                    <campo name="id_cat_centro_registro" />
+                    <campo name="id_centro_registro" />
+                </tabla>
+            </componente>
+        </nivel>
+       <!-- <nivel id="nlBarrePresupuestoEgresos" nombre="barrePresupuestoEgresos" interactivo="false">
+            <componente id="cpBarrePresupuestoEgresos" nombre="barrePresupuestoEgresos" tipo="cursor">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="id_presupuesto_egresos"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+     
+        <nivel id="nlRegAdecPresuEgreA" nombre="Registra Adecuación Presupuestaria del Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpDatGralAdec" nombre="Datos Generales de la Adecuación" tipo="formulario">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" calc="$config.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" llaveForanea="false"/>
+                    <campo name="id_adecuacion" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    <campo name="id_cat_centro_registro" calc="2" visible="false" llaveForanea="false"/>
+                    <campo name="centro_registro" text="Centro de Registro Solicitante" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="1" columnas="3" marcador="Seleccione un Centro de Registro" validacion="%centro_registro%==null" validacionMensaje="Seleccione Centro de Registro"/> <!--habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true"-->
+                    <campo name="id_fondo_contable" calc="3" visible="false" llaveForanea="false" />
+                    <campo name="fondo_contable" text="Fondo Contable" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" validacion="%fondo_contable%==null" validacionMensaje="Seleccione un Fondo Contable" marcador="Seleccione un Fondo Contable" columnas="3"/> 
+                    <campo name="tipo_adecuacion" text="Tipo de Adecuación" columnas="3" marcador="Seleccione un Tipo de Adecuación" validacion="%tipo_adecuacion%==null" validacionMensaje="Selecciona el tipo de adecuación"/>
+                    
+                    <campo name="documentacion" text="Documentación" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Documento'" grupo="%id_adecuacion%" expediente="Expediente de Adecuaciones al Presupuesto de Egresos Aprobado" columnas="3" margen-izquierdo="1"/>
+                    
+                   
+                     <campo name="concepto" text="Concepto" columnas="3" marcador="Ingrese un Concepto" validacion="%concepto%==null" validacionMensaje="Ingrese un concepto"/>
+                    <!-- validacion="@ifThenElse(!@matchRegEx(%concepto%,'^[A-Z ÁÉÍÓÚÜ 0-9-]*$'), true, falsevalidacionMensaje="Indique Concepto de la Adecuación, en letras Mayúsculos ó Números" -->
+                    
+                    <campo name="folio_presupuesto_ingreso" text="Ampliación/Reducción Presupuestal del Ingreso" descripcionForanea="folio_adecuacion" columnas="3" marcador="Seleccione un Folio de Adecuación del Ingreso" interaccion="%tipo_adecuacion%!=3" /> <!-- filtradoInteractivo="'tipo_adecuacion=3'" -->
+                    
+                    <campo name="importe_total" text="Detalle Presupuesto ingreso" columnas="3" margen-izquierdo="2" calcCliente="@consultaDirec('SELECT importe_total AS result FROM operation.adecuacion_presupuestaria_ingreso WHERE ur='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_adecuacion='+%folio_presupuesto_ingreso%,'result','long','MAGNITUS')" habilitado="false" />
+                    <campo name="ultimo_usuario_modificador" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" llaveForanea="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" visible="false" />
+                    <campo name="estatus" calc="1" visible="false"/>
+                    <campo name="nueva_clave" text="¿Requiere Nueva Clave Presupuestal?" local="true" type="string"  columnas="3"  margen-derecho="2" marcador="Seleccione si requiere Clave Presupuestal" validacion="%nueva_clave%==null AND (%tipo_adecuacion%==1 OR %tipo_adecuacion%==3)" validacionMensaje="Seleccione si Requiere Nueva Clave Presupuestal" interaccion-visible="%tipo_adecuacion%==1 OR %tipo_adecuacion%==3" visible="false" calc="2" habilitado="true">
+                        <opciones>
+                            <opcion texto="Sí" valor="1" />
+                            <opcion texto="No" valor="2" />
+                        </opciones>
+                    </campo>
+                    <campo name="val1_nueva_clave" local="true" type="string" visible="false" validacion="%tipo_adecuacion%==2 AND %nueva_clave%=='1'" validacionMensaje="Para realizar una reducción ya debe de haber una clave creada previamente."/>
+                </tabla>
+
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/><!--  -->
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreAdecuacionEgreso" nombre="BarreAdecuacionEgreso" interactivo="false" >
+            <componente id="nlBarreAdecuacionEgreso" nombre="BarreAdecuacionEgreso" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" />
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+                    <campo name="folio_adecuacion" visible="false" text="Folio Adecuación" calc="@concatenar(@ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==1,'A-',@ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==2,'R-','T-'))+
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;10,'00000',
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;100,'0000',
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;1000,'000',
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;10000,'00',
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;100000,'','')))))+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        
+        <nivel id="nclave" nombre="Registra Presupuesto de Egresos Nueva Clave" interactivo="false" ejecutar="(%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==1 OR %nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==3) AND %nlRegAdecPresuEgreA.cpDatGralAdec.nueva_clave%=='1'">
+            <componente id="nclave" nombre="Registra Presupuesto de Egresos Nueva Clave" tipo="altaDirect">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                    <campo name="id_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_presupuesto_egresos" autogenerado="true"  generacion="@prox()+1"/>
+                    <campo name="fecha_elaboracion" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="estatus" calc="1"/>
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!-- REGISTRO DE AMPLIACION LIQUIDA CON NUEVA CLAVE PRESUPUESTAL -->
+        <nivel id="crearClave" nombre="Selecciona Clave Presupuestal" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==1 AND %nlRegAdecPresuEgreA.cpDatGralAdec.nueva_clave%=='1'">
+            <componente id="etiquetaCD" nombre="Instrucciones" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" visible="false" text="ID" calc="1" />
+                    <etiqueta nombre="accionCD1" texto="ACCIÓN DE CLIC DERECHO PRESENTE EN LA TABLA" color="black" bold="normal" tamaño="24px" alineacion="center" interlineado="25px" width="500px" margen-izquierdo="2" columnas="6" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="false" />
+                </estilos>
+            </componente>
+            <componente id="crearClave" nombre="Selecciona Clave Presupuestal !!!INCLUYE ACCIÓN DE CLIC DERECHO¡¡¡" tipo="tabla" mostrarAgregar="true" mostrarEditar="false" mostrarEliminar="false" mostrarImportacion="true">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable"  text="ur" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="id_periodo" text="Año" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" llaveForanea="false" />
+                    <campo name="id_presupuesto_egresos" llaveForanea="false" calc="%nclave.nclave.id_presupuesto_egresos%" visible="false" columna-visible="false" />
+                    <campo name="id_presupuesto_egresos_det" llaveForanea="false" visible="false" columna-visible="false" autogenerado="true" generacion="@prox()+1" importacion="true"/>
+                    
+                    <campo name="id_clave_egreso" text="Id Clave" margen-izquierdo="2" columnas="3" visible="false" calc="
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS')==null, %buscaPeriodo.buscaPeriodo.id_periodo%+'-'+ '000001',
+                    @concatenar(%buscaPeriodo.buscaPeriodo.id_periodo%+'-'+
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;10,'00000',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;100,'0000',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;1000,'000',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;10000,'00',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS')))" importacion="true"/>
+                                
+                    <campo name="id_cat_tipo_gasto" calc="6" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="tipo_gasto" text="Tipo de Gasto (TG)" margen-izquierdo="2" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%tipo_gasto%==null" validacionMensaje="Favor de seleccionar tipo de gasto" columnaImportacion="Tipo de Gasto (TG)" importacion="true"/>
+                    <campo name="id_cat_centro_registro" calc="2" visible="false" columna-visible="false" llaveForanea="false" />
+                    <campo name="centro_registro" text="Centro Registro" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%centro_registro%==null" validacionMensaje="Favor de seleccionar centro de registro" columnaImportacion="Centro Registro" llavesFijas="afectable=true" />
+                    <campo name="id_cat_municipio" calc="7" visible="false" columna-visible="false" llaveForanea="false" />
+                    <campo name="municipio" text="Municipio" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%municipio%==null" validacionMensaje="Favor de seleccionar municipio" columnaImportacion="Municipio"  llavesFijas="afectable=true"/>
+                    <campo name="id_cat_fondo" text="FC" calc="3" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" descripcionForanea="id_cat,descripcion" columnas="3" columna-visible="false" columnaImportacion="Fondo Contable" importacion="true" llavesFijas="afectable=true" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.fondo_contable%"/>
+                    <campo name="id_clasif_funcional" calc="8" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clasificador_funcional" text="Clasificador Funcional" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%clasificador_funcional%==null" validacionMensaje="Favor de seleccionar tipo de clasificador Funcional" columnaImportacion="Clasificador Funcional" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_cat_fuente" text="ID Fuente de Financiamiento" calcCliente="%id_catalogo_foraneo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" validacion="%fuente_financiamiento%==null" validacionMensaje="Debe Capturarse Fuente de Fianciamiento" visible="true" columna-visible="false" columnas="3" margen-derecho="2"  calcCliente="%id_cat_foraneo%" habilitado="false" />
+                    <campo name="id_cat_clasif_programatico" calc="9" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clasificador_programatico" text="Clasificador Programático" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%clasificador_programatico%==null" validacionMensaje="Favor de seleccionar tipo de clasificador problematico" columnaImportacion="Clasificador Programático" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_cog" calc="4" visible="false" columna-visible="false" llaveForanea="false"/>
+                    
+                    
+                    <campo name="cog" text="Clasificador por Objeto del Gasto" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" 
+                        validacion="@ifThenElse(%cog%==null OR (%fondo_contable%=='115' AND (%val_capitulos%!='2' AND %val_capitulos%!='3')),true,@ifThenElse(%cog%==null OR (%fondo_contable%=='114' AND %val_capitulos%!='1' AND %cog%!='39801'),true,@ifThenElse(%cog%==null,true,false)))" validacionMensaje="El COG no debe estar vacio o 'Verifique Fondo Contable y Capítulo del COG'" 
+                         columnaImportacion="Clasificador por Objeto del Gasto" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="val_capitulos" text="Validación de Capitulos" local="true" type="string" calcCliente="@subCadena(%cog%,0,1)" visible="false" columna-visible="false"/>
+                    
+
+                    <campo name="id_cat_progra_presup" calc="10" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="programa_presupuestario" text="Programa Presupuestario (PP)" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%programa_presupuestario%==null" validacionMensaje="Favor de seleccionar programa Presupuestario" columnaImportacion="Programa Presupuestario (PP)" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_eje_pide" text="ID Programa Presupuestal" calc="13" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="eje_pide" text="Objetivo Estratégico" validacion="%eje_pide%==null" validacionMensaje="Debe Capturarse el Eje" visible="true" columna-visible="false" columnas="3" margen-derecho="2" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_proceso_proyecto" text="ID Proceso Proyecto" calc="14" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="proceso_proyecto" text="Estrategia" validacion="%proceso_proyecto%==null" validacionMensaje="Debe Capturarse el Eje" visible="true" columna-visible="false" columnas="3" margen-izquierdo="2" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_proceso_proyecto_eje_pide" text="ID Proceso Proyecto Detalle" calc="15" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="detalle_proceso_proyecto" text="Actividad Acción" validacion="%detalle_proceso_proyecto%==null" validacionMensaje="Debe Capturarse el Detalle Proceso Proyecto" visible="true" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" columnas="3" margen-derecho="2" llavesFijas="afectable=true"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" margen-izquierdo="2" columnas="6" habilitado="false"
+                    calcCliente="@concatenar(%centro_registro%, ' ', %fondo_contable%, ' ', %cog%, ' ', %fuente_financiamiento%, ' ', %programa_presupuestario%, ' ', %eje_pide%, ' ', %proceso_proyecto%, ' ', %detalle_proceso_proyecto%)"  validacion="%clave_presupuestal%==%valida_clave%" validacionMensaje="Ya existe Clave Presupuestal" importacion="true"/>
+                    <campo name="techo_presupuestal" text="Techo Presupuestal" formatoMoneda="true" habilitado="false" margen-izquierdo="2" columnas="3" calc="0.0"/>
+                    <campo name="presupuesto_modificado" text="Presupuesto Modificado" formatoMoneda="true" habilitado="false" margen-derecho="2" columnas="3"/>
+                    <campo name="fecha_elaboracion" text="Fecha Registro" visible="false" columna-visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="valida_clave" text="Clave" local="true" type="string" calcCliente="@consultaDirec('SELECT clave_presupuestal AS result FROM operation.presupuesto_egresos_det WHERE id_unidad_responsable='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND clave_presupuestal='+'\\''+%clave_presupuestal%+'\\'','result','string','MAGNITUS')" visible="false" columnas="10" columna-visible="false"/>
+                    <campo name="id_adecuacion" local="true" type="string" visible="false" columna-visible="false" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" importacion="true"/>
+                    <campo name="id_usuario" local="true" type="string" visible="false" columna-visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" importacion="true" />
+                    <campo name="nueva_clave" local="true" type="string" visible="false" columna-visible="false" calc="'1'"/>
+                   
+                    <campo name="enero" text="Enero" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="febrero" text="Febrero" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="marzo" text="Marzo" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="abril" text="Abril" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="mayo" text="Mayo" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="junio" text="Junio" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="julio" text="Julio" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="agosto" text="Agosto" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="septiembre" text="Septiembre" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="octubre" text="Octubre" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="noviembre" text="Noviembre" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="diciembre" text="Diciembre" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="por_distrubuir" text="Por Distribuir" calc="0.0" visible="false" columna-visible="false"/>
+                    
+                    <tareas>
+                        <tarea nombre="Registra Ampliación Líquida" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_presupuesto_egresos,id_presupuesto_egresos_det,id_adecuacion,clave_presupuestal,id_usuario,nueva_clave" ref="task=7a048da0-bb33-45ef-8088-8f5cf1cae612"/>
+                        <!--Tarea Click Derecho: Registra Ampliación Líquida (CD)-->
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" />
+                    <boton nombre="formulario" texto="GUARDAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) > 0 encontrado FROM operation.adecuacion_presupuestaria_egreso_det aped
+                WHERE aped.ur = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.ur%+'\\' AND aped.periodo = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%+'\\' AND aped.id_adecuacion = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%+'\\'','encontrado','bool','MAGNITUS')==false" 
+                validacionMensaje="'No se puede generar la solicitud de adecuación, si no se ha afectado a una de las claves presupuestales del egreso.'" />
+            </validaciones>
+        </nivel>
+        <!-- Inicio AMPLIACION LIQUIDA-->
+        
+        <nivel id="ampliacionLiquida" nombre="Selecciona Clave Presupuestal" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==1 AND %nlRegAdecPresuEgreA.cpDatGralAdec.nueva_clave%=='2'">
+            <componente id="etiquetaCD" nombre="" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" visible="false" text="ID" calc="1" />
+                    <etiqueta nombre="accionCD" texto="ACCIÓN DE CLIC DERECHO PRESENTE EN LA TABLA" color="blue" bold="normal" tamaño="32px" alineacion="left" interlineado="25px" width="500px" margen-izquierdo="2" columnas="6" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="false" />
+                </estilos>
+            </componente>
+            <componente id="ampliacionLiquida" nombre="Selecciona Clave Presupuestal ///---!!!INCLUYE ACCIÓN DE CLIC DERECHO¡¡¡---" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" mostrarImportacion="false" filtro="true">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable"  text="ur" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false" columna-visible="false" importacion="true" FiltrarConCalc="false"/>
+                    <campo name="id_periodo" text="Año" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" llaveForanea="false" />
+                    <campo name="id_presupuesto_egresos" llaveForanea="false" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="id_presupuesto_egresos_det" llaveForanea="false" visible="false" columna-visible="false" autogenerado="true" generacion="@prox()+1" importacion="true"/>
+                    <campo name="id_clave_egreso" text="Id Clave" margen-izquierdo="2" columnas="3" visible="false" importacion="true"/>
+                    <campo name="id_cat_tipo_gasto" calc="6" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="tipo_gasto" text="Tipo de Gasto (TG)" margen-izquierdo="2" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%tipo_gasto%==null" validacionMensaje="Favor de seleccionar tipo de gasto" columnaImportacion="Tipo de Gasto (TG)" importacion="true"/>
+                    <campo name="id_cat_centro_registro" calc="2" visible="false" columna-visible="false" llaveForanea="false" />
+                    <campo name="centro_registro" text="Centro Registro" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%centro_registro%==null" validacionMensaje="Favor de seleccionar centro de registro" columnaImportacion="Centro Registro" filtroCampo="centro_registro" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.centro_registro%"/>
+                    <campo name="id_cat_municipio" calc="7" visible="false" columna-visible="false" llaveForanea="false" />
+                    <campo name="municipio" text="Municipio" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%municipio%==null" validacionMensaje="Favor de seleccionar municipio" columnaImportacion="Municipio"  />
+                    <campo name="id_cat_fondo" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="id_cat_fondo" filtroOperador="=" filtroValor="3"/>
+                    <campo name="fondo_contable" text="Fondo Contable" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%fondo_contable%==null" validacionMensaje="Favor de seleccionar fondo contable" columnaImportacion="Fondo Contable" importacion="true" filtroCampo="fondo_contable" filtroOperador="=" filtroValor=" %nlRegAdecPresuEgreA.cpDatGralAdec.fondo_contable%"/>
+                    <campo name="id_clasif_funcional" calc="8" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clasificador_funcional" text="Clasificador Funcional" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%clasificador_funcional%==null" validacionMensaje="Favor de seleccionar tipo de clasificador Funcional" columnaImportacion="Clasificador Funcional" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_fuente" calc="5" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%fuente_financiamiento%==null" validacionMensaje="Favor de seleccionar fuente de financiamiento" columnaImportacion="Fuente de Financiamiento" importacion="true" />
+                    <campo name="id_cat_clasif_programatico" calc="9" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clasificador_programatico" text="Clasificador Programático" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%clasificador_programatico%==null" validacionMensaje="Favor de seleccionar tipo de clasificador problematico" columnaImportacion="Clasificador Programático" importacion="true" />
+                    <campo name="id_cat_cog" calc="4" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="cog" text="Clasificador por Objeto del Gasto" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%cog%==null" validacionMensaje="Favor de seleccionar clasificador por objeto de gasto" columnaImportacion="Clasificador por Objeto del Gasto" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_progra_presup" calc="10" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="programa_presupuestario" text="Programa Presupuestario (PP)" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%programa_presupuestario%==null" validacionMensaje="Favor de seleccionar programa Presupuestario" 
+                    columnaImportacion="Programa Presupuestario (PP)" importacion="true"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" margen-izquierdo="2" columnas="6" habilitado="false"
+                     importacion="true"/>
+                    <campo name="presupuesto_modificado" text="Presupuesto Modificado" formatoMoneda="true" habilitado="false" margen-derecho="2" columnas="3"/>
+                    <campo name="id_adecuacion" local="true" type="string" visible="false" columna-visible="false" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" importacion="true"/>
+                    <campo name="id_usuario" local="true" type="string" visible="false" columna-visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" importacion="true" />
+                    <campo name="nueva_clave" local="true" type="string" visible="false" columna-visible="false" calc="'2'"/>
+                    <tareas>
+                        <tarea nombre="Registra Ampliación Líquida" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_presupuesto_egresos,id_presupuesto_egresos_det,id_adecuacion,clave_presupuestal,id_usuario,nueva_clave" ref="task=7a048da0-bb33-45ef-8088-8f5cf1cae612"/>
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" />
+                    <boton nombre="formulario" texto="GUARDAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) > 0 encontrado FROM operation.adecuacion_presupuestaria_egreso_det aped
+                WHERE aped.ur = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.ur%+'\\' AND aped.periodo = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%+'\\' AND aped.id_adecuacion = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%+'\\'','encontrado','bool','MAGNITUS')==false" 
+                validacionMensaje="'No se puede generar la solicitud de adecuación, si no se ha afectado a una de las claves presupuestales del egreso.'" />
+            </validaciones>
+        </nivel>
+        <!-- FIN DE AMPLAICION LIQUIDA-->
+        
+        <!-- REGISTRA REDUCCIÓN LÍQUIDA -->
+        <nivel id="nlReduLiquid" nombre="Reducción Líquida" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==2" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpReduLiquid" nombre="Reducción Líquida (incluye acción de Click Derecho)" tipo="tabla" mostrarEliminar="false" mostrarEditar="false" filtro="true">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="id_presupuesto_egresos" llaveForanea="false" visible="false" columna-visible="false" FiltrarConCalc="false"/>
+                    <campo name="id_presupuesto_egresos_det" llaveForanea="false" visible="false" columna-visible="false" autogenerado="true" generacion="@prox()+1"/>
+                    <campo name="id_clave_egreso" text="Id Clave" margen-izquierdo="2" columnas="3"/>
+                    <campo name="id_periodo" text="Año" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" visible="false" />
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" visible="false" columna-visible="true"/>
+                    <campo name="id_adecuacion" local="true" type="long" visible="false" columna-visible="false" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%"/>
+                    <campo name="presupuesto_modificado" text="Presupuesto Modificado" formatoMoneda="true" habilitado="false" margen-derecho="2" columnas="3"/>
+                    <campo name="id_usuario" local="true" type="string" visible="false" columna-visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="id_cat_fondo" text="FC" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="id_cat_fondo" filtroOperador="=" filtroValor="3"/>
+                    <campo name="fondo_contable" text="Fondo Contable" filtroCampo="fondo_contable" filtroOperador="=" filtroValor=" %nlRegAdecPresuEgreA.cpDatGralAdec.fondo_contable%" visible="false" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Registra Reducción Líquida" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_presupuesto_egresos,id_presupuesto_egresos_det,id_adecuacion,clave_presupuestal,id_usuario" ref="task=85dd849a-2a3f-475a-b6c1-52cf3d108aad"/>
+                    </tareas>
+                </tabla>
+                
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) > 0 encontrado FROM operation.adecuacion_presupuestaria_egreso_det aped
+                WHERE aped.ur = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.ur%+'\\' AND aped.periodo = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%+'\\' AND aped.id_adecuacion = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%+'\\'','encontrado','bool','MAGNITUS')==false" 
+                validacionMensaje="'No se puede generar la solicitud de adecuación, si no se ha afectado a una de las claves presupuestales del egreso.'" />
+            </validaciones>
+        </nivel>
+        
+        <!-- CREA NUEVA CLAVE TRASPASO -->
+        <nivel id="crearClaveTras" nombre="Selecciona Clave Presupuestal" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==3 AND %nlRegAdecPresuEgreA.cpDatGralAdec.nueva_clave%=='1'">
+            <componente id="crearClaveTras" nombre="Selecciona Clave Presupuestal (incluye acción de Click Derecho)" tipo="tabla" mostrarAgregar="true" mostrarEditar="false" mostrarImportacion="true">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable"  text="ur" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="id_periodo" text="Año" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" llaveForanea="false" />
+                    <campo name="id_presupuesto_egresos" llaveForanea="false" calc="%nclave.nclave.id_presupuesto_egresos%" visible="false" columna-visible="false" />
+                    <campo name="id_presupuesto_egresos_det" llaveForanea="false" visible="false" columna-visible="false" autogenerado="true" generacion="@prox()+1" importacion="true"/>
+                    <campo name="id_clave_egreso" text="Id Clave" margen-izquierdo="2" columnas="3" visible="false" calc="
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS')==null, %buscaPeriodo.buscaPeriodo.id_periodo%+'-'+ '000001',
+                    @concatenar(%buscaPeriodo.buscaPeriodo.id_periodo%+'-'+
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;10,'00000',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;100,'0000',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;1000,'000',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;10000,'00',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT MAX(id_presupuesto_egresos_det)+1 max FROM operation.presupuesto_egresos_det
+                                WHERE id_unidad_responsable = '+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo = '+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND id_presupuesto_egresos = '+'\\''+%nclave.nclave.id_presupuesto_egresos%+'\\'','max','string','MAGNITUS')))" importacion="true"/>
+                    <campo name="id_cat_tipo_gasto" calc="6" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="tipo_gasto" text="Tipo de Gasto (TG)" margen-izquierdo="2" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%tipo_gasto%==null" validacionMensaje="Favor de seleccionar tipo de gasto" columnaImportacion="Tipo de Gasto (TG)" importacion="true"/>
+                    <campo name="id_cat_centro_registro" calc="2" visible="false" columna-visible="false" llaveForanea="false" />
+                    <campo name="centro_registro" text="Centro Registro" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%centro_registro%==null" validacionMensaje="Favor de seleccionar centro de registro" columnaImportacion="Centro Registro" />
+                    <campo name="id_cat_municipio" calc="7" visible="false" columna-visible="false" llaveForanea="false" />
+                    <campo name="municipio" text="Municipio" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%municipio%==null" validacionMensaje="Favor de seleccionar municipio" columnaImportacion="Municipio"  />
+                    <campo name="id_cat_fondo" calc="3" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" validacion="%fondo_contable%==null" validacionMensaje="Favor de seleccionar fondo contable" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.fondo_contable%"/>
+                    <campo name="id_clasif_funcional" calc="8" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clasificador_funcional" text="Clasificador Funcional" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%clasificador_funcional%==null" validacionMensaje="Favor de seleccionar tipo de clasificador Funcional" columnaImportacion="Clasificador Funcional" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_cat_fuente" text="ID Fuente de Financiamiento" calc="5" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" validacion="%fuente_financiamiento%==null" validacionMensaje="Debe Capturarse Fuente de Financiamiento" columna-visible="false" columnas="3" margen-derecho="2" autoFiltrado="true" />
+                    <campo name="id_cat_clasif_programatico" calc="9" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clasificador_programatico" text="Clasificador Programático" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%clasificador_programatico%==null" validacionMensaje="Favor de seleccionar tipo de clasificador problematico" columnaImportacion="Clasificador Programático" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_cog" calc="4" visible="false" columna-visible="false" llaveForanea="false"/>
+                   
+                    <campo name="cog" text="Clasificador por Objeto del Gasto" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" columna-visible="false" 
+                        validacion="@ifThenElse(%cog%==null OR (%fondo_contable%=='115' AND (%val_capitulos%!='2' AND %val_capitulos%!='3')),true,@ifThenElse(%cog%==null OR (%fondo_contable%=='114' AND %val_capitulos%!='1' AND %cog%!='39801'),true,@ifThenElse(%cog%==null,true,false)))" validacionMensaje="El COG no debe estar vacio o 'Verifique Fondo Contable y Capítulo del COG'" 
+                         columnaImportacion="Clasificador por Objeto del Gasto" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="val_capitulos" text="Validación de Capitulos" local="true" type="string" calcCliente="@subCadena(%cog%,0,1)" visible="false" columna-visible="false"/>
+                    
+                    <campo name="id_cat_progra_presup" calc="10" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="programa_presupuestario" text="Programa Presupuestario (PP)" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%programa_presupuestario%==null" validacionMensaje="Favor de seleccionar programa Presupuestario" 
+                    columnaImportacion="Programa Presupuestario (PP)" importacion="true" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_eje_pide" text="ID Programa Presupuestal" calc="13" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="eje_pide" text="Objetivo Estratégico" validacion="%eje_pide%==null" validacionMensaje="Debe Capturarse el Eje" visible="true" columna-visible="false" columnas="3" margen-derecho="2" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_proceso_proyecto" text="ID Proceso Proyecto" calc="14" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="proceso_proyecto" text="Estrategia" validacion="%proceso_proyecto%==null" validacionMensaje="Debe Capturarse el Eje" visible="true" columna-visible="false" columnas="3" margen-izquierdo="2" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                    <campo name="id_cat_proceso_proyecto_eje_pide" text="ID Proceso Proyecto Detalle" calc="15" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="detalle_proceso_proyecto" text="Actividad Acción" validacion="%detalle_proceso_proyecto%==null" validacionMensaje="Debe Capturarse el Detalle Proceso Proyecto" visible="true" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" columnas="3" margen-derecho="2" llavesFijas="afectable=true"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" margen-izquierdo="2" columnas="6" habilitado="false"
+                    calcCliente="@concatenar(%centro_registro%, ' ', %fondo_contable%, ' ', %cog%, ' ', %fuente_financiamiento%, ' ', %programa_presupuestario%, ' ', %eje_pide%, ' ', %proceso_proyecto%, ' ', %detalle_proceso_proyecto%)"  validacion="%clave_presupuestal%==%valida_clave%" validacionMensaje="Ya existe Clave Presupuestal" importacion="true"/>
+                    <campo name="presupuesto_modificado" text="Presupuesto Modificado" formatoMoneda="true" habilitado="false" margen-izquierdo="2" columnas="3"/>
+                    <campo name="valida_clave" text="Clave" local="true" type="string" calcCliente="@consultaDirec('SELECT clave_presupuestal AS result FROM operation.presupuesto_egresos_det WHERE id_unidad_responsable='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND id_periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\' AND  clave_presupuestal='+'\\''+%clave_presupuestal%+'\\'','result','string','MAGNITUS')" visible="false" columnas="10" columna-visible="false"/>
+                    
+                    <campo name="id_adecuacion" local="true" type="string" visible="false" columna-visible="false" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" importacion="true"/>
+                    
+                    <campo name="id_usuario" local="true" type="string" visible="false" columna-visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" importacion="true" />
+                    <campo name="fecha_elaboracion" text="fecha elaboracion" visible="false" columna-visible="false" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <campo name="techo_presupuestal" text="por_distribuir" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="enero" text="Enero" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="febrero" text="Febrero" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="marzo" text="Marzo" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="abril" text="Abril" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="mayo" text="Mayo" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="junio" text="Junio" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="julio" text="Julio" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="agosto" text="Agosto" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="septiembre" text="Septiembre" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="octubre" text="Octubre" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="noviembre" text="Noviembre" calc="0.0" visible="false" columna-visible="false"/>
+                    <campo name="diciembre" text="Diciembre" calc="0.0" visible="false" columna-visible="false"/>
+                    <tareas>
+                        <tarea nombre="Generar Clave Presupuestal" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_presupuesto_egresos,id_presupuesto_egresos_det,id_usuario" ref="task=1cc5a4f0-def8-4c84-9ea9-43f5a465edac"/>
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" />
+                    <boton nombre="formulario" texto="GUARDAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        
+        <!-- REGISTRA TRASPASO PRESUPUESTAL: SELECCIONAR ORIGEN -->
+        <nivel id="nlTrasPresu" nombre="Traspaso Presupuestal" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==3" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpTrasPresu" nombre="Traspaso Presupuestal Selecciona de Clave Origen (incluye acción de Click Derecho)" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" filtro="true" ordenar="asc" ordenaPor="clave_presupuestal">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" llaveForanea="false" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"  columna-visible="false" />
+                    <campo name="id_presupuesto_egresos" llaveForanea="false"  columna-visible="false" />
+                    <campo name="id_presupuesto_egresos_det" llaveForanea="false"  columna-visible="false" />
+                    <campo name="id_clave_egreso" text="Id Clave" visible="false" />
+                    <campo name="id_periodo" text="Año" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" />
+                    <campo name="id_adecuacion" local="true" type="long" visible="false" columna-visible="false" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%"/>
+                    <campo name="id_usuario" local="true" type="string" visible="false" columna-visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="id_cat_tipo_gasto" calc="6" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="tipo_gasto" text="Tipo de Gasto (TG)" columna-visible="false" />
+                    <campo name="id_cat_centro_registro" calc="2" columna-visible="false" llaveForanea="false" />
+                    <campo name="centro_registro" text="Centro Registro" columna-visible="false" />
+                    <!-- filtroCampo="centro_registro" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.centro_registro%" -->
+                    <campo name="id_cat_municipio" calc="7" visible="false" columna-visible="false" llaveForanea="false" />
+                    <campo name="municipio" text="Municipio" margen-izquierdo="2" columnas="3" columna-visible="false" />
+                    <campo name="id_cat_fondo" filtroCampo="id_cat_fondo" filtroOperador="=" filtroValor="3" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" filtroCampo="fondo_contable" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.fondo_contable%" columnas="3" columna-visible="false" />
+                    <campo name="id_clasif_funcional" calc="8" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clasificador_funcional" text="Clasificador Funcional"  columna-visible="false" />
+                    <campo name="id_cat_fuente" calc="5" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento"  columna-visible="false" />
+                    <campo name="id_cat_clasif_programatico" calc="9" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clasificador_programatico" text="Clasificador Programático" columna-visible="false" />
+                    <campo name="id_cat_cog" calc="4" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="cog" text="Clasificador por Objeto del Gasto"  columna-visible="false" />
+                    <campo name="id_cat_progra_presup" calc="10"  columna-visible="false" llaveForanea="false"/>
+                    <campo name="programa_presupuestario" text="Programa Presupuestario (PP)"  columna-visible="false" />
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" filtroCampo="clave_presupuestal" filtroOperador="!=" filtroValor="null" visible="true" columna-visible="true" margen-izquierdo="2" columnas="6" habilitado="false"/>
+                    <campo name="presupuesto_modificado" text="Presupuesto Modificado" formatoMoneda="true" habilitado="false" margen-derecho="2" columnas="3"/>
+                    <tareas>
+                        <tarea nombre="Registra Traspaso Presupuestal" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_presupuesto_egresos,id_presupuesto_egresos_det,id_adecuacion,clave_presupuestal,id_usuario,centro_registro,fondo_contable,cog" ref="task=ba95ac94-6e1b-49e7-9b3d-360cbf5cc6ba"/>
+                    </tareas>
+                    
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR"/>
+                    <boton nombre="formulario" texto="GUARDAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) > 0 encontrado FROM operation.adecuacion_presupuestaria_egreso_traspaso_mes_det aped
+                WHERE aped.ur = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.ur%+'\\' AND aped.periodo = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%+'\\' AND aped.id_adecuacion = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%+'\\'','encontrado','bool','MAGNITUS')==false" 
+                validacionMensaje="'No se puede generar la solicitud de adecuación, si no se ha afectado a una de las claves presupuestales del egreso.'" />
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) > 0 encontrado FROM operation.adecuacion_presupuestaria_egreso_traspaso_mes_det aped
+                WHERE aped.ur = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.ur%+'\\' AND aped.periodo = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%+'\\' AND aped.id_adecuacion = '+'\\''+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%+'\\' AND clave_presupuestal_destino is null','encontrado','bool','MAGNITUS')==true" 
+                validacionMensaje="'No se puede generar la solicitud de adecuación, si no se ha registrado las claves de destino de la afectación.'" />
+            </validaciones>
+        </nivel>
+        
+        <nivel id="FTT" nombre="Suma Total Traspaso"  interactivo="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==3">
+            <componente id="FTT" nombre="Filtra Detalles Traspaso"  tipo="cursor" >
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"  llaveForanea="false"/>
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" llaveForanea="false"/>
+                    <campo name="importe_total" calc="@consultaDirec('SELECT SUM(total_traspaso) AS result FROM operation.adecuacion_presupuestaria_egreso_traspaso_det WHERE ur='+%nlRegAdecPresuEgreA.cpDatGralAdec.ur%+' AND periodo='+%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%+' AND id_adecuacion='+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%+'','result','decimal','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="lanzaInstanciaAmpliacion" nombre="lanzaInstanciaAmpliación" interactivo="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==1">
+            <componente id="lanzaInstanciaAmpliacion" nombre="lanzaInstanciaAmpliación" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'a22fca0b-f7a8-4f60-93ef-0b7bb4006217'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_id_adecuacion" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_folio_adecuacion" calc="%nlBarreAdecuacionEgreso.nlBarreAdecuacionEgreso.folio_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_tipo_adecuacion_presupuestaria" calc="'AMPLIACIÓN'" mostrarEsc="false"/>
+                    <parametro name="out_centro_registro" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.centro_registro%" mostrarEsc="false"/>
+                    <parametro name="out_importe" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.importe_amp_red_egre%" mostrarEsc="false"/>
+                    <parametro name="out_nclave" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.nueva_clave%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="lanzaInstanciaReduccion" nombre="lanzaInstanciaReducción" interactivo="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==2">
+            <componente id="lanzaInstanciaReduccion" nombre="lanzaInstanciaReducción" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'a22fca0b-f7a8-4f60-93ef-0b7bb4006217'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_id_adecuacion" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_folio_adecuacion" calc="%nlBarreAdecuacionEgreso.nlBarreAdecuacionEgreso.folio_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_tipo_adecuacion_presupuestaria" calc="'REDUCCIÓN'" mostrarEsc="false"/>
+                    <parametro name="out_centro_registro" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.centro_registro%" mostrarEsc="false"/>
+                    <parametro name="out_importe" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.importe_amp_red_egre%" mostrarEsc="false"/>
+                    <parametro name="out_nclave" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.nueva_clave%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="lanzaInstanciaTraspaso" nombre="lanzaInstanciaTraspaso" interactivo="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==3">
+            <componente id="lanzaInstanciaTraspaso" nombre="lanzaInstanciaTraspaso" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'a22fca0b-f7a8-4f60-93ef-0b7bb4006217'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_id_adecuacion" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_folio_adecuacion" calc="%nlBarreAdecuacionEgreso.nlBarreAdecuacionEgreso.folio_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_tipo_adecuacion_presupuestaria" calc="'TRASPASO'" mostrarEsc="false"/>
+                    <parametro name="out_centro_registro" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.centro_registro%" mostrarEsc="false"/>
+                    <parametro name="out_importe" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.importe_amp_red_egre%" mostrarEsc="false"/>
+                    <parametro name="out_nclave" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.nueva_clave%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRegAdecPresuEgreCA" nombre="Registra Adecuación Presupuestaria del Egreso"  ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==1" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpReporAmpLiquid" nombre="Reporte Ampliación Líquida" tipo="reporte">
+                <reporte nombre="R_Ampliac_liq_IJ" update="true" nombreDocumento="'Ampliación Líquida'" 
+				expediente="Expediente de Adecuaciones al Presupuesto de Egresos Aprobado/Ampliación Líquida"  
+				grupo="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" url="$config.repository_upload_file$" >
+                    <campo name="id_adecuacion" type="long" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="ur" type="long" calc="$config.ur$" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+        </nivel>
+		
+
+        <nivel id="nlRegAdecPresuEgreCB" nombre="Registra Adecuación Presupuestaria del Egreso" mostrarProximoNivel="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==2" mostrarNivelAnterior="false" >
+            <componente id="cpReporReduLiquid" nombre="Reporte Reducción Líquida" tipo="reporte" update="true" nombreDocumento="'Reducción Líquida'" expediente="Expediente de Adecuaciones al Presupuesto de Egresos Aprobado/Reducción Líquida"  grupo="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" url="$config.repository_upload_file$">
+                <reporte nombre="R_Red_Liq_AL" update="true" nombreDocumento="'Reducción Líquida'" 
+				expediente="Expediente de Adecuación Presupuestaria del Egreso/Reducción Líquida"  
+				grupo="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" url="$config.repository_upload_file$">
+                    <campo name="id_adecuacion" type="long" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="ur" type="long" calc="$config.ur$" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+        </nivel>
+        
+				
+        <nivel id="nlRegAdecPresuEgreCC" nombre="Registra Adecuación Presupuestaria del Egreso" mostrarProximoNivel="false" ejecutar="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==3" mostrarNivelAnterior="false" >
+            <componente id="cpReporTransPresu" nombre="Reporte Traspaso Presupuestal" tipo="reporte" update="true" nombreDocumento="'Traspaso Presupuestal'" expediente="Expediente de Adecuaciones al Presupuesto de Egresos Aprobado/Traspaso Presupuestal"  grupo="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" url="$config.repository_upload_file$">
+                <reporte nombre="R_Traspaso" update="true" nombreDocumento="'Traspaso Líquida'" 
+				expediente="Expediente de Adecuación Presupuestaria del Egreso/Traspaso Líquida"  
+				grupo="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" url="$config.repository_upload_file$" > 
+                    <campo name="id_adecuacion" type="long" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="ur" type="long" calc="$config.ur$" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

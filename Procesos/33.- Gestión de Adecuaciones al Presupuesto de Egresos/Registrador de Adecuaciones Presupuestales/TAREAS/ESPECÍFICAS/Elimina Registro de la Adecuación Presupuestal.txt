@@ -1,0 +1,168 @@
+<tarea id="eliminaRegistroAdecuacionPresupuestal" nombre="Elimina Registro de la Adecuación Presupuestal" version="1" autor="Luis Eduardo Castañeda Delgadillo">
+    <pagina id="uno">
+        
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="tring" calc="$inParam.periodo$" />
+                    <campo name="id_adecuacion" local="true" type="string" calc="$inParam.id_adecuacion$" />
+                    <campo name="folio_adecuacion" local="true" type="string" calc="$inParam.folio_adecuacion$" />
+                    <campo name="tipo_adecuacion" local="true" type="string" calc="$inParam.tipo_adecuacion_presupuestaria$" />
+                    <campo name="centro_registro" local="true" type="string" calc="$inParam.centro_registro$" />
+                    <campo name="importe" local="true" type="decimal" calc="$inParam.importe$" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="nlRegAdecPresuEgreCA" nombre="Consulta de Adecuaciones Presupuestales del Egreso"  mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="cpReporAmpLiquid" nombre="Reporte Ampliación Líquida" tipo="reporte" ejecutar="%inParam.inParam.tipo_adecuacion%=='AMPLIACIÓN'">
+                <reporte nombre="R_Ampliac_liq_IJ" update="true" nombreDocumento="'Ampliación Líquida'" expediente="Adecuación Presupuestaria del Egreso"  grupo="$inParam.periodo$" url="$config.repository_upload_file$">
+                    <campo name="id_adecuacion" type="long" calc="%inParam.inParam.id_adecuacion%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%" />
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            
+            <componente id="cpReporReduLiquid" nombre="Reporte Reducción Líquida" tipo="reporte" ejecutar="%inParam.inParam.tipo_adecuacion%=='REDUCCIÓN'">
+                <reporte nombre="R_Red_Liq_AL" update="true" nombreDocumento="'Reducción Líquida'" expediente="Adecuación Presupuestaria del Egreso"   grupo="$inParam.periodo$" url="$config.repository_upload_file$">
+                    <campo name="id_adecuacion" type="long" calc="%inParam.inParam.id_adecuacion%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%" />
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            
+            <componente id="cpReporTransPresu" nombre="Reporte Traspaso Presupuestal " tipo="reporte" ejecutar="%inParam.inParam.tipo_adecuacion%=='TRASPASO'">
+                <reporte nombre="R_Traspaso" update="true" nombreDocumento="'Traspaso Presupuestal'" expediente="Adecuación Presupuestaria del Egreso"   grupo="$inParam.periodo$" url="$config.repository_upload_file$">
+                    <campo name="id_adecuacion" type="long" calc="%inParam.inParam.id_adecuacion%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%" />
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            
+            <componente id="cpElimSolAdecPresuEgre" nombre="Eliminar Solicitud de Adecuaciones Presupuestales del Egreso" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="ELIMINAR SOLICITUD" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+            <confirmaciones>
+                <confirmacion confirmacionMensaje="'¿Estás seguro qué deseas eliminar la Solicitud de Adecuaión?'" confirmacionTitulo="'ELIMINACIÓN DE SOLICITUD DE ADECUACIÓN'" tipo="avanzar"/>
+            </confirmaciones>
+        </nivel>
+        
+        
+        <!-- ELIMINAR DETALLES DE AMPLIACIÓN O REDUCCIÓN -->
+        <nivel id="FDAAR" nombre="Filtra Detalles Adecuación Para Ampliación y Reducción" interactivo="false" ejecutar="%inParam.inParam.tipo_adecuacion%=='REDUCCIÓN' OR %inParam.inParam.tipo_adecuacion%=='AMPLIACIÓN'">
+            <componente id="FDAAR" nombre="Filtra Detalles Adecuación Para Ampliación y Reducción" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%" />
+                    <campo name="id_adecuacion_det"/>
+                </tabla>
+                <nivel id="EDA" nombre="Elimina Detalle Adecuación" interactivo="false" ejecutar="%FDAAR.FDAAR.ur%!=null AND %FDAAR.FDAAR.periodo%!=null AND %FDAAR.FDAAR.id_adecuacion%!=null AND %FDAAR.FDAAR.id_adecuacion_det%!=null">
+                    <componente id="EDA" nombre="Elimina Detalle Adecuación" tipo="bajaDirect">
+                        <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_det">
+                            <campo name="ur" calc="%FDAAR.FDAAR.ur%" />
+                            <campo name="periodo" calc="%FDAAR.FDAAR.periodo%" />
+                            <campo name="id_adecuacion" calc="%FDAAR.FDAAR.id_adecuacion%" />
+                            <campo name="id_adecuacion_det" calc="%FDAAR.FDAAR.id_adecuacion_det%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        
+        <!-- ELIMINACION DE TRASPASO -->
+        <nivel id="FATD" nombre="Filtrar Adecuación de Traspaso Detalle"  interactivo="false" ejecutar="%inParam.inParam.tipo_adecuacion%=='TRASPASO'">
+            <componente id="FATD" nombre="Filtrar Adecuación de Traspaso Detalle" tipo="cursor" >
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%"/>
+                    <campo name="id_adecuacion_det" />
+                </tabla>
+                <nivel id="FATMD" nombre="Filtrar Adecuación de Traspaso Mes Detalle" interactivo="false">
+                    <componente id="FATMD" nombre="Filtrar Adecuación de Traspaso Mes Detalle" tipo="cursor">
+                        <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%FATD.FATD.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%FATD.FATD.periodo%" />
+                            <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%FATD.FATD.id_adecuacion%"/>
+                            <campo name="id_adecuacion_det" filtroCampo="id_adecuacion_det" filtroOperador="=" filtroValor="%FATD.FATD.id_adecuacion_det%"/>
+                            <campo name="id_adecuacion_mes_det"/>
+                        </tabla>
+                        <nivel id="ETMD" nombre="Elimina Traspaso Mes Detalle"  interactivo="false" ejecutar="%FATMD.FATMD.ur%!=null AND %FATMD.FATMD.periodo%!=null AND %FATMD.FATMD.id_adecuacion%!=null AND %FATMD.FATMD.id_adecuacion_det%!=null AND %FATMD.FATMD.id_adecuacion_mes_det%!=null">
+                            <componente id="ETMD" nombre="Elimina Traspaso Mes Detalle"  tipo="bajaDirect">
+                                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                                    <campo name="ur" calc="%FATMD.FATMD.ur%"/>
+                                    <campo name="periodo" calc="%FATMD.FATMD.periodo%"/>
+                                    <campo name="id_adecuacion" calc="%FATMD.FATMD.id_adecuacion%"/>
+                                    <campo name="id_adecuacion_det" calc="%FATMD.FATMD.id_adecuacion_det%"/>
+                                    <campo name="id_adecuacion_mes_det" calc="%FATMD.FATMD.id_adecuacion_mes_det%"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="FATD2" nombre="Filtrar Adecuación de Traspaso Detalle"  interactivo="false" ejecutar="%inParam.inParam.tipo_adecuacion%=='TRASPASO'">
+            <componente id="FATD2" nombre="Filtrar Adecuación de Traspaso Detalle" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                   <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%"/>
+                    <campo name="id_adecuacion_det" />
+                </tabla>
+                <nivel id="EATD" nombre="Eliminar Adecuacion Traspaso Detalle"  interactivo="false" ejecutar="%FATD2.FATD2.ur%!=null AND %FATD2.FATD2.periodo%!=null AND %FATD2.FATD2.id_adecuacion%!=null AND %FATD2.FATD2.id_adecuacion_det%!=null">
+                    <componente id="EATD" nombre="Eliminar Adecuacion Traspaso Detalle" tipo="bajaDirect" >
+                        <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                            <campo name="ur" calc="%FATD2.FATD2.ur%"/>
+                            <campo name="periodo" calc="%FATD2.FATD2.periodo%"/>
+                            <campo name="id_adecuacion" calc="%FATD2.FATD2.id_adecuacion%"/>
+                            <campo name="id_adecuacion_det" calc="%FATD2.FATD2.id_adecuacion_det%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- ELIMINACION DE ADECUACION -->
+        <nivel id="EAP" nombre="Elimina Adecuación Presupuestaria" interactivo="false" ejecutar="%inParam.inParam.ur%!=null AND %inParam.inParam.periodo%!=null AND %inParam.inParam.id_adecuacion%!=null">
+            <componente id="EAP" nombre="Elimina Adecuación Presupuestaria" tipo="bajaDirect">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" calc="%inParam.inParam.periodo%" />
+                    <campo name="id_adecuacion" calc="%inParam.inParam.id_adecuacion%" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- TERMINAR INSTANCIA -->
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" >
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
