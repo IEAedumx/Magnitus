@@ -1,0 +1,208 @@
+<tarea id="rOp" nombre="Recepción de Obra Pública" version="1.0.0" autor="Pedro De La Cruz" fechaModificacion="2019-07-15">
+    <pagina nombre="Administracion de Contratos Obra Pública" id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo" /> 
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/> 
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="borraSeleccion" nombre="borraSeleccion" interactivo="false">
+           <componente tipo="cursor" id="borraSeleccion" nombre="borraSeleccion">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_fuop"/>
+                    <campo name="seleccion" calc="false"/>
+                </tabla>            
+            </componente>        
+       </nivel>
+        <!--Nivel Seleccione Opcion-->
+        <nivel nombre="Seleccione Opción" id="SelOpc" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente tipo="formulario" id="SelOpc" nombre="Seleccione Opción" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica">
+                    <campo name="ur" visible="false"/>
+                    <campo name="periodo" visible="false"/>
+                    <campo name="id_fuop" visible="false"/>
+                    <campo name="tipos" local="true" type="long" text="Seleccione" margen-izquierdo="3" columnas="4" validacion="%SelOpc.SelOpc.tipos%==0" validacionMesaje="Por favor, selecciona una opción">
+                    <opciones>
+                        <opcion texto="Consulta" valor="1"/>
+                        <opcion texto="Gestión" valor="2"/>
+                    </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" margen-izquierdo="3" columnas="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+         <!--Nivel de Gestion de Folios Unicos de Obra Pública-->
+        <nivel nombre="Gestion de Folios Unicos de Obra Pública" id="GesFolUniObraPub" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%SelOpc.SelOpc.tipos%==2">
+            <componente tipo="tabla" nombre="Gestion de Folios Unicos de Obra Pública" id="GesFolUniObraPub"  mostrarEditar="false" mostrarAgregar="true" mostrarEliminar="false">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica">
+                    <campo name="ur" visible="false" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" visible="false" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_fuop" text="id_fuop" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true"/>
+                    
+                    <campo name="fuop" text="Fólio Único Obra Pública" columnas="3" habilitado="false"
+                    calc="@ifThenElse(@consultaDirec('
+                    SELECT MAX(id_fuop) AS resultado
+                    FROM operation.capitalizacion_obra_publica WHERE ur='+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','resultado','string','MAGNITUS')==null
+                    ,'0001',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fuop)+1 AS r FROM operation.capitalizacion_obra_publica 
+                        WHERE ur='+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','r','string','MAGNITUS') &lt;10,'000',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fuop)+1 AS re FROM operation.capitalizacion_obra_publica 
+                        WHERE ur='+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','re','string','MAGNITUS') &lt;100,'00',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fuop)+1 AS res FROM operation.capitalizacion_obra_publica 
+                        WHERE ur='+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','res','string','MAGNITUS') &lt;1000,'0',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fuop)+1 AS resul FROM operation.capitalizacion_obra_publica 
+                        WHERE ur='+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','resul','string','MAGNITUS') &lt;10000,'',''))))+@consultaDirec('SELECT MAX(id_fuop)+1 max FROM operation.capitalizacion_obra_publica
+                        WHERE ur ='+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\' AND periodo ='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\'','max','string','MAGNITUS'),)"/>
+                    <campo name="folio_duep" text="Folio" columna-visible="false" columnas="3" referenciaForanea="contrato" celdaForanea="folio_con_ordecom" autocompletar="true"/> 
+                    <campo name="contrato" text="Contrato" columnas="3" descripcionForanea="contrato" habilitado="true" descripcionForaneaTabla="contrato" autoFiltrado="true" autoFiltradoDescripcion="contrato" llavesFijas="tipo_documento=1"/>
+                    <campo name="importe_inicial_cont" text="Importe Inicial Contratado" columnas="3"  columna-visible="false" referenciaForanea="contrato" celdaForanea="total" autocompletar="true"/>
+                    <campo name="descripcion" text="Descripción" columnas="3" columna-visible="false" validacion="!@matchRegEx(%descripcion%,'^[A-Z 0-9]*$')" validacionMensaje="Solo puedes agregar letras mayúsculas y números"/>/>
+                    <campo name="ampliaciones" text="Ampliaciones" columnas="3" columna-visible="false" calcCliente="@consultaDirec('SELECT importe_total_ampliacion AS am FROM operation.duep_contrato_pedido_ampliacion WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_duep_contrato_pedido='+%contrato%,'am','decimal','MAGNITUS')" habilitado="false"   />
+                    <campo name="beneficiario" text="Contratista"  columnas="3" referenciaForanea="contrato" celdaForanea="proveedor" autocompletar="true" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social" habilitado="false"/>
+                    <campo name="reducciones" text="Reducciones" columnas="3" columna-visible="false" calcCliente="@consultaDirec('SELECT SUM(total_importe_reducir) AS rd FROM operation.reduccion_contrato_det WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_duep_contrato_pedido='+%contrato%,'rd','decimal','MAGNITUS')" habilitado="false"  />
+                    <campo name="fecha_con" text="Fecha de Contratación" columnas="3" columna-visible="false" referenciaForanea="contrato" celdaForanea="fecha_registro" autocompletar="true" habilitado="false"/>
+                    <campo name="total_contratado" text="Total Contratado" columnas="3" columna-visible="false" calcCliente="@ifThenElse(%importe_inicial_cont%==null,0,%importe_inicial_cont%)+@ifThenElse(%ampliaciones%==null,0,%ampliaciones%)-@ifThenElse(%reducciones%==null,0,%reducciones%)" habilitado="false"/>
+                    <campo name="modalidad" text="Modalidad" columnas="3" columna-visible="false" />
+                    <campo name="id_cat_programa_presupuestal" calc="10" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="programa_presupuestal" text="Programa Presupuestal" columnas="3" columna-visible="false" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" calcCliente="@consultaDirec('SELECT programa_presupuestal AS pp FROM operation.duep_contrato_pedido_det  WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_duep_contrato_pedido='+%contrato%,'pp','string','MAGNITUS')" habilitado="false"/>
+                    <campo name="codigo_estatal" text="Código Estatal" columnas="3" validacion="!@matchRegEx(%codigo_estatal%,'^[A-Z 0-9]*$')" validacionMensaje="Solo puedes agregar letras mayúsculas y números"/>
+                    
+                    <campo name="id_cat_fondo_contable" calc="3" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" columnas="3" columna-visible="false" referenciaForanea="contrato" celdaForanea="id_fondo_contable" autocompletar="true" habilitado="false"/>
+                    
+                    <campo name="id_fuente_financiamiento" calc="5" visible="false" columna-visible="false" llaveForanea="false"/>
+                    
+                    <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento" columnas="3" columna-visible="false" referenciaForanea="contrato" celdaForanea="fuente_financiamiento" autocompletar="true" habilitado="false" />
+                    
+                    <campo name="tipo_obra" text="Tipo de Obra" columnas="3"/>
+                    
+                    
+                    <campo name="clasificacion_obra" text="Clasificación de la Obra" columnas="3" />
+                     <campo name="ubicacion_fisica" text="Ubicación Física" columnas="3"/>
+                    <campo name="area_responsable" text="Área Responsable"  columnas="3" columna-visible="false"/>
+                   
+                    <campo name="observaciones" text="Observaciones" columnas="3" columna-visible="false" validacion="!@matchRegEx(%observaciones%,'^[A-Z 0-9]*$')" validacionMensaje="Solo puedes agregar letras mayúsculas y números" />
+                    <campo name="supervisor_responsable" text="Supervisor Responsable" columnas="3" columna-visible="false"  />
+                    <campo name="clave_inmueble" text="Clave del Inmueble"  columnas="3" columna-visible="false" autoFiltrado="true" autoFiltradoDescripcion="clave_articulo,descripcion_articulo"/>
+                    <campo name="titular_responsable" text="Titular Responsable"  columnas="3" columna-visible="false"/>
+                    <campo name="estatus" text="Estatus" columnas="3" filtroCampo="estatus" llavesFijas="id_estatus=1 OR id_estatus=2"/>
+                    <tareas>
+                        <tarea nombre="Alta Detalle Partidas" imagen="resources/img/button-defualt.png" imagen-sobre="resources/img/button-defualt-rollover.png" params="ur,periodo,id_fuop,tipo_obra" ref="task=d65d03c4-b4aa-4aa7-9d58-5ff5448fb7c7"/>
+                    </tareas>
+                </tabla>
+                <estilos>
+                    <boton nombre="formulario" visible="true" texto="Guardar" columnas="4" margen-izquierdo="3"/> 
+                </estilos>
+            </componente>
+        </nivel>
+ 
+        
+        <!-- Consulta de Folio Unico de Obra Pública-->
+        <nivel nombre="Consulta de Folio Unico de Obra Pública" id="ConFolUniObraPub" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%SelOpc.SelOpc.tipos%==1">
+            <componente tipo="tabla" nombre="Consulta de Folio Unico de Obra Pública" id="ConFolUniObraPub" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica">
+                    <campo name="ur" columna-visible="false" />
+                    <campo name="periodo" columna-visible="false" />
+                    <campo name="id_fuop" columna-visible="false" autogenerado="true" generacion="@prox()+1"/>
+                    <campo name="fuop" text="Folio Único FUOP"/>
+                    <!--<campo name="folio_duep" text="Folio DUEP"/>-->
+                    <campo name="contrato" text="Contrato" descripcionForaneaTabla="contrato"/>
+                    <campo name="beneficiario" text="Contratista" descripcionForanea="razon_social" descripcionForaneaTabla="razon_social"/>
+                    <campo name="tipo_obra" text="Tipo de Obra" />
+                    <campo name="codigo_estatal" text="Codigo Estatal" />
+                    <campo name="ubicacion_fisica" text="Ubicación Fisica"/>
+                    <campo name="estatus" text="Estatus" filtroCampo="estatus" filtroOperador="!=" filtroValor="4"/>  
+                    <campo name="seleccion" text="Selección" habilitado="true" editable="true" />
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" margen-derecho="4" columnas="2"/>
+                </estilos>
+                 <acciones>
+                    <accion nombre="grabar"  hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) &gt; 1 as resultado from operation.capitalizacion_obra_publica WHERE seleccion=true','resultado','bool','MAGNITUS')" validacionMensaje="'Debes seleccionar solo un registro'"/>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) = 0 as resultado_uno from operation.capitalizacion_obra_publica WHERE seleccion=true','resultado_uno','bool','MAGNITUS')" validacionMensaje="'Debe seleccionar un registro'"/>
+                </validaciones>
+        </nivel>
+        <!-- Detalle de Partidas Precios Unitarios -->
+        <nivel nombre="Detalle de Partidas Precios Unitarios" id="DetPartPrecUni" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%selDato.selDato.modalidad%==2 AND %selDato.selDato.tipo_obra%==1">
+            <componente tipo="tabla" nombre="Detalle de Partidas Precios Unitarios" id="DetPartPrecUni" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica_det">
+                    <campo name="ur" text="ur" visible="false" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" text="periodo" visible="false" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_fuop" text="id_fuop" visible="false" columna-visible="false" calc="%selDato.selDato.id_fuop%"/>
+                    <campo name="grupo" text="Grupo" width="50" margen-izquierdo="2" columnas="3" validacion="!@matchRegEx(%observaciones%,'^[A-Z 0-9]*$')" validacionMensaje="Solo letras mayusculas y números"/>
+                    <campo name="id_fuop_det" text="Número de Partida (Concepto de trabajo)" width="100" visible="true" columnas="3"/>
+                    <campo name="concepto" text="Concepto" width="100" columnas="3"/>
+                    <campo name="cantidad" text="Cantidad" width="50" margen-izquierdo="2" columnas="3"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" width="80" columnas="3"/>
+                    <campo name="precio_unitario" text="Precio Unitario" width="100" columnas="3"/>
+                    <campo name="total_contratado" text="Total Contratado" width="100" visible="false" margen-izquierdo="5" columnas="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" margen-derecho="4" columnas="2"/>
+                    <boton nombre="formulario" visible="true" texto="Guardar" /> 
+                </estilos>
+                 <acciones>
+                    <accion nombre="grabar"  hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!-- Detalle de Partidas Precios Alzados -->
+        <nivel nombre="Detalle de Partidas Precios Alzados" id="DetPartPrecAl" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%selDato.selDato.modalidad%==2 AND %selDato.selDato.tipo_obra%==2">
+            <componente tipo="tabla" nombre="Detalle de Partidas Precios Alzados" id="DetPartPrecAl" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="capitalizacion_obra_publica_det">
+                   <campo name="ur" text="ur" visible="false" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" text="periodo" visible="false" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_fuop" text="id_fuop" visible="false" columna-visible="false" calc="%selDato.selDato.id_fuop%"/>
+                    <campo name="grupo" text="Grupo" width="50" margen-izquierdo="2" columnas="3"/>
+                    <campo name="id_fuop_det" text="Número de Partida (Concepto de trabajo)" width="100" visible="false" columnas="3" />
+                    <campo name="concepto" text="Concepto" width="100" columnas="3"/>
+                    <campo name="cantidad" text="Cantidad" width="50" margen-izquierdo="2" columnas="3"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" width="80" columnas="3"/>
+                    <campo name="precio_unitario" text="Precio Unitario" width="100" columnas="3"/>
+                    <campo name="total_contratado" text="Total Contratado" width="100" visible="false" margen-izquierdo="5" columnas="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" margen-derecho="4" columnas="2"/>
+                </estilos>
+                 <acciones>
+                    <accion nombre="grabar"  hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!--Reporte FUOP-->
+        <nivel nombre="FUOP" id="f" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%SelOpc.SelOpc.tipos%==1"> 
+            <componente tipo="reporte" nombre="FUOP" id="f">
+                <reporte nombre="R_Reporte_IJL">
+                    <campo name="ur" type="long"  calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="id_fuop" type="long" calc="%selDato.selDato.modalidad%.id_fuop%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
