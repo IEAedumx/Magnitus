@@ -1,0 +1,339 @@
+<tarea id="autReFaVi" nombre="Autoriza Reembolso Faltante de Viáticos" autor="Héctor Villanueva">
+    <pagina id="1">
+        
+        <!-- INICIO DEL NIVEL DUMMY -->
+        <nivel id="inParams" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParams" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/> 
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="folio_duep_B" local="true" type="string" calc="$inParam.folio_duep_B$"/>
+                    <campo name="fecha_sistema" local="true" type="string" calc="$inParam.fecha_sistema$"/>
+                    <campo name="importe" local="true" type="string" calc="$inParam.importe$"/>
+                    <campo name="orden_pago" local="true" type="string" calc="$inParam.orden_pago$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN DEL NIVEL DUMMY -->
+        
+        <!-- OBTENER USUARIO MODIFICADOR  -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario" />
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                    <campo named="permisos_especiales" />
+                </tabla>
+            </componente>        
+        </nivel>
+       <!-- /OBTENER USUARIO MODIFICADOR -->
+        
+        <!-- NIVEL 1 REPORTES  -->
+        <nivel id="reporteReFaVi" nombre="Reembolso Faltante de Viáticos" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            
+            <componente id="reporteReFaVi" nombre="Reembolso Faltante de Viáticos" tipo="reporte">
+                <reporte nombre="R_Formato_Reembolso_Jo">
+                    <campo name="ur" type="long" calc="%inParams.inParams.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParams.inParams.periodo%"/> 
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="ordenPago" type="long" calc="%inParams.inParams.orden_pago%"/>
+                </reporte>
+            </componente>
+            
+            <!--<componente id="reporteOrdPago" nombre="Reporte de Orden de Pago" tipo="reporte">
+                <reporte nombre="repor_ordenPag_reeViat_jsus">
+                    <campo name="ur" type="long" calc="%inParams.inParams.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParams.inParams.periodo%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="orden_pago" type="long" calc="%inParams.inParams.orden_pago%"/>
+                </reporte>
+            </componente>-->
+        </nivel>
+        <!-- NIVEL 1 REPORTES -->
+        <!--/REPORTES -->
+        
+        <!-- NIVEL 2 FORMULARIO DE AUTORIZACION -->
+        <nivel id="autorizaReFaVi" nombre="Autoriza Reembolso Faltante de Viáticos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="autorizaReFaVi" nombre="Autoriza Reembolso Faltante de Viáticos" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" text="ID" visible="false" calc="%inParams.inParams.ur%" llaveForanea="false"/>
+                    <campo name="id_periodo" text="ID" visible="false" calc="%inParams.inParams.periodo%" llaveForanea="false"/>
+                    <campo name="orden_pago" text="ID" visible="false" calc="%inParams.inParams.orden_pago%" llaveForanea="false"/>
+                    <campo name="observaciones" text="Observaciones" height="200"
+                        interaccion="%autoriza%==false" columnas="6" margen-izquierdo="2" margen-derecho="2"
+                        validacion="%autoriza%==false AND %observaciones%==null" validacionMensaje="Ingrese el motivo de rechazo en el campo observaciones"/>
+                    <campo name="autoriza" text="Autoriza" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                </tabla>
+                 <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                </estilos>
+            </componente>    
+        </nivel>
+        
+        
+        <nivel id="cambioEstatus" nombre="cambioEstatus" interactivo="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true">
+            <componente id="cambioEstatus" nombre="Cambio de Estatus" tipo="cursor" accionDefault="editar">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" text="Periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParams.inParams.orden_pago%"/>
+                    <campo name="estatus_orden_pago" calc="2"/>
+                </tabla>
+            </componente>
+        </nivel>
+         
+        <!--SEPARADOR PARA REALIZAR EL SUBSTRING -->
+        <!-- OBTENER SERPARADOR-->
+        <nivel id="obIdSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true"> <!-- -->
+            <componente id="obIdSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor" >
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParams.inParams.ur%" llaveForanea="false"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%" llaveForanea="false"/>
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="obSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true"> <!-- ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza=true%"-->
+            <componente id="obSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="separador" >
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%obIdSeparador.obIdSeparador.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+         
+        <!-- /OBTENER SERPARADOR -->
+        
+        <!-- OBTENER ORDEN DE PAGO -->
+       <nivel id="barreOrdenPago" nombre="barreOrdenPago" interactivo="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true"> <!--  -->
+            <componente id="barreOrdenPago" nombre="barreOrdenPago" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="id_periodo" text="Periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParams.inParams.orden_pago%"/>
+                    <campo name="id_cat_fondo_contable"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="concepto"/>
+                    <campo name="folio_duep"/>
+                    <campo name="duep_viaticos"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- GENERACIÓN DE LA PÓLIZA DE ORDEN DE PAGO -->
+        <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true AND %barreOrdenPago.barreOrdenPago.ur%!=null">
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%barreOrdenPago.barreOrdenPago.ur%"/> 
+                   <campo name="periodo" calc="%barreOrdenPago.barreOrdenPago.id_periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%barreOrdenPago.barreOrdenPago.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%barreOrdenPago.barreOrdenPago.id_fondo_contable%"/>
+                   <campo name="momento_contable" calc="7"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="3"/>
+                   <campo name="folio_reporte" calc="@concatenar(%barreOrdenPago.barreOrdenPago.id_periodo%+'-T'+
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%folio_movimiento_auxiliar%)" />
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                   <campo name="concepto_general" calc="'Poliza de Reembolso de Viaticos'"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true AND %nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%!=null">
+            <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParams.inParams.orden_pago%"/>
+                    <campo name="id_detalle_orden_pago"/>
+                    <campo name="importe" />
+                </tabla>
+                <!--INGRESA EL CARGO A LA PÓLIZA -->
+                <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>-->
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '7'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+'0')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '7'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','SIPAAP');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1" llaveForanea="false"/> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- Cargo a la cuenta del banco-->
+                <nivel id="cargoCuenta" nombre="cargoCuenta" interactivo="false">
+                    <componente id="cargoCuenta" nombre="cargoCuenta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="'2112'" /> <!--  -->
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%"/>
+                            <campo name="concepto_bloque" calc="'PROVEEDORES POR PAGAR'"/>
+                           <campo name="referencia" calc="'PROVEEDORES POR PAGAR'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- Cargo a la cuenta del banco-->
+                <!--INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>-->
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '6'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+'0')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '6'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','SIPAAP');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1" llaveForanea="false"/> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- Abono al 2112-->
+                <nivel id="cargoAbono" nombre="cargoAbono" interactivo="false">
+                    <componente id="cargoAbono" nombre="cargoAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable"  calc="'1.1.1.2.1.161'" /> <!-- calc="'2112'" -->
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%"/> <!-- - @ifThenElse(%barreImportesDetalleNoPresupuestal.barreImportesDetalleNoPresupuestal.acumulado%==null,0,@castTo(%barreImportesDetalleNoPresupuestal.barreImportesDetalleNoPresupuestal.acumulado%,'float'))-->
+                           <campo name="concepto_bloque" calc="'BANAMEX 3246'"/>
+                           <campo name="referencia" calc="'BANAMEZ 3246'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- Abono al 2112-->
+            </componente>
+        </nivel>
+         
+        
+        <!-- REPORTE PÓLIZA DE ORDEN DE COMPRA -->
+        
+        
+        
+        
+        <!---->
+        <nivel id="guardaPoliza" nombre="guardaPoliza" interactivo="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true">
+            <componente id="guardaPoliza" nombre="guardaPoliza" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParams.inParams.orden_pago%"/>
+                    <campo name="poliza" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- -->
+        
+        
+         <nivel id="nlConsultaPolizaOrdenPago" nombre="Consulta Póliza de Orden de Pago" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true">
+            <componente id="cpConsultaPolizaOrdenPago" nombre="Consulta Póliza de Orden de Pago" tipo="reporte">
+                <reporte nombre="poliza_contable">
+                    <campo name="ur" type="long" text="Unidad Responsable"  calc="@castTo($config.ur$,'long')"/>
+                    <campo name="periodo" type="long" calc="%inParams.inParams.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+ 
+        
+         <!--PASO DE PARAMETROS PARA TERMINAR LA INSTANCIA EN EL ESCRITORIO VIRTUAL -->
+        
+        <!-- COMPONENTES SOLICITUD PARA NEGOCIAR LA INSTANCIA Y MANDAR MENSAJE DE RETROALIMENTACIÓN -->
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false"  ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==false" >
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false"  ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==false">
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%autorizaReFaVi.autorizaReFaVi.observaciones%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+       
+       
+        
+         <!--PASO DE PARAMETROS PARA TERMINAR LA INSTANCIA EN EL ESCRITORIO VIRTUAL -->
+        <nivel nombre="TurnarInstanciaP" id="turnar_instanciaP" interactivo="false" ejecutar="%autorizaReFaVi.autorizaReFaVi.autoriza%==true">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

@@ -1,0 +1,105 @@
+<tarea id="Cun_Reem_Falta_viatico" nombre="Consulta Reembolso Faltante de Viáticos " autor="Juan Diego" version="1">
+    <pagina id="1">
+        
+        <!-- INICIO DEL NIVEL DUMMY -->
+        <nivel id="inParams" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParams" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/> 
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="folio_duep_B" local="true" type="string" calc="$inParam.folio_duep_B$"/>
+                    <campo name="fecha_sistema" local="true" type="string" calc="$inParam.fecha_sistema$"/>
+                    <campo name="importe" local="true" type="string" calc="$inParam.importe$"/>
+                    <campo name="orden_pago" local="true" type="string" calc="$inParam.orden_pago$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN DEL NIVEL DUMMY -->
+        
+         <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="permisos_especiales"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+
+        
+        <nivel id="Con_ReemFalta_viatico" nombre="Consulta Reembolso Faltante de Viáticos" mostrarProximoNivel="true" mostrarNivelAnterior="false" >
+            <componente id="Rep_Con_ReemFalta_viatico" nombre="Depósito o reembolso de viáticos y gastos por comprobar" 
+            tipo="reporte">
+                <reporte nombre="documento_presupuesto">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%inParams.inParams.ur%" />
+                    <campo name="periodo" type="long" calc="%inParams.inParams.periodo%"/>
+                    <campo name="folio_duep" type="long" calc="%inParams.inParams.folio_duep_B%"/>
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+       
+       <!--componente tipo formulario consulta de reembolso de viaticaos-->
+       <nivel id="conreemfaltaviatico" nombre="Consulta Reembolso Faltante de Viáticos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="Form_conreemfaltaviatico" nombre="Registra Reembolso Faltante de Viaticos" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" llaveForanea="false" visible="false" calc="%inParams.inParams.ur%"/>
+                    <campo name="id_periodo" llaveForanea="false" visible="false" calc="%inParams.inParams.periodo%"/>
+                    <campo name="orden_pago" text="Orden de Pago" calc="%inParams.inParams.orden_pago%" visible="false"/>
+                    <campo name="folio_duep" text="Duep" columnas="3" />
+                    
+                    <!--<campo name="cuenta_bancaria_beneficiario" text="Para depósito en:" 
+                        calcCliente="@ifThenElse(%beneficiario%!=null,@consultaDirec('select cuenta_bancaria as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','SIPAAP'),null)" 
+                        descripcionForanea="cuenta_bancaria"  columnas="3" margen-derecho="2" visible="false" llaveForanea="false"/>
+                        <campo name="cuenta_bancaria_beneficiario_local" local="true" type="string" text="Para depósito en:" 
+                        calcCliente="@ifThenElse(%beneficiario%!=null,@concatenar(@consultaDirec('select cuenta_bancaria as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','SIPAAP')+'-'+@consultaDirec('select clabe as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','SIPAAP')),null)" 
+                        descripcionForanea="cuenta_bancaria"  columnas="3" margen-derecho="2" habilitado="false"/>-->
+                    
+                    <campo name="duep_viaticos" text="Duep Asociado" descripcionForanea="folio_duep_a" columnas="3"  habilitado="false"/>
+                    <campo name="cuenta_bancaria_beneficiario" text="Cuenta Bancaria" descripcionForanea="cuenta_bancaria" columnas="3"  habilitado="false"/>
+                    <campo name="folio_orden_pago" text="Folio Orden de Pago" columnas="3"  habilitado="false"/>
+                    <campo name="importe_reembolsar" text="Importe a Reembolsar" calc="%inParams.inParams.importe%" columnas="3"  habilitado="false"/>
+                    <campo name="beneficiario" text="Beneficiario" columnas="3" descripcionForanea="razon_social"  habilitado="false"/>
+                    
+                    <campo name="id_cat_fondo_contable" text="Llave Fondo Contable" calc="3" llaveForanea="false" visible="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" columnas="3"  habilitado="false"/> <!-- llaveForanea="false"-->
+                    
+                </tabla>
+                <estilos>
+		            <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+		        </estilos>
+		        <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+       <nivel id="con_reem_falta_viatico" nombre="Consulta Reembolso Faltante de Viáticos">
+            <componente id="Rep_Vale_Reembol" nombre="Vale de Reembolso" tipo="Reporte">
+                <reporte nombre="R_Formato_Reembolso_Jo">
+                     <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="ordenPago" type="long" calc="%inParams.inParams.orden_pago%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    
+    </pagina>
+</tarea>
