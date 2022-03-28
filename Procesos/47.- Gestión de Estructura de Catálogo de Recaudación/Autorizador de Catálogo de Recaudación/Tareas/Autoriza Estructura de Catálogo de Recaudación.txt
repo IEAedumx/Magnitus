@@ -1,0 +1,69 @@
+<tarea id="Autoriza_CatRec" nombre="Autoriza Estructura de Catálogo de Recaudación" autor="Monserrat Gerardo" version="1">
+    <pagina id="uno" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+        <nivel id="nlAutorizaCatRec" nombre="Autoriza Estructura de Catálogo de Recaudación" mostrarProximoNivel="false">
+            <componente id="cpReporteCatRec" nombre="Reporte de Estructura de Catálogo de Recaudación" tipo="reporte">
+                <reporte nombre="EstructuraCatPresup_ing">
+                    <campo name="id_unidad_responsable" type="long" calc="@castTo($inParam.ur$,'long')"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="tipo_reporte" type="long" calc="0"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="cpAutorizaCatRec" nombre="Autoriza Estructura de Catálogo de Recaudación" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="observaciones_estructura_recaudacion" mascara="C" text="Observaciones" height="250" columnas="6" margen-izquierdo="2" interaccion="%autoriza_estructura_recaudacion%==false" validacion="%observaciones_estructura_recaudacion%==null AND %autoriza_estructura_recaudacion%==false" validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%autoriza_estructura_recaudacion%==true,'',%observaciones_estructura_recaudacion%)"/>
+                    <!--interaccion="%autoriza_estructura_recaudacion%==false" validacion="%observaciones_estructura_recaudacion%==null AND %autoriza_estructura_recaudacion%==false" validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%autoriza_estructura_recaudacion%==true,'',%observaciones_estructura_recaudacion%)"-->
+                    <campo name="autoriza_estructura_recaudacion" text="Autorizar" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!--MENSAJE -->
+        <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%nlAutorizaCatRec.cpAutorizaCatRec.autoriza_estructura_recaudacion%==false"> 
+             <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado"> 
+                 <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                     <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                     <parametro name="process" calc="$protocolarios.process$"/>    
+                     <parametro name="version" calc="$protocolarios.version$"/> 
+                     <parametro name="user" calc="$protocolarios.user$"/>  
+                     <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                     <parametro name="message" calc="%nlAutorizaCatRec.cpAutorizaCatRec.observaciones_estructura_recaudacion%"/>
+                     <parametro name="type" calc="'1'"/> 
+                 </parametros> 
+             </componente>
+         </nivel>
+        <nivel nombre="Instancia Rechazo" id="RechazoInstancia" interactivo="false" ejecutar="%nlAutorizaCatRec.cpAutorizaCatRec.autoriza_estructura_recaudacion%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="RechazoInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                    <parametro name="out_observaciones" calc="%nlAutorizaCatRec.cpAutorizaCatRec.observaciones_estructura_recaudacion%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlAutorizaCatRec.cpAutorizaCatRec.autoriza_estructura_recaudacion%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
