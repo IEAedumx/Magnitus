@@ -1,0 +1,331 @@
+<tarea id="invIni" nombre="Carga de Inventario Inicial de Almacén" autor="Froylán Alanis" version="1.0.0">
+	<pagina id="1">
+		<nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+			<componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+				<tabla schema="entity" nombre="usuario">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_usuario"/>
+					<campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+					<campo name="id_periodo"/>
+					<campo name="id_separador"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="invIni" nombre="Carga de Inventario Inicial de Almacén" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+			<componente id="invIni" tipo="formulario" nombre="Datos Generales del Inventario Inicial" >
+				<tabla schema="operation" nombre="inventario_inicial">
+					<campo name="fecha_elaboracion" text="Fecha" calc="@fechaSistema()" visible="false"/>
+					<campo name="ur" text="UR" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false" llaveForanea="false"/>
+					<campo name="id_periodo" text="Año" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" columnas="3" />
+					<campo name="adjunta_documentacion" text="Adjunta Documentación" local="true" type="file" update="true" fileType="normal" url="" nombreDocumento="DocumetacionInventarioInicial" grupo="" expediente="" columnas="3"/>
+					<campo name="id_inventario_inicial" text="ID inventario" generacion="@prox()+1" autogenerado="true" visible="false"/>
+					<campo name="in_afectacion_contable" text="Inventario con Afectación Contable" validacion="%in_afectacion_contable%==null" validacionMensaje="Seleccione Opción" columnas="3" >
+						<opciones>
+							<opcion texto="Si" valor="si"/>
+							<opcion texto="No" valor="no"/>
+						</opciones>
+					</campo>
+					<campo name="id_tipo_movimientos" text="id_tipo_movimientos" calc="1" llaveForanea="false" visible="false"/>
+					<campo name="transaccion" text="Transacción" descripcionForanea="transaccion"  columnas="3"  validacion="%transaccion%==null AND %in_afectacion_contable%=='si'" validacionMensaje="Seleccione una transacción" interaccion-visible="%in_afectacion_contable%=='si'" visible="false"/>
+					<campo name="concepto" text="Concepto" columnas="3" />
+					<campo name="usuario_alta" text="usuario" visible="false" calc="$protocolarios.user$"/>
+				</tabla>
+				<estilos>
+					<boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+				</estilos>
+				<acciones>
+					<accion nombre="grabar" hacer="saltar siguiente nivel"/>
+				</acciones>
+			</componente>
+		</nivel>
+	<!--	<nivel nombre="altaDirect_a_inventario_inicial_det" id="alta_inventario_inicial_det" interactivo="false">
+			<componente id="alta_inventario_inicial_det" tipo="cursor" nombre="alta_inventario_inicial_det">
+				<tabla schema="operation" nombre="inventario_inicial_det">
+					<campo name="ur" calc="%invIni.invIni.ur%"/>
+					<campo name="id_periodo" calc="%invIni.invIni.id_periodo%"/>
+					<campo name="id_inventario_inicial" calc="%invIni.invIni.id_inventario_inicial%"/>
+				</tabla>
+			</componente>
+		</nivel>-->
+		<nivel id="gesInvIni" nombre="Gestión de Inventario Inicial" mostrarNivelAnterior="false">
+		    <componente id="cpFolio" nombre="Gestión de Inventario Inicial" tipo="formulario" accionDefault="seleccionar">
+		        <tabla schema="catalog" nombre="dummy">
+		            <campo name="id" text="ID" calc="1" visible="false"/>
+		            <campo name="folio" text="Folio" calc="%invIni.invIni.id_inventario_inicial%" local="true" type="long" columnas="3" margen-izquierdo="2"/>
+		            <campo name="tipomov" text="Tipo Movimiento" calc="%invIni.invIni.id_tipo_movimientos%" local="true" type="long" columnas="3" margen-derecho="2"/>
+		        </tabla>
+		        <estilos>
+                    <boton nombre="grabar" visible="false" texto="Continuar"/>
+                </estilos>
+		    </componente>
+			<componente id="gesInvIni" tipo="tabla" nombre="Gestión de Inventario Inicial" filtro="true" mostrarEliminar="true" mostrarEditar="true" mostrarAgregar="true" mostrarImportacion="true">
+				<tabla schema="operation" nombre="inventario_inicial_det">
+				    <campo name="ur" text="UR"  llaveForanea="false" calc="%invIni.invIni.ur%" visible="false" columna-visible="false" columnaImportacion="UR" importacion="true"/>
+					<campo name="id_periodo" text="periodo" calc="%invIni.invIni.id_periodo%" llaveForanea="false"  visible="false" columna-visible="false" columnaImportacion="Periodo" importacion="true"/>
+			    	<campo name="id_inventario_inicial" text="id Inventario" calc="%invIni.invIni.id_inventario_inicial%" llaveForanea="false" visible="false" columna-visible="false"/>
+					<campo name="id_inventario_inicial_det" text="id Inventario detalle" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="false"/>
+					<campo name="clave_articulo" text="Clave Artículo" descripcionForaneaTabla="clave_articulo" width="100" descripcionForanea="clave_articulo,descripcion_articulo" llavesFijas="afectable=true" validacion="%clave_articulo%==null" validacionMensaje="Seleccione Artículo" columnas="2" columna-visible="true" columnaImportacion="Clave Artículo" importacion="true"/>
+					<campo name="des_articulo" text="Descripción del artículo" hablilitado="false" columnas="2" referenciaForanea="clave_articulo" referenciaForaneaTabla="descripcion_articulo" width="100" celdaForanea="descripcion_articulo" celdaForaneaTabla="descripcion_articulo" autocompletar="true" columna-visible="false"/>
+					<campo name="des_especifica" text="Descripción Específica" hablilitado="false"  width="100"  columnas="2"  columna-visible="false"/>
+					<campo name="id_cat_cog" text="ID COG" calc="4" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_cog" text="COG" habilitado="false" columnas="2"  calcCliente="@consultaDirec('SELECT (id_cat_clasificacion_objeto_gasto) AS result FROM catalog.articulos WHERE ur='+%invIni.invIni.ur%+' AND '+'periodo='+'\\''+%invIni.invIni.id_periodo%+'\\''+' AND '+' clave_articulo='+'\\''+%clave_articulo%+'\\'','result','string','MAGNITUS')" columna-visible="false"/>
+                    <campo name="id_cuenta_contable" text="Clave Cuenta Contable de Activo" descripcionForaneaTabla="clave_cuenta" descripcionForanea="clave_cuenta,descripcion" columnas="2"  columna-visible="false"/>
+                    <campo name="des_cuenta_contable" text="Descripción de Cuenta Contable Activo" referenciaForaneaTabla="id_cuenta_contable" celdaForaneaTabla="descripcion" referenciaForanea="id_cuenta_contable" celdaForanea="descripcion" autocompletar="true" columnas="2"  columna-visible="false"/>
+                    
+                    <campo name="id_unidad_medida" text="Unidad de Medida" hablilitado="false" descripcionForaneaTabla="descripcion" descripcionForanea="descripcion" referenciaForaneaTabla="clave_articulo" celdaForaneaTabla="unidad_medida" referenciaForanea="clave_articulo" celdaForanea="unidad_medida" autocompletar="true" columnas="2" columnaImportacion="Unidad de Medida" importacion="true"/>
+                    <campo name="um_descripcion" text="Descripción Unidad de Medida" hablilitado="false" referenciaForaneaTabla="id_unidad_medida" celdaForaneaTabla="descripcion" referenciaForanea="id_unidad_medida" celdaForanea="descripcion" autocompletar="true" columnas="2" columnaImportacion="Descripción Unidad de Medida" importacion="true"/>
+                    
+                    <campo name="id_almacenes" text="Clave de Almacén *" descripcionForanea="nombre" validacion="%id_almacenes%==null" validacionMensaje="Seleccione Almacen de Entrada" columnas="2" columna-visible="false"/>
+                    
+					<campo name="nombre_almacen" text="Descripción de Almacen" descripcionForaneaTabla="nombre" referenciaForaneaTabla="id_almacenes" celdaForaneaTabla="nombre" referenciaForanea="id_almacenes" celdaForanea="nombre" autocompletar="true" hablilitado="false" visible="false" columnas="2"  columna-visible="false" />
+					
+                    <campo name="folio" text="Folio" columnas="2" calc="
+                    @concatenar('ALM-'+
+                    @subCadena(@ifThenElse(@consultaDirec('
+                    SELECT (folio) AS resultado 
+                    FROM operation.inventario_inicial_det 
+                    WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' 
+                    ORDER BY folio DESC limit 1','resultado','string','MAGNITUS')==null,'000001',
+                    @consultaDirec('
+                    SELECT to_char((((substring(folio FROM char_length(folio)-4)::int)+1)),\\''+'00000'+'\\') as resultado 
+                    FROM operation.inventario_inicial_det 
+                    WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' ORDER BY folio DESC limit 1','resultado','int','MAGNITUS')),1,6))" columna-visible="false"/>
+                    
+					<campo name="id_tipo_movimientos" text="Tipo de Movimiento" hablilitado="false" visible="false" calc="%invIni.invIni.id_tipo_movimientos%" columnas="2"  columna-visible="false"/>
+					
+					<campo name="transaccion" text="Transacción" hablilitado="false" calc="'Inventario Inicial'" columnas="2" columna-visible="false"/>
+					
+					<campo name="fecha" text="Fecha" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')" columnas="2" hablilitado="true" columna-visible="false"/>
+					
+					<campo name="cantidad_entrada" text="Cantidad Entrada *" validacion="%cantidad_entrada%==null" validacionMensaje="Indique Cantidad de Artículos" columnas="2" columnaImportacion="Cantidad Entrada" importacion="true"/>
+					
+					<campo name="concepto" text="Concepto *" validacion="%concepto%==null" validacionMensaje="Capture concepto" columnas="2"  columna-visible="false"/>
+					
+					<campo name="id_centro_registro" text="id_cat_centro_registro" calc="2" llaveForanea="false" visible="false" columna-visible="false" />
+					
+					<campo name="centro_registro" text="Clave de Centro Registro *" descripcionForaneaTabla="descripcion" descripcionForanea="descripcion" columnas="2"  validacion="%centro_registro%==null" validacionMensaje="Seleccione Centro de Registro" columna-visible="false" />
+					
+					<campo name="id_cat_fondo" text="id_cat_fondo_contable" llaveForanea="false" columna-visible="false" visible="false" calc="3"/>
+					
+					<campo name="fondo_contable" text="Clave de Fondo Contable *" columnas="2"  descripcionForaneaTabla="descripcion" descripcionForanea="descripcion" validacion="%fondo_contable%==null" validacionMensaje="Seleccione Fondo Contable" columnaImportacion="Clave de Fondo Contable" importacion="true"/>
+					
+					<campo name="observaciones" text="Observaciones" columnas="2"  columnaImportacion="Observaciones" importacion="true"/>
+					
+					<campo name="costo_unitario" text="Costo Unitario *" validacion="%costo_unitario%==null" validacionMensaje="Capture Costo Unitario" formatoMoneda="true" columnas="2"  columnaImportacion="Costo Unitario" importacion="true"/>
+					
+                    <campo name="total" text="Total"  visible="false"  calcCliente="@ifThenElse(%cantidad_entrada%==null,0,%cantidad_entrada%)*@ifThenElse(%costo_unitario%==null,0,%costo_unitario%)" columnaImportacion="Total" importacion="true"/>
+                    
+                </tabla>
+            </componente>
+        </nivel>
+         <!-- Genera poliza -->
+        <nivel id="bSep" nombre="obSeparador" interactivo="false">
+            <componente tipo="cursor" id="bSep" nombre="bSep">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Generación del Encabezado de la Póliza" id="gEP" interactivo="false">
+            <componente id="gEP" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/> 
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                    <campo name="tipo_poliza" calc="1"/>
+                    <campo name="estatus_poliza" calc="2"/>
+                    <campo name="origen_poliza" calc="1"/>
+                    <campo name="fondo_contable" calc="%gesInvIni.gesInvIni.fondo_contable%"/>
+                    <campo name="concepto_general" calc="'Póliza Póliza de Inventario Inicial de Almacén '+%gesInvIni.gesInvIni.folio%+' '+%invIni.invIni.concepto%"/>
+               </tabla>
+           </componente>
+       </nivel>
+       <nivel id="barreImportesDetalleNoPresupuestal" nombre="barreImportesDetalle" interactivo="false">
+            <componente id="barreImportesDetalleNoPresupuestal" nombre="barreImportesDetalle" tipo="cursor">
+                <tabla schema="operation" nombre="inventario_inicial_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_inventario_inicial" filtroCampo="id_inventario_inicial" filtroOperador="=" filtroValor="%invIni.invIni.id_inventario_inicial%"/>
+                    <campo name="id_inventario_inicial_det"/>
+                    <campo name="total"/>
+                </tabla>
+            </componente>
+        </nivel>
+            <!-- INGRESA EL ABONO A LA PÓLIZA-->
+            <nivel nombre="b_acumular" id="b_acumular_" interactivo="false">
+            <componente tipo="cursor" nombre="b_acumular" id="b_acumular_">
+                <tabla schema="operation" nombre="inventario_inicial_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_inventario_inicial" filtroCampo="id_inventario_inicial" filtroOperador="=" filtroValor="%invIni.invIni.id_inventario_inicial%"/>
+                    <campo name="id_inventario_inicial_det"/>
+                    <campo name="costo_unitario"/>
+                    <campo name="clave_articulo"/>
+                    <campo name="id_cuenta_contable"/>
+                    <campo name="des_cuenta_contable"/>
+
+                </tabla>
+            <!--    <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">-->
+            <!--        <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">-->
+            <!--            <tabla schema="operation" nombre="detalle_movimientos_auxiliares">-->
+            <!--               <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>-->
+            <!--               <campo name="id_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>-->
+            <!--               <campo name="id_movimiento_auxiliar" calc="%gEP.gEP.folio_movimiento_auxiliar%" />-->
+            <!--               <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>-->
+            <!--                     <campo name="clave_presupuestal" calc="%bDuepPC.bDuepCPD.clave_presup%"/> -->
+            <!--               <campo name="clave_cuenta_contable" calc="@concatenar('8'+%bSep.bSep.caracter%+-->
+            <!--                '2'+%bSep.bSep.caracter%+-->
+            <!--                '2'+%bSep.bSep.caracter%+-->
+            <!--                '0'+%bSep.bSep.caracter%+'0')" />-->
+            <!--                <campo name="importe_abono" calc="%b_acumular_.b_acumular_.costo_unitario%"/>-->
+            <!--                <campo name="concepto_bloque" calc="%b_acumular_.b_acumular_.clave_articulo%"/>-->
+            <!--                <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables-->
+            <!--                    WHERE clave_cuenta ='+'\\''+ @concatenar('8220'+%bSep.bSep.caracter%+-->
+            <!--                    '2'+%bSep.bSep.caracter%+-->
+            <!--                    '4'+%bSep.bSep.caracter%+-->
+            <!--                    '0'+%bSep.bSep.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>-->
+            <!--                    <campo name="fecha_registro" calc="@fechaSistema()" />-->
+            <!--                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>-->
+            <!--                    <campo name="tipo_detalle" calc="2"/>-->
+            <!--                </tabla>-->
+            <!--            </componente>-->
+            <!--        </nivel>-->
+
+            <nivel id="cargoCuenta" nombre="cargoCuenta" interactivo="false">
+                    <componente id="cargoCuenta" nombre="cargoCuenta" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <campo name="id_movimiento_auxiliar" calc="%gEP.gEP.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%bDuepPC.bDuepCPD.clave_presup%"/>-->
+                            <campo name="clave_cuenta_contable" calc="%b_acumular_.b_acumular_.id_cuenta_contable%"/>
+                            <campo name="importe_cargo" calc="%barreImportesDetalleNoPresupuestal.barreImportesDetalleNoPresupuestal.total%"/>
+                            <campo name="concepto_bloque" calc="%b_acumular_.b_acumular_.clave_articulo%"/>
+                            <campo name="referencia" calc="'ALMACÉN GENERAL'"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+    
+                <nivel id="cargoCuentaRetencion" nombre="cargoCuentaRetencion" interactivo="false">
+                    <componente id="cargoCuentaRetencion" nombre="cargoCuentaRetencion" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <campo name="id_movimiento_auxiliar" calc="%gEP.gEP.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%bDuepPC.bDuepCPD.clave_presup%"/>-->
+                            <campo name="clave_cuenta_contable" calc="%b_acumular_.b_acumular_.id_cuenta_contable%"/>
+                            <campo name="importe_abono" calc="%barreImportesDetalleNoPresupuestal.barreImportesDetalleNoPresupuestal.total%"/>
+                            <campo name="concepto_bloque" calc="%b_acumular_.b_acumular_.clave_articulo%"/>
+                            <campo name="referencia" calc="%b_acumular_.b_acumular_.des_cuenta_contable%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+        </componente>
+    </nivel>
+        <!-- Genera poliza -->
+        <nivel nombre="barrido_inventario_inicial" id="bII" interactivo="false">
+            <componente tipo="cursor" nombre="bII" id="bII">
+                <tabla schema="operation" nombre="inventario_inicial_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_inventario_inicial" filtroCampo="id_inventario_inicial" filtroOperador="=" filtroValor="%invIni.invIni.id_inventario_inicial%"/>
+                    <campo name="id_inventario_inicial_det"/>
+                    <campo name="clave_articulo"/>
+					<campo name="des_articulo"/> 
+					<campo name="des_especifica"/>
+					<campo name="id_cat_cog"/>
+                    <campo name="id_cog"/>
+                    <campo name="id_cuenta_contable"/>
+                    <campo name="des_cuenta_contable"/>
+                    <campo name="id_unidad_medida"/>
+                    <campo name="um_descripcion"/>
+                    <campo name="id_almacenes"/>
+					<campo name="nombre_almacen"/>
+                    <campo name="folio"/>
+					<campo name="id_tipo_movimientos"/>
+					<campo name="transaccion"/>
+					<campo name="fecha"/>
+					<campo name="cantidad_entrada"/>
+					<campo name="concepto"/>
+					<campo name="id_centro_registro"/>
+					<campo name="centro_registro"/>
+					<campo name="id_cat_fondo"/>
+					<campo name="fondo_contable"/>
+					<campo name="observaciones"/>
+					<campo name="costo_unitario"/>
+                </tabla>
+		        <nivel nombre="alta_tarjetaAlmacen" id="aTA" interactivo="false">
+		            <componente tipo="altaDirect" nombre="aTA" id="aTA">
+		                <tabla schema="operation" nombre="tarjeta_almacen">
+		                	<campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+		                    <campo name="id_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+		                    <campo name="id_tarjeta_almacen" autogenerado="true" generacion="@prox()+1"/>
+		                    <campo name="fecha_registro" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')"/>
+		                    <campo name="articulo" calc="%bII.bII.clave_articulo%"/>
+		                    <campo name="des_articulo" calc="%bII.bII.des_especifica%"/>
+		                    <campo name="id_cat_cog" calc="%bII.bII.id_cat_cog%"/>
+		                    <campo name="id_cog" calc="%bII.bII.id_cog%"/>
+		                    <campo name="clave_cuenta" calc="%bII.bII.id_cuenta_contable%"/>
+		                    <campo name="des_clave_cuenta" calc="%bII.bII.des_cuenta_contable%"/>
+		                    <campo name="id_unidad_medida" calc="%bII.bII.id_unidad_medida%"/>
+		                    <campo name="des_unidad_medida" calc="%bII.bII.um_descripcion%"/>
+		                    <campo name="id_almacen" calc="%bII.bII.id_almacenes%"/>
+		                    <campo name="des_almacen" calc="%bII.bII.nombre_almacen%"/>
+		                    <campo name="folio_movimiento" calc="%bII.bII.folio%"/>
+		                    <campo name="id_tipo_movimientos" calc="%bII.bII.id_tipo_movimientos%"/>
+		                    <campo name="transaccion" calc="%bII.bII.transaccion%"/>
+		                    <!--<campo name="fecha" calc="%bII.bII.fecha%"/>-->
+		                    <campo name="cantidad_entrada" calc="%bII.bII.cantidad_entrada%"/>
+		                    <campo name="existencia" calc="%bII.bII.cantidad_entrada%"/>
+		                    <campo name="concepto" calc="%bII.bII.concepto%"/>
+		                    <campo name="id_centro_registro" calc="%bII.bII.id_centro_registro%"/>
+		                    <campo name="centro_registro" calc="%bII.bII.centro_registro%"/>
+		                    <campo name="id_cat_fondo" calc="%bII.bII.id_cat_fondo%"/>
+		                    <campo name="fondo_contable" calc="%bII.bII.fondo_contable%"/>
+		                    <campo name="observaciones" calc="%bII.bII.observaciones%"/>
+		                    <campo name="costo_unitario" calc="%bII.bII.costo_unitario%"/>
+		                    <campo name="total" calc="@ifThenElse(%bII.bII.cantidad_entrada%==null,0,%bII.bII.cantidad_entrada%)*@ifThenElse(%bII.bII.costo_unitario%==null,0,%bII.bII.costo_unitario%)"/>
+		                    <campo name="fecha_comprobante" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')"/>
+		                </tabla>
+		            </componente>
+		        </nivel>
+		    </componente>
+		</nivel>
+        <nivel nombre="repInvIni" id="repInvIni" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+        	<componente id="repInvIni" tipo="reporte" nombre="Inventario Inicial">
+        		<reporte nombre="Rep_Inv_Ini_AL">
+        			<campo name="id_inventario_inicial" type="long" calc="%invIni.invIni.id_inventario_inicial%"/>
+        			<campo name="periodo" type="long" calc="%invIni.invIni.id_periodo%"/>
+        			<campo name="ur" type="long" calc="%invIni.invIni.ur%"/>
+        			<campo name="usuario" type="string" calc="$protocolarios.user$"/>
+        		</reporte>
+        	</componente>
+        	<componente id="reporteSEDS" nombre="Documento Unico del Ejercicio del Presupuesto" tipo="reporte">
+                <reporte nombre="poliza_contable"> 
+                    <campo name="ur" type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%gEP.gEP.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
