@@ -1,0 +1,282 @@
+<tarea id="regRecPreIn" nombre="Registra Reclasificación del Ingreso" autor="HMVG">
+    <pagina id="1">
+        
+        <!-- FILTRA PERIODO -->
+        <nivel id="BP" nombre="Busca Periodo" interactivo="false">
+            <componente id="BP" nombre="Busca Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- PARAMETROS -->
+        <nivel id="inParam" nombre="Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="%BP.BP.id_unidad_responsable%" />
+                    <campo name="periodo" local="true" type="long" calc="%BP.BP.id_periodo%" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="FU" nombre="Filtra Usuario" interactivo="false">
+            <componente id="FU" nombre="Filtra Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        
+      
+        
+        <!-- FORMULARIO DE SELECCIÓN DE FOLIO DE RECAUDACIÓN -->
+        <nivel id="ARPI" nombre="Selección de Folio de Recaudación para Reclasificación del Ingreso" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="ARPI" nombre="Selección de Folio de Recaudación para Reclasificación del Ingreso" tipo="formulario">
+                <tabla schema="operation" nombre="reclas_pres_ingreso_aux">
+                    <campo name="ur" text="ur" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" text="periodo" calc="%inParam.inParam.periodo%" visible="false" descripcionForanea="id_periodo"/>
+                    <campo name="id_folio_duri_pres" text="Folio de Reclasificación" generacion="@prox()+1" autogenerado="true" habilitado="false" columnas="3"  margen-izquierdo="1"/>
+                    <campo name="folio_duri_pres" text="Folio de Reclasificación" visible="false"/>
+                    <campo name="fecha_registro" text="Fecha" columnas="3" calc="@fechaSistema()"/>
+                    <campo name="folio_duri_recaudado" text="Folio de Recaudación" columnas="3" descripcionForanea="folio_asociado" validacion="%folio_duri_recaudado%==null" validacionMensaje="Debe ingresar un Folio Duri Recaudado" llavesFijas="(autoriza_recaudacion=true OR autoriza_recaudacion_sim_i=true) AND elimina_recaudacion=false AND estatus=2 AND pc_cancelar=false AND elimina_rv=false AND estatus_reclasificacion IS NULL order by folio_asociado"/>
+                        <!-- llavesFijas="(autoriza_recaudacion=true OR autoriza_recaudacion_sim_i=true) AND corte_caja_autorizado=true" -->
+                    <!--
+                    <campo name="id_cat_clas_rubro_ingreso_destino" text="id clasificador" calc="11" llaveForanea="false" visible="false" /> 
+                    <campo name="clasificador_rubro_ingreso_destino" text="Clasificador por Rubro de Ingreso Destino" columnas="3" margen-izquierdo="1" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="nivel=4"/>
+                    <campo name="id_cat_fondo_contable_destino" calc="3" llaveForanea="false" visible="false" text="Id fondo contable"/>
+                    <campo name="fondo_contable_destino" text="Fondo Contable Destino" calcCliente="@consultaDirec('SELECT id_fondo_contable AS result FROM operation.recaudacion_registro_detalle WHERE ur='+%inParam.inParam.ur%+' AND periodo='+%inParam.inParam.periodo%+'AND id_recaudacion_registro='+%folio_duri_recaudado%,'result','string','MAGNITUS')" columnas="3" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" descripcionForanea="id_cat,descripcion" visible="false"/> 
+                    <campo name="fondo_contable_destino_local" text="Fondo Contable Destino" local="true" type="string" calcCliente="@consultaDirec('SELECT id_cat,descripcion AS resulta FROM catalog.catalogos WHERE ur='+%inParam.inParam.ur%+' AND id_periodo='+%inParam.inParam.periodo%+'AND id_catalogo=3 AND id_cat='+'\\''+%fondo_contable_destino%+'\\'','resulta','string','MAGNITUS')" columnas="3"/> 
+                    -->
+                    <campo name="estatus" text="Estatus" habilitado="false" calc="1" columnas="3" margen-izquierdo="1"/>
+                    <campo name="justificacion" text="Justificación" columnas="9"  margen-izquierdo="1" height="150"/>
+                </tabla>
+                <estilos>
+		            <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="3" margen-derecho="3"/>
+		        </estilos>
+		        <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- ACTUALIZAR FOLIO -->
+        <nivel id="AFRPI" nombre="Agrega Folio a Reclasificación del Ingreso" interactivo="false">
+			<componente id="AFRPI" nombre="Agrega Folio a Reclasificación del Ingreso" tipo="cursor">
+				<tabla schema="operation" nombre="reclas_pres_ingreso_aux">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+					<campo name="id_folio_duri_pres" filtroCampo="id_folio_duri_pres" filtroOperador="=" filtroValor="%ARPI.ARPI.id_folio_duri_pres%"/>
+					<campo name="folio_duri_pres" calc="@concatenar('RECI-'+
+					@ifThenElse(%ARPI.ARPI.id_folio_duri_pres% &lt;10,'00000',@ifThenElse(%ARPI.ARPI.id_folio_duri_pres%&lt;100,'0000',@ifThenElse(%ARPI.ARPI.id_folio_duri_pres%&lt;1000,'000',@ifThenElse(%ARPI.ARPI.id_folio_duri_pres%&lt;10000,'00',@ifThenElse(%ARPI.ARPI.id_folio_duri_pres%&lt;100000,'0',null)))))+%ARPI.ARPI.id_folio_duri_pres%)"/>
+				</tabla>
+			</componente>
+		</nivel>
+        
+        
+        <!-- SELECCIÓN DE CLAVE PRESUPUESTAL ORIGEN -->
+        <nivel id="RRD" nombre="Clave Origen de Recaudación a Reclasificar" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="RRD" nombre="Clave Origen de Recaudación a Reclasificar (incluye acción de Click Derecho)" tipo="tabla" filtro="false" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                <tabla schema="operation" nombre="recaudacion_registro_detalle">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false" calc="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_registro" text="id folio duri pres" visible="true" llaveForanea="false" columna-visible="false" width="150" calc="%ARPI.ARPI.folio_duri_recaudado%"/>
+                    <campo name="id_recaudacion_registro_det" text="Renglón" visible="true" columna-visible="false"/>
+                    <campo name="id_folio_duri_pres" text="id folio duri" visible="true" width="150" columna-visible="false" calc="%ARPI.ARPI.id_folio_duri_pres%" local="true" type="long"/>
+                    <campo name="id_cat_cri" text="cri"  llaveForanea="false" visible="false" columna-visible="false" />
+                    <campo name="id_cri" text="Clasificador por Rubro del Ingreso" width="250" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion"/>
+                    <campo name="id_cat_fondo_contable" text="ID FC" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" width="200" />
+                    <campo name="id_cat_centro_registro" text="ID CR" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_centro_registro" text="Centro de Registro" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" width="200" />
+                    <campo name="mes" text="Mes" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" width="200" llaveForanea="false"/>
+                    <campo name="cantidad" text="Cantidad" width="100" cellsalign="center"/>
+                    <campo name="importe" text="Importe" width="200" formatoMoneda="true"/>
+                    <campo name="descuento" text="Descuento" width="200" formatoMoneda="true"/>
+                    <campo name="iva" text="IVA" width="120" formatoMoneda="true"/>
+                    <campo name="total" text="Total" width="200" formatoMoneda="true" muestraAcumulado="true" />
+                    <!-- <campo name="reclasificacion_asig_bloque" text="Reclasificaciones Asignadas al Bloque" width="200" columnas="5"  margen-izquierdo="2" margen-derecho="2"/>-->
+                    <tareas>
+					   <tarea nombre="Gestiona Reclasificación" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png"
+					       params="ur,periodo,id_folio_duri_pres,id_recaudacion_registro,id_recaudacion_registro_det,mes,clave_presupuestal,id_cat_cri,id_cri" ref="task=bf5616c0-e931-4942-8af3-807781c06be7"/>
+				    </tareas>
+                </tabla>
+                <estilos>
+		        <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+		        </estilos>
+		        <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- FILTRA RECAUDACIÓN REGISTRO -->
+        <nivel id="barreRecau" nombre="barreRecau" interactivo="false" >
+            <componente id="barreRecau" nombre="barreRecau" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_registro">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%ARPI.ARPI.folio_duri_recaudado%"/>
+                    <campo name="beneficiario"/>
+                    <campo name="exp_ingreso"/>
+                    <campo name="estatus_reclasificacion" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!-- ALTA DE RECLASIFICACIÓN -->
+        <nivel id="agregarRecla" nombre="agregarRecla" interactivo="false" >
+            <componente id="agregarRecla" nombre="agregarRecla" tipo="altaDirect">
+                <tabla schema="operation" nombre="reclasificacion_presupuestal_ingreso">
+                    <campo name="ur" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%"/>
+                    <campo name="id_folio_duri" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="folio_duri" calc="%AFRPI.AFRPI.folio_duri_pres%"/>
+                    <campo name="folio_recaudado" calc="%ARPI.ARPI.folio_duri_recaudado%"/>
+                    <campo name="fecha_registro" calc="@fechaSistema()"/>
+                    <campo name="beneficiario" calc="%barreRecau.barreRecau.beneficiario%"/>
+                    <campo name="justificacion" calc="%ARPI.ARPI.justificacion%"/>
+                    <campo name="estatus" calc="%ARPI.ARPI.estatus%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- FILTRA DETALLE DE RECLASIFICACIÓN AUXILIAR -->
+        <nivel id="agregar_Detalle" nombre="agregar_Detalle" interactivo="false" >
+            <componente id="agregar_Detalle" nombre="agregar_Detalle" tipo="cursor">
+                <tabla schema="operation" nombre="reclas_pres_ingr_det_aux">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%ARPI.ARPI.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%ARPI.ARPI.periodo%"/>
+                    <campo name="folio_duri_pres" filtroCampo="folio_duri_pres" filtroOperador="=" filtroValor="%ARPI.ARPI.id_folio_duri_pres%"/>
+                    <campo name="folio_duri_pres_detalle"/>
+                    <campo name="id_cat_clas_rubro_ingreso_destino"/>
+                    <campo name="clasificador_rubro_ingreso_destino"/>
+                    <campo name="id_cat_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="cantidad"/>
+                    <campo name="importe"/>
+                    <campo name="iva"/>
+                    <campo name="total"/>
+                    <campo name="reclasificacion_asig_bloque"/>
+                    <campo name="tipo_bloque"/>
+                    <campo name="descuento"/>
+                    <campo name="mes_destino"/>
+                    <campo name="clave_presupuestal_destino"/>
+                    <campo name="id_cat_fondo_contable"/>
+                    <campo name="fondo_contable"/>
+                </tabla>
+                <!-- ALTA RECLASIFICACIÓN DETALLES -->
+                <nivel id="agregarReclaDet" nombre="agregarReclaDet" interactivo="false" >
+                    <componente id="agregarReclaDet" nombre="agregarReclaDet" tipo="altaDirect">
+                        <tabla schema="operation" nombre="reclasificacion_presupuestal_ingr_det">
+                            <campo name="ur" calc="%agregar_Detalle.agregar_Detalle.ur%"/>
+                            <campo name="periodo" calc="%agregar_Detalle.agregar_Detalle.periodo%"/>
+                            <campo name="folio_duri_pres" calc="%agregarRecla.agregarRecla.id_folio_duri%"/>
+                            <campo name="folio_duri_pres_detalle" calc="%agregar_Detalle.agregar_Detalle.folio_duri_pres_detalle%"/>
+                            <campo name="id_cat_clas_rubro_ingreso_destino" calc="%agregar_Detalle.agregar_Detalle.id_cat_clas_rubro_ingreso_destino%"/>
+                            <campo name="clasificador_rubro_ingreso_destino" calc="%agregar_Detalle.agregar_Detalle.clasificador_rubro_ingreso_destino%"/>
+                            <campo name="id_cat_centro_registro" calc="%agregar_Detalle.agregar_Detalle.id_cat_centro_registro%"/>
+                            <campo name="centro_registro" calc="%agregar_Detalle.agregar_Detalle.centro_registro%"/>
+                            <campo name="cantidad" calc="%agregar_Detalle.agregar_Detalle.cantidad%" />
+                            <campo name="importe" calc="%agregar_Detalle.agregar_Detalle.importe%"/>
+                            <campo name="iva" calc="%agregar_Detalle.agregar_Detalle.iva%"/>
+                            <campo name="total" calc="%agregar_Detalle.agregar_Detalle.total%"/>
+                            <campo name="descuento" calc="%agregar_Detalle.agregar_Detalle.descuento%"/>
+                            <campo name="mes" calc="%agregar_Detalle.agregar_Detalle.mes_destino%"/>
+                            <campo name="clave_presupuestal" calc="%agregar_Detalle.agregar_Detalle.clave_presupuestal_destino%"/>
+                            <campo name="id_cat_fondo_contable" calc="%agregar_Detalle.agregar_Detalle.id_cat_fondo_contable%"/>
+                            <campo name="fondo_contable" calc="%agregar_Detalle.agregar_Detalle.fondo_contable%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+
+       <!-- MAESTRO DETALLE DE RECLASIFICACIÓN -->
+       <nivel id="RRPIMD" nombre="Reclasificación del Ingreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="RRPIMD" nombre="Reclasificación del Ingreso" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="reclasificacion_presupuestal_ingreso">
+                        <campo name="ur" text="Unidad Responsable"  calc="%inParam.inParam.ur%" visible="false" llaveForanea="false"/>
+                        <campo name="periodo" text="Periodo" visible="false" calc="%inParam.inParam.periodo%"/>
+                        <campo name="id_folio_duri" text="Folio de Reclasificación" visible="false" calc="%agregarRecla.agregarRecla.id_folio_duri%"/>
+                        <campo name="folio_duri" text="Folio de Reclasificación" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="folio_recaudado" text="Folio de Recaudación" habilitado="false" columnas="3"/>
+                        <campo name="fecha_registro" text="Fecha de Registro" calc="@fechaSistema()" habilitado="false" columnas="3" />
+                        <campo name="tramite" text="Trámite" descripcionForanea="nombre" calc="'Reclasificación de Claves Presupuestales'" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="beneficiario" text="Beneficiario" descripcionForanea="razon_social" visible="false"/>
+                        <campo name="justificacion" text="Justificación" habilitado="false" columnas="6"/>
+                        <campo name="ultimo_usuario_modificador" text="Usuario" calc="%FU.FU.id_usuario%" visible="false"/>
+                    </tabla>
+                   <estilos>
+                        <boton nombre="grabar" texto="CONTINUAR" visible="true" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla id="identificador_detalle" schema="operation" nombre="reclasificacion_presupuestal_ingr_det" tituloDetalle="Renglones" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="folio_duri_pres" llaveForanea="false" text="Folio Reclasificación" columna-visible="false"/>
+                        <campo name="folio_duri_pres_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" width="85"/>
+                        <campo name="id_cat_clas_rubro_ingreso_destino" text="ID CRI" habilitado="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="clasificador_rubro_ingreso_destino" text="Clasificador por Rubro de Ingreso" descripcionForaneaTabla="id_cat,descripcion" width="250"/>
+                        <campo name="id_cat_fondo_contable" text="id fondo contable" llaveForanea="false" columna-visible="false"/>
+                        <campo name="fondo_contable" text="Fondo Contable" descripcionForaneaTabla="id_cat,descripcion" width="200"/>
+                        <campo name="mes" text="mes Destino" llaveForanea="false" visible="false" columna-visible="false" />
+                        <campo name="clave_presupuestal" text="Clave Presupuestal"  width="225" descripcionForaneaTabla="clave_presupuestal" llaveForanea="false"/>
+                        <campo name="cantidad" text="Cantidad" width="100" cellsalign="center"/>
+                        <campo name="importe" text="Importe" width="150" cellsalign="right" formatoMoneda="true"/>
+                        <campo name="descuento" text="Descuento" width="150" cellsalign="right" formatoMoneda="true"/>
+                        <campo name="iva" text="IVA" width="120" cellsalign="right" formatoMoneda="true"/>
+                        <campo name="total" text="Total" width="150" cellsalign="right" formatoMoneda="true"/>
+                        <campo name="reclasificacion_asig_bloque"  text="Reclasificación Asignación de Bloque" llaveForanea="false" columna-visible="false"/>
+                        <campo name="tipo_bloque" text="Tipo de Bloque" llaveForanea="false" columna-visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="4" margen-izquierdo="4" margen-derecho="2"/>
+                   </estilos>
+                   <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                   </acciones>
+                </detalles>
+            </componente>
+        </nivel>
+        
+        <!-- REPORTE -->
+        <nivel id="reporReclas" nombre="Reclasificación del Ingreso" mostrarNivelAnterior="false">
+            <componente id="reporReclas" nombre="Documento Reclasificación del Ingreso" tipo="reporte">
+                <reporte nombre="R_Rep_Ing_IJ" expediente="Expediente de Ingresos/Reclasificación del Ingreso" nombreDocumento="'Documento de Reclasificación'" grupo="%barreRecau.barreRecau.exp_ingreso%" url="$config.repository_upload_file$" update="true" >
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="folio_duri" type="long" calc="%RRPIMD.RRPIMD.id_folio_duri%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>  
+            </componente>
+        </nivel>
+        
+        <!-- LANZA INSTANCIA -->
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" tipo="json" metodo="POST" accion="crearNuevaInstancia">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'bef62e1d-4d28-4501-9389-e1f46dd13d66'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%inParam.inParam.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%inParam.inParam.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_id_folio_duri_pres" calc="%ARPI.ARPI.id_folio_duri_pres%" mostrarEsc="true"/>
+                    <parametro name="out_folio_duri_recaudado" calc="%ARPI.ARPI.folio_duri_recaudado%" mostrarEsc="false"/>
+                    <parametro name="out_id_folio_duri" calc="%RRPIMD.RRPIMD.id_folio_duri%" mostrarEsc="false"/>
+                    <parametro name="out_folio_ingreso" calc="%barreRecau.barreRecau.exp_ingreso%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
