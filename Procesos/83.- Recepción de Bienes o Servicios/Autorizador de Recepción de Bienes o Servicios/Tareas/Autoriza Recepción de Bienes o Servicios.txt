@@ -1,0 +1,195 @@
+<tarea id="AutorizaRecepcionBienesServicios" nombre="Autoriza Recepción de Bienes o Servicios">
+    <pagina id="1">
+       <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="BarreDuepBS" nombre="BarreDuepBS" interactivo="false">
+            <componente tipo="cursor" id="BarreDuepBS" nombre="BarreDuepBS">        
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> 
+                    <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                    <campo name="tramite" text="Tramite" descripcionForanea="siglas"/>
+                    <campo name="beneficiario" text="Beneficiario"/>
+                    <campo name="id_contrato" text="Contrato"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlAutorizaRBS" nombre="Reporte Recepción de Bienes o Servicios" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="reporteSEDS" nombre="Reporte Recepción de Bienes" tipo="reporte" colapsado="NO">
+                <reporte nombre="Rbs"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.duep$"/>
+                </reporte>
+            </componente>
+          <!--   <componente id="reporteSEDSD" nombre="Reporte Estado de Cuenta Detallado del DUEP" tipo="reporte" colapsado="SI">
+                <reporte nombre="Edo_cta_duep"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.duep$"/>
+                    <campo name="id_contrato" type="long" calc="$inParam.contrato$"/>
+                </reporte>
+            </componente> -->
+             <componente id="cpAutorizaRBS" tipo="formulario" nombre="Autoriza Recepción de Bienes o Servicios" accionDefault="editar" colapsado="NO" >
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" visible="false" calc="$inParam.periodo$" llaveForanea="false"/> 
+                    <campo name="folio_duep" text="Folio" visible="false" calc="$inParam.duep$"/>
+                    <campo name="observaciones" text="Observaciones" local="true" type="memo" height="250" columnas="6"  margen-izquierdo="2" interaccion="%autoriza_duep%==false" validacion="%observaciones%!=null AND %autoriza_duep%==false" validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%autoriza_duep%==true,'',%observaciones%)" />
+                    <campo name="fecha" text="Validar" local="true" type="string" visible="false"  calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                    <campo name="autoriza_duep" text = "Autorización"  visible = "true" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="fecha_autoriza_duep" text="Fecha Autorización" calcCliente="@ifThenElse(%autoriza_duep%==true,%fecha%,'')" visible="false"/>
+                    <campo name="usuario_autoriza_duep" text="Usuario Autoriza" calc="%barreUsuarios.barreUsuarios.id_usuario%"  visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente> 
+        </nivel> 
+        <nivel id="cambiaEstatus" nombre="cambiaEstatus" interactivo="false" ejecutar="%nlAutorizaRBS.cpAutorizaRBS.autoriza_duep%==true">
+            <componente id="cambiaEstatus" nombre="cambiaEstatus" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                    <campo name="estatus_duep" calc="4" />
+                    <campo name="folio_solicitud"/>
+                   
+                </tabla>
+            </componente>
+        </nivel>         
+        
+        <nivel id="bff" nombre="bff" interactivo="false">
+            <componente id="bff" nombre="bff" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                    <campo name="folio_duep_a"/>
+                    <campo name="folio_solicitud"/>
+                </tabla>
+                <nivel id="bb" nombre="bb" interactivo="false">
+                    <componente nombre="bb" id="bb" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                            <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                            <campo name="folio_comprobante"/>
+                            <campo name="fecha_registro"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="aa" id="a" interactivo="false">
+                            <componente tipo="cursor" nombre="a" id="a">
+                                <tabla schema="operation" nombre="duep_contrato_pedido">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                                    <campo name="folio_con_ordecom" filtroCampo="folio_con_ordecom" filtroOperador="=" filtroValor="%bff.bff.folio_solicitud%"/>
+                                    <campo name="id_duep_contrato_pedido"/>
+                                    <campo name="tipo_contrato"/>
+                                </tabla>
+                            </componente>
+                    </nivel>
+                <nivel nombre="aaa" id="aa" interactivo="false">
+                            <componente tipo="cursor" nombre="aa" id="aa">
+                                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%a.a.id_duep_contrato_pedido%"/>
+                                    <campo name="id_duep_contrato_pedido_det"/>
+                                    <campo name="folio_comprobante" calc="%bff.bff.folio_duep_a%"/>
+                                    <campo name="fecha_comprobante" calc="%bb.bb.fecha_registro%"/>
+                                </tabla>
+                                <nivel id="RRB2" nombre="Registra Recepción de Bienes y Servicios" interactivo="false" ejecutar="%a.a.tipo_contrato%==2">
+                                    <componente id="RRB2" nombre="Registra Recepción de Bienes y Servicios" tipo="cursor">
+                                        <tabla schema="operation" nombre="duep_contrato_pedido_det_calendario">
+                                            <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                                            <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                                            <campo name="id_duep_contrato_pedido" text="Pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%a.a.id_duep_contrato_pedido%"/>
+                                            <campo name="id_duep_contrato_pedido_det" text="Renglon" filtroCampo="id_duep_contrato_pedido_det" filtroOperador="=" filtroValor="%aa.aa.id_duep_contrato_pedido_det%"/>
+                                            <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                                            <campo name="recepcion_autorizada" calc="true"/>
+                                        </tabla>
+                                    </componente>
+                                </nivel>
+                            </componente>
+                    </nivel>
+                
+             </componente>
+        </nivel>
+        
+        
+        
+        
+        <nivel nombre="Instancia Validor" id="InstanciaVal" interactivo="false" ejecutar="%nlAutorizaRBS.cpAutorizaRBS.autoriza_duep%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAutorizaRBS.cpAutorizaRBS.observaciones%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%nlAutorizaRBS.cpAutorizaRBS.autoriza_duep%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="out_observaciones" calc="%nlAutorizaRBS.cpAutorizaRBS.observaciones%" mostrarEsc="true"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlAutorizaRBS.cpAutorizaRBS.autoriza_duep%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--CREA INSTANCIA-->
+        <nivel id="CreaInsDic4" nombre="Crea Instancia" interactivo="false" ejecutar="%nlAutorizaRBS.cpAutorizaRBS.autoriza_duep%==true">
+            <componente id="CreaInsDic4" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="'4858fae7-eb04-45e9-9dd7-d33130c59135'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                    <parametro name="out_folio_duep" calc="$inParam.duep$" mostrarEsc="true"/>
+                    <parametro name="out_beneficiario" calc="%BarreDuepBS.BarreDuepBS.beneficiario%" mostrarEsc="true"/>
+                    <parametro name="out_folio_contrato_compra" calc="$inParam.contrato$" mostrarEsc="true"/>
+                    <parametro name="out_tramite" calc="%BarreDuepBS.BarreDuepBS.tramite%" mostrarEsc="true"/>
+                    <parametro name="out_importe" calc="$inParam.importe$" mostrarEsc="true"/>
+                    <parametro name="out_expediente" calc="$inParam.adquisicion$" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

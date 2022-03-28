@@ -1,0 +1,565 @@
+    <tarea id="ARAF" nombre="Autoriza Recepción de Activo Fijo"> 
+        <pagina id="" nombre="">
+            <!--CURSORES-->
+        <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="folio_resguardo" text="folio_resguardo" local="true" type="string" calc="@concatenar('RESG-'+@ifThenElse(
+                        @consultaDirec('
+                        SELECT (id_resguardo_activo_fijo) AS resultado
+                        FROM operation.resguardo_activo_fijo
+                        WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                        ,
+                        '000001'
+                        ,
+                        @consultaDirec('
+                        SELECT to_char((((substring(id_resguardo_activo_fijo from char_length(id_resguardo_activo_fijo)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                        FROM operation.resguardo_activo_fijo
+                        WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' ORDER BY id_resguardo_activo_fijo DESC limit 1','resultado','string','MAGNITUS')
+                        ))" habilitado="false"/>
+                    <campo name="letras" local="true" type="string" text="Contrato" calc="@subCadena(%per.per.folio_resguardo%,0,5)"/>
+                    <campo name="numeros" local="true" type="string" text="Contrato" calc="@subCadena(%per.per.folio_resguardo%,6,11)"/>
+                </tabla>
+            </componente>
+        </nivel>
+            <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    </tabla>
+                </componente>
+            </nivel>
+
+
+        <nivel id="mod" nombre="Modifica Recepción de Activo Fijo" interactivo="true" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="maestroDetalle" id="md" nombre="Registra Recepción de Bienes">
+                <encabezado nombre="Activo Fijo" accionDefault="editar">
+                    <tabla schema="operation" nombre="activo_fijo">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$config.ur$" habilitado="false"/>
+                        <campo name="periodo" text="Periodo" visible="false" calc="%per.per.id_periodo%" habilitado="false"/>
+                        <campo name="activo_fijo" text="Folio" visible="false" calc="$inParam.activo_fijo$"/>
+                        <campo name="folio_duep" text="Folio" calc="$inParam.duep$" visible="false"/>
+                        
+                        <campo name="id_activo_fijo" text="Folio" calc="$inParam.duep$" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                        <campo name="tramite" text="Tramite" columnas="3" margen-derecho="2" habilitado="false" calc="'Recepción de Activo Fijo'"/>
+                        <campo name="beneficiario" text="Beneficiario" columnas="3" margen-izquierdo="2" habilitado="false" descripcionForanea="razon_social"/>
+                        <campo name="id_cat_fondo_contable" text="Fondo Contable" columnas="3" habilitado="false" margen-derecho="2"/>
+                        <campo name="area_requiriente" text="Centro Registro" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                        <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento"  calc="5" columnas="3" margen-derecho="2" habilitado="false"/>
+                        <campo name="fecha_elaboracion" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                        <campo name="id_contrato" text="Contrato" columnas="3"  margen-derecho="2" llaveForanea="false" habilitado="false"/>
+                        <campo name="id_tipo_comprobante" text="Tipo Comprobante" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                        <campo name="orden_compra" text="Orden Compra" columnas="3"  margen-derecho="2" habilitado="false" calc=" " />
+                        <campo name="folio_comprobante" text="Folio Comprobante" columnas="3"  margen-izquierdo="2"/>
+                        <campo name="amortizacion_anticipo" text="Armotizacion Anticipio" columnas="3" margen-derecho="2" habilitado="false"/>
+                        <campo name="anticipo" text="% Anticipo" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                        <campo name="concepto" text="Concepto" columnas="6" margen-izquierdo="2" habilitado="false" width="100" height="100"/> 
+                    </tabla>
+                        <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+                    </encabezado>
+                <detalles id="mdDetalle">
+                        <tabla schema="operation" nombre="activo_fijo_det" tituloDetalle="Renglones" id="detalle_uno" mostrarEliminar="false"  mostrarAgregar="false" mostrarEditar="false">
+                            <!--Bloque Presupuestal-->
+                            <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false" calc="$config.ur$"/>
+                            <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false" calc="%per.per.id_periodo%"/>
+                            <campo name="folio_duep" text="folio_duep" calc="$inParam.duep$" llaveForanea="false" columna-visible="false" visible="false"/>
+                            <campo name="activo_fijo" text="Folio" calc="$inParam.activo_fijo$"  visible="false"/>
+                            <campo name="id_activo_fijo" text="id_activo_fijo" calc="$inParam.duep$" llaveForanea="false" visible="false" columna-visible="false"/>
+                            <campo name="id_cat_clasificacion_objeto_gasto" text="Clasificador por Objeto del Gasto" width="100" calc="4" visible="false" columna-visible="false"/> 
+                            <campo name="programa_presupuestal" text="Programa Presupuestal" width="100" calc="10" visible="false" columna-visible="false" habilitado="false"/> 
+                            
+                            <campo name="id_activo_fijo_det" text="Renglón" autogenerado="true" generacion="@prox()+1" width="50" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                            <campo name="clave_presupuestal" text="Clave Presupuestal" width="100" columnas="3" margen-derecho="2" habilitado="false"/>
+                            <campo name="tipo_bloque" text="Tipo de Renglón" width="100" columnas="3" margen-izquierdo="2" llavesFijas="id_detalle_duep=1 OR id_detalle_duep=2"/>
+                            <campo name="genero" text="Género" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==2" visible="false"/><!--Bloque No Presupuestal-->
+                            <campo name="tipo_afectacion" text="Tipo de Afectación" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==2" visible="false"/><!--Bloque No Presupuestal-->
+                            
+                            <campo name="cuenta_amortizacion" text="Cuenta de Amortización" width="100" columnas="3" margen-derecho="2"  visible="false" interaccion-visible="%tipo_bloque%==1" habilitado="false"/> 
+                            <campo name="tipo_comprobante" text="Tipo de Comprobante" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            <campo name="operacion" text="Operación" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==2" visible="false"/><!--Bloque No Presupuestal -->
+                            
+                            <campo name="folio_comprobante" text="Folio de Comprobante" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" habilitado="false"/>
+                            <campo name="articulo" text="Artículo" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" habilitado="true" descripcionForanea="descripcion_articulo" descripcionForaneaTabla="descripcion_articulo"/> 
+                            <campo name="fecha_cfdi" text="Fecha de CFDI" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false"/>
+                            <campo name="marca" text="Marca" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            
+                            <campo name="cantidad_recibida" text="Cantidad Recibida" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            <campo name="modelo" text="Modelo" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            <campo name="unidad_medida" text="Unidad de Medida" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" habilitado="false"/>
+                            <campo name="serie" text="Serie" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            <campo name="precio_unitario" text="Precio Unitario" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            <campo name="color" text="Color" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            <campo name="descuento" text="Descuento" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            <campo name="comentarios" text="Comentarios" width="100" height="100" columnas="6" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            
+                            <campo name="iva" text="% IVA" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" habilitado="false"/>
+                            <campo name="clasificacion_objeto_gasto" text="Clasificador por Objeto del Gasto" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false" habilitado="false"/> 
+                            
+                        
+                            <campo name="descripcion_especifica" text="Descripción Específica" width="100" height="100" columnas="6" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1 OR %tipo_bloque%==2" visible="false"/><!--Bloque 2-->
+                            <campo name="impuesto_valor_agregado" text="Impuesto al Valor Agregado" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false"/> 
+                            <campo name="otros_impuestos" text="Otros Impuestos" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1" visible="false"/>
+                            <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" width="100" calc="10" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" habilitado="false"/> 
+                            <campo name="importe_unitario" text="Importe Unitario" width="100" columnas="3" margen-derecho="2" interaccion-visible="%tipo_bloque%==1 OR %tipo_bloque%==2" visible="false"/><!-- Bloque 2-->
+                            <campo name="indicador" text="Indicador" width="100" columnas="3" margen-izquierdo="2" interaccion-visible="%tipo_bloque%==1" visible="false" habilitado="false"/>
+                            <!--    <campo name="adjuntar" text="Adjuntar Soporte Documental" width="100" interaccion-visible="%tipo_bloque%==1 OR %tipo_bloque%==2" visible="false"/> Bloque 2-->
+
+                        <!--    <campo name="descuento" text="Descuento" width="100" columnas="3" margen-izquierdo="2"/> -->
+
+                        </tabla>
+                        <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+                            
+                    </detalles>
+            </componente>
+        </nivel>
+
+            <!--CURSORES-->
+            <!--REPORTES-->
+            <nivel nombre="Autoriza Recepción de Activo Fijo" id="CRBAF" mostrarNivelAnterior="false" >
+                    <componente tipo="reporte" id="R_consultaSaldoGlobal" nombre="Autoriza Recepción de Activo Fijo">
+                <reporte nombre="R_duep_IJ">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="activo_fijo" type="long" calc="%mod.md.activo_fijo%"/>
+                </reporte>
+                </componente>
+                   <componente tipo="reporte" nombre="Estado de Cuenta Detallado del DDEP" id="ECDDC">
+                    <reporte nombre="estado_Detallado_ij" id="ECDDR">
+                        <campo name="ur" type="long" calc="$config.ur$"/>
+                        <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                        <campo name="id_activo_fijo" type="string" calc="$inParam.duep$"/>
+                    </reporte>
+                </componente>
+                   <componente tipo="reporte" nombre="Detalle de Recepción del Activo Fijo" id="DRAFC">
+                    <reporte nombre="R_edo_cta_DUEP_Asm" id="DRAFR">
+                        <campo name="ur" type="long" calc="$config.ur$"/>
+                        <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                        <campo name="id_activo_fijo" type="string" calc="$inParam.duep$"/>
+                    </reporte>
+                </componente>
+            </nivel>  
+            <!--REPORTES-->
+            <!--AUTORIZA-->
+            <nivel id="ARAF2" nombre="Autoriza Recepción de Activo Fijo" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                <componente id="ARAFC" nombre="Autoriza Recepción de Activo Fijo" tipo="formulario" accionDefault="editar">
+                    <tabla schema="operation" nombre="activo_fijo">
+                    <campo name="ur" text="ur" calc="$inParam.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="periodo" calc="$inParam.periodo$" llaveForanea="false" visible="false"/>
+                   <campo name="activo_fijo" text="DUEP" calc="$inParam.activo_fijo$"  visible="false"/>
+                    <campo name="id_activo_fijo" text="id_activo_fijo" calc="$inParam.duep$" llaveForanea="false" visible="false"/>
+                    <campo name="comentarios_autorizador" text="Observaciones *" columnas="4" margen-izquierdo="3"  interaccion="%autoriza%==false" height="100"  validacion="%comentarios_autorizador%==null and %autoriza%==false" validacionMensaje="Faltan Observaciones"/>
+                    <campo name="autoriza" text="Autoriza" validacion="%autoriza%==null" columnas="1" margen-izquierdo="4"/>
+                    <campo name="usuario_autorizador" text="Usuario Autorizador"  calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/> 
+                    </tabla>
+                  <estilos>
+                            <boton nombre="grabar" visible="true" texto="Grabar"  columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                         </estilos>
+                        <acciones>
+                            <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                        </acciones>
+                </componente>
+            </nivel>
+            <!--AUTORIZA-->
+            <!--INSTANCIAS-->
+            <nivel id="suma" nombre="suma" interactivo="false">
+                            <componente id="suma" nombre="suma" tipo="cursor">
+                                <tabla schema="operation" nombre="activo_fijo_det">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                                    <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                                     <campo name="activo_fijo"/>
+                                     <campo name="importe_total"/>
+                                     <campo name="acumulado" local="true" type="double" calc="$sumatoria.importe_total$"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <nivel id="sumaa" nombre="sumaa" interactivo="false">
+                            <componente id="sumaa" nombre="sumaa" tipo="cursor">
+                                <tabla schema="operation" nombre="activo_fijo">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                                    <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                                     <campo name="activo_fijo"/>
+                                     <campo name="total" calc="%suma.suma.acumulado%"/>
+                                     <campo name="importe_letra" text="Cantidad con Letra" calc="@numeroAletra(%suma.suma.acumulado%,'Pesos M.N.')"/>
+                                     <campo name="cantidad_letra" text="Cantidad con Letra" calc="@numeroAletra(%suma.suma.acumulado%,'Pesos M.N.')"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+            <!--alta al duep -->
+            <!--alta a tabla duep -->
+          <nivel id="baf" nombre="baf" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==true">
+                <componente id="baf" nombre="baf" tipo="cursor">
+                    <tabla schema="operation" nombre="activo_fijo">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                        <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                        <campo name="activo_fijo"/>
+                        <campo name="folio_contrato_compra"/>
+                          <campo name="folio_duep"/>
+                          <campo name="fecha_elaboracion"/>
+                          <campo name="beneficiario"/>
+                          <!--<campo name="centro_registro"/>-->
+                          <campo name="fecha_registro"/>
+                          <campo name="id_tipo_comprobante"/>
+                          <campo name="folio_comprobante"/>
+                          <campo name="tramite"/>
+                          <campo name="estatus" calc="2"/>
+                          <campo name="id_cat_fondo_contable"/>
+                          <campo name="id_fondo_contable"/>
+                          <campo name="id_cat_fuente_financiamiento"/>
+                          <campo name="id_fuente_financiamiento"/>
+                          <campo name="id_contrato"/>
+                          <campo name="orden_compra"/>
+                          <campo name="amortizacion_anticipo"/>
+                          <campo name="anticipo"/>
+                          <campo name="concepto"/>
+                          <campo name="ultimo_usuario_modificador"/>
+                          <campo name="autoriza"/>
+                          <campo name="comentarios_autorizador"/>
+                          <campo name="usuario_autorizador"/>
+                          <campo name="total"/>
+                          <campo name="cantidad_letra"/>
+                          <campo name="id_cat_area_requiriente"/>
+                          <campo name="area_requiriente"/>
+                    </tabla>
+                 </componente>
+            </nivel>
+                    <nivel id="ad" nombre="ad" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==true">
+                        <componente id="ad" nombre="ad" tipo="altaDirect">
+                            <tabla schema="operation" nombre="duep">
+                                  <campo name="ur" calc="%baf.baf.ur%"/>
+                                  <campo name="periodo" calc="%baf.baf.periodo%"/>
+                                  <campo name="folio_duep" autogenerado="true" generacion="@prox()+1"/>
+                                  <campo name="tipo_comprobante" calc="%baf.baf.tipo_comprobante%"/>
+                                  <campo name="folio_comprobante" calc="%baf.baf.id_activo_fijo%"/>
+                                  <campo name="folio_solicitud" calc="%baf.baf.folio_contrato_compra%"/>
+                                  <campo name="folio_duep_a"/>
+                                  <campo name="fecha_solicitud" calc="%baf.baf.fecha_registro%"/>
+                                  <campo name="fecha_autorizacion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                                  <campo name="beneficiario" calc="%baf.baf.beneficiario%"/>
+                                  <campo name="tramite" calc="13"/>
+                                  <campo name="id_cat_unidad_ejecutora_gasto"/>
+                                  <campo name="id_unidad_ejecutora_gasto"/>
+                                  <campo name="concepto" calc="%baf.baf.concepto%"/>
+                                  <campo name="ultimo_usuario_modificador" calc="%baf.baf.ultimo_usuario_modificador%"/>
+                                  <campo name="estatus_duep" calc="2"/>
+                                  <campo name="total" calc="%baf.baf.total%"/>
+                                  <campo name="total_letra" calc="%baf.baf.cantidad_letra%"/>
+                                  <campo name="total_descuento"/>
+                                  <campo name="total_importe"/>
+                                  <campo name="proveedor"/>
+                                  <campo name="autoriza_duep" calc="%baf.baf.autoriza%"/>
+                                  <campo name="autoriza_duep_pro"/>
+                                  <campo name="fecha_autoriza_duep"/>
+                                  <campo name="fecha_autoriza_duep_pro"/>
+                                  <campo name="usuario_autoriza_duep_pro"/>
+                                  <campo name="usuario_autoriza_duep" calc="%baf.baf.usuario_autorizador%"/>
+                                  <campo name="autoriza_duep_obs" calc="%baf.baf.comentarios_autorizador%"/>
+                                  <campo name="id_cat_fondo_contable" calc="%baf.baf.id_cat_fondo_contable%"/>
+                                  <campo name="id_fondo_contable" calc="%baf.baf.id_fondo_contable%"/>
+                                  <campo name="seleccion_orden_pago"/>
+                                  <campo name="id_contrato" calc="%baf.baf.id_contrato%"/>
+                                  <campo name="id_cat_fuente_financiamiento" calc="%baf.baf.id_fuente_financiamiento%"/>
+                                  <campo name="id_fuente_financiamiento" calc="%baf.baf.id_cat_fuente_financiamiento%"/>
+                                  <campo name="folio_operacion_instancia"/>
+                                  <campo name="comprobacion_justificada"/>
+                                  <campo name="evidencia_sificiente"/>
+                                  <campo name="requiere_adjuntar"/>
+                                  <campo name="ruta"/>
+                                  <campo name="descripcion"/>
+                                  <campo name="comentarios"/>
+                                  <campo name="tipo"/>
+                                  <campo name="total_comprometido"/>
+                                  <campo name="importe_devengar"/>
+                                  <campo name="proceso_origen" calc="72"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+
+            <!--alta tabla duep detalle -->
+            <nivel id="bacd" nombre="bacd" interactivo="false"  ejecutar="%ARAF2.ARAFC.autoriza%==true">
+                        <componente id="bacd" nombre="bacd" tipo="cursor">
+                            <tabla schema="operation" nombre="activo_fijo_det">
+                                      <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                                      <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                                      <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                                      <campo name="activo_fijo"/>
+                                      <campo name="folio_duep"/>
+                                      <campo name="id_activo_fijo_det"/>
+                                      <campo name="fecha_elaboracion"/>
+                                      <campo name="tipo_bloque"/>
+                                      <campo name="tipo_comprobante"/>
+                                      <campo name="articulo"/>
+                                      <campo name="marca"/>
+                                      <campo name="modelo"/>
+                                      <campo name="serie"/>
+                                      <campo name="color"/>
+                                      <campo name="comentarios"/>
+                                      <campo name="id_cat_clasificacion_objeto_gasto"/>
+                                      <campo name="clasificacion_objeto_gasto"/>
+                                      <campo name="descripcion_especifica"/>
+                                      <campo name="id_cat_programa_presupuestal"/>
+                                      <campo name="programa_presupuestal"/>
+                                      <campo name="indicador"/>
+                                      <campo name="clave_presupuestal"/>
+                                      <campo name="mes"/> 
+                                      <campo name="cuenta_amortizacion"/>
+                                      <campo name="folio_comprobante"/>
+                                      <campo name="fecha_cfdi"/>
+                                      <campo name="cantidad_recibida"/>
+                                      <campo name="unidad_medida"/>
+                                      <campo name="precio_unitario"/>
+                                      <campo name="descuento"/>
+                                      <campo name="iva"/>
+                                      <campo name="impuesto_valor_agregado"/>
+                                      <campo name="otros_impuestos"/>
+                                      <campo name="importe_unitario"/>
+                                      <campo name="ruta_archivo"/>
+                                      <campo name="ultimo_usuario_modificador"/>
+                                      <campo name="genero"/>
+                                      <campo name="tipo_afectacion"/>
+                                      <campo name="operacion"/>
+                                      <campo name="folio_contrato_compra"/>
+                                      <campo name="total"/>
+                                      <campo name="importe_total"/>
+                            </tabla>
+                            <nivel id="bfd" nombre="bfd" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==true">
+                                <componente id="bfd" nombre="bfd" tipo="cursor">
+                                    <tabla schema="operation" nombre="duep">
+                                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                                              <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                                              <campo name="folio_comprobante" filtroCampo="folio_comprobante" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                                          <campo name="folio_duep"/>
+        
+                                    </tabla>
+                                </componente>
+                            </nivel>
+                            <nivel id="add" nombre="add" interactivo="false"  ejecutar="%ARAF2.ARAFC.autoriza%==true">
+                                <componente id="add" nombre="add" tipo="altaDirect">
+                                    <tabla schema="operation" nombre="duep_detalle">
+                                                  <campo name="ur" calc="$config.ur$"/>
+                                                  <campo name="periodo" calc="$inParam.periodo$"/>
+                                                  <campo name="folio_duep" calc="%bfd.bfd.folio_duep%"/>
+                                                  <campo name="folio_duep_detalle"  autogenerado="true" generacion="@prox()+1"/>
+                                                  <campo name="fecha_registro" calc="%bacd.bacd.fecha_elaboracion%"/>
+                                                  <campo name="articulo" calc="%bacd.bacd.articulo%"/>
+                                                  <campo name="cantidad" calc="%bacd.bacd.cantidad_recibida%"/>
+                                                  <campo name="precio_unitario" calc="%bacd.bacd.precio_unitario%"/>
+                                                  <campo name="descuento" calc="%bacd.bacd.descuento%"/>
+                                                  <campo name="iva" calc="%bacd.bacd.impuesto_valor_agregado%"/>
+                                                  <campo name="otros_impuestos" calc="%bacd.bacd.otros_impuestos%"/>
+                                                  <campo name="importe" calc="%bacd.bacd.importe_unitario%"/>
+                                                  <campo name="importe_unitario" calc="%bacd.bacd.importe_unitario%"/> 
+                                                  <campo name="id_cat_programa_presupuestal" calc="%bacd.bacd.id_cat_programa_presupuestal%"/>
+                                                  <campo name="programa_presupuestal" calc="%bacd.bacd.programa_presupuestal%"/>
+                                                  <campo name="indicador" calc="%bacd.bacd.indicador%"/>
+                                                  <campo name="clave_presupuestal" calc="%bacd.bacd.clave_presupuestal%"/>
+                                                  <campo name="mes_cve_presupuestal" calc="%bacd.bacd.mes%"/>
+                                                  <campo name="proveedor"/>
+                                                  <campo name="tipo_detalle" calc="%bacd.bacd.tipo_bloque%"/>
+                                                  <campo name="concepto_retencion"/>
+                                                  <campo name="c_objeto_gasto" calc="%bacd.bacd.clasificacion_objeto_gasto%"/>
+                                                  <campo name="caracteristica_esp" calc="%bacd.bacd.descripcion_especifica%"/>
+                                                  <campo name="centro_registro"/>
+                                                 <campo name="unidad_medida" calc="%bacd.bacd.unidad_medida%"/>
+                                                  <campo name="total" calc="%bacd.bacd.importe_total%"/>
+                                                  <campo name="folio_comprobante" calc="%bacd.bacd.folio_comprobante%"/>
+                                                  <campo name="u_medida" calc="%bacd.bacd.unidad_medida%"/>
+                                                  <campo name="id_cat_objeto_gasto" calc="%bacd.bacd.id_cat_clasificacion_objeto_gasto%"/>
+                                                  <campo name="genero_contable"/>
+                                                  <campo name="tipo_afectacion"/>
+                                                  <campo name="tipo_comprobante" calc="%bacd.bacd.tipo_comprobante%"/>
+                                                  <campo name="tipo_operacion"/>
+                                                  <campo name="validado"/>
+                                                  <campo name="retencion"/>
+                                                  <campo name="descripcion_especifica" calc="%bacd.bacd.descripcion_especifica%"/>
+                                                  <campo name="cuenta_amortizacion"/> 
+                                                  <campo name="liga_soporte_documental"/>
+                                                  <campo name="porcentaje_iva"/>
+                                    </tabla>
+                                </componente>
+                            </nivel>
+                        </componente>
+                    </nivel>
+                    
+    <!--ALTA DE INVENTARIO POR ARTICULO -->
+                <!-- <nivel id="rep" nombre="rep" interactivo="false"  ejecutar="%ARAF2.ARAFC.autoriza%==true">
+                                <componente id="rep" nombre="rep" tipo="altaDirect" repeticiones="%bacd.bacd.cantidad_recibida%">
+                                    <tabla schema="operation" nombre="inventario_activofijo_aux">
+                                                  <campo name="ur" calc="$config.ur$"/>
+                                                  <campo name="periodo" calc="$inParam.periodo$"/>
+                                                  <campo name="id_inventario" autogenerado="true" generacion="@prox()+1"/>
+                                                  <campo name="folio_inventario"  />
+                                                  <campo name="folio_activo_fijo" calc="$inParam.duep$"/>
+                                                  <campo name="folio_resguardo" calc="%per.per.letras%+%per.per.numeros%"/>
+                                                  <campo name="fecha_elaboracion" calc="@fechaSistema()"/>
+                                                  <campo name="articulo" calc="%bacd.bacd.articulo%"/>
+                                                  <campo name="cantidad" calc="1"/>
+                                                  
+                                                  <campo name="valor_historico"/>
+                                                  <campo name="unidad_medida" calc="%bacd.bacd.unidad_medida%"/>
+                                                  <campo name="descripcion_especifica" calc="%bacd.bacd.descripcion_especifica%"/>
+                                                  <campo name="beneficiario"/>
+                                                  <campo name="resguardante_destino"/>
+                                                  <campo name="corresguardante"/>
+                                                  <campo name="clave_inventario"/>
+                                                  <campo name="ubicacion_fisica"/>
+                                                  <campo name="tipo"/>
+                                                  <campo name="asignacion"/>
+                                                  <campo name="id_cat_clasificacion_objeto_gasto" calc="%bacd.bacd.id_cat_clasificacion_objeto_gasto%"/>
+                                                  <campo name="clasificacion_objeto_gasto" calc="%bacd.bacd.clasificacion_objeto_gasto%"/>
+                                                  <campo name="ano_vida_util"/>
+                                                  <campo name="porcentaje_deprecicion"/>
+                                                  <campo name="fecha_adquisicion"/>
+                                                  <campo name="anos_vida"/>
+                                                  <campo name="anos_por_depreciar"/>
+                                                  <campo name="importe_depre_anual"/>
+                                                  <campo name="deprecicion_acumulada"/>
+                                                  <campo name="valor_libros"/>
+                                                  <campo name="estatus"/>
+                                                  <campo name="id_cat_area_requiriente"/>
+                                                  <campo name="area_requiriente"/>
+                                                  <campo name="costo_total" calc="%bacd.bacd.precio_unitario%"/>
+                                                  <campo name="poliza_contable"/>
+                                                  <campo name="costo_total_unitario"/>
+                                                  <campo name="id_inventario_activofijo_folio"/>
+                                                
+                                    </tabla>
+                                </componente>
+                            </nivel>-->
+           <!--Erick -->         
+              <nivel nombre="barreRecepcion" id="barreRecepcion" interactivo="false">
+                    <componente tipo="cursor" nombre="barreRecepcion" id="barreRecepcion">
+                        <tabla nombre="activo_fijo_det" schema="operation">
+                             <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                             <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                             <campo name="id_activo_fijo" filtroCampo="id_activo_fijo" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                            <campo name="id_activo_fijo_det"/>
+                            <campo name="cantidad_por_recibir"/>
+                            <campo name="cantidad_recibida"/>
+              <campo name="total"/>
+                        </tabla>
+                        <nivel nombre="Llena Contrato/pedido" id="llena_ctto_p" interactivo="false">
+                            <componente tipo="cursor" nombre="Llena Contrato/pedido" id="llena_ctto_p">
+                                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                                    <campo name="ur" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.ur%" />
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                                    <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%ad.ad.id_contrato%"/>
+                  <campo name="id_duep_contrato_pedido_det" filtroCampo="id_duep_contrato_pedido_det" filtroOperador="=" filtroValor="%barreRecepcion.barreRecepcion.id_activo_fijo_det%"/>
+                                    <campo name="cantidad_recibida" calc="%barreRecepcion.barreRecepcion.cantidad_recibida%"/>
+                  <campo name="cantidad_por_recibir" calc="%barreRecepcion.barreRecepcion.cantidad_por_recibir%"/>
+                  <campo name="importe_total"/>
+                  <campo name="importe_recepcion" calc="%barreRecepcion.barreRecepcion.total%"/>
+                  <campo name="folio_comprobante" calc="$inParam.duep$"/>
+                  <campo name="fecha_comprobante" calc="%bacd.bacd.fecha_elaboracion%"/>
+                                </tabla>
+                <nivel nombre="Actualiza Encabezado" id="actualiza_duep" interactivo="false" ejecutar="%llena_ctto_p.llena_ctto_p.cantidad_por_recibir%==0 AND %llena_ctto_p.llena_ctto_p.importe_total% &gt; %llena_ctto_p.llena_ctto_p.importe_recepcion%">
+                  <componente tipo="cursor" nombre="Actualiza Encabezado" id="actualiza_duep">
+                    <tabla schema="operation" nombre="duep_contrato_pedido">
+                      <campo name="ur" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.ur%" />
+                      <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                      <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%ad.ad.id_contrato%"/>
+                      <campo name="por_liberar" calc="true"/>
+                    </tabla>
+                  </componente>
+                </nivel>
+                            </componente>
+                        </nivel>
+                    </componente>
+                </nivel>
+                    
+        <!--Erick -->  
+           <nivel nombre="alta resguardo activo fijo" id="altaraf" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==true">
+        <componente tipo="altaDirect" nombre="alta resguardo activo fijoo" id="altaraf">
+          <tabla schema="operation" nombre="resguardo_activo_fijo">
+            <campo name="ur" calc="$config.ur$"/>
+            <campo name="periodo" calc="%per.per.id_periodo%"/>
+            <campo name="id_resguardo_activo_fijo" calc="%per.per.letras%+%per.per.numeros%"/>
+          </tabla>
+        </componente>
+      </nivel>
+        
+        <nivel nombre="Documento Devengado" id="DocDevengado" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="AdjudicacionDirecta">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'4858fae7-eb04-45e9-9dd7-d33130c59135'"/>
+                    <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                    <parametro name="out_folio_comprobante" calc="$inParam.duep$" mostrarEsc="true"/>
+                    <parametro name="out_folio_duep" calc="%ad.ad.folio_duep%" mostrarEsc="true"/>
+                    <parametro name="out_proceso_origen" calc="'72'" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Documento Resguardo Activo Fijo" id="DocRAF" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="DocRAF">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'8010fdc2-daf4-4a22-837b-e5f4986c547a'"/>
+                    <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                    <parametro name="out_duep" calc="$inParam.duep$" mostrarEsc="true"/>
+                    <parametro name="out_folio_duep" calc="%ad.ad.folio_duep%" mostrarEsc="true"/>
+                    <parametro name="out_proceso_origen" calc="'72'" mostrarEsc="true"/>
+                    <parametro name="out_folio_resguardo" calc="%per.per.letras%+%per.per.numeros%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+  
+  
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%ARAF2.ARAFC.autoriza%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%ARAF2.ARAFC.comentarios_autorizador%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+    </pagina>
+</tarea> 

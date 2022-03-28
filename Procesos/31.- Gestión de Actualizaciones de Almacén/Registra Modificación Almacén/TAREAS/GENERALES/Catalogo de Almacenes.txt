@@ -1,0 +1,78 @@
+<tarea nombre="Registra Catalogo de Almacenes" version="1.0.1" fechaModificacion="" autor="Daniel" modificacionEfectuada="" requisitosInstalacion="">
+    <pagina id="rCa" nombre="Registra Catalogo de Almacenes">
+        <nivel id="bPer" nombre="bPer" interactivo="false">
+            <componente tipo="cursor" id="bPer" nombre="bPer">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Selección de Gestión" id="rCa" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Selección de Gestión" id="rCa">
+                <tabla schema="operation" nombre="almacenes">
+                    <campo name="ur" text="UR" calc="%bPer.bPer.id_unidad_responsable%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" text="Año" llaveForanea="false" calc="%bPer.bPer.id_periodo%" columnas="2" margen-izquierdo="4"/>
+                    <campo name="id_almacenes" text="id_almacenes" autogenerado="true" generacion="@prox()+1" columna-visible="false" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="Registra Catálogo de Almacenes" id="rCat" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente tipo="tabla" nombre="Registra Catálogo de Almacenes" id="rCat">
+                <tabla schema="operation" nombre="almacenes_det">
+                    <campo name="ur" text="" calc="%bPer.bPer.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="" calc="%bPer.bPer.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <!--Se quita el filtro , por que el RQ 494 requieren que se vena todos los registros
+                    filtroCampo="id_almacenes" filtroOperador="=" filtroValor="%rCa.rCa.id_almacenes%"-->
+                    <campo name="id_almacenes" text="id_almacenes" calc="%rCa.rCa.id_almacenes%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_almacenes_det" text="" autogenerado="true" generacion="@prox()+1" visible="false" columna-visible="false"/>
+                 <campo name="clave_alamcen" text="Clave de Almacen" calc="@concatenar('ALM-'+
+                    @subCadena(@ifThenElse(@consultaDirec('
+                    SELECT (clave_alamcen) AS resultado 
+                    FROM operation.almacenes_det 
+                    WHERE ur='+$config.ur$+' AND id_periodo='+%bPer.bPer.id_periodo%+' ORDER BY resultado ASC limit 1','resultado','string','MAGNITUS')==null,
+                    '000001',
+                    @consultaDirec('SELECT to_char((((substring(clave_alamcen from char_length(clave_alamcen)-4)::int)+1)),\\''+'00000'+'\\')
+                    as resultado FROM operation.almacenes_det WHERE ur='+$config.ur$+' AND id_periodo='+%bPer.bPer.id_periodo%+' 
+                    ORDER BY clave_alamcen DESC limit 1','resultado','int','MAGNITUS')),1,6))" width="180" columnas="3" />
+                  <campo name="nombre" text="Nombre" columnas="3" />
+                    <campo name="ubicacion_fisica" text="Ubicación Física" width="230" mascara="C" columnas="3" />
+                    <campo name="id_pais" text="Pais" calc="1" columna-visible="false" visible="false"/>
+                    <campo name="id_estado" text="id_estado" calc="1" columna-visible="false" visible="false"/>
+                    <campo name="id_municipio" text="Municipio" columnas="3" />
+                    <campo name="id_centro_registro" text="Centro Registro" calc="2" width="400" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="centro_registro" text="Centro Registro" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" columnas="3" />
+                    <campo name="responsable_alamcen" text="Responsable de Almacén" descripcionForanea="nombre,primer_apellido,segundo_apellido" columnas="3" />
+                    <!-- <campo name="usuario_alta" text="usuario_alta" calc="%barreUsuarios.barreUsuarios.nombre_usuario%" columna-visible="false" visible="false"/> -->
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Catalogo de Almacenes" id="rCDa" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="reporte" nombre="Catalogo de Almacenes" id="rCDa" colapsado="no">
+                <reporte nombre="Rep_Catalogo_de_Almacen_IJ">
+                    <campo name="id_almacenes" type="long" calc="%rCa.rCa.id_almacenes%"/>
+                    <campo name="periodo" type="long" calc="%rCa.rCa.id_periodo%"/>
+                    <campo name="ur" type="long" calc="%rCa.rCa.ur%"/>
+                    <campo name="usuario" type="long" calc="1"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

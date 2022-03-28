@@ -1,0 +1,599 @@
+<tarea nombre="Autoriza Actualización de Almacen" version="1.0.0" fechaModificacion="" autor="" modificacionEfectuada="" requisitosInstalacion="">
+    <pagina id="1" nombre="Autoriza Actualización de Almacen">
+        <nivel id="bPer" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="bPer" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                    <campo name="id_separador"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="id_tipo_movimientos" local="true" type="long" calc="$inParam.id_tipo_movimientos$"/>
+                    <campo name="id_registro_act_almacen" local="true" type="long" calc="$inParam.id_registro_act_almacen$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barreUsuarios" id="bU" interactivo="false">
+            <componente tipo="cursor" nombre="bU" id="bU">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="id_usuario"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="acumular" id="acumular" interactivo="false">
+            <componente tipo="cursor" nombre="acumular" id="acumular">
+                <tabla schema="operation" nombre="registro_act_almacen" id="rEA">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.id_periodo$"/>
+                    <campo name="id_registro_act_almacen" filtroCampo="id_registro_act_almacen" filtroOperador="=" filtroValor="$inParam.id_registro_act_almacen$"/>
+                    <campo name="total"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Consulta Entradas de Almacén" id="rEA" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%bPer.bPer.id_tipo_movimientos%==1">
+            <componente tipo="maestroDetalle" nombre="Consulta Entradas de Almacén" id="rEA">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="registro_act_almacen" id="rEA" tituloDetalle="Modifica Entradas de Almacén">
+                        <campo name="ur" text="UR" calc="%bPer.bPer.ur%" llaveForanea="false" visible="false"/>
+                        <campo name="id_periodo" text="Periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false" visible="false"/>
+                        <campo name="id_registro_act_almacen" text="" calc="%bPer.bPer.id_registro_act_almacen%" llaveForanea="false" visible="false"/>
+                        <campo name="folio_registro_act_almacen" text="Folio" calc="@concatenar('ALM-'+@subCadena(@ifThenElse(
+                            @consultaDirec('
+                            SELECT (folio_registro_act_almacen) AS resultado
+                            FROM operation.registro_act_almacen
+                            WHERE ur='+%bPer.bPer.ur%+' AND id_periodo='+%bPer.bPer.id_periodo%+' ORDER BY folio_registro_act_almacen DESC limit 1','resultado','string','MAGNITUS')==null
+                            ,
+                            '000001'
+                            ,
+                            @consultaDirec('
+                            SELECT to_char((((substring(folio_registro_act_almacen from char_length(folio_registro_act_almacen)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                            FROM operation.registro_act_almacen
+                            WHERE ur='+%bPer.bPer.ur%+' AND id_periodo='+%bPer.bPer.id_periodo%+' ORDER BY folio_registro_act_almacen DESC limit 1','resultado','int','MAGNITUS')
+                            ),1,6))" columnas="3" />
+                            <campo name="id_almacenes" text="Clave Almacen *" habilitado="false" descripcionForanea="nombre" validacion="%id_almacenes%==null" validacionMensaje="Seleccione Almacen de Entrada" columnas="3" />
+                            <campo name="fecha_entrada" text="Fecha *" calc="@fechaSistema()" validacion="%fecha_entrada%==null OR @after(%fecha_entrada%,@fechaSistema())" validacionMensaje="No puede ingresar una fecha vacia o posterior a la fecha de registro " columnas="3" />
+                            <campo name="nombre" text="Almacen" columnas="3"  referenciaForanea="id_almacenes" celdaForanea="nombre" autocompletar="true"/>
+                            <campo name="id_tipo_movimientos" text="Tipo de Movimiento" descripcionForanea="descripcion" habilitado="false" columnas="3" />
+                            <campo name="adjunto_ex" text="Adjuntar excel" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Adjunto Excel'" grupo="%bPer.bPer.id_registro_act_almacen%" expediente="" columnas="3" />
+                            <campo name="transaccion" text="" visible="false"/>
+                            <campo name="transaccion_local" text="Transaccion" local="true" type="string" calc="'Inventario Inicial'" habilitado="false" columnas="3" />
+                            <campo name="adjunto_doc" text="Adjuntar Documentación" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Adjunta Documentación'" grupo="%bPer.gCA.id_registro_act_almacen%" expediente="" columnas="3" />
+                            <campo name="concepto" text="Concepto *" habilitado="false" width="720" height="150" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%concepto%==null" validacionMensaje="Capture Concepto"/>
+                            <campo name="usuario_alta" text="usuario_alta" calc="%bU.bU.id_usuario%" llaveForanea="false" visible="false"/>
+                        </tabla>
+                        <estilos>
+                            <boton nombre="grabar" visible="false" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                        </estilos>
+                    </encabezado>
+                    <!--Entrada -->
+                    <detalles tituloDetalle="Agregar Bloque">
+                        <tabla schema="operation" nombre="registro_act_almacen_det" id="rEAd" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                            <campo name="ur"  llaveForanea="false" columna-visible="false" visible="false"/>
+                            <campo name="id_periodo"  llaveForanea="false" columna-visible="false" visible="false"/>
+                            <campo name="id_registro_act_almacen"  llaveForanea="false" columna-visible="false" visible="false"/>
+                            <campo name="id_registro_act_almacen_det"  llaveForanea="false" autogenerado="true" generacion="@prox()+1" columna-visible="false" visible="false"/>
+                            <campo name="id_centro_registro" text="" llaveForanea="false" calc="2" visible="false" columna-visible="false"/>
+                            <campo name="fecha_elaboracion" text="" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')" columna-visible="false" visible="false"/>
+                            <campo name="articulo" text="Clave artículo *" width="300" descripcionForanea="descripcion_articulo" descripcionForaneaTabla="descripcion" validacion="%articulo%==null" validacionMensaje="Seleccione Artículo" columnas="3"  />
+                            <campo name="id_cat_cog" text="" llaveForanea="false" calc="4" visible="false" columna-visible="false"/>
+                            <campo name="id_cog" text="COG" width="300" habilitado="false"
+                                calcCliente="@consultaDirec('SELECT (id_cat_clasificacion_objeto_gasto) AS result FROM catalog.articulos WHERE ur='+%bPer.bPer.ur%+' AND '+'periodo='+'\\''+%bPer.bPer.id_periodo%+'\\''+' AND '+' clave_articulo='+'\\''+%articulo%+'\\'','result','string','MAGNITUS')"
+                                validacion="%id_cog%==null" validacionMensaje="Favor de agregar el COG" columnas="3"  />
+                                <campo name="des_articulo" text="Descripción del artículo" width="200" columna-visible="false" referenciaForanea="articulo" celdaForanea="descripcion_articulo" autocompletar="true" columnas="3"  />
+                                <campo name="clave_cuentas_contables" text="Clave Cuenta C.A" width="300" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" validacion="%clave_cuentas_contables%==null" validacionMensaje="Favor de seleccionar clave cuenta C.A" columnas="3"  />
+                                <campo name="des_cuenta_contable" text="Descripcion de Cuenta C.A" referenciaForanea="clave_cuentas_contables" celdaForanea="descripcion" autocompletar="true" columna-visible="false" width="300" validacion="%des_cuenta_contable%==null" validacionMensaje="Favor de agregar descripcion de cuenta C.A" columnas="3"  />
+                                <campo name="id_unidad_medida" text="Clave Unidad de Medida" habilitado="false" referenciaForanea="articulo" celdaForanea="unidad_medida" autocompletar="true" columnas="3"  />
+                                <campo name="des_unidad_medida" text="Descripción Unidad de Medida" width="230" columna-visible="false" referenciaForanea="id_unidad_medida" celdaForanea="descripcion" autocompletar="true" columnas="3"  />
+                                <campo name="cantidad_entrada" text="Cantidad Entrada *" validacion="%cantidad_entrada%==null" validacionMensaje="Indique Cantidad de Artículos" columnas="3"  />
+                                <campo name="centro_registro" text="Clave Centro de Registro" validacion="%centro_registro%==null" validacionMensaje="Favor de agregar clave de centro registro" width="220" columnas="3"  />
+                                <campo name="des_centro_registro" text="Descripción Centro de Registro" columna-visible="false" width="230" referenciaForanea="centro_registro" celdaForanea="descripcion" autocompletar="true" columnas="3" />
+                                <campo name="id_cat_fondo" text="" llaveForanea="false" calc="3" visible="false" columna-visible="false"/>
+                                <campo name="fondo_contable" text="Clave de Fondo" width="120"  columnas="3"  />
+                                <campo name="des_fondo_contable" text="Descripción de Fondo" width="200" referenciaForanea="fondo_contable"  celdaForanea="descripcion" autocompletar="true" columnas="3"  />
+                                <campo name="costo_unitario" text="Costo Unitario *" width="120" validacion="%costo_unitario%==null" validacionMensaje="Capture Costo Unitario" columnas="3" />
+                                <campo name="total" text="Total *" habilitado="false" calcCliente="@ifThenElse(%cantidad_entrada%==null,0,%cantidad_entrada%)*@ifThenElse(%costo_unitario%==null,0,%costo_unitario%)" columnas="3" />
+                                <campo name="observaciones" text="Observaciones" width="720" height="150" validacion="%observaciones%==null" validacionMensaje="Favor de agregar observaciones" columnas="6" margen-izquierdo="2"/>    
+                                <campo name="usuario_alta" text="usuario_alta" calc="%bU.bU.id_usuario%" llaveForanea="false" visible="false"/>
+                            </tabla>
+                        </detalles>
+                    </componente>
+                </nivel>
+                <nivel nombre="Entrada de Almacén" id="entrada" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%bPer.bPer.id_tipo_movimientos%==1">
+                    <componente tipo="reporte" nombre="Entrada de Almacén" id="entrada">
+                        <reporte nombre="repor_entAlmacen_jsus">
+                            <campo name="ur"  type="long" calc="%bPer.bPer.ur%"/>
+                            <campo name="periodo" type="long" calc="%bPer.bPer.id_periodo%"/>
+                            <campo name="id_registro_act_almacen" type="long" calc="%bPer.bPer.id_registro_act_almacen%"/>
+                    <!--<campo name="usuario" type="string" calc="'mgomez'"/>-->
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Autoriza Entrada de Almacén" id="aEA" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==1">
+            <componente tipo="formulario" nombre="Autoriza Entrada de Almacén" id="aEA">
+                <tabla schema="operation" nombre="registro_act_almacen" id="rEA">
+                    <campo name="ur" text="UR" calc="%bPer.bPer.ur%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="id_registro_act_almacen" text="" calc="%bPer.bPer.id_registro_act_almacen%" llaveForanea="false" visible="false"/>
+                    <campo name="obs_autorizar" text="Observaciones" width="100" height="100" columnas="6" margen-izquierdo="2"/>
+                    <campo name="autoriza" text="Autoriza" columnas="1" margen-izquierdo="4"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!-- Genera poliza -->
+        <nivel id="bSep" nombre="obSeparador" interactivo="false">
+            <componente tipo="cursor" id="bSep" nombre="bSep">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%bPer.bPer.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Generación del Encabezado de la Póliza" id="gEP" interactivo="false">
+            <componente id="gEP" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                 <campo name="ur" calc="%bPer.bPer.ur%"/> 
+                 <campo name="periodo" calc="%bPer.bPer.id_periodo%"/>
+                 <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                 <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <!-- <campo name="id_catalogo" calc="%bDCP.bDCP.id_cat_fondo%"/>
+                   <campo name="fondo_contable" calc="%bDCP.bDCP.id_fondo_contable%"/> -->
+                   <!-- <campo name="momento_contable" calc="4"/> -->
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="concepto_general" calc="@concatenar('Póliza de Entrada al Almacén folio:'+%bPer.bPer.id_registro_act_almacen%)"/>
+               </tabla>
+           </componente>
+       </nivel>
+       <nivel nombre="b_acumular" id="b_acumular" interactivo="false">
+            <componente tipo="cursor" nombre="b_acumular" id="b_acumular">
+                <tabla schema="operation" nombre="registro_act_almacen_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_registro_act_almacen" filtroCampo="id_registro_act_almacen" filtroOperador="=" filtroValor="%bPer.bPer.id_registro_act_almacen%"/>
+                    <campo name="id_registro_act_almacen_det"/>
+                    <campo name="total"/>
+                    <campo name="articulo"/>
+                </tabla>
+                <!--<nivel id="aDMA" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="aDMA" nombre="aDMA" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%bPer.bPer.ur%"/>
+                            <campo name="id_periodo" calc="%bPer.bPer.id_periodo%"/>
+                            <campo name="id_movimiento_auxiliar" calc="%gEP.gEP.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%bDuepPC.bDuepCPD.clave_presup%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%bSep.bSep.caracter%+
+                                '2'+%bSep.bSep.caracter%+
+                                '4'+%bSep.bSep.caracter%+
+                                '0'+%bSep.bSep.caracter%+'0')" />
+                                <campo name="importe_cargo" calc="%acumular.acumular.total%"/>
+                                <campo name="concepto_bloque" calc="%b_acumular.b_acumular.articulo%"/>
+                                <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                    WHERE clave_cuenta ='+'\\''+ @concatenar('8240'+%bSep.bSep.caracter%+
+                                    '2'+%bSep.bSep.caracter%+
+                                    '4'+%bSep.bSep.caracter%+
+                                    '0'+%bSep.bSep.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                                    <campo name="ultimo_usuario_modificador" calc="%bU.bU.id_usuario%"/>
+                                    <campo name="tipo_detalle" calc="2"/>
+                                </tabla>
+                            </componente>
+                        </nivel>-->
+                </componente>
+            </nivel>
+            <!-- INGRESA EL ABONO A LA PÓLIZA-->
+            <nivel nombre="b_acumular" id="b_acumular_" interactivo="false">
+            <componente tipo="cursor" nombre="b_acumular" id="b_acumular_">
+                <tabla schema="operation" nombre="registro_act_almacen_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_registro_act_almacen" filtroCampo="id_registro_act_almacen" filtroOperador="=" filtroValor="%bPer.bPer.id_registro_act_almacen%"/>
+                    <campo name="id_registro_act_almacen_det"/>
+                    <campo name="total"/>
+                    <campo name="articulo"/>
+                    <campo name="clave_cuentas_contables"/>
+                    <campo name="des_cuenta_contable"/>
+                </tabla>
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="$inParam.ur$"/>
+                           <campo name="id_periodo" calc="$inParam.id_periodo$"/>
+                           <campo name="id_movimiento_auxiliar" calc="%gEP.gEP.folio_movimiento_auxiliar%" />
+                           <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                           <!-- <campo name="clave_presupuestal" calc="%bDuepPC.bDuepCPD.clave_presup%"/> -->
+                           <campo name="clave_cuenta_contable" calc="'1-1-5-1-1-001'"/>
+                            <!--<campo name="referencia" calc="'ALMACÉN GENERAL'"/>-->
+                            <campo name="importe_cargo" calc="%b_acumular_.b_acumular_.total%"/>
+                            <campo name="concepto_bloque" calc="%b_acumular_.b_acumular_.articulo%"/>
+                            <campo name="referencia" calc="'ALMACÉN GENERAL'"/>
+                                <campo name="fecha_registro" calc="@fechaSistema()" />
+                                <campo name="ultimo_usuario_modificador" calc="%bU.bU.id_usuario%"/>
+                                <campo name="tipo_detalle" calc="2"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+                     <nivel id="cargoCuentaRetencion" nombre="cargoCuentaRetencion" interactivo="false">
+                    <componente id="cargoCuentaRetencion" nombre="cargoCuentaRetencion" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.id_periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%gEP.gEP.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%bDuepPC.bDuepCPD.clave_presup%"/>-->
+                            <campo name="clave_cuenta_contable" calc="'5-1-2-1-0-211-01-001'"/>
+                            <campo name="importe_abono" calc="%b_acumular_.b_acumular_.total%"/>
+                            <campo name="concepto_bloque" calc="%b_acumular_.b_acumular_.articulo%"/>
+                            <campo name="referencia" calc="%b_acumular_.b_acumular_.des_cuenta_contable%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%bU.bU.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/> <!-- Afectación Presupuestal -->
+                        </tabla>
+                    </componente>
+                </nivel>
+                </componente>
+            </nivel>
+        <!-- Genera poliza -->
+         <nivel id="reporteRBS" nombre="Recepción de Materiales de Almacén" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==1 AND %aEA.aEA.autoriza%==true">
+            <componente id="reporteSEDS" nombre="Recepción de Almacén" tipo="reporte">
+                <reporte nombre="poliza_contable"> 
+                    <campo name="ur" type="long" calc="%bPer.bPer.ur%"/>
+                    <campo name="periodo" type="long" calc="%bPer.bPer.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%gEP.gEP.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==1 AND %aEA.aEA.autoriza%==false">
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal">
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                   <parametro name="process" calc="$protocolarios.process$"/>
+                   <parametro name="version" calc="$protocolarios.version$"/>
+                   <parametro name="user" calc="$protocolarios.user$"/>
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%aEA.aEA.obs_autorizar%"/>
+                   <parametro name="type" calc="'1'"/>
+               </parametros> 
+           </componente>
+       </nivel>
+       <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==1 AND %aEA.aEA.autoriza%==false">
+        <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+            <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                <parametro name="process" calc="$protocolarios.process$"/>
+                <parametro name="version" calc="$protocolarios.version$"/>
+                <parametro name="instance" calc="$protocolarios.instance$"/>
+                <parametro name="user" calc="$protocolarios.user$"/>
+                <parametro name="url" calc="$protocolarios.url$"/>
+                <parametro name="reiniciarInstancia" calc="'true'" />
+            </parametros>
+        </componente>
+    </nivel>
+    <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==1 AND %aEA.aEA.autoriza%==true">
+        <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+            <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                <parametro name="process" calc="$protocolarios.process$"/>
+                <parametro name="version" calc="$protocolarios.version$"/>
+                <parametro name="instance" calc="$protocolarios.instance$"/>
+            </parametros>
+        </componente>
+    </nivel>
+    <nivel nombre="Registra Salida de Almacén" id="rSA" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%bPer.bPer.id_tipo_movimientos%==2">
+        <componente tipo="maestroDetalle" nombre="Registra Salida de Almacén" id="rSA">
+            <encabezado accionDefault="editar">
+                <tabla schema="operation" nombre="registro_act_almacen" id="rEA" tituloDetalle="Registra Salida de Almacén">
+                    <campo name="ur" text="UR" calc="%bPer.bPer.ur%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="id_registro_act_almacen" text="" calc="%bPer.bPer.id_registro_act_almacen%" llaveForanea="false" visible="false"/>
+                    <campo name="folio_registro_act_almacen" text="Folio" calc="@concatenar('ALM-'+@subCadena(@ifThenElse(
+                        @consultaDirec('
+                        SELECT (folio_registro_act_almacen) AS resultado
+                        FROM operation.registro_act_almacen
+                        WHERE ur='+%bPer.bPer.ur%+' AND id_periodo='+%bPer.bPer.id_periodo%+' ORDER BY folio_registro_act_almacen DESC limit 1','resultado','string','MAGNITUS')==null
+                        ,
+                        '000001'
+                        ,
+                        @consultaDirec('
+                        SELECT to_char((((substring(folio_registro_act_almacen from char_length(folio_registro_act_almacen)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                        FROM operation.registro_act_almacen
+                        WHERE ur='+%bPer.bPer.ur%+' AND id_periodo='+%bPer.bPer.id_periodo%+' ORDER BY folio_registro_act_almacen DESC limit 1','resultado','int','MAGNITUS')
+                        ),1,6))" columnas="3" />
+                        <campo name="id_almacenes" text="Clave Almacen *" habilitado="false" descripcionForanea="nombre" validacion="%id_almacenes%==null" validacionMensaje="Seleccione Almacen de Entrada" columnas="3" />
+                        <campo name="fecha_entrada" text="Fecha *" calc="@fechaSistema()" validacion="%fecha_entrada%==null OR @after(%fecha_entrada%,@fechaSistema())" validacionMensaje="No puede ingresar una fecha vacia o posterior a la fecha de registro " columnas="3" />
+                        <campo name="nombre" text="Almacen" columnas="3"  referenciaForanea="id_almacenes" celdaForanea="nombre" autocompletar="true"/>
+                        <campo name="id_tipo_movimientos" text="Tipo de Movimiento" descripcionForanea="descripcion" habilitado="false" columnas="3" />
+                        <campo name="adjunto_ex" text="Adjuntar excel" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Adjunto Excel'" grupo="%bPer.bPer.id_registro_act_almacen%" expediente="" columnas="3" />
+                        <campo name="transaccion" text="" visible="false"/>
+                        <campo name="transaccion_local" text="Transaccion" local="true" type="string" calc="'Inventario Inicial'" habilitado="false" columnas="3" />
+                        <campo name="adjunto_doc" text="Adjuntar Documentación" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Adjunta Documentación'" grupo="%bPer.gCA.id_registro_act_almacen%" expediente="" columnas="3" />
+                        <campo name="concepto" text="Concepto *" habilitado="false" width="720" height="150" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%concepto%==null" validacionMensaje="Capture Concepto"/>
+                        <campo name="usuario_alta" text="usuario_alta" calc="%bU.bU.id_usuario%" llaveForanea="false" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                    </estilos>
+                </encabezado>
+                <!--salida -->    
+                <detalles tituloDetalle="Agregar Bloque">
+                    <tabla schema="operation" nombre="registro_act_almacen_det" id="rEAd" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false">
+                        <campo name="ur"  llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_periodo"  llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_registro_act_almacen"  llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_registro_act_almacen_det"  llaveForanea="false" autogenerado="true" generacion="@prox()+1" columna-visible="false" visible="false"/>
+                        <campo name="id_centro_registro" text="" llaveForanea="false" calc="2" visible="false" columna-visible="false"/>
+                        <campo name="fecha_elaboracion" text="" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')" columna-visible="false" visible="false"/>
+
+
+                        <campo name="articulo" text="Clave artículo *" width="300" descripcionForanea="descripcion_articulo" descripcionForaneaTabla="descripcion" validacion="%articulo%==null" validacionMensaje="Seleccione Artículo" columnas="3"  />
+                        <campo name="id_unidad_medida" text="Unidad de Medida" habilitado="false" referenciaForanea="articulo" celdaForanea="unidad_medida" autocompletar="true" columnas="3" />
+                        <campo name="existencia" text="Existencia" columnas="3" />
+                        <campo name="costo_unitario" text="Costo Unitario *" width="120" validacion="%costo_unitario%==null" validacionMensaje="Capture Costo Unitario" columnas="3" />
+                        <campo name="id_cat_fondo" text="" llaveForanea="false" calc="3" visible="false" columna-visible="false"/>
+                        <campo name="fondo_contable" text="Clave de Fondo" width="120"  columnas="3" />
+                        <campo name="total" text="Total *" habilitado="false" columnas="3" />
+                        <campo name="cantidad_salida" text="Cantidad Salida *" validacion="%cantidad_salida%==null" validacionMensaje="Indique Cantidad de Salida" columnas="3" />
+                        <campo name="observaciones" text="Observaciones" columnas="3" margen-derecho="2"/>
+
+
+                       <!--  <campo name="id_cat_cog" text="" llaveForanea="false" calc="4" visible="false" columna-visible="false"/>
+                        <campo name="id_cog" text="COG" width="300" habilitado="false"
+                        calcCliente="@consultaDirec('SELECT (id_cat_clasificacion_objeto_gasto) AS result FROM catalog.articulos WHERE ur='+%bPer.bPer.ur%+' AND '+'periodo='+'\\''+%bPer.bPer.id_periodo%+'\\''+' AND '+' clave_articulo='+'\\''+%articulo%+'\\'','result','string','MAGNITUS')"
+                        validacion="%id_cog%==null" validacionMensaje="Favor de agregar el COG" columnas="3" margen-derecho="2" />
+                        
+                        <campo name="des_articulo" text="Descripción del artículo" width="200" referenciaForanea="articulo" celdaForanea="descripcion_articulo" autocompletar="true" columnas="3" margen-izquierdo="2" />
+                        
+                        <campo name="clave_cuentas_contables" text="Clave Cuenta C.A" width="300" descripcionForanea="clave_cuenta,descripcion" validacion="%clave_cuentas_contables%==null" validacionMensaje="Favor de seleccionar clave cuenta C.A" columnas="3" margen-derecho="2" />
+                        
+                        <campo name="des_cuenta_contable" text="Descripcion de Cuenta C.A" referenciaForanea="clave_cuentas_contables" celdaForanea="descripcion" autocompletar="true" width="300" validacion="%des_cuenta_contable%==null" validacionMensaje="Favor de agregar descripcion de cuenta C.A" columnas="3" margen-izquierdo="2" />
+                        
+
+                        
+                        <campo name="des_unidad_medida" text="Descripción Unidad de Medida" width="230"  referenciaForanea="id_unidad_medida" celdaForanea="descripcion" autocompletar="true" columnas="3" margen-izquierdo="2" />
+                        
+                        
+                        
+                        <campo name="centro_registro" text="Clave Centro de Registro" validacion="%centro_registro%==null" validacionMensaje="Favor de agregar clave de centro registro" width="220" columnas="3" margen-izquierdo="2" />
+                        
+                        <campo name="des_centro_registro" text="Descripción Centro de Registro"  width="230" referenciaForanea="centro_registro" celdaForanea="descripcion" autocompletar="true" columnas="3" margen-derecho="2"/>
+                        
+                        
+                        
+                        <campo name="des_fondo_contable" text="Descripción de Fondo" width="200" referenciaForanea="fondo_contable"  celdaForanea="descripcion" autocompletar="true" columnas="3" margen-derecho="2" />
+                        
+                        
+                        
+                        
+                        
+                        <campo name="observaciones" text="Observaciones" width="720" height="150" validacion="%observaciones%==null" validacionMensaje="Favor de agregar observaciones" columnas="6" margen-izquierdo="2"/>    
+                        
+                        <campo name="id_cat_cog" text="" llaveForanea="false" calc="4" visible="false" columna-visible="false"/>
+                        
+                        <campo name="id_cat_fondo" text="" llaveForanea="false" calc="3" visible="false" columna-visible="false"/>
+                        
+                        <campo name="usuario_alta" text="usuario_alta" calc="%rEA.rEA.id_registro_act_almacen%" llaveForanea="false" visible="false"/> -->
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <nivel nombre="Consulta Saldias de Almacén" id="sAlida" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%bPer.bPer.id_tipo_movimientos%==2">
+            <componente tipo="reporte" nombre="Consulta Saldias de Almacén" id="sAlida">
+                <reporte nombre="repor_salAlmacen_jsus">
+                 <campo name="ur"  type="long" calc="%bPer.bPer.id_unidad_responsable%"/>
+                 <campo name="periodo" type="long" calc="%bPer.bPer.id_periodo%" />
+                 <campo name="id_registro_act_almacen" type="long" calc="%bPer.bPer.id_registro_act_almacen%"/>
+                 <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+             </reporte>
+         </componente>
+     </nivel>
+     <nivel nombre="Autoriza Salida de Almacén" id="aSA" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==2">
+        <componente tipo="formulario" nombre="Autoriza Salida de Almacén" id="aSA">
+            <tabla schema="operation" nombre="registro_act_almacen" id="rEA">
+                <campo name="ur" text="UR" calc="%bPer.bPer.ur%" llaveForanea="false" visible="false"/>
+                <campo name="id_periodo" text="Periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false" visible="false"/>
+                <campo name="id_registro_act_almacen" text="" calc="%bPer.bPer.id_registro_act_almacen%" llaveForanea="false" visible="false"/>
+                <campo name="autoriza" text="Autoriza" columnas="1" margen-izquierdo="4"/>
+                <campo name="obs_autorizar" text="Observaciones" width="100" height="100" columnas="6" margen-izquierdo="2"/>
+            </tabla>
+            <estilos>
+                <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+            </estilos>
+            <acciones>
+                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+            </acciones>
+        </componente>
+    </nivel>
+    <nivel id="reporteRBasdS" nombre="Recepción de Materiales de Almacén" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==2 AND %aSA.aSA.autoriza%==true">
+            <componente id="reporteRBasdS" nombre="Documento Unico del Ejercicio del Presupuesto" tipo="reporte" colapsado="NO">
+                <reporte nombre="poliza_contable"> 
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%gEP.gEP.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    <nivel nombre="Instancia Validdor" id="InstanciaValS" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==2 AND %aEA.aEA.autoriza%==false">
+       <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaValS">
+           <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+               <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+               <parametro name="process" calc="$protocolarios.process$"/>
+               <parametro name="version" calc="$protocolarios.version$"/>
+               <parametro name="user" calc="$protocolarios.user$"/>
+               <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+               <parametro name="message" calc="%aEA.aEA.obs_autorizar%"/>
+               <parametro name="type" calc="'1'"/>
+           </parametros> 
+       </componente>
+   </nivel>
+   <nivel nombre="TurnarInstancia" id="EnlaceDynamoS" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==2 AND %aEA.aEA.autoriza%==false">
+    <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamoS">
+        <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+            <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+            <parametro name="process" calc="$protocolarios.process$"/>
+            <parametro name="version" calc="$protocolarios.version$"/>
+            <parametro name="instance" calc="$protocolarios.instance$"/>
+            <parametro name="user" calc="$protocolarios.user$"/>
+            <parametro name="url" calc="$protocolarios.url$"/>
+            <parametro name="reiniciarInstancia" calc="'true'" />
+        </parametros>
+    </componente>
+</nivel>
+<nivel nombre="Finaliza Instancia" id="finalizaInstanciaS" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==2 AND %aSA.aSA.autoriza%==true">
+    <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstanciaS" >
+        <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+            <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+            <parametro name="process" calc="$protocolarios.process$"/>
+            <parametro name="version" calc="$protocolarios.version$"/>
+            <parametro name="instance" calc="$protocolarios.instance$"/>
+        </parametros>
+    </componente>
+</nivel>
+<nivel nombre="Registra Traspaso de Almacén" id="rTA" ejecutar="%bPer.bPer.id_tipo_movimientos%==3" mostrarNivelAnterior="false">
+            <componente tipo="tabla" nombre="Registra Traspaso de Almacén" id="rTA" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="tarjeta_almacen">
+                	<campo name="ur" text="" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%" visible="false" columna-visible="false"/>
+                    <campo name="id_tarjeta_almacen" text="" visible="false" columna-visible="false"/>
+                    <campo name="articulo" text="Clave artículo" descripcionForaneaTabla="descripcion_articulo"/>
+                    <!-- <campo name="" text="Descripción Específica"/> -->
+                    <campo name="id_unidad_medida" text="Unidad de Medida" descripcionForaneaTabla="descripcion"/>
+                    <campo name="id_almacen" text="Almacén"/>
+                    <campo name="existencia" text="Existencia"/>
+                    <campo name="cantidad_traspaso" text="Cantidad Traspaso"/>
+                    <campo name="costo_unitario" text="Costo Unitario"/>
+                    <campo name="costo_total" text="Costo Total" formatoMoneda="true"/>
+                    <campo name="observaciones" text="Observaciones"/>
+                    <campo name="seleccion_tras_alm" text="Selección" filtroCampo="seleccion_tras_alm" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="btarjeta_almacen" id="bTA" ejecutar="%bPer.bPer.id_tipo_movimientos%==3" interactivo="false">
+            <componente tipo="cursor" nombre="Registra Traspaso de Almacén" id="bTA">
+                <tabla schema="operation" nombre="tarjeta_almacen">
+                	<campo name="ur" text="" filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="id_periodo" text="" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_registro_act_almacen" filtroCampo="id_registro_act_almacen" filtroOperador="=" filtroValor="%bPer.bPer.id_registro_act_almacen%"/>
+                    <campo name="id_tarjeta_almacen"/>
+                    <campo name="existencia"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Datos Generales del Traspaso" id="bPerT" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==3">
+            <componente tipo="formulario" nombre="bPerT" id="bPerT" accionDefault="editar">
+                <tabla schema="operation" nombre="tarjeta_almacen">
+                	<campo name="ur" tex="" calc="%bTA.bTA.ur%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" tex="" calc="%bTA.bTA.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema('YYYY-MM-dd HH:mm:ss')" visible="false"/>
+                    <campo name="id_tarjeta_almacen" tex="" calc="%bTA.bTA.id_tarjeta_almacen%" llaveForanea="false" visible="false"/>
+                    <campo name="folio_movimiento" text="Folio" 
+                    calc="@concatenar('ALM-'+@subCadena(@ifThenElse(
+                    @consultaDirec('
+                    SELECT (folio_movimiento) AS resultado
+                    FROM operation.tarjeta_almacen
+                    WHERE ur='+%bPer.bPer.ur%+' AND id_periodo='+%bPer.bPer.id_periodo%+' ORDER BY folio_movimiento DESC limit 1','resultado','string','MAGNITUS')==null
+                    ,
+                    '000001'
+                    ,
+                    @consultaDirec('
+                    SELECT to_char((((substring(folio_movimiento from char_length(folio_movimiento)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                    FROM operation.tarjeta_almacen
+                    WHERE ur='+%bPer.bPer.ur%+' AND id_periodo='+%bPer.bPer.id_periodo%+' ORDER BY folio_movimiento DESC limit 1','resultado','int','MAGNITUS')
+                    ),1,6))"
+                    columnas="2" />
+                    <campo name="id_almacen_destino" text="Almacen Destino" descripcionForanea="nombre" habilitado="false" columnas="2"/>
+                    <campo name="fecha" text="Fecha" calc="@fechaSistema('YYYY-MM-dd HH:mm:ss')" columnas="2" />
+                    <campo name="observaciones" text="Observaciones" habilitado="false" columnas="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="false" texto="Guardar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="Consulta Traspasos de Almacén" id="tras" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%bPer.bPer.id_tipo_movimientos%==3">
+            <componente tipo="reporte" nombre="Consulta Traspasos de Almacén" id="tras">
+                <reporte nombre="Rep_Traspaso_AL">
+                     <campo name="ur"  type="long" calc="%bTA.bTA.ur%"/>
+                     <campo name="periodo" type="long" calc="%bTA.bTA.id_periodo%" />
+                     <campo name="id_tarjeta_almacen" type="long" calc="$inParam.tarjeta_almacen$"/>
+                     <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+ <nivel nombre="Autoriza Traspaso de Almacén" id="aTA" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==3">
+    <componente tipo="formulario" nombre="Autoriza Traspaso de Almacén" id="aTA">
+        <tabla schema="operation" nombre="registro_act_almacen" id="rEA">
+            <campo name="ur" text="UR" calc="%bPer.bPer.ur%" llaveForanea="false" visible="false"/>
+            <campo name="id_periodo" text="Periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false" visible="false"/>
+            <campo name="id_registro_act_almacen" text="" calc="%bPer.bPer.id_registro_act_almacen%" llaveForanea="false" visible="false"/>
+            <campo name="autoriza" text="Autoriza" columnas="1" margen-izquierdo="4"/>
+            <campo name="obs_autorizar" text="Observaciones" width="100" height="100" columnas="6" margen-izquierdo="2"/>
+        </tabla>
+        <estilos>
+            <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+        </estilos>
+        <acciones>
+            <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+        </acciones>
+    </componente>
+</nivel>
+<nivel id="reporteRBasqwdS" nombre="Recepción de Materiales de Almacén" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==3 AND %aEA.aEA.autoriza%==true">
+            <componente id="reporteRBasqwdS" nombre="Entrada de Alamcén" tipo="reporte" colapsado="NO">
+                <reporte nombre="poliza_contable"> 
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%gEP.gEP.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+<nivel nombre="Instancia Validdor" id="InstanciaValT" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==3 AND %aEA.aEA.autoriza%==false">
+   <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaValT">
+       <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+           <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+           <parametro name="process" calc="$protocolarios.process$"/>
+           <parametro name="version" calc="$protocolarios.version$"/>
+           <parametro name="user" calc="$protocolarios.user$"/>
+           <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+           <parametro name="message" calc="%aEA.aEA.obs_autorizar%"/>
+           <parametro name="type" calc="'1'"/>
+       </parametros> 
+   </componente>
+</nivel>
+<nivel nombre="TurnarInstancia" id="EnlaceDynamoT" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==3 AND %aEA.aEA.autoriza%==false">
+    <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamoT">
+        <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+            <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+            <parametro name="process" calc="$protocolarios.process$"/>
+            <parametro name="version" calc="$protocolarios.version$"/>
+            <parametro name="instance" calc="$protocolarios.instance$"/>
+            <parametro name="user" calc="$protocolarios.user$"/>
+            <parametro name="url" calc="$protocolarios.url$"/>
+            <parametro name="reiniciarInstancia" calc="'true'" />
+        </parametros>
+    </componente>
+</nivel>
+<nivel nombre="Finaliza Instancia" id="finalizaInstanciaT" interactivo="false" ejecutar="%bPer.bPer.id_tipo_movimientos%==3 AND %aTA.aTA.autoriza%==true">
+    <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstanciaT">
+        <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+            <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+            <parametro name="process" calc="$protocolarios.process$"/>
+            <parametro name="version" calc="$protocolarios.version$"/>
+            <parametro name="instance" calc="$protocolarios.instance$"/>
+        </parametros>
+    </componente>
+</nivel>
+</pagina>
+</tarea>

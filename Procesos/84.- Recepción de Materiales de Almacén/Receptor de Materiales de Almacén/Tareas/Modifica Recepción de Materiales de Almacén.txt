@@ -1,0 +1,206 @@
+<!-- is the version of the day 2019-05-20 23:30 -->
+<tarea nombre="Gestión de Recepción de Materiales de Almacén " version="1.0.0" fechaModificacion="" autor="" modificacionEfectuada="" requisitosInstalacion="">
+    <pagina id="1" nombre="Gestión de Recepción de Materiales de Almacén">
+        
+         <nivel id="bPer" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="bPer" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido" id="bPE" interactivo="false">
+            <componente tipo="cursor" nombre="bPE" id="bPE">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bPer.bPer.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%"/>
+                    <campo name="id_presupuesto_egresos"/>
+                    <campo name="total"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="x" id="X" interactivo="false">
+            <componente tipo="cursor" nombre="x" id="X">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text=" " filtroCampo="ur" filtroOperador="=" filtroValor="%bPer.bPer.id_unidad_responsable%" columna-visible="false"/>
+                    <campo name="periodo" text=" " filtroCampo="periodo" filtroOperador="=" filtroValor="%bPer.bPer.id_periodo%" columna-visible="false"/>
+                    <campo name="id_duep_contrato_pedido" text=" " />
+                    <campo name="seleccion_reg_almacen" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        
+        
+        <nivel id="aRMA" nombre="Gestión de Recepción de Materiales de Almacén " mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="aRMA" nombre="Registra Recepcion de Materiales de Almacén" tipo="tabla" accionDefault="editar" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="recepcion_material_almacen">
+                    <campo name="ur" text="ur" calc="$inParam.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="id_periodo" calc="$inParam.id_periodo$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" calc="$inParam.id_duep_contrato_pedido$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_recepcion_material_almacen" text="Renglón" calc="$inParam.id_recepcion_material_almacen$" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_almacen" text="Almacén *" descripcionForanea="clave_alamcen,nombre" descripcionForaneaTabla="clave_alamcen,nombre" columnas="2" margen-izquierdo="1" validacion="%id_almacen%==null" validacionMensaje="Seleccione Almacen de Etrada"/>
+                    <campo name="clave_articulo" text="Clave del artículo *" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" columnas="2" margen-izquierdo="1" validacion="%clave_articulo%==null" validacionMensaje="Indique Clave del artículo"/>
+                    <campo name="fecha_recepcion" text="Fecha de recepción" columnas="2" margen-izquierdo="1" validacion="%fecha_recepcion%==null" validacionMensaje=" Indique Fecha de recepción"/>
+                    <campo name="cantidad_solicitada" text="Cantidad Solicitada" columnas="2" margen-izquierdo="1" validacion="%cantidad_solicitada%==null" validacionMensaje="Indique Cantidad Solicitada"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" columnas="2" margen-izquierdo="1" validacion="%unidad_medida%==null" validacionMensaje="Indique Unidad de Medida"/>
+                    <campo name="recepcion_acumulada" text="Recepción Acumulada" columnas="2" margen-izquierdo="1" validacion="%recepcion_acumulada%==null" validacionMensaje="Indique Recepción Acumulada"/>
+                    <campo name="cantidad_recibida" text="Cantidad Recibida *" columnas="2" margen-izquierdo="1" validacion="%cantidad_recibida%==null" validacionMensaje="Indique Cantidad a recibir"/>
+                    <campo name="por_recibir" text="Por recibir" calcCliente="%cantidad_solicitada%-@ifThenElse(%cantidad_recibida%==null,0,%cantidad_recibida%)" habilitado="false" columnas="2" margen-izquierdo="1" validacion="%por_recibir%==null" validacionMensaje="Indique Por recibir"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="formulario" visible="true" texto="Guarda Bloque" columnas="2" margen-izquierdo="4"/>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="5"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="aRMA1" nombre="Registra Recepcion de Materiales de Almacén" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="@consultaDirec('SELECT (id_duep_contrato_pedido) AS resultado FROM operation.recepcion_material_almacen WHERE ur='+%bPer.bPer.id_unidad_responsable%+' AND id_periodo='+%bPer.bPer.id_periodo%+' AND id_duep_contrato_pedido='+%aRMA.aRMA.id_duep_contrato_pedido%+' 
+                ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')!=null">
+                <componente id="aRMA1" nombre="Registra Recepcion de Materiales de Almacén" accionDefault="editar" tipo="tabla" mostrarAgregar="false" mostrarEliminar="false">
+                    <tabla schema="operation" nombre="recepcion_material_almacen">
+                        <campo name="ur" text="ur" calc="%bPer.bPer.id_unidad_responsable%" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_periodo" text="id_periodo" calc="%bPer.bPer.id_periodo%" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%aRMA.aRMA.id_duep_contrato_pedido%" calc="%aRMA.aRMA.id_duep_contrato_pedido%" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_recepcion_material_almacen" text="Renglón" visible="false" width="75"/>
+                        <!--<campo name="id_almacen" text="Almacén *" descripcionForanea="clave_alamcen,nombre" descripcionForaneaTabla="clave_alamcen,nombre" columnas="3" margen-izquierdo="2" validacion="%id_almacen%==null" validacionMensaje="Seleccione Almacen de Etrada"/>-->
+                        <campo name="clave_articulo" text="Clave del artículo" habilitado="false" descripcionForanea="clave_articulo,descripcion_articulo" descripcionForaneaTabla="clave_articulo,descripcion_articulo" columnas="2" margen-izquierdo="1" validacion="%clave_articulo%==null" validacionMensaje="Indique Clave del artículo"/>
+                        <campo name="fecha_recepcion" text="Fecha de recepción" calc="@fechaSistema('YYYY-MM-dd 00:00:00')" habilitado="true" columnas="2" margen-izquierdo="1" validacion="%fecha_recepcion%==null" validacionMensaje="Indique Fecha de recepción"/>
+                        <campo name="cantidad_solicitada" text="Cantidad Solicitada" habilitado="false" columnas="2" margen-izquierdo="1" validacion="%cantidad_solicitada%==null" validacionMensaje="Indique Cantidad Solicitada"/>
+                        <campo name="unidad_medida" text="Unidad de Medida" habilitado="false" columnas="2" margen-izquierdo="1" validacion="%unidad_medida%==null" validacionMensaje="Indique Unidad de Medida"/>
+                        
+                        
+                        
+                        <campo name="recepcion_acumulada" text="Recepción Acumulada" calcCliente="%cantidad_recibida%" columnas="2" margen-izquierdo="1" visible="false"/>
+                        <!--1 OR %cantidad_recibida%&gt;%cantidad_solicitada%-->
+                        
+                        
+                        <campo name="cantidad_recibida" text="Cantidad Recibida" columnas="2" margen-izquierdo="1" 
+                               validacionModificacion="@ifThenElse(%cantidad_recibida%==null,true,@ifThenElse(%cantidad_recibida%&gt;%por_recibir%,true,false))" validacionModificacionMensaje="La 'Cantidad Recibida' debe ser Menor o Igual a la 'Cantidad Por Recibir'"/>
+                        
+                        
+                        
+                        <campo name="por_recibir" text="Por recibir" calcCliente="%cantidad_solicitada%-@ifThenElse(%cantidad_recibida%==null,0,%cantidad_recibida%)" habilitado="false" columnas="2" margen-izquierdo="1" validacion="%por_recibir%==null" validacionMensaje="Indique Por recibir"/>
+                    </tabla>
+                    <estilos>
+                        <!--<boton nombre="formulario" visible="true" texto="Guarda Bloque" columnas="2" margen-izquierdo="4"/>-->
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="3" margen-izquierdo="5"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </componente>
+            </nivel>
+        <nivel nombre="Consulta Recepción de Bienes de Activo Fijo" id="ConsRBAF" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+            <componente tipo="maestroDetalle" nombre="Consulta Recepción de Materiales de Almacén" id="ConsRMA">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="materiales_almacen" id="mA" tituloDetalle="Registra Recepción de Materiales de Almacén">
+                        <campo name="ur" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                        <campo name="id_periodo" text="Año" calc="$inParam.id_periodo$" llaveForanea="false" visible="false"/>
+                        <campo name="id_materiales_almacen" text="id Materiales" calc="$inParam.id_materiales_almacen$" visible="false"/>
+                        <campo name="id_duep_materiales_almacen" text="Folio" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="tramite" text="Trámite" calc="'Recepción de Material de Almacén'" columnas="2" margen-izquierdo="1"/>
+                        <campo name="id_beneficiario" text="Beneficiario" habilitado="false" descripcionForanea="razon_social" ccolumnas="2" margen-izquierdo="1"/>
+                        <campo name="id_cat_fondo" calc="3" llaveForanea="false" visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" habilitado="false" descripcionForanea="id_cat,descripcion" columnas="2" margen-izquierdo="1"/>
+                        <campo name="id_cat_centro_registro" calc="2" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="centro_registro" text="Centro de Registro" habilitado="false" descripcionForanea="descripcion" columnas="2" margen-izquierdo="1"/>
+                        <campo name="id_cat_fuente" calc="5" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="fuente_financiamiento" text="Fuente de Financiamiento" habilitado="false" llavesFijas="afectable='true'" descripcionForaneaTabla="id_cat,descripcion" columnas="2" margen-izquierdo="1"/>
+                        <campo name="fecha_ma" text="Fecha" habilitado="true" columnas="2" margen-izquierdo="1"/>
+                        <campo name="contrato" text="Contrato" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="tipo_comprobante" text="Tipo de comprobante *" columnas="2" margen-izquierdo="1" validacion="%tipo_comprobante%==null" validacionMensaje="Tipo de comprobante es requerido">
+                                <opciones>
+                                    <opcion texto="Cfdi General" valor="Cfdi General"/>
+                                    <opcion texto="Cfdi Nota de Crédito" valor="Cfdi Nota de Crédito"/>
+                                    <opcion texto="Cfdi Aplicación Anticipo" valor="Cfdi Aplicación Anticipo"/>
+                                    <opcion texto="Nota de Crédito" valor="Nota de Crédito"/>
+                                    <opcion texto="Nota de Débito" valor="Nota de Débito"/>
+                                    <opcion texto="Invoice" valor="Invoice"/>
+                                    <opcion texto="No fiscal" valor="No fiscal"/>
+                                    <opcion texto="Otros" valor="Otros"/>
+                                </opciones>
+                            </campo>
+                        <campo name="orde_compra" text="Orden de Compra" habilitado="false" interaccion-="%tipo_comprobante%!=null AND %contrato%!=null"  columnas="2" margen-izquierdo="1"/>
+                        <campo name="folio_comprobante" text="Folio de comprobante *" habilitado="true" columnas="2" margen-izquierdo="1"/>
+                        <campo name="amortizacion_anticipo" text="Amoritización de Anticipo" habilitado="true" columnas="2" margen-izquierdo="1"/>
+                        <campo name="fecha_comprobante" text="Fecha del comprobante" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="anticipo" text="%Anticipo" habilitado="true" columnas="2" margen-izquierdo="1"/>
+                        <campo name="concepto" text="Concepto" habilitado="false" columnas="2" margen-izquierdo="1" height="150"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                    </estilos>
+                </encabezado>
+                <detalles accionDefault="editar">
+                    <tabla schema="operation" nombre="detalle_materiales_almacen" id="aBl" tituloDetalle="Renglón Presupuestal" mostrarAgregar="true" mostrarEliminar="false">
+                        <campo name="ur" text="UR" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_periodo" text="Año" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_materiales_almacen" text="" llaveForanea="false" visible="false"/>
+                        <campo name="id_detalle_ma" text="Renglón" habilitado="false" columnas="2" margen-izquierdo="1"  generacion="@prox()+1" autogenerado="true"/>
+                        <campo name="id_duep" text="Folio" width="100" visible="false"/>
+                        <campo name="fecha_elaboracion" text="" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')" columna-visible="false" visible="false"/>
+                        <campo name="folio_comprobante" text="Folio de Comprobante" calcCliente="@ifThenElse(%fecha_cfdi%!=null,%ConsRBAF.ConsRMA.folio_comprobante%,%ConsRBAF.ConsRMA.folio_comprobante%)" width="200" columnas="2" margen-izquierdo="1"/>
+                        <campo name="tipo_bloque" text="Tipo de Renglón" habilitado="false" calcCliente="@ifThenElse(%fecha_cfdi%!=null,'Presupuestal','')" width="200" columnas="2" margen-izquierdo="1"/>
+                        <campo name="fecha_cfdi" text="Fecha de CFDI" width="200" columnas="2" margen-izquierdo="1"/>
+                        <campo name="tipo_comprobante" text="Tipo de Comprobante" habilitado="false" calcCliente="@ifThenElse(%fecha_cfdi%!=null,%ConsRBAF.ConsRMA.tipo_comprobante%,%ConsRBAF.ConsRMA.tipo_comprobante%)" width="250" columnas="2" margen-izquierdo="1"/>
+                        <campo name="cantidad_recibida" text="Cantidad Recibida" calcCliente="@ifThenElse(%fecha_cfdi%!=null,%aRMA.aRMA.cantidad_recibida%,%aRMA.aRMA.cantidad_recibida%)" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="clave_articulo" text="Clave del artículo *"  habilitado="false" descripcionForanea="descripcion_articulo" descripcionForaneaTabla="descripcion_articulo" columnas="2" margen-izquierdo="1" validacion="%clave_articulo%==null" validacionMensaje="Indique Clave del artículo"/>
+                        <campo name="unidad_medida" text="Unidad de Medida" habilitado="false" width="200" columnas="2" margen-izquierdo="1"/>
+                        <campo name="descripcion_especifica" text="Descripción Específica" width="250" columnas="2" margen-izquierdo="1"/>
+                        <campo name="precio_unitario" text="Precio Unitario" habilitado="false" width="200" columnas="2" margen-izquierdo="1"/>
+                        <campo name="id_cat_cog" calc="5" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="cog" text="Clasificador por Objeto del Gasto" habilitado="false" width="300" columnas="2" margen-izquierdo="1"/>
+                        <campo name="descuento" text="Descuento" width="100" columnas="2" margen-izquierdo="1"/>
+                        <campo name="iva" text="% IVA" width="100" columnas="2" margen-izquierdo="1"/>
+                        <campo name="id_cat_progra_presup" calc="10" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="programa_presupuestario" text="Programa Presupuestal" width="250" columnas="2" margen-izquierdo="1"/>
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" habilitado="false" width="250" columnas="2" margen-izquierdo="1"/>
+                        <campo name="imp_valor_agregado" text="Impuesto al Valor Agregado" width="300" columnas="2" margen-izquierdo="1"/>
+                        <campo name="indicador" text="Indicador" calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat 
+                        INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat
+                        INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat
+                        INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo
+                        WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')" width="100" columnas="2" margen-izquierdo="1"/>
+                        <campo name="otros_imp" text="Otros Impuestos" width="200" columnas="2" margen-izquierdo="1"/>
+                        <campo name="importe_unitario" text="Importe Unitario" habilitado="false" width="250" columnas="2" margen-izquierdo="1"/>
+                        <campo name="cuenta_amortizacion" text="Cuenta de Amortización" width="250" columnas="2" margen-izquierdo="1"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <nivel id="reporteRBS" nombre="Recepción de Materiales de Almacén" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+           <componente tipo="reporte" nombre="Recepción de Materiales de Almacén" id="dRMA">
+                <reporte nombre="R_duep_AL">
+                    <campo name="id_materiales_almacen" type="long" calc="$inParam.id_materiales_almacen$"/>
+                    <campo name="periodo" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                </reporte>
+            </componente>
+            <componente id="reporteSEDS2" nombre="Estado de Cuenta Detallado del Folio" tipo="reporte" colapsado="NO">
+                <reporte nombre="reporte_R_detalle_recep_AL"> 
+                    <campo name="id_materiales_almacen" type="long" calc="$inParam.id_materiales_almacen$"/>
+                    <campo name="periodo" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                </reporte>
+            </componente>
+            <!--
+            <componente id="reporteSEDS2" nombre="Estado de Cuenta Detallado del DUEP" tipo="reporte" colapsado="NO">
+                <reporte nombre="Edo_cta_duep"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.id_periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.duep$"/>
+                    <campo name="id_contrato" type="long" calc="$inParam.contrato$"/>
+                </reporte>
+            </componente>
+            -->
+        </nivel>
+  </pagina>
+</tarea>

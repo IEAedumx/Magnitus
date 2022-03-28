@@ -1,0 +1,67 @@
+<tarea id="regEquivAlm" nombre="Registra Equivalencias para la Afectación de Alamcén" version="1.0.0" autor="Froylán Alanís">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="bPer" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="bPer" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="Gestion" nombre="Selección de Gestión" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpGestion"  nombre="Selección de Gestión" tipo="formulario"  accionDefault="seleccionar">
+                    <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="UR" llaveForanea="false" calc="%bPer.bPer.id_unidad_responsable%" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" llaveForanea="false" calc="%bPer.bPer.id_periodo%" visible="true" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="equivCuenCon" nombre="Equivalencias de Cuentas Cuentas" mostrarNivelAnterior="false">
+            <componente id="equivCuenCon" nombre="Equivalencias de Cuentas Contables" tipo="tabla">
+                <tabla schema="operation" nombre="equiv_almacen_det">
+                        <campo name="ur" text="ur" calc="%bPer.bPer.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_periodo" text="periodo" calc="%bPer.bPer.id_periodo%" visible="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_equiv_almacen" text="Número" autogenerado="true"  width="150" generacion="@prox()+1" visible="false" columna-visible="true"/>
+                        <campo name="usuario_alta" text="usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="fecha_elaboracion" text="fecha" calc="@fechaSistema()" columna-visible="false" visible="false"/>
+                        <campo name="id_cat_cog" calc="4"  llaveForanea="false" text="Clasificador por Objeto de Gasto" columna-visible="false" visible="false"/>
+                        <campo name="id_cog" text="Clasificador por Objeto de Gasto" llavesFijas="afectable=true"  maxlength="50"  width="300" descripcionForanea="id_cat,descripcion"  descripcionForaneaTabla="id_cat,descripcion"  validacion="%id_cog%==null" validacionMensaje="Favor de seleccionar el clasificador por objeto de gasto" columnas="3"  autoFiltrado="true" filtradoInteractivo="'id_cat LIKE \\'2[37]\\''"/>
+                        <campo name="des_id_cog" text="Descripción de COG" local="true" type="string" width="350" referenciaForanea="id_cog" celdaForanea="descripcion" autocompletar="true" descripcionForanea="clave_cuenta" descripcionForaneaTabla="clave_cuenta" columnas="3"/>
+                        <campo name="clave_cuenta" text="Cuenta Contable Activo" width="300" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" validacion="%clave_cuenta%==null" validacionMensaje="Asigne una cuenta contable" validacionModificacion="%clave_cuenta%==null" validacionModificacionMensaje="Asigne una Cuenta Contable" columnas="3"  autoFiltrado="true" filtradoInteractivo="'clave_cuenta LIKE \\'1-1-5[37]\\''" llavesFijas="tipo_transaccion=2"/>
+                        <campo name="des_clave_cuenta" text="Descripción de Cuenta Contable" width="300" referenciaForanea="clave_cuenta" celdaForanea="descripcion" autocompletar="true" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" columnas="3" />
+                        <campo name="clave_cuenta_cg" text="Cuenta Contable Gasto"  width="300" validacion="%clave_cuenta_cg%==null" validacionMensaje="Favor de agregar cuenta contable gasto" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" columnas="3" autoFiltrado="true" filtradoInteractivo="'clave_cuenta LIKE \\'5[37]\\''" llavesFijas="tipo_transaccion=2"/>
+                        <campo name="des_cuenta_cg" text="Descripción de Cuenta Contable" width="300" referenciaForanea="clave_cuenta_cg" celdaForanea="descripcion" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" autocompletar="true" columnas="3"/>
+                        <campo name="estatus" text="Estatus" calc="'Activo'" visible="false" columna-visible="false"/>
+                    </tabla>
+            </componente>
+        </nivel>
+        <nivel id="repEquivCuenCon" nombre="Equivalencias" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="repEquivCuenCon" nombre="Equivalencias" tipo="reporte">
+                <reporte nombre="R_de_Equivalencias">
+                    <campo name="ur" type="long" calc="%bPer.bPer.id_unidad_responsable%"/>
+                    <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                    <campo name="periodo" type="long" calc="%bPer.bPer.id_periodo%"/>
+                    
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
