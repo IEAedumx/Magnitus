@@ -1,0 +1,195 @@
+<tarea id="Consulta_Saldo_OrdenDeCompra" nombre="Consulta Saldo de orden de Compra" autor="Carlos Esquivel">
+    <pagina id="1">
+        <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barrido_false" nombre="bF" interactivo="false">
+            <componente tipo="cursor" id="bF" nombre="Gestiona Registro de Activo Fijo">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_duep_contrato_pedido"/>
+                    <campo name="seleccion_cons" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="ConSalGlobal" nombre="Consulta Saldo Global Orden de Compra o Contrato" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" id="ConSalGlobal" filtro="true" nombre="Consulta Saldo Global Orden de Compra o Contrato" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" text="ur" llaveForanea="false" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo"  llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_duep_contrato_pedido" text="id_duep_contrato_pedido" llaveForanea="false" columna-visible="false"/>
+                    <campo name="folio_con_ordecom" text="Folio" width="100" habilitado="false"/>
+                    <campo name="proveedor" text="Beneficiario" width="220" habilitado="false" descripcionForaneaTabla="razon_social"/>
+                    <campo name="contrato" text="Contrato / Orden de Compra"  width="100" habilitado="false"/>
+                    <campo name="fecha_registro"  text="Fecha" width="150" habilitado="false"/>
+                    <campo name="area_requiriente" text="Centro de Registro" width="170" habilitado="false"/>
+                    <campo name="total" text="Total Comprometido" width="200" habilitado="false" formatoMoneda="true"/>
+                    <campo name="comprometido_no_devengado" text="Comprometido No devengado" width="250" habilitado="false" formatoMoneda="true"/>
+                    <campo name="seleccion_af" text="Selección" columna-visible="false" habilitado="false"/>
+                    <campo name="folio_af" columna-visible="false" filtroCampo="folio_af" filtroOperador="!=" filtroValor="'0'" habilitado="true"/>
+                    <campo name="autoriza" text="autoriza" width="100" columna-visible="false" filtroCampo="autoriza" filtroOperador="=" filtroValor="true" habilitado="true"/>
+                   <campo name="seleccion_cons" text="Selección" width="100" editable="true" filtroCampo="seleccion_cons" filtroOperador="=" filtroValor="false" habilitado="false"/>
+                </tabla> 
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) AS resultado FROM operation.duep_contrato_pedido WHERE ur='+%ConSalGlobal.ConSalGlobal.ur%+' AND periodo='+%ConSalGlobal.ConSalGlobal.periodo%+' AND seleccion_cons=true','resultado','int','MAGNITUS')==0 OR @consultaDirec('SELECT count(*) AS resultado FROM operation.duep_contrato_pedido WHERE ur='+%ConSalGlobal.ConSalGlobal.ur%+' AND periodo='+%ConSalGlobal.ConSalGlobal.periodo%+' AND seleccion_cons=true','resultado','int','MAGNITUS')&gt;1" validacionMensaje="'Debe seleccionar un registro'"/>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) AS resultado FROM operation.duep_contrato_pedido WHERE ur='+%ConSalGlobal.ConSalGlobal.ur%+' AND periodo='+%ConSalGlobal.ConSalGlobal.periodo%+' AND seleccion_cons=true','resultado','int','MAGNITUS')&gt;1" validacionMensaje="'Debe seleccionar solo un registro'"/>
+            </validaciones>
+        </nivel>  
+        <nivel id="bdcp" nombre="bdcp" interactivo="false">
+            <componente tipo="cursor" id="bdcp" nombre="bdcp">
+               <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="seleccion_cons" filtroCampo="seleccion_cons" filtroOperador="=" filtroValor="true"/>
+                      <campo name="folio_con_ordecom" />
+                      <campo name="id_duep_contrato_pedido"/>
+                      <campo name="proyecto_compra"/>
+                  </tabla>
+              </componente>
+        </nivel>
+        
+        <nivel id="bMA" nombre="bMA" interactivo="false">
+            <componente id="bMA" nombre="bMA" tipo="cursor">
+                <tabla schema="operation" nombre="recepcion_material_almacen">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bdcp.bdcp.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="ur" filtroOperador="=" filtroValor="%bdcp.bdcp.id_periodo%"/>
+                    <campo name="id_duep_contrato_pedido" filtroCampo="ur" filtroOperador="=" filtroValor="%bdcp.bdcp.id_duep_contrato_pedido%"/>
+                    
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="R_consultaSaldoGlobal" nombre="Consulta Saldo Global Orden de Compra o Contrato" mostrarNivelAnterior="false">
+            <componente tipo="reporte" id="R_consultaSaldoGlobal" nombre="Consulta Saldo Global Orden de Compra o Contrato">
+                <reporte nombre="reporte_R_saldo_AL">
+                    <campo name="id_materiales_almacen" type="long" calc="%bdcp.bdcp.id_duep_contrato_pedido%"/>
+                    <campo name="periodo" type="long" calc="%bdcp.bdcp.periodo%"/>
+                    <campo name="ur" type="long" calc="%bdcp.bdcp.ur%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="ConSalOrden" nombre="Consulta Saldo Global Orden de Compra o Contrato" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" id="ConSalOrden" filtro="true" nombre="Estado de Cuenta Detallado del Folio" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false" accionDefault="editar">
+                <tablaForanea schema="operation" nombre="duep_contrato_pedido">
+                        <campo name="folio_con_ordecom" text="Folio" cellsalign="left" width="100"/>
+                    </tablaForanea>
+                <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                    <campo name="ur" text="ur" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="periodo" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                    <campo name="id_duep_contrato_pedido" text="id_contrato" columna-visible="false" visible="false"  filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%bdcp.bdcp.id_duep_contrato_pedido%"/>
+                    <campo name="id_duep_contrato_pedido_det" text="Renglón" habilitado="false" width="50"/>
+                    <campo name="clave_articulo" text="Clave Artículo" width="210" habilitado="false" descripcionForanea="clave_articulo" descripcionForaneaTabla="clave_articulo"/>
+                    <campo name="folio_comprobante" text="Folio de Recepción" width="210"/>
+                    <campo name="fecha_comprobante" text="Fecha de recepción" width="210"/>
+                    <campo name="seleccion_com_ped" text="Selección" editable="true"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" width="200"/>
+                    <campo name="importe_unitario" text="Importe Unitario" width="200" formatoMoneda="true"/>
+                    <campo name="cantidad_recibida" text="Cantidad Recibida"/>
+                    <campo name="cantidad_por_recibir" text="Cantidad Por Recibir"/>
+                    <campo name="presupuesto_comprometido" text="Presupuesto Comprometido" habilitado="false" formatoMoneda="true"/>
+                    <campo name="devengado_en_proceso" text="Devengado en Proceso" habilitado="false" formatoMoneda="true"/>
+                    <campo name="presupuesto_devengado" text="Presupuesto Devengado" habilitado="false" formatoMoneda="true"/>
+                    <campo name="precio_unitario" text="Precio Unitario" width="200" formatoMoneda="true"/>
+                    <campo name="cantidad" text="Cantidad" width="100" visible="false"/>
+                    <campo name="descuento" text="Descuento" width="110"/>
+                    <campo name="imp_valor_agregado" text="Impuesto al Valor Agregado" width="300" formatoMoneda="true"/>
+                    <campo name="otros_impuestos" text="Otros Impuestos" width="200"/>
+                    <campo name="importe_total" text="Total" width="120" muestraAcumulado="true" formatoMoneda="true"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente> 
+        </nivel>
+         <nivel id="ce" nombre="ce" interactivo="false">
+            <componente tipo="cursor" id="ce" nombre="ce">
+               <tabla schema="operation" nombre="duep_contrato_pedido">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                      <campo name="folio_con_ordecom"/>
+                      <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%bdcp.bdcp.id_duep_contrato_pedido%"/>
+                      <campo name="seleccion_cons" calc="false"/>
+                  </tabla>
+                      <nivel id="bdcpb" nombre="bdcpb" interactivo="false">
+                        <componente tipo="cursor" id="bdcpb" nombre="bdcpb">
+                           <tabla schema="operation" nombre="af_receprcion_bienes_det">
+                              <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                              <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                              <campo name="id_contrato" filtroCampo="id_contrato" filtroOperador="=" filtroValor="%bdcp.bdcp.id_duep_contrato_pedido%"/>
+                              <campo name="seleccion_cons" calc="false"/>
+                          </tabla>
+                      </componente>
+                  </nivel>
+                  <nivel id="bdcpb1" nombre="bdcpb1" interactivo="false">
+                        <componente tipo="cursor" id="bdcpb1" nombre="bdcpb1">
+                           <tabla schema="operation" nombre="duep_contrato_pedido_det">
+                              <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                              <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                              <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%bdcp.bdcp.id_duep_contrato_pedido%"/>
+                              <campo name="seleccion_com_ped" calc="false"/>
+                          </tabla>
+                      </componente>
+                  </nivel>
+            </componente>
+        </nivel> 
+        
+        <nivel id="faf" nombre="faf" interactivo="false">
+                        <componente tipo="cursor" id="faf" nombre="faf">
+                           <tabla schema="operation" nombre="duep_contrato_pedido">
+                              <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                              <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%per.per.id_periodo%"/>
+                              <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%bdcp.bdcp.id_duep_contrato_pedido%"/>
+                              <campo name="folio_af" />
+                          </tabla>
+
+                      </componente>
+                  </nivel>
+
+                  
+         <nivel id="reporteRBS" nombre="Documento Unico del Ejercicio del Presupuesto" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Documento Único del Ejercicio del Presupuesto" id="DUEPC">
+                    <reporte nombre="R_duep_IJ" id="DUEPR">
+                        <campo name="id_activo_fijo" calc="%faf.faf.folio_af%" type="string"/>
+                        <campo name="periodo" calc="%per.per.id_periodo%" type="long"/>
+                        <campo name="ur" calc="$config.ur$" type="long"/>
+                        <!--<campo name="usuario" type="string" local="true" calc="$protocolarios.user$"/>-->
+                    </reporte>
+                </componente>
+                <!--   <componente tipo="reporte" nombre="Estado de Cuenta Detallado del DUEP" id="ECDDC">-->
+                <!--    <reporte nombre="R_edo_cta_DUEP_Al" id="ECDDR">-->
+                <!--        <campo name="id_activo_fijo" calc="%acf3.acf3.id_activo_fijo%" type="string"/>-->
+                <!--        <campo name="periodo" calc="%per.per.id_periodo%" type="long"/>-->
+                <!--        <campo name="ur" calc="$config.ur$" type="long"/>-->
+                <!--        <campo name="usuario" type="string" local="true" calc="$protocolarios.user$"/>-->
+                <!--    </reporte>-->
+                <!--</componente>-->
+                   <componente tipo="reporte" nombre="Detalle de Recepción del Activo Fijo" id="DRAFC">
+                    <reporte nombre="estado_Detallado_ij" id="DRAFR">
+                        <campo name="id_activo_fijo" calc="%faf.faf.folio_af%" type="string"/>
+                        <campo name="periodo" calc="%per.per.id_periodo%" type="long"/>
+                        <campo name="ur" calc="$config.ur$" type="long"/>
+                        <campo name="usuario" type="string" local="true" calc="$protocolarios.user$"/>
+               
+                    </reporte>
+                </componente>
+        </nivel>
+    </pagina>
+</tarea>
