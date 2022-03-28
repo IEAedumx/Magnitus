@@ -1,0 +1,841 @@
+<tarea nombre="Registra Adecuación Presupuestaria Comprometido" id="rAPC" autor="Julio DH" fechaModificacion="" modificacionEfectuada="Versión Inicial" requisitosInstalacion="No" version="1.0.1">
+    <pagina nombre="Registra Adecuación Presupuestaria Comprometido" id="rAPC">
+        <nivel nombre="buscaPeriodo" id="bP" interactivo="false">
+            <componente tipo="cursor" nombre="bP" id="bP">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    <campo name="id_periodo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido Compromisos Anuales" id="bdCA" interactivo="false">
+            <componente tipo="cursor" nombre="Detalle de Compromisos Anuales" id="bdCA">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <campo name="id_compromiso"/>
+                    <campo name="seleccion_adecuacion_ca" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Detalle de Compromisos Anuales" id="dCA" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="tabla" nombre="Detalle de Compromisos Anuales" id="dCA" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" text="" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%" columna-visible="false"/>
+                    <campo name="id_periodo" text="" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%" columna-visible="false"/>
+                    <campo name="id_compromiso" text="" columna-visible="false"/>
+                    <campo name="id_duep" text="Folio" width="100"/>
+                    <campo name="id_beneficiario" text="Beneficiario" width="330" descripcionForaneaTabla="razon_social"/>
+                    <campo name="id_tipo_compromiso" text="Tipo de Compromiso" width="160" filtroCampo="id_tipo_compromiso" filtroOperador="=" filtroValor="1" descripcionForaneaTabla="tipo_compromiso"/>
+                    <campo name="fecha_compromiso" text="Fecha" width="110"/>
+                    <campo name="id_centro_registro" text="CAT Centro Registro" columna-visible="false"/>
+                    <campo name="centro_registro" text="Centro de Registro" width="300"/>
+                    <campo name="total_comprometido" text="Importe Total Comprometido" formatoMoneda="true"/>
+                    <!--<campo name="comprometido_no_devengado" text="Comprometido no Devengado" formatoMoneda="true"/>-->
+                    <campo name="total_devengado" text="Importe Total Devengado" formatoMoneda="true"/>
+                    <campo name="estatus" text="Estatus" width="110" filtroCampo="estatus" filtroOperador="!=" filtroValor="'GENERADA'"/>
+                    <campo name="seleccion_adecuacion_ca" text="Selección" editable="true"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) AS resultado FROM operation.compromisos_anual WHERE ur='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' AND seleccion_adecuacion_ca=true','resultado','int','MAGNITUS')==0" validacionMensaje="'Debe seleccionar un registro'"/>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('SELECT count(*) AS resultado FROM operation.compromisos_anual WHERE ur='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' AND seleccion_adecuacion_ca=true','resultado','int','MAGNITUS')&gt;1" validacionMensaje="'Debe seleccionar solo un registro'"/>
+                </validaciones>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_Compromisos Anuales" id="bCA" interactivo="false">
+            <componente tipo="cursor" nombre="Detalle de Compromisos Anuales" id="bCA">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%" llaveForanea="false"/>
+                    <campo name="seleccion_adecuacion_ca" text="" filtroCampo="seleccion_adecuacion_ca" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_compromiso"/>
+                    <campo name="id_duep"/>
+                    <campo name="id_tipo_compromiso"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barre_compromisos_anual_det" id="mes_act" interactivo="false">
+            <componente tipo="cursor" nombre="bCAd" id="mes_act">
+                <tabla schema="operation" nombre="compromisos_anual_det" id="aBl" tituloDetalle="Alta de Bloque">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%" columna-visible="false"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%" columna-visible="false"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%bCA.bCA.id_compromiso%"/>
+                    <campo name="mes_act" calc="@castTo(@fechaSistema('MM'),'long')"/>
+                    <campo name="mes_actual" text="mes_actual" calc="13-@castTo(@fechaSistema('MM'),'long')"/>
+                    <campo name="prorratear" calc="false"/>
+                    <campo name="importe_ampliacion_com" calc="0"/>
+                    <campo name="importe_ampliacion_com_modificado" calc="0"/>
+                    <campo name="importe_ampliacion_com_suma" calc="0"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte Gestión de Compromisos Anuales" id="rCAR" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%bCA.bCA.id_tipo_compromiso%==1 OR %bCA.bCA.id_tipo_compromiso%==3">
+            <componente tipo="reporte" nombre="Reporte de Compromisos Anuales" id="rCAR" >
+                <reporte nombre="repor_compromisos_an_jsus_adcomp" update="true" nombreDocumento="'Reporte Gestión de Compromisos Anuales'" expediente="Compromisos Anuales"  grupo="%bCA.bCA.id_compromiso%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%bCA.bCA.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%bCA.bCA.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%bCA.bCA.id_compromiso%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte de Compromisos Anuales de Servicios Personales" id="rCAdSP" ejecutar="%bCA.bCA.id_tipo_compromiso%==2" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+            <componente tipo="reporte" nombre="Reporte de Compromisos Anuales de Servicios Personales" id="rCAdSP">
+                <reporte nombre="repor_comprServicios_jsus" update="true" nombreDocumento="'Reporte Gestión de Compromisos Anuales'" expediente="Compromisos Anuales"  grupo="%bCA.bCA.id_compromiso%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%bCA.bCA.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%bCA.bCA.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%bCA.bCA.id_compromiso%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Selección de Año" id="rAPC" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" id="rAPC" nombre="Selección de Año">
+                <tabla schema="operation" nombre="adecuacion_compromisos_anuales">
+                    <campo name="ur" calc="%bP.bP.id_unidad_responsable%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" calc="%bP.bP.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="id_adecuacion_compromisos_anuales" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema('YYYY-MM-dd HH:mm:ss')" visible="false"/>
+                    <campo name="id_compromiso" calc="%bCA.bCA.id_compromiso%" visible="false"/>
+                    <campo name="folio_duep" text="Folio" calc="%bCA.bCA.id_duep%" local="true" type="string" columnas="2" margen-izquierdo="1"/>
+                    <campo name="id_mov_adecuacion_compromisos_anuales" text="Tipo de Adecuación *" descripcionForanea="descripcion_adecuacion_ca" validacion="%id_mov_adecuacion_compromisos_anuales%==null" validacionMensaje="Selecciona el tipo de adecuación" columnas="2" margen-izquierdo="1"/>
+                    <campo name="adjunta" text="Documento de Aprobación" width="200" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Adjuntar Soporte Documental'" grupo="%rCA.gCA.id_compromiso%" expediente="" columnas="2" margen-izquierdo="1"/>
+                    <campo name="concepto" text="Concepto *" mascara="C" validacion="%concepto%==null" validacionMensaje="Indique Concepto de la Adecuación" columnas="4" margen-izquierdo="3" width="100" height="200"/>
+                    <!--<campo name="requiere_clave_presupuestal" text="Requiere Nueva Clave Presupuestal *" validacion="%requiere_clave_presupuestal%==null" validacionMensaje="Seleccione si Requiere Nueva Clave Presupuestal" columnas="4" margen-izquierdo="3">
+                        <opciones>
+                            <opcion texto="Si" valor="Si"/>
+                            <opcion texto="No" valor="No"/>
+                        </opciones>
+                    </campo>-->
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_adecuacion_compromisos_anuales_Ampliacion" id="b_aCA_A" interactivo="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==1">
+            <componente tipo="cursor" nombre="barrido" id="b_aCA_A">
+               <tabla schema="operation" nombre="adecuacion_compromisos_anuales">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%rAPC.rAPC.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%rAPC.rAPC.id_periodo%"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%rAPC.rAPC.id_compromiso%"/>
+                    <campo name="id_adecuacion_compromisos_anuales" filtroCampo="id_adecuacion_compromisos_anuales" filtroOperador="=" filtroValor="%rAPC.rAPC.id_adecuacion_compromisos_anuales%"/>
+                    <campo name="id_duep" calc="@concatenar('ACAN-'+@subCadena(@ifThenElse(
+                    @consultaDirec('
+                    SELECT (id_duep) AS resultado
+                    FROM operation.adecuacion_compromisos_anuales
+                    WHERE ur='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                    ,
+                    '000001'
+                    ,
+                    @consultaDirec('
+                    SELECT to_char((((substring(id_duep from char_length(id_duep)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                    FROM operation.adecuacion_compromisos_anuales
+                    WHERE ur='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','int','MAGNITUS')
+                    ),1,6))"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_adecuacion_compromisos_anuales_Reduccion" id="b_aCA_R" interactivo="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==2">
+            <componente tipo="cursor" nombre="barrido" id="b_aCA_R">
+               <tabla schema="operation" nombre="adecuacion_compromisos_anuales">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%rAPC.rAPC.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%rAPC.rAPC.id_periodo%"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%rAPC.rAPC.id_compromiso%"/>
+                    <campo name="id_adecuacion_compromisos_anuales" filtroCampo="id_adecuacion_compromisos_anuales" filtroOperador="=" filtroValor="%rAPC.rAPC.id_adecuacion_compromisos_anuales%"/>
+                    <campo name="id_duep" calc="@concatenar('RCAN-'+@subCadena(@ifThenElse(
+                    @consultaDirec('
+                    SELECT (id_duep) AS resultado
+                    FROM operation.adecuacion_compromisos_anuales
+                    WHERE ur='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                    ,
+                    '000001'
+                    ,
+                    @consultaDirec('
+                    SELECT to_char((((substring(id_duep from char_length(id_duep)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                    FROM operation.adecuacion_compromisos_anuales
+                    WHERE ur='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','int','MAGNITUS')
+                    ),1,6))"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_adecuacion_compromisos_anuales_TrasladoP" id="b_aCA_T" interactivo="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==3">
+            <componente tipo="cursor" nombre="barrido" id="b_aCA_T">
+               <tabla schema="operation" nombre="adecuacion_compromisos_anuales">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%rAPC.rAPC.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%rAPC.rAPC.id_periodo%"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%rAPC.rAPC.id_compromiso%"/>
+                    <campo name="id_adecuacion_compromisos_anuales" filtroCampo="id_adecuacion_compromisos_anuales" filtroOperador="=" filtroValor="%rAPC.rAPC.id_adecuacion_compromisos_anuales%"/>
+                    <campo name="id_duep" calc="@concatenar('TCAN-'+@subCadena(@ifThenElse(
+                    @consultaDirec('
+                    SELECT (id_duep) AS resultado
+                    FROM operation.adecuacion_compromisos_anuales
+                    WHERE ur='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                    ,
+                    '000001'
+                    ,
+                    @consultaDirec('
+                    SELECT to_char((((substring(id_duep from char_length(id_duep)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                    FROM operation.adecuacion_compromisos_anuales
+                    WHERE ur='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','int','MAGNITUS')
+                    ),1,6))"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="barre_compromisos_anual_det" id="bCAd" interactivo="false">
+            <componente tipo="cursor" nombre="bCAd" id="bCAd">
+                <tabla schema="operation" nombre="compromisos_anual_det" id="aBl" tituloDetalle="Alta de Bloque">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%" columna-visible="false"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%" columna-visible="false"/>
+                    <campo name="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%bCA.bCA.id_compromiso%"/>
+                    <campo name="importe_total"/>
+                    <campo name="articulo"/>
+                    <campo name="por_distribuir"/>
+                    <campo name="id_cat_cog"/>
+                    <campo name="id_cog"/>
+                    <campo name="enero"/>
+                    <campo name="des_especifica"/>
+                    <campo name="febrero"/>
+                    <campo name="id_programa_presupuestal"/>
+                    <campo name="programa_presupuestal"/>
+                    <campo name="marzo"/>
+                    <campo name="indicador"/>
+                    <campo name="abril"/>
+                    <campo name="id_unidad_medida"/>
+                    <campo name="mayo"/>
+                    <campo name="junio"/>
+                    <campo name="julio"/>
+                    <campo name="agosto"/>
+                    <campo name="septiembre"/>
+                    <campo name="octubre"/>
+                    <campo name="noviembre"/>
+                    <campo name="diciembre"/>
+                </tabla>
+                <nivel nombre="alta_adecuacion_compromisos_anuales_det" id="aACAd">
+                    <componente tipo="altaDirect" nombre="aACAd" id="aACAd">
+                        <tabla schema="operation" nombre="adecuacion_compromisos_anuales_det">
+                            <campo name="ur" calc="%bP.bP.id_unidad_responsable%"/>
+                            <campo name="id_periodo" calc="%bP.bP.id_periodo%"/>
+                            <!-- <campo name="id_compromiso" calc="%bCA.bCA.id_compromiso%"/> -->
+                            <campo name="id_adecuacion_compromisos_anuales" calc="%rAPC.rAPC.id_adecuacion_compromisos_anuales%"/>
+                            <campo name="id_adecuacion_compromisos_anuales_det" autogenerado="true" generacion="@prox()+1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel nombre="barrido_presupuesto_egresos" id="bPegresos" interactivo="false">
+            <componente tipo="cursor" nombre="barrido" id="bPegresos">
+                <tabla schema="operation" nombre="presupuesto_egresos">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%bP.bP.id_unidad_responsable%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bP.bP.id_periodo%"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_presupuesto_egresos"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Crear Nueva Clave Presupuestal" id="cCP" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%rAPC.rAPC.requiere_clave_presupuestal%=='Si'">
+            <componente tipo="tabla" nombre="Crear Nueva Clave Presupuestal" id="cCP" mostrarEliminar="false">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" text="" llaveForanea="false" calc="%bP.bP.id_unidad_responsable%" visible="false" columna-visible="false"/>
+                    <campo name="id_periodo" text="Año" llaveForanea="false" calc="%bP.bP.id_periodo%" visible="false"/>
+                    <campo name="id_presupuesto_egresos" text="" calc="%bPegresos.bPegresos.id_presupuesto_egresos%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_presupuesto_egresos_det" text="" autogenerado="true" generacion="@prox()+1" columna-visible="false" visible="false"/>
+                    <campo name="fecha_elaboracion" text="" calc="@fechaSistema('YYYY/MM/dd HH:mm:ss')" visible="false" columna-visible="false"/>
+                    <campo name="id_clave_egreso" text="Id Clave Presupuestal" calc="@concatenar(%bP.bP.id_periodo%+'-'+@subCadena(@ifThenElse(@consultaDirec('SELECT (id_clave_egreso) AS resultado FROM operation.presupuesto_egresos_det WHERE id_unidad_responsable='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+'ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null,'000001',@consultaDirec('SELECT to_char((((substring(id_clave_egreso FROM char_length(id_clave_egreso)-4)::int)+1)),\\''+'00000'+'\\') as resultado FROM operation.presupuesto_egresos_det WHERE id_unidad_responsable='+%bP.bP.id_unidad_responsable%+' AND id_periodo='+%bP.bP.id_periodo%+' ORDER BY id_clave_egreso DESC limit 1','resultado','int','MAGNITUS')),1,6))" columnas="2" margen-izquierdo="1"/>
+                    <campo name="id_cat_centro_registro" text="" calc="2" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="centro_registro" text="Centro de Registro" autoFiltrado="true" maxlength="5" autoFiltradoDescripcion="id_cat,descripcion" descripcionForanea="descripcion" validacion="%centro_registro%==null" validacionMensaje="Debe Capturarse Centro de Registro" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="id_cat_fondo" text="" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" autoFiltrado="true" maxlength="5" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable='true'" descripcionForanea="id_cat,descripcion" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="id_cat_fuente" text="" calc="5" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" autoFiltrado="true" maxlength="5" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable='true'" descripcionForaneaTabla="id_cat,descripcion" validacion="%fuente_financiamiento%==null" validacionMensaje="Debe Capturarse Fuente de Fianciamiento" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="id_cat_cog" calc="4" text="" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="cog" text="Clasificador por Objeto del Gasto (COG)" autoFiltrado="true" maxlength="5" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable='true'" descripcionForaneaTabla="id_cat,descripcion" validacion="%cog%==null" validacionMensaje="Debe Capturarse Clasificador por Objeto del Gasto (COG)" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="id_cat_tipo_gasto" text="" calc="6" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="tipo_gasto" text="Tipo de Gasto (TG)" autoFiltrado="true" maxlength="5" autoFiltradoDescripcion="id_cat,descripcion" validacion="%tipo_gasto%==null" validacionMensaje="Tipo de Gasto (TG) requerido" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="id_cat_municipio" text="" calc="7" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="municipio" text="Municipio" validacion="%municipio%==null" validacionMensaje="Municipio es requerido" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="id_clasif_funcional" text="" calc="8" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="clasificador_funcional" text="Clasificador Funcional" autoFiltrado="true" maxlength="5" autoFiltradoDescripcion="id_cat,descripcion" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="id_cat_clasif_programatico" text="" calc="9" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="clasificador_programatico" text="Clasificador Programático" autoFiltrado="true" maxlength="5" autoFiltradoDescripcion="id_cat,descripcion" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="id_cat_progra_presup" text="" calc="10" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="programa_presupuestario" text="Programa Presupuestario (PP)" autoFiltrado="true" maxlength="5" autoFiltradoDescripcion="id_cat,descripcion" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" habilitado="false" columnas="2" margen-izquierdo="1" calcCliente="@concatenar(@ifThenElse(%centro_registro%==null,'',%centro_registro%)+' '+@ifThenElse(%fondo_contable%==null,'',%fondo_contable%)+' '+@ifThenElse(%cog%==null,'',%cog%)+' '+@ifThenElse(%fuente_financiamiento%==null,'',%fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestario%==null,'',%programa_presupuestario%))"/>
+                    <!--<campo name="presupuesto_autorizado" text="" columna-visible="false"/>
+                    <campo name="presupuesto_reservado" text="" columna-visible="false"/>
+                    <campo name="presupuesto_precomprometido" text="" columna-visible="false"/>
+                    <campo name="presupuesto_comprometido" text="Importe Comprometido"/>
+                    <campo name="presupuesto_devengado" text="" columna-visible="false"/>
+                    <campo name="presupuesto_ejercido" text=""/>
+                    <campo name="presupuesto_pagado" text=""/>
+                    <campo name="presupuesto_ampliacion" text=""/>
+                    <campo name="presupuesto_reduccion" text=""/>
+                    <campo name="clave_presup_operativa" text=""/>-->
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="Ampliación Líquida" id="aL" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==1">
+            <componente tipo="tabla" nombre="Ampliación Líquida" id="aL" accionDefault="editar" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="compromisos_anual_det" id="aBl">
+                    <campo name="ur" text="UR" filtroCampo="ur" filtroOperador="=" filtroValor="%bCA.bCA.ur%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_compromiso" text="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%bCA.bCA.id_compromiso%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_detalle_compromiso" text="Renglón" width="100" habilitado="false" visible="false"/>
+                    <campo name="id_periodo" text="Año" width="100" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bCA.bCA.id_periodo%" llaveForanea="false" columna-visible="true" visible="false"/>
+                    <campo name="articulo" text="Artículo" width="140" habilitado="false" descripcionForanea="clave_articulo,descripcion" descripcionForaneaTabla="clave_articulo,descripcion" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" width="270" llaveForanea="false" habilitado="false" columnas="2" margen-izquierdo="1"/>
+
+                    <campo name="importe_ampliacion_com" text="Importe Total Ampliacion" habilitado="false" formatoMoneda="true" width="290" columnas="2" margen-izquierdo="1" calcCliente="@ifThenElse(@consultaDirec('SELECT (importe_ampliacion_com) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (importe_ampliacion_com) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+%importe_ampliacion_com_modificado%"/>
+                    <campo name="importe_ampliacion_com_modificado" text="Importe de Ampliación" calcCliente="@ifThenElse(%ur%!=null,0,0)" formatoMoneda="true" width="290" columnas="2" margen-izquierdo="1"/>
+                    <campo name="prorratear" text="Prorratear" width="150" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="mes_act" text="mes_act" width="120" visible="false" columna-visible="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="importe_total" text="Importe Aprobado" formatoMoneda="true" width="150" columnas="2" margen-izquierdo="1" visible="false"/>
+                    <campo name="presupuesto_comprometer" text="Comprometido" formatoMoneda="true" width="150" visible="false"/>
+                    <campo name="presupuesto_p_ejercer" text="Por Ejercer" formatoMoneda="true" width="140" visible="false"/>
+                    
+                    <campo name="mes_actual" text="mes_actual" visible="false" columna-visible="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="importexmes" text="importexmes" columnas="3" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(%importe_ampliacion_com_modificado%==null,0,%importe_ampliacion_com_modificado%)/@ifThenElse(%mes_actual%==null,0,%mes_actual%),0)" visible="false" columna-visible="false"/>
+                    <campo name="por_calendarizar" text="Por Calendarizar" formatoMoneda="true" width="150" habilitado="false" columnas="2" margen-izquierdo="1" columna-visible="true" calcCliente="@redondearDecimales(@castTo(@ifThenElse(%enero%==null,0,%enero%)+@ifThenElse(%febrero%==null,0,%febrero%)+
+                    @ifThenElse(%marzo%==null,0,%marzo%)+@ifThenElse(%abril%==null,0,%abril%)+@ifThenElse(%mayo%==null,0,%mayo%)+@ifThenElse(%junio%==null,0,%junio%)+@ifThenElse(%julio%==null,0,%julio%)+@ifThenElse(%agosto%==null,0,%agosto%)+
+                    @ifThenElse(%septiembre%==null,0,%septiembre%)+@ifThenElse(%octubre%==null,0,%octubre%)+@ifThenElse(%noviembre%==null,0,%noviembre%)+@ifThenElse(%diciembre%==null,0,%diciembre%),'double'),1,'arriba')"/>
+                    
+                    
+                    <campo name="enero" text="Enero" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 1>=%mes_act%,
+                    @ifThenElse(%suma_enero%==null,0,%suma_enero%),
+                    @ifThenElse(@consultaDirec('SELECT (enero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (enero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_enero" text="suma_enero" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (enero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (enero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+                    
+                    <campo name="febrero" text="Febrero" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 2>=%mes_act%,
+                    @ifThenElse(%suma_febrero%==null,0,%suma_febrero%),
+                    @ifThenElse(@consultaDirec('SELECT (febrero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (febrero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_febrero" text="suma_febrero" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (febrero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (febrero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="marzo" text="Marzo" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 3>=%mes_act%,
+                    @ifThenElse(%suma_marzo%==null,0,%suma_marzo%),
+                    @ifThenElse(@consultaDirec('SELECT (marzo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (marzo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_marzo" text="suma_marzo" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (marzo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (marzo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="abril" text="Abril" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 4>=%mes_act%,
+                    @ifThenElse(%suma_abril%==null,0,%suma_abril%),
+                    @ifThenElse(@consultaDirec('SELECT (abril) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (abril) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_abril" text="suma_abril" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (abril) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (abril) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="mayo" text="Mayo" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 5>=%mes_act%,
+                    @ifThenElse(%suma_mayo%==null,0,%suma_mayo%),
+                    @ifThenElse(@consultaDirec('SELECT (mayo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (mayo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_mayo" text="suma_mayo" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (mayo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (mayo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="junio" text="Junio" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 6>=%mes_act%,
+                    @ifThenElse(%suma_junio%==null,0,%suma_junio%),
+                    @ifThenElse(@consultaDirec('SELECT (junio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (junio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_junio" text="suma_junio" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (junio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (junio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+                    
+                    <campo name="julio" text="Julio" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 7>=%mes_act%,
+                    @ifThenElse(%suma_julio%==null,0,%suma_julio%),
+                    @ifThenElse(@consultaDirec('SELECT (julio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (julio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_julio" text="suma_julio" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (julio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (julio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="agosto" text="Agosto" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 8>=%mes_act%,
+                    @ifThenElse(%suma_agosto%==null,0,%suma_agosto%),
+                    @ifThenElse(@consultaDirec('SELECT (agosto) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (agosto) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_agosto" text="suma_agosto" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (agosto) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (agosto) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="septiembre" text="Septiembre" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 9>=%mes_act%,
+                    @ifThenElse(%suma_septiembre%==null,0,%suma_septiembre%),
+                    @ifThenElse(@consultaDirec('SELECT (septiembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (septiembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_septiembre" text="suma_septiembre" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (septiembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (septiembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="octubre" text="Octubre" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 9>=%mes_act%,
+                    @ifThenElse(%suma_octubre%==null,0,%suma_octubre%),
+                    @ifThenElse(@consultaDirec('SELECT (octubre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (octubre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_octubre" text="suma_octubre" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (octubre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (octubre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="noviembre" text="Noviembre" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 9>=%mes_act%,
+                    @ifThenElse(%suma_noviembre%==null,0,%suma_noviembre%),
+                    @ifThenElse(@consultaDirec('SELECT (noviembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (noviembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_noviembre" text="suma_noviembre" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (noviembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (noviembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="diciembre" text="diciembre" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 9>=%mes_act%,
+                    @ifThenElse(%suma_diciembre%==null,0,%suma_diciembre%),
+                    @ifThenElse(@consultaDirec('SELECT (diciembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (diciembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_diciembre" text="suma_diciembre" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (diciembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (diciembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+                </tabla>
+               <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="crearNuevaInstancia" id="cIAL" interactivo="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==1">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cIAL" >
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'5ad7560e-b1b0-48e3-a69f-8aa4786deaff'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%bP.bP.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_id_periodo" calc="%bP.bP.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_compromiso_anual" calc="%bCA.bCA.id_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_id_mov_adecuacion_compromisos_anuales" calc="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%" mostrarEsc="true"/>
+                    <parametro name="out_id_adecuacion_compromisos_anuales" calc="%rAPC.rAPC.id_adecuacion_compromisos_anuales%" mostrarEsc="true"/>
+                    <!--<parametro name="out_importe_ampliacion_com" calc="%aL.aL.importe_ampliacion_com%" mostrarEsc="true"/>-->
+                    <!--<parametro name="out_importexmes" calc="%aL.aL.importexmes%" mostrarEsc="true"/>-->
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte de Adecuaciones de Compromisos Anuales" id="report_AL" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==1">
+            <componente tipo="reporte" nombre="Reporte Ampliación Líquida" id="report_AL">
+                <reporte nombre="R_Ejercicio_Pres_CA_Jo" update="true" nombreDocumento="'Reporte Ampliación Líquida'" expediente="Adecuaciones de Compromisos Anuales"  grupo="%bCA.bCA.id_compromiso%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%aL.aL.ur%"/>
+                    <campo name="periodo" type="long" calc="%aL.aL.id_periodo%"/>
+                    <campo name="idCompromiso" type="long" calc="%aL.aL.id_compromiso%"/>
+                    <campo name="id_adecuacion_compromisos_anuales" type="long" calc="%rAPC.rAPC.id_adecuacion_compromisos_anuales%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Reducción Líquida" id="rL" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==2">
+            <componente tipo="tabla" nombre="Reducción Líquida " id="rL" accionDefault="editar" mostrarEliminar="false" mostrarAgregar="false">
+                <tabla schema="operation" nombre="compromisos_anual_det" id="aBl" tituloDetalle="Alta de Bloque">
+                    <campo name="ur" text="UR" filtroCampo="ur" filtroOperador="=" filtroValor="%bCA.bCA.ur%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_compromiso" text="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%bCA.bCA.id_compromiso%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_detalle_compromiso" text="Renglón" width="100" habilitado="false" visible="false"/>
+                    <campo name="id_periodo" text="Año" width="100" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bCA.bCA.id_periodo%" llaveForanea="false" columna-visible="true" visible="false"/>
+                    <campo name="articulo" text="Artículo" width="140" habilitado="false" descripcionForanea="clave_articulo,descripcion" descripcionForaneaTabla="clave_articulo,descripcion" columnas="2" margen-izquierdo="1" columna-visible="false"/><!--llavesFijas="estatus='Activo' AND afectable=true"-->
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" width="270" llaveForanea="false" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="importe_reduccion_com" text="Importe Total Reducción" habilitado="false" formatoMoneda="true" width="290" columnas="2" margen-izquierdo="1" calcCliente="@ifThenElse(@consultaDirec('SELECT (importe_ampliacion_com) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (importe_ampliacion_com) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))+%importe_reduccion_com_modificado%"/>
+                    <campo name="importe_reduccion_com_modificado" text="Importe de Reducción" calcCliente="@ifThenElse(%ur%!=null,0,0)" formatoMoneda="true" width="290" columnas="2" margen-izquierdo="1"/>
+                    
+                    
+                    <campo name="por_calendarizar" text="Por Calendarizar" width="150" habilitado="false" columnas="2" margen-izquierdo="1" columna-visible="false" calcCliente="@redondearDecimales(@castTo(@ifThenElse(%enero%==null,0,%enero%)+@ifThenElse(%febrero%==null,0,%febrero%)+
+                    @ifThenElse(%marzo%==null,0,%marzo%)+@ifThenElse(%abril%==null,0,%abril%)+@ifThenElse(%mayo%==null,0,%mayo%)+@ifThenElse(%junio%==null,0,%junio%)+@ifThenElse(%julio%==null,0,%julio%)+@ifThenElse(%agosto%==null,0,%agosto%)+
+                    @ifThenElse(%septiembre%==null,0,%septiembre%)+@ifThenElse(%octubre%==null,0,%octubre%)+@ifThenElse(%noviembre%==null,0,%noviembre%)+@ifThenElse(%diciembre%==null,0,%diciembre%),'double'),1,'arriba')"/>
+                    
+                    <campo name="prorratear" text="Prorratear" width="150" columnas="2" margen-izquierdo="1" columna-visible="false"/>
+                    <campo name="presupuesto_comprometer" text="Comprometido" formatoMoneda="true" width="150" columnas="2" margen-izquierdo="1" visible="false"/>
+                    <campo name="importe_devengado" text="Devengado" formatoMoneda="true" width="150" visible="false"/>
+                    <campo name="saldo_compromiso" text="Saldo del Compromiso" formatoMoneda="true" width="140" visible="false"/>
+                    <campo name="mes_act" text="mes_act" width="120" local="true" type="long" calc="@castTo(@fechaSistema('MM'),'long')" visible="false" columna-visible="false"/>
+                    <campo name="mes_actual" text="mes_actual" local="true" type="long" calc="13-@castTo(@fechaSistema('MM'),'long')" visible="false" columna-visible="false"/>
+                    <campo name="importexmes" text="importexmes" calcCliente="@ifThenElse(%importe_reduccion_com%==null,0,%importe_reduccion_com%)/@castTo(%mes_actual%,'long')" visible="false" columna-visible="false"/>
+                    <campo name="importe_reduccion_com_consulta" text="consulta_imp" local="true" type="decimal" calc="@ifThenElse(@consultaDirec('SELECT (importe_reduccion_com) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (importe_reduccion_com) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+'','resultado','int','MAGNITUS'))" visible="false" columna-visible="false"/>
+                    <campo name="comparacion_importes_amp" text="comparacion_imp" local="true" type="bool" calcCliente="%importe_reduccion_com%==%importe_reduccion_com_consulta%" visible="false" columna-visible="false"/>
+                    
+                    
+                    
+                    <campo name="enero" text="Enero" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 1>=%mes_act%,
+                    @ifThenElse(%suma_enero%==null,0,%suma_enero%),
+                    @ifThenElse(@consultaDirec('SELECT (enero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (enero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_enero" text="suma_enero" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (enero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (enero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+                    
+                    <campo name="febrero" text="Febrero" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 2>=%mes_act%,
+                    @ifThenElse(%suma_febrero%==null,0,%suma_febrero%),
+                    @ifThenElse(@consultaDirec('SELECT (febrero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (febrero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_febrero" text="suma_febrero" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (febrero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (febrero) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="marzo" text="Marzo" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 3>=%mes_act%,
+                    @ifThenElse(%suma_marzo%==null,0,%suma_marzo%),
+                    @ifThenElse(@consultaDirec('SELECT (marzo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (marzo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_marzo" text="suma_marzo" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (marzo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (marzo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="abril" text="Abril" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 4>=%mes_act%,
+                    @ifThenElse(%suma_abril%==null,0,%suma_abril%),
+                    @ifThenElse(@consultaDirec('SELECT (abril) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (abril) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_abril" text="suma_abril" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (abril) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (abril) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="mayo" text="Mayo" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 5>=%mes_act%,
+                    @ifThenElse(%suma_mayo%==null,0,%suma_mayo%),
+                    @ifThenElse(@consultaDirec('SELECT (mayo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (mayo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_mayo" text="suma_mayo" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (mayo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (mayo) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="junio" text="Junio" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 6>=%mes_act%,
+                    @ifThenElse(%suma_junio%==null,0,%suma_junio%),
+                    @ifThenElse(@consultaDirec('SELECT (junio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (junio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_junio" text="suma_junio" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (junio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (junio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+                    
+                    <campo name="julio" text="Julio" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 7>=%mes_act%,
+                    @ifThenElse(%suma_julio%==null,0,%suma_julio%),
+                    @ifThenElse(@consultaDirec('SELECT (julio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (julio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_julio" text="suma_julio" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (julio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (julio) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="agosto" text="Agosto" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 8>=%mes_act%,
+                    @ifThenElse(%suma_agosto%==null,0,%suma_agosto%),
+                    @ifThenElse(@consultaDirec('SELECT (agosto) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (agosto) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_agosto" text="suma_agosto" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (agosto) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (agosto) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="septiembre" text="Septiembre" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 9>=%mes_act%,
+                    @ifThenElse(%suma_septiembre%==null,0,%suma_septiembre%),
+                    @ifThenElse(@consultaDirec('SELECT (septiembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (septiembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_septiembre" text="suma_septiembre" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (septiembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (septiembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="octubre" text="Octubre" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 9>=%mes_act%,
+                    @ifThenElse(%suma_octubre%==null,0,%suma_octubre%),
+                    @ifThenElse(@consultaDirec('SELECT (octubre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (octubre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_octubre" text="suma_octubre" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (octubre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (octubre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="noviembre" text="Noviembre" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 9>=%mes_act%,
+                    @ifThenElse(%suma_noviembre%==null,0,%suma_noviembre%),
+                    @ifThenElse(@consultaDirec('SELECT (noviembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (noviembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_noviembre" text="suma_noviembre" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (noviembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (noviembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+
+                    <campo name="diciembre" text="diciembre" width="120" columnas="2" margen-izquierdo="1" columna-visible="false"
+                    calcCliente="@ifThenElse(%prorratear%==true AND 9>=%mes_act%,
+                    @ifThenElse(%suma_diciembre%==null,0,%suma_diciembre%),
+                    @ifThenElse(@consultaDirec('SELECT (diciembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (diciembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))
+                    )"/>
+                    <campo name="suma_diciembre" text="suma_diciembre" local="true" type="decimal" calcCliente="@ifThenElse(%prorratear%==true,@ifThenElse(@consultaDirec('SELECT (diciembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS')==null,0,@consultaDirec('SELECT (diciembre) AS resultado 
+                    FROM operation.compromisos_anual_det 
+                    WHERE ur='+%bCA.bCA.ur%+' AND id_periodo='+%bCA.bCA.id_periodo%+' AND id_compromiso='+%bCA.bCA.id_compromiso%+' AND id_detalle_compromiso='+%id_detalle_compromiso%+'','resultado','int','MAGNITUS'))-@ifThenElse(%importexmes%==null,0,%importexmes%),0)" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="crearNuevaInstancia" id="cIRL" interactivo="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==2">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cIRL" >
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'5ad7560e-b1b0-48e3-a69f-8aa4786deaff'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%bP.bP.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_id_periodo" calc="%bP.bP.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_compromiso_anual" calc="%bCA.bCA.id_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_id_mov_adecuacion_compromisos_anuales" calc="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%" mostrarEsc="true"/>
+                    <parametro name="out_id_adecuacion_compromisos_anuales" calc="%rAPC.rAPC.id_adecuacion_compromisos_anuales%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte de Adecuaciones de Compromisos Anuales" id="report_RL" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==2">
+            <componente tipo="reporte" nombre="Reporte Reducción Líquida" id="report_RL">
+                <reporte nombre="R_Ejercicio_Pres_CA_Jo_Reduccion" update="true" nombreDocumento="'Reporte Reducción Líquida'" expediente="Adecuaciones de Compromisos Anuales"  grupo="%bCA.bCA.id_compromiso%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%rL.rL.ur%"/>
+                    <campo name="periodo" type="long" calc="%rL.rL.id_periodo%"/>
+                    <campo name="idCompromiso" type="long" calc="%bCA.bCA.id_compromiso%"/>
+                    <campo name="id_adecuacion_compromisos_anuales" type="long" calc="%rAPC.rAPC.id_adecuacion_compromisos_anuales%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Traspaso Presupuestal" id="tP" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==3">
+            <componente tipo="tabla" nombre="Traspaso Presupuestal" id="tP" accionDefault="editar" mostrarEliminar="false" mostrarAgregar="false">
+                <tabla schema="operation" nombre="compromisos_anual_det" id="aBl" tituloDetalle="Alta de Bloque">
+                    <campo name="ur" text="UR" filtroCampo="ur" filtroOperador="=" filtroValor="%bCA.bCA.ur%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_compromiso" text="id_compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%bCA.bCA.id_compromiso%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="id_detalle_compromiso" text="Renglón" width="100" habilitado="false" visible="false"/>
+                    <campo name="id_periodo" text="Año" width="100" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%bCA.bCA.id_periodo%" llaveForanea="false" columna-visible="true" visible="false"/>
+                    <campo name="articulo" text="Artículo" width="140" habilitado="false" descripcionForanea="clave_articulo,descripcion" descripcionForaneaTabla="clave_articulo,descripcion" columnas="6" margen-izquierdo="2" visible="false" columna-visible="false"/><!--llavesFijas="estatus='Activo' AND afectable=true"-->
+                    <campo name="clave_presupuestal" text="Clave Presupuestal Origen" width="270" llaveForanea="false" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="importe_reduccion" text="Importe Reducción" columnas="2" margen-izquierdo="1"/>
+                    <campo name="clave_presupuestal_destino_local" text="Clave Presupuestal Destino" width="270" columnas="2" margen-izquierdo="1" descripcionForanea="clave_presupuestal" descripcionForaneaTabla="clave_presupuestal" autoFiltradoEsquema="operation" autoFiltradoTabla="presupuesto_egresos_mes_det" autoFiltradoLlave="clave_presupuestal" autoFiltradoDescripcion="clave_presupuestal" autoFiltrado="true" columna-visible="false"  habilitado="true" local="true" type="string"/>
+                    <campo name="clave_presupuestal_destino" text="" calcCliente="%clave_presupuestal_destino_local%" visible="false" columna-visible="false"/>
+                    <campo name="importe_ampliacion" text="Importe Ampliación" calcCliente="%importe_reduccion%" columnas="2" margen-izquierdo="1"/>
+                    <campo name="presupuesto_comprometer" text="Comprometido" formatoMoneda="true" width="150" visible="false"/>
+                    <campo name="importe_devengado" text="Devengado" formatoMoneda="true" width="150" visible="false"/>
+                    <campo name="saldo_compromiso" text="Saldo del Compromiso" formatoMoneda="true" width="200" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                    <boton nombre="formulario" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="crearNuevaInstancia" id="cITP" interactivo="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==3">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="cITP" >
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'5ad7560e-b1b0-48e3-a69f-8aa4786deaff'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%bP.bP.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_id_periodo" calc="%bP.bP.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_compromiso_anual" calc="%bCA.bCA.id_compromiso%" mostrarEsc="true"/>
+                    <parametro name="out_id_mov_adecuacion_compromisos_anuales" calc="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%" mostrarEsc="true"/>
+                    <parametro name="out_id_adecuacion_compromisos_anuales" calc="%rAPC.rAPC.id_adecuacion_compromisos_anuales%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte Traspaso Presupuestal" id="report_TP" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%rAPC.rAPC.id_mov_adecuacion_compromisos_anuales%==3">
+            <componente tipo="reporte" nombre="Reporte Traspaso Presupuestal" id="report_TP">
+                <reporte nombre="repor_traspaso_jsus" update="true" nombreDocumento="'Reporte Traspaso Líquida'" expediente="Adecuaciones de Compromisos Anuales"  grupo="%bCA.bCA.id_compromiso%" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%tP.tP.ur%"/>
+                    <campo name="periodo" type="long" calc="%tP.tP.id_periodo%"/>
+                    <campo name="idCompromiso" type="long" calc="%bCA.bCA.id_compromiso%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
