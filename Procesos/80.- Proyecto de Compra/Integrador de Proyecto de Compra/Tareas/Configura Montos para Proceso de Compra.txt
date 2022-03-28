@@ -1,0 +1,163 @@
+<tarea id="Configura Montos para Proceso de Compra" nombre="Configura Montos para Proceso de Compra" version="1.0.0" autor="Gustavo Escalante">
+    <pagina id="1">
+         <!--<nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    </tabla>
+                </componente>
+         </nivel>-->
+         
+         <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="nombre"/>
+                    <campo name="primer_apellido"/>
+                    <campo name="segundo_apellido"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="per" nombre="per" interactivo="false">
+				<componente tipo="cursor" id="per" nombre="per">
+					<tabla schema="catalog" nombre="periodo">
+						<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+						<campo name="id_periodo"/>
+						<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+						<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+						
+						<campo name="adjudicacion" text="IAdjudicacióno" local="true" type="string" calc="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Adjudicación Directa'+'\\'','resultado','bool','MAGNITUS')"/>
+                        <campo name="proveedores" text="Proveedores" local="true" type="string" calc="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Invitación a Tres Proveedores'+'\\'','resultado','bool','MAGNITUS')"/>
+                        <campo name="publica" text="Pública" local="true" type="string" calc="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Licitación Pública'+'\\'','resultado','bool','MAGNITUS')"/>
+                        <campo name="licitacion" text="Licitación" local="true" type="string" calc="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Licitación Restringida'+'\\'','resultado','bool','MAGNITUS')"/>
+                       
+                        
+                         <campo name="itp_excepcion" text="Invitación a Tres Proveedores por Excepción" local="true" type="string" calc="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Invitación a Tres Proveedores por Excepción'+'\\'','resultado','bool','MAGNITUS')"/>
+					</tabla>
+				</componente>
+			</nivel>
+        <nivel id="montos" nombre="montos" interactivo="false" ejecutar="%per.per.adjudicacion%=='false'"><!--ejecutar="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Adjudicación Directa'+'\\'','resultado','bool','MAGNITUS')==false"-->
+                            <componente id="montos" nombre="montos" tipo="altaDirect">
+                                <tabla schema="operation" nombre="montos_compras">
+                                    <campo name="ur" calc="$config.ur$"/>
+                                    <campo name="periodo" calc="%per.per.id_periodo%"/>
+                                    <campo name="id_montos_compras" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="proceso" calc="'Adjudicación Directa'"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                                    <campo name="importe_minimo"/>
+                                    <campo name="importe_maximo"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <nivel id="montosITP" nombre="montosITP" interactivo="false" ejecutar="%per.per.proveedores%=='false'"><!--ejecutar="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Invitación a Tres Proveedores'+'\\'','resultado','bool','MAGNITUS')==false"-->
+                            <componente id="montosITP" nombre="montosITP" tipo="altaDirect">
+                                <tabla schema="operation" nombre="montos_compras">
+                                    <campo name="ur" calc="$config.ur$"/>
+                                    <campo name="periodo" calc="%per.per.id_periodo%"/>
+                                    <campo name="id_montos_compras" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="proceso" calc="'Invitación a Tres Proveedores'"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                                    <campo name="importe_minimo"/>
+                                    <campo name="importe_maximo"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <nivel id="montosLP" nombre="montosLP" interactivo="false" ejecutar="%per.per.publica%=='false'"><!--ejecutar="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Licitación Pública'+'\\'','resultado','bool','MAGNITUS')==false"-->
+                            <componente id="montosLP" nombre="montosLP" tipo="altaDirect">
+                                <tabla schema="operation" nombre="montos_compras">
+                                    <campo name="ur" calc="$config.ur$"/>
+                                    <campo name="periodo" calc="%per.per.id_periodo%"/>
+                                    <campo name="id_montos_compras" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="proceso" calc="'Licitación Pública'"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                                    <campo name="importe_minimo"/>
+                                    <campo name="importe_maximo"/>
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <nivel id="montosLR" nombre="montosLR" interactivo="false" ejecutar="%per.per.licitacion%=='false'"><!--ejecutar="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Licitación Restringida'+'\\'','resultado','bool','MAGNITUS')==false"-->
+                            <componente id="montosLR" nombre="montosLR" tipo="altaDirect">
+                                <tabla schema="operation" nombre="montos_compras">
+                                    <campo name="ur" calc="$config.ur$"/>
+                                    <campo name="periodo" calc="%per.per.id_periodo%"/>
+                                    <campo name="id_montos_compras" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="proceso" calc="'Licitación Restringida'"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                                    <campo name="importe_minimo"/>
+                                    <campo name="importe_maximo"/>
+                                    
+                                </tabla>
+                            </componente>
+                        </nivel>
+                        <nivel id="montosITPE" nombre="montosITPE" interactivo="false" ejecutar="%per.per.itp_excepcion%=='false'"><!--ejecutar="@consultaDirec('
+                        SELECT count(proceso) &gt; 0 AS resultado FROM
+                        operation.montos_compras where ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' and proceso='+'\\''+'Licitación Restringida'+'\\'','resultado','bool','MAGNITUS')==false"-->
+                            <componente id="montosITPE" nombre="montosITPE" tipo="altaDirect">
+                                <tabla schema="operation" nombre="montos_compras">
+                                    <campo name="ur" calc="$config.ur$"/>
+                                    <campo name="periodo" calc="%per.per.id_periodo%"/>
+                                    <campo name="id_montos_compras" autogenerado="true" generacion="@prox()+1"/>
+                                    <campo name="proceso" calc="'Invitación a Tres Proveedores por Excepción'"/>
+                                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                                    <campo name="importe_minimo"/>
+                                    <campo name="importe_maximo"/>
+                                    
+                                </tabla>
+                            </componente>
+                        </nivel>
+    
+        <nivel id="CMPP" nombre="Configura Montos para Proceso de Compra" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="tabla" nombre="Montos para Asignación de Procesos" id="montos" mostrarAgregar="false" mostrarEliminar="false">
+                    <tabla schema="operation" nombre="montos_compras" id="compra">
+                        <campo name="ur" text="" calc="$config.ur$" columna-visible="false" visible="false"/>
+                        <campo name="periodo" text="Año" calc="%per.per.id_periodo%" llaveForanea="false" columnas="3" margen-izquierdo="2"/> <!--Coloque en el campo tex el año y borre columna-visible="false" visible="false" se coloco llaveForanea="false"-->
+                        <campo name="id_montos_compras" text="" autogenerado="true" generacion="@prox()+1" columna-visible="false" visible="false"/>
+                        <campo name="proceso" text="Proceso" type="string" habilitado="false" columnas="3" margen-derecho="2"/>
+                        <campo name="importe_minimo" text="Importe Minimo *" formatoMoneda="true" columnas="3" margen-izquierdo="2" validacion="%importe_minimo%&gt;%importe_maximo%" validacionMensaje="Importe Minimo es mayor a Importe Máximo"/>
+                        <campo name="importe_maximo" text="Importe Máximo *" formatoMoneda="true" columnas="3" margen-derecho="2" validacion="%importe_maximo%&lt;%importe_minimo%" validacionMensaje="Importe Máximo es menor a Importe Minimo"/>
+                        <!--<campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" columna-visible="false"  calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>-->
+                    </tabla>
+                <!--<acciones>
+                        <accion nombre="grabar" hacer="Saltar siguiente nivel"/>
+                </acciones>-->
+                <!--<estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Guardar"/>
+                    <boton nombre="formulario" posicion="derecha" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>-->
+            </componente>
+            </nivel>
+            <nivel id="RCMPP" nombre="Configura Montos para Proceso de Compra">
+            <componente id="Consulta" tipo="reporte" nombre="Consulta de Montos para Asignacion de Procesos">
+                <reporte nombre="repor_mnt_procesoAdquisiciones_jsus">
+                    <campo name="ur" type="long" calc="%per.per.id_unidad_responsable%"/>
+                    <campo name="id_periodo" type="long" calc="%per.per.id_periodo%"/> <!-- modifique periodo por id_periodo, ya que es el campo de la tabla para que se muestre el reporte.-->
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/> 
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
