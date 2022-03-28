@@ -1,0 +1,571 @@
+<tarea id="Modifica_Reclasificacion_Presupuestal_Egreso" nombre="Modifica Reclasificación Presupuestal del Egreso" autor="HMVG" version="1.1">
+    <pagina id="1">
+        
+        <nivel id="FU" nombre="Filtrar Usuarios" interactivo="false">
+            <componente id="FU" nombre="Filtrar Usuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="inParams" nombre="Parametros"  interactivo="false">
+            <componente id="inParams"  nombre="Parametros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas" local="true" type="long" calc="$inParam.id_duep_reclas$"/>
+                    <campo name="id_duep_reclas_presup_e" local="true" type="long" calc="$inParam.id_duep_reclas_presup_e$"/>
+                    <campo name="orden_pago" local="true" type="long" calc="$inParam.orden_pago$"/>
+                    <campo name="tipo_gestion" local="true" type="long" calc="$inParam.tipo_gestion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="MRPE" nombre="Selección de Orden de Pago para Reclasificación del Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="MRPE" nombre="Modifica Clave de Orden de Pago para Reclasificación del Egreso" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="duep_reclas_presup_e" >
+                    <campo name="ur" text="ur" visible="false" columna-visible="false" llaveForanea="false" calc="%inParams.inParams.ur%"/>
+                    <campo name="periodo" text="periodo" visible="false" columna-visible="false" llaveForanea="false" calc="%inParams.inParams.periodo%"/>
+                    <campo name="id_duep_reclas_presup_e" text="Folio de Reclasificación" calc="%inParams.inParams.id_duep_reclas_presup_e%" visible="false" columna-visible="false"/>
+                    <campo name="folio_duep" text="Folio de Reclasificación" columnas="3" margen-izquierdo="1" habilitado="false"/>
+                    <campo name="fecha_registro" text="Fecha de Registro" columnas="3" />
+                    <campo name="folio_orden_pago" text="Folio Orden Pago" descripcionForanea="folio_orden_pago" columnas="3" habilitado="false"/>
+                    <campo name="id_cat_fondo" text="id_f" calc="3" visible="false" llaveForanea="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" columnas="3" margen-izquierdo="1" descripcionForanea="id_cat,descripcion"/>
+                    <campo name="id_cat_fuente" text="id_f" calc="5" visible="false" llaveForanea="false"/>
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" columnas="3" descripcionForanea="id_cat,descripcion"/>
+                    <campo name="justificacion" text="Justificación" columnas="9" margen-izquierdo="1" height="100"/>
+                    <campo name="fop" text="fop" visible="false" local="true" type="long" referenciaForanea="folio_orden_pago" celdaForanea="duep_asociado" autocompletar="true"/>
+                    <campo name="seleccion_gestion" text="selección" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="usuario" visible="false" calc="%FU.FU.id_usuario%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" columnas="3" margen-izquierdo="4" margen-derecho="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="FOP" nombre="Filtro Orden Pago" interactivo="false">
+            <componente id="FOP" tipo="cursor" nombre="Filtro Orden Pago">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParams.inParams.orden_pago%"/>
+                    <campo name="duep_asociado"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="FDUEP" nombre="Filtro Folio Duep" interactivo="false">
+            <componente id="FDUEP" tipo="cursor" nombre="Filtro Folio Duep">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="@castTo(%FOP.FOP.duep_asociado%,'long')"/>
+                    <campo name="folio_duep_a"/>
+                    <campo name="beneficiario"/>
+                    <campo name="tramite"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto"/>
+                    <campo name="id_unidad_ejecutora_gasto"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- INICIO SECCIÓN RECLASIFICACIÓN DE CLAVES PRESUPUESTALES-->
+        <nivel id="nAgregar" nombre="Clave Origen de Orden de Pago a Reclasificar" mostrarProximoNivel="false" mostrarNivelAnterior="false"  ejecutar="%inParams.inParams.tipo_gestion%==1">
+            <componente id="cpAgregar" tipo="tabla" nombre="Clave Origen de Orden de Pago a Reclasificar" filtro="true" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false"> 
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%" habilitado="false"/>
+                    <campo name="periodo" text="Periodo" columnas="3" margen-izquierdo="2" visible="false" llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%" habilitado="false"/>
+                    <campo name="folio_duep" text="folio_duep" columnas="3" margen-derecho="2" visible="false" columna-visible="false" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FDUEP.FDUEP.folio_duep%"/>
+                    <campo name="id_duep_reclas_presup_e" text="id_parametro" visible="false" width="100" columna-visible="false" calc="%MRPE.MRPE.id_duep_reclas_presup_e%" local="true" type="long"/>
+                    <campo name="tipo_gestion" text="parametro_Gestión" visible="false" width="100" columna-visible="false" calc="%inParams.inParams.tipo_gestion%" local="true" type="long"/>
+                    <campo name="folio_duep_detalle" text="Renglón" visible="true" width="70" columna-visible="true" cellsalign="center"/>
+                    <campo name="fecha_registro" text="Fecha" visible="false" columna-visible="false"/>
+                    <campo name="articulo" text="Artículo" width="200" descripcionForaneaTabla="clave_articulo,descripcion_articulo"/>
+                    
+                    <campo name="fondo_cont_l" text="FC" visible="false" width="100" columna-visible="false" local="true" type="string" calc="%MRPE.MRPE.id_fondo_contable%"/>
+                    <campo name="fuente_l" text="FF" visible="false" width="100" columna-visible="false" local="true" type="string" calc="%MRPE.MRPE.fuente_financiamiento%"/>
+                    <campo name="id_cat_objeto_gasto" text="ID COG" columna-visible="false" visible="false"/>
+                    <campo name="c_objeto_gasto" text="COG"  descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" habilitado="false" width="200"/>
+                    <campo name="mes_cve_presupuestal" text="mes" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" width="300" habilitado="false" descripcionForanea="clave_presupuestal" descripcionForaneaTabla="clave_presupuestal"/>
+                    <campo name="cantidad" text="Cantidad"  habilitado="false" width="80" cellsalign="center"/>
+                    <campo name="u_medida" text="Unidad de Medida" habilitado="false" width="125"/>
+                    <campo name="precio_unitario" text="Costo Unitario" habilitado="false" width="130" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="iva" text="IVA" habilitado="false" width="100" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="total" text="Importe Total" habilitado="false" width="130" formatoMoneda="true" cellsalign="right"/>
+                    <campo name="reclasificaciones_asignadas_bloq" text="Reclasificaciones Asignadas al Renglón"  width="160" habilitado="false"/>
+                    <campo name="accion" text="accion Asignadas al Renglón"  local="true" type="long" calc="1" visible="false" columna-visible="false"/>
+                    <!--<confirmaciones>
+                        <confirmacion confirmacionInteraccion="@ifThenElse(@consultaDirec('SELECT SUM(importe_total) as result FROM operation.duep_reclas_presup_e_det WHERE ur='+$param.ur$+' AND periodo='+$param.periodo$+' AND id_duep_reclas_presup_e='+$param.id_duep_reclas_presup_e$+' AND  id_duep='+$param.folio_duep$+' AND id_duep_det='+$param.folio_duep_detalle$,'result','decimal','MAGNITUS')!=%barreDuepDet.barreDuepDet.total%,true,false)" confirmacionTitulo="'Importe Total Erroneo'" confirmacionMensaje="'La suma de los totales no coincide con el Total de la orden de pago'" tipo="avanzar"/>
+                    </confirmaciones>-->
+                    <tareas>
+                        <tarea nombre="Seleccionar" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_reclas_presup_e,folio_duep,folio_duep_detalle,tipo_gestion,fondo_cont_l,fuente_l,accion" ref="task=87e84026-d67c-45af-a103-ffb2315e272c"/>
+                    </tareas>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+        </nivel>
+        
+        
+        
+        
+        <nivel id="agregaDuep" nombre="agregaDuep" interactivo="false" ejecutar="%inParams.inParams.tipo_gestion%==1">
+            <componente id="agregaDuep" nombre="agregaDuep" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%inParams.inParams.id_duep_reclas%"/>
+                    <campo name="id_duep_asociado"/>
+                    <campo name="duep_asociado"/>
+                    <campo name="duep"/>
+                    <campo name="fecha_emision"/>
+                    <campo name="tramite" />
+                    <campo name="beneficiario" />
+                    <campo name="id_cat_fuente_financiamiento"/>
+                    <campo name="fuente_financiamiento"/>
+                    <campo name="id_cat_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="estatus"/>
+                    <campo name="justificacion" calc="%MRPE.MRPE.justificacion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+       <nivel id="agregaDuep_detalle" nombre="agregaDuep_detalle" interactivo="false" ejecutar="%inParams.inParams.tipo_gestion%==1">
+            <componente id="agregaDuep_detalle" nombre="agregaDuep_detalle" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_presup_e_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="id_duep_reclas_presup_e" filtroCampo="id_duep_reclas_presup_e" filtroOperador="=" filtroValor="%inParams.inParams.id_duep_reclas_presup_e%"/>
+                    <campo name="id_duep_reclas_presup_e_det"/>
+                    <campo name="id_duep"/>
+                    <campo name="id_duep_det"/>
+                    <campo name="id_pres_origen"/>
+                    <campo name="cve_pres_origen"/>
+                    <campo name="mes"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="folio_orden_pago"/>
+                    <campo name="id_cog"/>
+                    <campo name="cog"/>
+                    <campo name="id_cat_fondo"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="id_cat_fuente"/>
+                    <campo name="fuente_financiamiento"/>
+                    <campo name="id_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="id_pres_destino"/>
+                    <campo name="cve_pres_destino"/>
+                    <campo name="cantidad"/>
+                    <campo name="importe_unitario"/>
+                    <campo name="importe_total"/>
+                    <campo name="registro_original" />
+                </tabla>
+                <nivel id="barre_duep_dt" nombre="barre_duep_dt" interactivo="false">
+                    <componente id="barre_duep_dt" nombre="barre_duep_dt" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                            <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%agregaDuep_detalle.agregaDuep_detalle.id_duep%"/>
+                            <campo name="folio_duep_detalle" filtroCampo="folio_duep_detalle" filtroOperador="=" filtroValor="%agregaDuep_detalle.agregaDuep_detalle.id_duep_det%"/>
+                            <campo name="tipo_detalle"/>
+                            <campo name="articulo"/>
+                            <campo name="cantidad"  />
+                            <campo name="u_medida" />
+                            <campo name="descripcion_especifica"/>
+                            <campo name="id_cat_programa_presupuestal"/>
+                            <campo name="programa_presupuestal"/>
+                            <campo name="indicador"/>
+                            <campo name="total"/>
+                            <campo name="clave_presupuestal"/>
+                            <campo name="mes_cve_presupuestal"/>
+                        </tabla>
+                   </componente>
+                </nivel>
+                <nivel id="barre_pog_pre" nombre="barre_pog_pre" interactivo="false">
+                    <componente id="barre_pog_pre" nombre="barre_pog_pre" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="@ifThenElse(%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%==null,%barre_duep_dt.barre_duep_dt.clave_presupuestal%,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%)"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%agregaDuep_detalle.agregaDuep_detalle.mes%"/>
+                            <campo name="id_cat_progra_presup"/>
+                            <campo name="programa_presupuestario"/>
+                        </tabla>
+                   </componente>
+                </nivel>
+                <nivel id="agregaDuep_det" nombre="agregaDuep_det" interactivo="false">
+                    <componente id="agregaDuep_det" nombre="agregaDuep_det" tipo="altaDirect">
+                        <tabla schema="operation" nombre="duep_reclas_pres_det">
+                            <campo name="ur" calc="%inParams.inParams.ur%"/>
+                            <campo name="periodo" calc="%inParams.inParams.periodo%"/>
+                            <campo name="id_duep_reclas_pres" calc="%agregaDuep.agregaDuep.id_duep_reclas_pres%"/>
+                            <campo name="id_duep_reclas_pres_det" calc="%agregaDuep_detalle.agregaDuep_detalle.id_duep_reclas_presup_e_det%"/>
+                            <!--<campo name="id_presupuesto_e_origen" calc="1" llaveForanea="false"/>-->
+                            <!--<campo name="clave_presupuestal_origen" calc="%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen%"/>-->
+                            <!--<campo name="cve_pres_origen1" calc="@consultaDirec('SELECT clave_presupuestal AS result FROM operation.presupuesto_egresos_det WHERE -->
+                            <!--id_unidad_responsable='+%inParams.inParams.ur%+' AND id_periodo='+%inParams.inParams.periodo%+' AND id_presupuesto_egresos=1 AND id_presupuesto_egresos_det='+%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen%,'result','string','MAGNITUS')"/>-->
+                            <!--<campo name="id_presupuesto_e" calc="1" llaveForanea="false"/>-->
+                            <!--<campo name="clave_presupuestal" calc="@ifThenElse(%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino%==null,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen%,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino%)"/>-->
+                            <campo name="mes" calc="%agregaDuep_detalle.agregaDuep_detalle.mes%"/>
+                            <campo name="cve_pres_origen1" calc="%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen1%"/>
+                            <campo name="cve_pres_destino1" calc="@ifThenElse(%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%==null,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen1%,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%)"/>
+                            <campo name="tipo_detalle" calc="%barre_duep_dt.barre_duep_dt.tipo_detalle%"/>
+                            <campo name="articulo" calc="%barre_duep_dt.barre_duep_dt.articulo%"/>
+                            <campo name="cantidad"  calc="%agregaDuep_detalle.agregaDuep_detalle.cantidad%"/>
+                            <campo name="u_medida" calc="%barre_duep_dt.barre_duep_dt.u_medida%"/>
+                            <campo name="descripcion_especifica" calc="%barre_duep_dt.barre_duep_dt.descripcion_especifica%"/>
+                            <campo name="precio_unitario"  calc="%agregaDuep_detalle.agregaDuep_detalle.importe_unitario%"/>
+                            <campo name="id_cat_objeto_gasto"  calc="%agregaDuep_detalle.agregaDuep_detalle.id_cog%"/>
+                            <campo name="c_objeto_gasto"  calc="%agregaDuep_detalle.agregaDuep_detalle.cog%"/>
+                            <campo name="id_cat_programa_presupuestal" calc="%barre_pog_pre.barre_pog_pre.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestal" calc="%barre_pog_pre.barre_pog_pre.programa_presupuestario%"/>
+                            <campo name="indicador" calc="%barre_duep_dt.barre_duep_dt.indicador%"/>
+                            <campo name="total"  calc="%agregaDuep_detalle.agregaDuep_detalle.importe_total%"/>
+                            <campo name="registro_original" calc="%agregaDuep_detalle.agregaDuep_detalle.registro_original%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="modificaDuep" nombre="modificaDuep" interactivo="false">
+                    <componente id="modificaDuep" nombre="modificaDuep" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_reclas_pres_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                            <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%agregaDuep.agregaDuep.id_duep_reclas_pres%"/>
+                            <campo name="id_duep_reclas_pres_det" filtroCampo="id_duep_reclas_pres_det" filtroOperador="=" filtroValor="%agregaDuep_detalle.agregaDuep_detalle.id_duep_reclas_presup_e_det%"/>
+                            <campo name="mes" calc="%agregaDuep_detalle.agregaDuep_detalle.mes%" llaveForanea="false"/>
+                            <campo name="cve_pres_origen1" calc="%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen1%"/>
+                            <campo name="cve_pres_destino1" calc="@ifThenElse(%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%==null,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen1%,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%)"/>
+                            <campo name="tipo_detalle" calc="%barre_duep_dt.barre_duep_dt.tipo_detalle%"/>
+                            <campo name="articulo" calc="%barre_duep_dt.barre_duep_dt.articulo%"/>
+                            <campo name="cantidad"  calc="%agregaDuep_detalle.agregaDuep_detalle.cantidad%"/>
+                            <campo name="u_medida" calc="%barre_duep_dt.barre_duep_dt.u_medida%"/>
+                            <campo name="descripcion_especifica" calc="%barre_duep_dt.barre_duep_dt.descripcion_especifica%"/>
+                            <campo name="precio_unitario"  calc="%agregaDuep_detalle.agregaDuep_detalle.importe_unitario%"/>
+                            <campo name="id_cat_objeto_gasto"  calc="%agregaDuep_detalle.agregaDuep_detalle.id_cog%"/>
+                            <campo name="c_objeto_gasto"  calc="%agregaDuep_detalle.agregaDuep_detalle.cog%"/>
+                            <campo name="id_cat_programa_presupuestal" calc="%barre_pog_pre.barre_pog_pre.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestal" calc="%barre_pog_pre.barre_pog_pre.programa_presupuestario%"/>
+                            <campo name="indicador" calc="%barre_duep_dt.barre_duep_dt.indicador%"/>
+                            <campo name="total"  calc="%agregaDuep_detalle.agregaDuep_detalle.importe_total%"/>
+                            <campo name="registro_original" calc="%agregaDuep_detalle.agregaDuep_detalle.registro_original%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="bdu" nombre="bdu" interactivo="false" ejecutar="%inParams.inParams.tipo_gestion%==1">
+            <componente id="bdu" nombre="bdu" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FDUEP.FDUEP.folio_duep%"/>
+                    <campo name="folio_duep_a"/>
+                    <campo name="beneficiario"/>
+                    <campo name="tramite"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto"/>
+                    <campo name="id_unidad_ejecutora_gasto"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <!--INICIO DEL MAESTRO DETALLE--> 
+        <nivel id="modificaOrdenPagoNiv2" nombre="Reclasificación del Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%inParams.inParams.tipo_gestion%==1">
+            <componente id="modificaOrdenPagoComp2" nombre="Reclasificación del Egreso" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_reclas_pres">
+                        <campo name="ur" text="Unidad Responsable" calc="%inParams.inParams.ur%" visible="false" />
+                        <campo name="periodo" text="Periodo" calc="%inParams.inParams.periodo%" visible="false"/>
+                        <campo name="id_duep_reclas_pres" text="Folio Orden de Pago" calc="%agregaDuep.agregaDuep.id_duep_reclas_pres%" visible="false" />
+                        <campo name="duep_asociado" text="Folio Asociado" habilitado="false" columnas="3" margen-izquierdo="1" calc="%bdu.bdu.folio_duep_a%"/>
+                        <campo name="fecha_emision" text="Fecha de Emisión" calc="@fechaSistema()" habilitado="false" columnas="3"/>
+                        <campo name="duep" text="Folio de Reclasificación" habilitado="false" columnas="3"/>
+                        <campo name="tramite" text="Trámite" habilitado="false" columnas="3" margen-izquierdo="1" descripcionForanea="siglas,nombre"/>
+                        <campo name="beneficiario" text="Beneficiario" descripcionForanea="razon_social" visible="false"/>
+                        <campo name="id_cat_fuente_financiamiento" text="Llave Fuente Financiamiento" visible="false" llaveForanea="false" />
+                        <campo name="fuente_financiamiento" text="Fuente Financiamiento" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" visible="true" columnas="3" habilitado="false"/>
+                        <campo name="id_cat_centro_registro" text="Llave Centro de Registro" visible="false" llaveForanea="false" calc="2"/>
+                        <campo name="centro_registro" text="Centro de Registro" habilitado="false" descripcionForanea="id_cat,descripcion" visible="true"  columnas="3" />
+                        <campo name="adjuntar" text="Adjunta Archivo" visible="true" columnas="3" margen-izquierdo="1" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Soporte'" grupo="%agregaDuep.agregaDuep.id_duep_reclas_pres%" expediente="Expediente Reclasificación Presupuesto Egreso/Soporte"   archivosAceptados="application/pdf"/>
+                        <campo name="id_cat_fondo_contable" text="Llave Fondo Contable" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" visible="false" llaveForanea="false" calc="3"/>
+                        <campo name="fondo_contable" text="Fondo Contable" visible="true" habilitado="false" descripcionForanea="id_cat,descripcion" columnas="3"/>
+                        <campo name="concepto" text="Concepto" habilitado="true" columnas="9" margen-izquierdo="1" height="200"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar"  margen-izquierdo="3" columnas="4" margen-derecho="3" />
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla id="identificador_detalle" schema="operation" nombre="duep_reclas_pres_det" tituloDetalle="Renglones" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres" llaveForanea="false" text="Duep Reclasificación" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres_det" text="Renglón" generacion="@prox()+1" autogenerado="true" width="80" cellsalign="center"/>
+                        <campo name="fecha_registro" text="Fecha de Emisión" calc="@fechaSistema()" habilitado="false" columnas="3" visible="false" columna-visible="false"/>
+                        <campo name="mes" text="mes" llaveForanea="false" width="100" visible="false" columna-visible="false"/>
+                        <campo name="cve_pres_destino1" text="Clave Presupuestal"  width="250" descripcionForaneaTabla="clave_presupuestal"/>
+                        <campo name="tipo_detalle" text="Tipo de Renglón" width="150" columna-visible="false"/>
+                        <campo name="cantidad" text="Cantidad" width="100" cellsalign="center"/>
+                        <campo name="articulo" text="Artículo" width="200" descripcionForaneaTabla="clave_articulo,descripcion_articulo" descripcionForanea="clave_articulo,descripcion_articulo"/>
+                        <campo name="u_medida" text="U.M." />
+                        <campo name="id_cat_objeto_gasto" visible="false" llaveForanea="false" columna-visible="false" text="cat_fuente"/>
+                        <campo name="c_objeto_gasto" text="COG" descripcionForaneaTabla="id_cat,descripcion" descripcionForanea="id_cat,descripcion"/>
+                        <campo name="id_cat_programa_presupuestal" visible="false" llaveForanea="false" columna-visible="false" text="cat_fuente"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" descripcionForaneaTabla="id_cat,descripcion"/>
+                        <campo name="total" text="Total" cellsalign="right" formatoMoneda="true"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+         <nivel id="Rep_reclas" nombre="Documento de Reclasificación del Egreso" ejecutar="%inParams.inParams.tipo_gestion%==1" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="Rep_reclas" nombre="Documento de Reclasificación del Egreso" tipo="reporte">
+                <reporte nombre="R_ReporteDUEP_iJ" expediente="Expediente Reclasificación Presupuesto Egreso/Reportes" nombreDocumento="'Reporte de Reclasificación'" grupo="$inParam.id_duep_reclas$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%MRPE.MRPE.ur%"/>
+                    <campo name="periodo" type="long" calc="%MRPE.MRPE.periodo%"/>
+                    <campo name="id_duep_reclas_pres" type="long" calc="$inParam.id_duep_reclas$"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <!-- FIN SECCIÓN RECLASIFICACIÓN DE CLAVES PRESUPUESTALES-->
+        <!-- INICIO SECCIÓN RECLASIFICACIÓN POR REINTEGRO-->
+        <nivel id="verDuep" nombre="Reclasificación del Egreso por Reintegro" mostrarProximoNivel="false" mostrarNivelAnterior="false"  ejecutar="%inParams.inParams.tipo_gestion%==2">
+            <componente id="verDuep" tipo="tabla" nombre="Reclasificación del Egreso por Reintegro" filtro="true" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false"> <!--mostrarImportacion="true"-->
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" calc="$config.ur$" habilitado="false"/>
+                    <campo name="periodo" text="Periodo" columnas="3" margen-izquierdo="2" visible="false" llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"  calc="%inParams.inParams.periodo%" habilitado="false"/>
+                    <campo name="folio_duep" text="folio_duep" columnas="3" margen-derecho="2" visible="false" columna-visible="false" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%MRPE.MRPE.fop%" />
+                    <campo name="id_duep_reclas_presup_e" text="id_parametro" visible="false" width="100" columna-visible="false" calc="%MRPE.MRPE.id_duep_reclas_presup_e%" local="true" type="long"/>
+                    <campo name="tipo_gestion" text="parametro_Gestión" visible="false" width="100" columna-visible="false" calc="%inParams.inParams.tipo_gestion%" local="true" type="long"/>
+                    <campo name="folio_duep_detalle" text="Renglón" visible="true" width="100" columna-visible="false"/>
+                    <campo name="fecha_registro" text="Fecha" visible="false" columna-visible="false"/>
+                    <campo name="articulo" text="Artículo"  habilitado="false" width="200" descripcionForaneaTabla="descripcion"/>
+                    <campo name="c_objeto_gasto" text="COG"  habilitado="false"/>
+                    <campo name="mes_cve_presupuestal" text="mes" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" width="150" habilitado="false" descripcionForaneaTabla="clave_presupuestal"/>
+                    <campo name="cantidad" text="Cantidad"  habilitado="false" width="100"/>
+                    <campo name="u_medida" text="Unidad de Medida"  habilitado="false" width="100"/>
+                    <campo name="precio_unitario" text="Importe Unitario"  habilitado="false" width="100"/>
+                    <campo name="importe" text="Importe"  habilitado="false" width="100"/>
+                    <campo name="reclasificaciones_asignadas_bloq" text="Reclasificaciones Asignadas al Renglón"  width="160" habilitado="false" columna-visible="false"/>
+                    <!--<confirmaciones>
+                        <confirmacion confirmacionInteraccion="@ifThenElse(@consultaDirec('SELECT SUM(importe_total) as result FROM operation.duep_reclas_presup_e_det WHERE ur='+$param.ur$+' AND periodo='+$param.periodo$+' AND id_duep_reclas_presup_e='+$param.id_duep_reclas_presup_e$+' AND  id_duep='+$param.folio_duep$+' AND id_duep_det='+$param.folio_duep_detalle$,'result','decimal','MAGNITUS')!=%barreDuepDet.barreDuepDet.total%,true,false)" confirmacionTitulo="'Importe Total Erroneo'" confirmacionMensaje="'La suma de los totales no coincide con el Total de la orden de pago'" tipo="avanzar"/>
+                    </confirmaciones>-->
+                    <tareas>
+                        <tarea nombre="Seleccionar" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_reclas_presup_e,folio_duep,folio_duep_detalle,tipo_gestion" ref="task=87e84026-d67c-45af-a103-ffb2315e272c"/>
+                    </tareas>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+        </nivel>
+        
+         <nivel id="agregaDuep2" nombre="agregaDuep" interactivo="false" ejecutar="%inParams.inParams.tipo_gestion%==2">
+            <componente id="agregaDuep2" nombre="agregaDuep" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%inParams.inParams.id_duep_reclas_pres%"/>
+                    <campo name="duep_asociado" calc="@castTo(%MRPE.MRPE.fop%,'string')"/>
+                    <campo name="duep" calc="%MRPE.MRPE.folio_duep%"/>
+                    <campo name="fecha_emision"/>
+                    <campo name="tramite" />
+                    <campo name="beneficiario" />
+                    <campo name="id_cat_fuente_financiamiento" calc="%MRPE.MRPE.id_cat_fuente%"/>
+                    <campo name="fuente_financiamiento" calc="%MRPE.MRPE.fuente_financiamiento%"/>
+                    <campo name="id_cat_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="estatus" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="agregaDuep_detalle2" nombre="agregaDuep_detalle2" interactivo="false" ejecutar="%inParams.inParams.tipo_gestion%==2">
+            <componente id="agregaDuep_detalle2" nombre="agregaDuep_detalle2" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_presup_e_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="id_duep_reclas_presup_e" filtroCampo="id_duep_reclas_presup_e" filtroOperador="=" filtroValor="%MRPE.MRPE.id_duep_reclas_presup_e%"/>
+                    <campo name="id_duep_reclas_presup_e_det"/>
+                    <campo name="id_duep"/>
+                    <campo name="id_duep_det"/>
+                    <campo name="id_pres_origen"/>
+                    <campo name="cve_pres_origen"/>
+                    <campo name="mes"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="folio_orden_pago"/>
+                    <campo name="id_cog"/>
+                    <campo name="cog"/>
+                    <campo name="id_cat_fondo"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="id_cat_fuente"/>
+                    <campo name="fuente_financiamiento"/>
+                    <campo name="id_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="id_pres_destino"/>
+                    <campo name="cve_pres_destino"/>
+                    <campo name="cantidad"/>
+                    <campo name="importe_unitario"/>
+                    <campo name="importe_total"/>
+                    <campo name="tipo_operacion"/>
+                    <campo name="genero_contable"/>
+                    <campo name="tipo_afectacion"/>
+                    <campo name="tipo_detalle"/>
+                    <campo name="registro_original"/>
+                </tabla>
+                <nivel id="barre_duep_dt2" nombre="barre_duep_dt2" interactivo="false">
+                    <componente id="barre_duep_dt2" nombre="barre_duep_dt2" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                            <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%agregaDuep_detalle2.agregaDuep_detalle2.id_duep%"/>
+                            <campo name="folio_duep_detalle" filtroCampo="folio_duep_detalle" filtroOperador="=" filtroValor="%agregaDuep_detalle2.agregaDuep_detalle2.id_duep_det%"/>
+                            <campo name="tipo_detalle"/>
+                            <campo name="articulo"/>
+                            <campo name="cantidad"  />
+                            <campo name="precio_unitario"  />
+                            <campo name="u_medida" />
+                            <campo name="descripcion_especifica"/>
+                            <campo name="id_cat_programa_presupuestal"/>
+                            <campo name="programa_presupuestal"/>
+                            <campo name="indicador"/>
+                            <campo name="total"/>
+                        </tabla>
+                   </componente>
+                </nivel>
+                <nivel id="agregaDuep_det2" nombre="agregaDuep_det2" interactivo="false">
+                    <componente id="agregaDuep_det2" nombre="agregaDuep_det2" tipo="altaDirect">
+                        <tabla schema="operation" nombre="duep_reclas_pres_det">
+                            <campo name="ur" llaveForanea="false" calc="%inParams.inParams.ur%"/>
+                            <campo name="periodo" llaveForanea="false" calc="%inParams.inParams.periodo%"/>
+                            <campo name="id_duep_reclas_pres" llaveForanea="false" calc="%agregaDuep2.agregaDuep2.id_duep_reclas_pres%"/>
+                            <campo name="id_duep_reclas_pres_det" calc="%agregaDuep_detalle2.agregaDuep_detalle2.id_duep_reclas_presup_e_det%"/>
+                            <campo name="mes" calc="%agregaDuep_detalle2.agregaDuep_detalle2.mes%" llaveForanea="false"/>
+                            <campo name="cve_pres_origen1" calc="%agregaDuep_detalle2.agregaDuep_detalle2.cve_pres_origen1%"/>
+                            <campo name="tipo_detalle" calc="%agregaDuep_detalle2.agregaDuep_detalle2.tipo_detalle%"/>
+                            <campo name="articulo" calc="%barre_duep_dt2.barre_duep_dt2.articulo%"/>
+                            <campo name="cantidad"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.cantidad%"/>
+                            <campo name="u_medida" calc="%barre_duep_dt2.barre_duep_dt2.u_medida%"/>
+                            <campo name="descripcion_especifica" calc="%barre_duep_dt2.barre_duep_dt2.descripcion_especifica%"/>
+                            <campo name="precio_unitario"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.precio_unitario%"/>
+                            <campo name="total"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.importe_total%"/>
+                            <campo name="tipo_operacion"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.tipo_operacion%"/>
+                            <campo name="genero_contable"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.genero_contable%"/>
+                            <campo name="tipo_afectacion"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.tipo_afectacion%"/>
+                            <campo name="registro_original" calc="%barre_duep_dt2.barre_duep_dt2.registro_original%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="modificaDuep2" nombre="modificaDuep2" interactivo="false">
+                    <componente id="modificaDuep2" nombre="modificaDuep2" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_reclas_pres_det">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                            <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%agregaDuep2.agregaDuep2.id_duep_reclas_pres%"/>
+                            <campo name="id_duep_reclas_pres_det" filtroCampo="id_duep_reclas_pres_det" filtroOperador="=" filtroValor="%agregaDuep_detalle2.agregaDuep_detalle2.id_duep_reclas_presup_e_det%"/>
+                            <campo name="mes" calc="%agregaDuep_detalle2.agregaDuep_detalle2.mes%" llaveForanea="false"/>
+                            <campo name="cve_pres_origen1" calc="%agregaDuep_detalle2.agregaDuep_detalle2.cve_pres_origen1%"/>
+                            <campo name="cve_pres_destino1" calc="@ifThenElse(%agregaDuep_detalle2.agregaDuep_detalle2.cve_pres_destino1%==null,%agregaDuep_detalle2.agregaDuep_detalle2.cve_pres_origen1%,%agregaDuep_detalle2.agregaDuep_detalle2.cve_pres_destino1%)"/>
+                            <campo name="tipo_detalle" calc="%agregaDuep_detalle2.agregaDuep_detalle2.tipo_detalle%"/>
+                            <campo name="articulo" calc="%barre_duep_dt2.barre_duep_dt2.articulo%"/>
+                            <campo name="cantidad"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.cantidad%"/>
+                            <campo name="u_medida" calc="%barre_duep_dt2.barre_duep_dt2.u_medida%"/>
+                            <campo name="descripcion_especifica" calc="%barre_duep_dt2.barre_duep_dt2.descripcion_especifica%"/>
+                            <campo name="precio_unitario"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.importe_unitario%"/>
+                            <campo name="total"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.importe_total%"/>
+                            <campo name="tipo_operacion"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.tipo_operacion%"/>
+                            <campo name="genero_contable"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.genero_contable%"/>
+                            <campo name="tipo_afectacion"  calc="%agregaDuep_detalle2.agregaDuep_detalle2.tipo_afectacion%"/>
+                            <campo name="cantidad"  calc="%barre_duep_dt2.barre_duep_dt2.cantidad%"/>
+                            <campo name="precio_unitario"  calc="%barre_duep_dt2.barre_duep_dt2.precio_unitario%"/>
+                            <campo name="registro_original" calc="%barre_duep_dt2.barre_duep_dt2.registro_original%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--INICIO DEL MAESTRO DETALLE--> 
+        <nivel id="modificaOrdenPagoNiv2_RI" nombre="Reclasificación Presupuestal de Egreso por Reintegro" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%inParams.inParams.tipo_gestion%==2">
+            <componente id="modificaOrdenPagoNiv2_RI" nombre="Reclasificación Presupuestal de Egreso por Reintegro" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_reclas_pres">
+                        <campo name="ur" text="Unidad Responsable" calc="%MRPE.MRPE.ur%" visible="false" />
+                        <campo name="periodo" text="Periodo" calc="%MRPE.MRPE.periodo%" visible="false"/>
+                        <campo name="id_duep_reclas_pres" text="Folio Orden de Pago" calc="%agregaDuep2.agregaDuep2.id_duep_reclas_pres%" visible="false" />
+                        <campo name="duep_asociado" text="Folio " habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="fecha_emision" text="Fecha de Emisión" calc="@fechaSistema()" habilitado="false" columnas="3" margen-derecho="2"/>
+                        <campo name="duep" text="Folio " habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="tramite" text="Trámite" habilitado="false" columnas="3" margen-derecho="2" descripcionForanea="nombre"/>
+                        <campo name="beneficiario" text="Beneficiario" descripcionForanea="razon_social" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                        <campo name="id_cat_fuente_financiamiento" text="Llave Fuente Financiamiento" visible="false" llaveForanea="false" />
+                        <campo name="fuente_financiamiento" text="Fuente Financiamiento" visible="true"  columnas="3" margen-derecho="2" habilitado="false"/>
+                        <campo name="id_cat_centro_registro" text="Llave Centro de Registro" visible="false" llaveForanea="false" calc="2"/>
+                        <campo name="centro_registro" text="Centro de Registro" visible="true"  columnas="3" margen-izquierdo="2" habilitado="false"/>
+                        <campo name="adjuntar archivo" text="Adjunta Archivo" visible="true" columnas="3" margen-derecho="2" local="true" type="file"/>
+                        <campo name="id_cat_fondo_contable" text="Llave Fondo Contable" visible="false" llaveForanea="false" calc="3"/>
+                        <campo name="fondo_contable" text="Fondo Contable" visible="true" columnas="3" margen-izquierdo="2"/>
+                        <campo name="concepto" text="Concepto" habilitado="false" columnas="3" margen-derecho="2"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" />
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles> 
+                    <tabla id="identificador_detalle" schema="operation" nombre="duep_reclas_pres_det" tituloDetalle="Renglones" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres" llaveForanea="false" text="Reclasificación" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres_det" text="Renglón" generacion="@prox()+1" autogenerado="true" width="200"/>
+                        <campo name="fecha_registro" text="Fecha de Emisión" calc="@fechaSistema()" habilitado="false" columnas="3" visible="false" columna-visible="false"/>
+                        <campo name="mes" text="id_pres" llaveForanea="false" width="100" visible="false" columna-visible="false"/>
+                        <campo name="cve_pres_origen1" text="Clave Presupuestal"  width="100" descripcionForaneaTabla="clave_presupuestal" columna-visible="false"/>
+                        <campo name="tipo_detalle" text="Tipo de Renglón" width="200" columna-visible="false"/>
+                        <campo name="tipo_operacion" text="Tipo Operación" width="200"/>
+                        <campo name="genero_contable" text="Género Contable" width="200"/>
+                        <campo name="tipo_afectacion" text="Tipo Afección" width="200"/>
+                        <campo name="total" text="Total"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <nivel id="Rep_reclas_reint" nombre="Reporte Reclasificación Presupuestal de Egreso por Reintegro" ejecutar="%inParams.inParams.tipo_gestion%==2" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="Rep_reclas_reint" nombre="Reporte Reclasificación Presupuestal de Egreso por Reintegro" tipo="reporte">
+                <reporte nombre="R_Reporte_DUEP_Pe_AL" expediente="Expediente Reclasificación Presupuesto Egreso/DUEP" nombreDocumento="'DUEP'"  grupo="$inParam.id_duep_reclas$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%MRPE.MRPE.ur%"/>
+                    <campo name="periodo" type="long" calc="%MRPE.MRPE.periodo%"/>
+                    <campo name="id_duep_reclas_pres" type="long" calc="$inParam.id_duep_reclas$"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>

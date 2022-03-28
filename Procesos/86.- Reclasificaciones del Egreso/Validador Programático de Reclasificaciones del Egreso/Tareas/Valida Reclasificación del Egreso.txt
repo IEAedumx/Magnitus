@@ -1,0 +1,335 @@
+<tarea id="ges_reclas_pres_eg" nombre="Valida Reclasificación Presupuestal del Egreso" autor="HMVG" fechaModificacion="2020-07-01">
+    <pagina id="1">
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="inParams" nombre="Parametros"  interactivo="false">
+            <componente id="inParams"  nombre="Parametros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas" local="true" type="long" calc="$inParam.id_duep_reclas$"/>
+                    <campo name="id_duep_reclas_presup_e" local="true" type="long" calc="$inParam.id_duep_reclas_presup_e$"/>
+                    <campo name="orden_pago" local="true" type="long" calc="$inParam.orden_pago$"/>
+                    <campo name="tipo_gestion" local="true" type="long" calc="$inParam.tipo_gestion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        
+        
+         <nivel id="FOP" nombre="Filtro Orden Pago" interactivo="false">
+            <componente id="FOP" tipo="cursor" nombre="Filtro Orden Pago">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParams.inParams.orden_pago%"/>
+                    <campo name="duep_asociado"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="FDUEP" nombre="Filtro Folio Duep" interactivo="false">
+            <componente id="FDUEP" tipo="cursor" nombre="Filtro Folio Duep">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="@castTo(%FOP.FOP.duep_asociado%,'long')"/>
+                    <campo name="folio_duep_a"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+		<!-- tabla 1a -->
+		 <nivel id="nAgregar" nombre="Valida Selección de Orden de Pago para Reclasificación Presupuestal del Egreso" mostrarProximoNivel="false" mostrarNivelAnterior="false"  ejecutar="%inParams.inParams.tipo_gestion%==1">
+            <componente id="cpAgregar" tipo="tabla" nombre="Valida Selección de Orden de Pago para Reclasificación Presupuestal del Egreso" filtro="true" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"  habilitado="false"/>
+					<campo name="periodo" text="Periodo" columnas="3" margen-izquierdo="2" visible="false" llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"   habilitado="false"/>
+					<campo name="folio_duep" text="Folio de Orden de Pago" columnas="3" margen-derecho="2" visible="false" columna-visible="false" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FOP.FOP.duep_asociado%"/>
+					<campo name="id_duep_reclas_presup_e" text="id_parametro" visible="false" width="100" columna-visible="false" calc="%inParams.inParams.id_duep_reclas_presup_e%" local="true" type="long"/>
+					<campo name="tipo_gestion" text="parametro_Gestión" visible="false" width="100" columna-visible="false" calc="$inParam.tipo_gestion$" local="true" type="long"/>
+					<campo name="folio_duep_detalle" text="Renglón" visible="true" width="80" cellsalign="center" columna-visible="true"/>
+					<campo name="articulo" text="Artículo"  habilitado="false" width="200" descripcionForaneaTabla="clave_articulo,descripcion_articulo"/>
+					<campo name="c_objeto_gasto" text="COG" width="150" habilitado="false"/>
+				    <campo name="mes_cve_presupuestal" text="mes" llaveForanea="false" visible="false" columna-visible="false"/>
+					<campo name="clave_presupuestal" text="Clave Presupuestal" width="200" habilitado="false" descripcionForaneaTabla="clave_presupuestal"/>
+					<campo name="cantidad" text="Cantidad"  habilitado="false" width="80" descripcionForaneaTabla="clave_articulo,descripcion_articulo" cellsalign="center"/>
+					<campo name="u_medida" text="Unidad de Medida"  habilitado="false" width="150"/>
+					<campo name="precio_unitario" text="Costo Unitario"  habilitado="false" width="150" formatoMoneda="true"/>
+					<campo name="total" text="Importe Total"  habilitado="false" width="150" formatoMoneda="true"/>
+					<campo name="reclasificaciones_asignadas_bloq" text="Reclasificaciones Asignadas al Renglón"  width="160" habilitado="false"/>
+					<tareas>
+						<tarea nombre="Seleccionar" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_reclas_presup_e,folio_duep,folio_duep_detalle,tipo_gestion" ref="task=b708dafa-b1fb-46ea-b554-b68662dfea79"/>
+					</tareas>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+        </nivel>
+		<!-- tabla 1b -->
+		<nivel id="tbl_valReclaPresupEgreB" nombre="Valida Reclasificación Presupuestal del Egreso"  mostrarNivelAnterior="false" mostrarProximoNivel="false"  ejecutar="%inParams.inParams.tipo_gestion%==2">
+		    <componente id="tbl_valReclaPresupEgreOpb" nombre="Valida Detalle de Reclasificación Presupuestal del Egreso por Reintegro" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+		        <tabla schema="operation" nombre="duep_detalle">
+		            <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%"/>
+					<campo name="periodo" text="Periodo" visible="false" llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+					<campo name="folio_duep" text="folio_duep" visible="false" columna-visible="false" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FOP.FOP.duep_asociado%"/>
+					<campo name="id_duep_reclas_presup_e" text="id_parametro" visible="false" width="100" columna-visible="false" calc="%inParams.inParams.id_duep_reclas_presup_e%" local="true" type="long"/>
+					<campo name="tipo_gestion" text="parametro_Gestión" visible="false" width="100" columna-visible="false" calc="%inParams.inParams.tipo_gestion%" local="true" type="long"/>
+					<campo name="folio_duep_detalle" text="Renglón" visible="true" width="100" columna-visible="true"/>
+					<campo name="fecha_registro" text="Fecha" visible="false" columna-visible="false"/>
+					<campo name="articulo" text="Artículo"  habilitado="false" width="200" descripcionForaneaTabla="descripcion"/>
+					<campo name="c_objeto_gasto" text="COG"  habilitado="false" width="150"/>
+					<campo name="mes_cve_presupuestal" text="mes" llaveForanea="false" visible="false" columna-visible="false"/>
+					<campo name="clave_presupuestal" text="Clave Presupuestal" width="150" habilitado="false"  descripcionForaneaTabla="clave_presupuestal"/>
+					<campo name="cantidad" text="Cantidad"  habilitado="false" width="100"/>
+					<campo name="u_medida" text="Unidad de Medida"  habilitado="false" width="100"/>
+					<campo name="precio_unitario" text="Importe Unitario"  habilitado="false" width="100"/>
+					<campo name="importe" text="Importe"  habilitado="false" width="100"/>
+					<campo name="reclasificaciones_asignadas_bloq" text="Reclasificaciones Asignadas al Renglón"  width="160" habilitado="false"/>
+		           <tareas>
+						<tarea nombre="Seleccionar" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_reclas_presup_e,folio_duep,folio_duep_detalle,tipo_gestion" ref="task=b708dafa-b1fb-46ea-b554-b68662dfea79"/>
+					</tareas>
+		        </tabla>
+		        <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" />
+                 </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+		    </componente>
+		</nivel>
+		
+		<nivel id="barreTblparaFormu" nombre="barreTblparaFormu" interactivo="false">
+		    <componente id="barreTblparaFormu" nombre="barreTblparaFormu" tipo="cursor">
+		        <tabla schema="operation" nombre="duep_reclas_pres">
+		            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParams.inParams.ur%" />
+		            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParams.inParams.periodo%"/>
+		            <campo name="id_duep_reclas_pres"/>
+		        </tabla>
+		    </componente>
+		</nivel>
+		
+	
+		
+		<!-- MD 2a  -->
+		<nivel id="md_valReclaPresuEgreA" nombre="Valida Reclasificación Presupuestal del Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%inParams.inParams.tipo_gestion%==1">
+             <componente id="modificaOrdenPagoComp2" nombre="Valida Reclasificación Presupuestal del Egreso" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_reclas_pres">
+                        <campo name="ur" text="Unidad Responsable" calc="%inParams.inParams.ur%" visible="false" />
+                        <campo name="periodo" text="Periodo" calc="%inParams.inParams.periodo%" visible="false"/>
+                        <campo name="id_duep_reclas_pres" text="Folio Orden de Pago" calc="%inParams.inParams.id_duep_reclas%" visible="false" />
+                        <campo name="duep_asociado"  text="Folio Asociado" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="fecha_emision" text="Fecha de Emisión" habilitado="false" columnas="3"/>
+                        <campo name="duep" text="Folio de Reclasificación" habilitado="false" columnas="3"/>
+                        <campo name="tramite" text="Trámite" habilitado="false" descripcionForanea="siglas,nombre" columnas="3" margen-izquierdo="1" />
+                        <campo name="beneficiario" text="Beneficiario" habilitado="false" visible="false"/>
+                        <campo name="id_cat_fuente_financiamiento" text="FF" visible="false" llaveForanea="false" />
+                        <campo name="fuente_financiamiento" text="Fuente Financiamiento" visible="true" habilitado="false" columnas="3" descripcionForanea="id_cat,descripcion"/>
+                        <campo name="id_cat_centro_registro" text="CR" visible="false" llaveForanea="false" />
+                        <campo name="centro_registro" text="Centro de Registro" visible="true" habilitado="false" columnas="3" descripcionForanea="id_cat,descripcion"/>
+                        <campo name="adjuntar archivo" text="Adjunta Archivo" visible="true" habilitado="false" columnas="3" margen-izquierdo="1"  local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Facturas'" grupo="%generaSEDS.generaSEDS.folio_duep%" expediente="Expediente Ejercicio Directo/Facturas"   archivosAceptados="application/pdf" />
+                        <campo name="id_cat_fondo_contable" text="Llave Fondo Contable" visible="false" llaveForanea="false" />
+                        <campo name="fondo_contable" text="Fondo Contable" descripcionForanea="id_cat,descripcion" visible="true" habilitado="false" columnas="3" />
+                        <campo name="concepto" text="Concepto" habilitado="false" height="100" columnas="9" margen-izquierdo="1"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" />
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles> 
+                    <tabla id="identificador_detalle" schema="operation" nombre="duep_reclas_pres_det" tituloDetalle="Renglones" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres" llaveForanea="false" text="Reclasificación" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres_det" text="Renglón" width="80"/>
+                        <campo name="fecha_registro" text="Fecha de Emisión" habilitado="false" columnas="3" visible="false" columna-visible="false"/>
+                        <campo name="mes" text="id_pres" llaveForanea="false" width="100" visible="false" columna-visible="false"/>
+                        <campo name="cve_pres_destino1" text="Clave Presupuestal"  width="250" descripcionForaneaTabla="clave_presupuestal"/>
+                        <campo name="tipo_detalle" text="Tipo de Bloque" width="120" columna-visible="false"/>
+                        <campo name="cantidad" text="Cantidad" width="100" cellsalign="center"/>
+                        <campo name="articulo" text="Artículo" width="200" descripcionForaneaTabla="clave_articulo,descripcion_articulo"/>
+                        <campo name="u_medida" text="Unidad de Medida" descripcionForaneaTabla="descripcion" width="150"/>
+                        <!--<campo name="descripcion_especifica" text="Descripción Específica"/>
+                        <campo name="precio_unitario" text="Importe Unitario"/>
+                        <campo name="cantidad" text="Cantidad" width="200"/>-->
+                        <campo name="id_cat_objeto_gasto" visible="false" llaveForanea="false" columna-visible="false" text="cat_fuente"/>
+                        <campo name="c_objeto_gasto" text="Clasificador por Objeto del Gasto" descripcionForaneaTabla="id_cat,descripcion"/>
+                        <campo name="id_cat_programa_presupuestal" visible="false" llaveForanea="false" columna-visible="false" text="cat_fuente"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" width="200" descripcionForaneaTabla="id_cat,descripcion"/>
+                        <campo name="indicador" text="Indicador" columna-visible="false"/>
+                        <campo name="total" text="Total" formatoMoneda="true" width="150" muestraAcumulado="true"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+         <!-- reporte 3a -->
+        <nivel id="Rep_reclas" nombre="Documento de Reclasificación Presupuestal de Egreso" ejecutar="%inParams.inParams.tipo_gestion%==1" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente id="Rep_reclas" nombre="Documento de Reclasificación Presupuestal de Egreso" tipo="reporte">
+                <reporte nombre="R_ReporteDUEP_iJ" expediente="Expediente Reclasificación Presupuesto Egreso/Reportes" nombreDocumento="'Reporte de Reclasificación'" grupo="$inParam.id_duep_reclas$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%inParams.inParams.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas_pres" type="long" calc="$inParam.id_duep_reclas$"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+		<!-- MD 2b -->
+		 <nivel id="modificaOrdenPagoNiv2_RI" nombre="Reclasificación Presupuestal de Egreso por Reintegro" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%inParams.inParams.tipo_gestion%==2">
+            <componente id="modificaOrdenPagoNiv2_RI" nombre="Reclasificación Presupuestal de Egreso por Reintegro" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_reclas_pres">
+                        <campo name="ur" text="Unidad Responsable" calc="%inParams.inParams.ur%" visible="false" />
+                        <campo name="periodo" text="Periodo" calc="%inParams.inParams.periodo%" visible="false"/>
+                        <campo name="id_duep_reclas_pres" text="Folio Orden de Pago" calc="$inParam.id_duep_reclas$" visible="false" />
+                        <campo name="duep_asociado" text="Folio Asociado" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="fecha_emision" text="Fecha de Emisión" habilitado="false" columnas="3" margen-derecho="2"/>
+                        <campo name="duep" text="Folio Duep" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="tramite" text="Trámite" habilitado="false" columnas="3" margen-derecho="2" descripcionForanea="nombre"/>
+                        <campo name="beneficiario" text="Beneficiario" habilitado="false" descripcionForanea="nombre" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_fuente_financiamiento" text="Llave Fuente Financiamiento" visible="false" llaveForanea="false" />
+                        <campo name="fuente_financiamiento" text="Fuente Financiamiento" visible="true" habilitado="false" columnas="3" margen-derecho="2"/>
+                        <campo name="id_cat_centro_registro" text="Llave Centro de Registro" visible="false" llaveForanea="false" />
+                        <campo name="centro_registro" text="Centro de Registro" visible="true" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="adjuntar archivo" text="Adjunta Archivo" visible="true" habilitado="false" columnas="3" margen-derecho="2" local="true" type="file"/>
+                        <campo name="id_cat_fondo_contable" text="Llave Fondo Contable" visible="false" llaveForanea="false" />
+                        <campo name="fondo_contable" text="Fondo Contable" visible="true" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="concepto" text="Concepto" habilitado="false" columnas="3" margen-derecho="2"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" />
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles> <!--  -->
+                    <tabla id="identificador_detalle" schema="operation" nombre="duep_reclas_pres_det" tituloDetalle="Renglones" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres" llaveForanea="false" text="Duep Reclasificación" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres_det" text="Renglón" generacion="@prox()+1" autogenerado="true" width="200"/>
+                        <campo name="fecha_registro" text="Fecha de Emisión" calc="@fechaSistema()" habilitado="false" columnas="3" columna-visible="false"/>
+                        <campo name="mes" text="id_pres" llaveForanea="false" width="100" visible="false" columna-visible="false"/>
+                        <campo name="cve_pres_destino1" text="Clave Presupuestal"  width="200" descripcionForaneaTabla="clave_presupuestal"/>
+                        <campo name="tipo_detalle" text="Tipo de Bloque" width="200" columna-visible="false"/>
+                        <campo name="tipo_operacion" text="Tipo Operación"/>
+                        <campo name="genero_contable" text="Género Contable"/>
+                        <campo name="tipo_afectacion" text="Tipo Afección"/>
+                        <!--<campo name="descripcion_especifica" text="Descripción Específica"/>
+                        <campo name="precio_unitario" text="Importe Unitario"/>
+                        <campo name="cantidad" text="Cantidad" width="200"/>
+                        <campo name="id_cat_objeto_gasto" visible="false" llaveForanea="false" columna-visible="false" text="cat_fuente"/>
+                        <campo name="c_objeto_gasto" text="Clasificador por Objeto del Gasto"/>
+                        <campo name="id_cat_programa_presupuestal" visible="false" llaveForanea="false" columna-visible="false" text="cat_fuente"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal"/>
+                        <campo name="indicador" text="Indicador"/>-->
+                        <campo name="total" text="Total"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <!-- reporte 3b -->
+        <nivel id="Rep_reclas_reint" nombre="Reporte Reclasificación Presupuestal de Egreso por Reintegro" mostrarProximoNivel="true" ejecutar="%inParams.inParams.tipo_gestion%==2" mostrarNivelAnterior="false">
+            <componente id="Rep_reclas_reint" nombre="Reporte Reclasificación Presupuestal de Egreso por Reintegro" tipo="reporte">
+                <reporte nombre="R_Reporte_DUEP_Pe_AL" expediente="Expediente Reclasificación Presupuesto Egreso/Reportes" nombreDocumento="'Reclasificación'" grupo="$inParam.id_duep_reclas$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas_pres" type="long" calc="$inParam.id_duep_reclas$"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+     
+        <nivel id="for_valiReclaPresuEgreA" nombre="Valida Reclasificación Presupuestal del Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="for_valiReclaPresuEgreA" nombre="Valida Reclasificación Presupuestales del Egreso" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="duep_reclas_pres">
+                    <campo name="ur" llaveForanea="false" calc="%inParams.inParams.ur%" visible="false"/>
+                    <campo name="periodo" llaveForanea="false" calc="%inParams.inParams.periodo%" visible="false"/>
+                    <campo name="id_duep_reclas_pres" text="Folio Orden de Pago" calc="$inParam.id_duep_reclas$" visible="false" />
+                    <campo name="valida" text="Valida Programáticamente" columnas="2" margen-izquierdo="4" />
+                    <campo name="observaciones_valida" text="Motivo de rechazo" interaccion="%valida%!=true" habilitado="true" 
+                    validacion="%observaciones_valida%=='' AND %valida%==false" validacionMensaje="Por favor debes agregar un motivo de rechazo" 
+                    height="200" margen-izquierdo="2" columnas="6" margen-derecho="2"/>
+                    <!--<campo name="estatus" />-->
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Guardar" margen-izquierdo="3" columnas="4"/>
+                </estilos>
+					<acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                  </acciones>
+            </componente>
+        </nivel>
+        <!-- NO VALIDA LA RECLASIFICACIÓN DEL PRESUPUESTO Y LO REGRESA-->
+        <nivel nombre="Instancia Validador" id="InstanciaVal" interactivo="false" ejecutar="%for_valiReclaPresuEgreA.for_valiReclaPresuEgreA.valida%==false"> 
+             <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                    <parametro name="process" calc="$protocolarios.process$"/>    
+                    <parametro name="version" calc="$protocolarios.version$"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>  
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                    <parametro name="message" calc="%for_valiReclaPresuEgreA.for_valiReclaPresuEgreA.observaciones_valida%"/>
+                    <parametro name="type" calc="'1'"/> 
+                </parametros> 
+            </componente>
+        </nivel>
+        
+         <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%for_valiReclaPresuEgreA.for_valiReclaPresuEgreA.valida%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <!--VALIDA RECLASIFICACIÓN PRESUPUESTO EGRESO-->
+        <nivel id="actualizaEstatus" nombre="actualizaEstatus" interactivo="false" ejecutar="%for_valiReclaPresuEgreA.for_valiReclaPresuEgreA.valida%">
+            <componente id="actualizaEstatus" nombre="actualizaEstatus" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="$inParam.id_duep_reclas$"/>
+                    <campo name="estatus" calc="2"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="turnar_instancia" interactivo="false" ejecutar="%for_valiReclaPresuEgreA.for_valiReclaPresuEgreA.valida%">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

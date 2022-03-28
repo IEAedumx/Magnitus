@@ -1,0 +1,2004 @@
+<tarea id="Autoriza_presupuesto_egresos_aprobado" nombre="Autoriza Reclasificación presupuestal de egreso" version="1" autor="Erick Maya" mostrarCarrusel="false">
+    <pagina id="registro_reclasificacion_presupuesto_egresos" mostrarCarrusel="false">
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="estatus"/>
+                    <campo name="id_estatus"/>
+                    <campo name="id_separador"/>
+                    <campo name="tipo_gestion" local="true" type="long" calc="$inParam.tipo_gestion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="obSeparador" nombre="obSeparador" interactivo="false">
+            <componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="btpe" nombre="Barre Tabla Reclasificación Presupuestal" interactivo="false">
+            <componente id="btpe" nombre="Barre Tabla Reclasificación Presupuestal" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_presup_e">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas_presup_e" filtroCampo="id_duep_reclas_presup_e" filtroOperador="=" filtroValor="$inParam.id_duep_reclas_presup_e$"/>
+                    <campo name="seleccion_gestion"/>
+                    <campo name="folio_orden_pago"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="inParam" nombre="Parametros" interactivo="false">
+            <componente id="inParam" nombre="Parametros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="op" text="Orden de Pago" local="true" type="long" calc="%btpe.btpe.folio_orden_pago%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--BARRIDO PARA CHECAR EL PRESUPUESTO DISPONIBLE-->
+        <!--<nivel id="barreTablaDet" nombre="barreTablaDet" interactivo="false">
+            <componente id="barreTablaDet" nombre="barreTablaDet" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="$inParam.id_duep_reclas_pres_e$"/>
+                    <campo name="id_duep_reclas_pres_det"/>
+                    <campo name="id_presupuesto_e"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="total"/>
+                    <campo name="fecha_registro" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                    <nivel id="barrePres" nombre="barrePres" interactivo="false">
+                        <componente id="barrePres" nombre="barrePres" tipo="cursor">
+                            <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                                <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                                <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.id_periodo"/>
+                                <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreTablaDet.barreTablaDet.clave_presupuestal%"/>
+                                <campo name="mes"  filtroCampo="mes" filtroOperador="=" filtroValor="@subCadena(%barreTablaDet.barreTablaDet.fecha_elaboracion%,5,7)"/>
+                                <campo name="total" local="true" type="decimal"/>
+                            </tabla>
+                            <nivel id="agregaSinPres" nombre="agregaSinPres" interactivo="false">
+                                <componente id="agregaSinPres" nombre="agregaSinPres" tipo="altaDirect">
+                                    <tabla schema="operation" nombre="temp_disp_presupuesto">
+                                        <campo name="ur" calc="$inParam.ur$"/>
+                                        <campo name="periodo" fcalc="$inParam.id_periodo"/>
+                                        <campo name="clave_presupuestal" calc="%barrePres.barrePres.clave_presupuestal%"/>
+                                        <campo name="mes"  filtroCampo="mes" filtroOperador="=" filtroValor="%barrePres.barrePres.mes%"/>
+                                        <campo name="presupuesto_disponible" calc="%barrePres.barrePres.total%"/>
+                                    </tabla>
+                                </componente>
+                            </nivel>
+                        </componente>
+                    </nivel>
+            </componente>
+        </nivel>-->
+
+       <!-- <nivel id="Menu" nombre="Autoriza Reclasificación presupuestal de egreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="Menu" nombre="Autoriza Reclasificación presupuestal de egreso" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" visible="false"/>
+                    <campo name="opciones" text="Seleccione una opción:" columnas="3" margen-izquierdo="2"  local="true" type="long" validacion="%id%==null" validacionMensaje="Favor de seleccionar una opción.">
+                        <opciones>
+                            <opcion texto="Reclasificación de Claves presupuestales" valor="1"/>
+                            <opcion texto="Reclasificación por Reintegro" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar"  columnas="4" margen-izquierdo="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>-->
+        
+        <nivel id="dgr" nombre="Selección de Orden de Pago para Reclasificación Presupuestal del Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="false" interactivo="true">
+            <componente id="dgr" nombre="Selección de Orden de Pago para Reclasificación Presupuestal del Egreso" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="duep_reclas_presup_e">
+                    <campo name="ur" text="ur" visible="false" calc="$config.ur$"/>
+                    <campo name="periodo" text="Periodo" visible="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_duep_reclas_presup_e" visible="false"  calc="$inParam.id_duep_reclas_presup_e$"/>
+                    <campo name="folio_duep" text="Folio de Reclasificación" columnas="3" margen-izquierdo="1" habilitado="false"/>
+                    <campo name="fecha_registro" text="Fecha de Registro" columnas="3" habilitado="false"/>
+                    <campo name="folio_orden_pago" text="Folio Orden Pago" columnas="3" habilitado="false" descripcionForanea="folio_orden_pago"/>
+                    <campo name="id_cat_fondo" text="id_f" calc="3" visible="false" llaveForanea="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" descripcionForanea="id_cat,descripcion" columnas="3" margen-izquierdo="1"  habilitado="false"/>
+                    <campo name="id_cat_fuente" text="id_f" calc="5" visible="false" llaveForanea="false" />
+                    <campo name="fuente_financiamiento" text="Fuente de Financiamiento" descripcionForanea="id_cat,descripcion" columnas="3"  habilitado="false"/>
+                    <campo name="justificacion" text="Justificación" columnas="9" margen-izquierdo="1" height="100"  habilitado="false"/>
+                    <campo name="seleccion_gestion" text="selección" visible="false"  habilitado="false"/>
+                    <campo name="ultimo_usuario_modificador" text="usuario" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar"  columnas="3" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>    
+        <!-- INICIO SECCIÓN RECLASIFICACIÓN DE CLAVES PRESUPUESTALES--><!--mostrarImportacion="true"-->
+        <!--<nivel id="nAgregar" nombre="Selección de Orden de Pago para Reclasificación Presupuestal del Egreso" mostrarProximoNivel="false" mostrarNivelAnterior="false"  ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==1" interactivo="true">
+            <componente id="cpAgregar" tipo="tabla" nombre="Selección de Orden de Pago para Reclasificación Presupuestal del Egreso" filtro="true" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false"> 
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" habilitado="false"/>
+                    <campo name="periodo" text="Periodo" columnas="3" margen-izquierdo="2" visible="false" llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" habilitado="false"/>
+                    
+                    <campo name="folio_orden_pago" text="folio orden pago" visible="false" columna-visible="false"
+                       filtroCampo="folio_orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.op%"/>
+                    <campo name="folio_duep" text="folio_duep" llaveForanea="false" columnas="3" margen-derecho="2" visible="false" columna-visible="false"/>
+                    
+                    <campo name="id_duep_reclas_presup_e" text="id_parametro" visible="false" width="100" columna-visible="false" calc="$inParam.id_duep_reclas_presup_e$" local="true" type="long"/>
+                    <campo name="tipo_gestion" text="parametro_Gestión" visible="false" width="100" columna-visible="false" calc="$inParam.tipo_gestion$" local="true" type="long"/>
+                    <campo name="folio_duep_detalle" text="Renglón" visible="true" width="65" columna-visible="true" cellsalign="center"/>
+                    <campo name="fecha_registro" text="Fecha" visible="false" columna-visible="false"/>
+                    <campo name="articulo" text="Artículo" descripcionForanea="clave_articulo,descripcion_articulo" descripcionForaneaTabla="clave_articulo,descripcion_articulo" habilitado="false" width="200" />
+                    <campo name="c_objeto_gasto" text="COG" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" habilitado="false" width="200"/>
+                    <campo name="mes_cve_presupuestal" text="mes" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" llaveForanea="false" width="300" habilitado="false" />
+                    <campo name="cantidad" text="Cantidad"  habilitado="false" width="80" cellsalign="center"/>
+                    <campo name="u_medida" text="Unidad de Medida"  habilitado="false" width="150"/>
+                    <campo name="precio_unitario" text="Costo Unitario"  habilitado="false" width="150" cellsalign="right" formatoMoneda="true" muestraAcumulado="true"/>
+                    <campo name="total" text="Importe Total"  habilitado="false" width="150" formatoMoneda="true" cellsalign="right" muestraAcumulado="true"/>
+                    <campo name="reclasificaciones_asignadas_bloq" text="Reclasificaciones Asignadas al Renglón" cellsalign="center" width="300" habilitado="false"/>
+                    <tareas>
+                        <tarea nombre="Seleccionar" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_reclas_presup_e,folio_duep,folio_duep_detalle,tipo_gestion" ref="task=b708dafa-b1fb-46ea-b554-b68662dfea79"/>
+                    </tareas>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+        </nivel>-->
+        <!-- ACTUALIZA FOLIO -->
+        <!--<nivel id="AFRPE" nombre="Agrega Folio a Reclasificación del Egreso" interactivo="false">
+            <componente id="AFRPE" nombre="Agrega Folio a Reclasificación del Egreso" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_presup_e">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%dgr.dgr.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%dgr.dgr.periodo%"/>
+                    <campo name="id_duep_reclas_presup_e" filtroCampo="id_duep_reclas_presup_e" filtroOperador="=" filtroValor="%dgr.dgr.id_duep_reclas_presup_e%"/>
+                    <campo name="folio_duep" calc="@concatenar('RECP-'+@consultaDirec('SELECT LPAD(\\''+%dgr.dgr.id_duep_reclas_presup_e%+'\\'::text,5,\\'0\\') AS result','result','string','MAGNITUS'))"/>
+                    <campo name="folio_orden_pago"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="FOP" nombre="Filtro Orden Pago" interactivo="false">
+            <componente id="FOP" tipo="cursor" nombre="Filtro Orden Pago">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%dgr.dgr.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%dgr.dgr.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%AFRPE.AFRPE.folio_orden_pago%"/>
+                    <campo name="folio_duep"/>
+                    <campo name="estatus_reclasificacion" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="FDUEP" nombre="Filtro Folio Duep" interactivo="false">
+            <componente id="FDUEP" tipo="cursor" nombre="Filtro Folio Duep">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="@castTo(%FOP.FOP.folio_duep%,'long')"/>
+                    <campo name="folio_adquisiciones"/>
+                </tabla>
+            </componente>
+        </nivel>
+       <nivel id="bdu" nombre="bdu" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="bdu" nombre="bdu" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FDUEP.FDUEP.folio_duep%"/>
+                    <campo name="folio_duep_a"/>
+                    <campo name="beneficiario"/>
+                    <campo name="tramite"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto"/>
+                    <campo name="id_unidad_ejecutora_gasto"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaDuep" nombre="agregaDuep" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="agregaDuep" nombre="agregaDuep" tipo="altaDirect">
+                <tabla schema="operation" nombre="duep_reclas_pres">
+                    <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_duep_reclas_pres" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="id_duep_asociado" calc="%FDUEP.FDUEP.folio_duep%"/>
+                    <campo name="duep_asociado" calc="%bdu.bdu.folio_duep_a%"/>
+                    <campo name="duep" calc="%AFRPE.AFRPE.folio_duep%"/>
+                    <campo name="fecha_emision" calc="@fechaSistema()"/>
+                    <campo name="tramite" calc="10"/>
+                    <campo name="beneficiario" calc="%bdu.bdu.beneficiario%"/> 
+                    <campo name="id_cat_fuente_financiamiento" calc="%dgr.dgr.id_cat_fuente%"/>
+                    <campo name="fuente_financiamiento" calc="%dgr.dgr.fuente_financiamiento%"/>
+                    <campo name="id_cat_fondo_contable" calc="%dgr.dgr.id_cat_fondo%"/>
+                    <campo name="fondo_contable" calc="%dgr.dgr.id_fondo_contable%"/>
+                    <campo name="id_cat_centro_registro" calc="%bdu.bdu.id_cat_unidad_ejecutora_gasto%"/>
+                    <campo name="centro_registro" calc="%bdu.bdu.id_unidad_ejecutora_gasto%"/>
+                    <campo name="estatus" calc="1"/>
+                    <campo name="justificacion" calc="%dgr.dgr.justificacion%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaDuep_detalle" nombre="agregaDuep_detalle" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="agregaDuep_detalle" nombre="agregaDuep_detalle" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_presup_e_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_duep_reclas_presup_e" filtroCampo="id_duep_reclas_presup_e" filtroOperador="=" filtroValor="%dgr.dgr.id_duep_reclas_presup_e%"/>
+                    <campo name="id_duep_reclas_presup_e_det"/>
+                    <campo name="id_duep"/>
+                    <campo name="id_duep_det"/>
+                    <campo name="id_pres_origen"/>
+                    <campo name="cve_pres_origen"/>
+                    <campo name="mes"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="folio_orden_pago"/>
+                    <campo name="id_cog"/>
+                    <campo name="cog"/>
+                    <campo name="id_cat_fondo"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="id_cat_fuente"/>
+                    <campo name="fuente_financiamiento"/>
+                    <campo name="id_centro_registro"/>
+                    <campo name="centro_registro"/>
+                    <campo name="id_pres_destino"/>
+                    <campo name="cve_pres_destino"/>
+                    <campo name="cantidad"/>
+                    <campo name="importe_unitario"/>
+                    <campo name="importe_total"/>
+                    <campo name="tipo_detalle"/>
+                    <campo name="registro_original"/>
+                </tabla>
+                <nivel id="barre_duep_dt" nombre="barre_duep_dt" interactivo="false">
+                    <componente id="barre_duep_dt" nombre="barre_duep_dt" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%agregaDuep_detalle.agregaDuep_detalle.id_duep%"/>
+                            <campo name="folio_duep_detalle" filtroCampo="folio_duep_detalle" filtroOperador="=" filtroValor="%agregaDuep_detalle.agregaDuep_detalle.id_duep_det%"/>
+                            <campo name="tipo_detalle"/>
+                            <campo name="articulo"/>
+                            <campo name="cantidad"  />
+                            <campo name="u_medida" />
+                            <campo name="descripcion_especifica"/>
+                            <campo name="id_cat_programa_presupuestal"/>
+                            <campo name="programa_presupuestal"/>
+                            <campo name="indicador"/>
+                            <campo name="total"/>
+                        </tabla>
+                   </componente>
+                </nivel>
+                <nivel id="barre_pog_pre" nombre="barre_pog_pre" interactivo="false">
+                    <componente id="barre_pog_pre" nombre="barre_pog_pre" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="@ifThenElse(%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%==null,%barre_duep_dt.barre_duep_dt.clave_presupuestal%,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%)"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%agregaDuep_detalle.agregaDuep_detalle.mes%"/>
+                            <campo name="id_cat_progra_presup"/>
+                            <campo name="programa_presupuestario"/>
+                        </tabla>
+                   </componente>
+                </nivel>
+                <nivel id="agregaDuep_det" nombre="agregaDuep_det" interactivo="false">
+                    <componente id="agregaDuep_det" nombre="agregaDuep_det" tipo="altaDirect">
+                        <tabla schema="operation" nombre="duep_reclas_pres_det">
+                            <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                            <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <campo name="id_duep_reclas_pres" calc="%agregaDuep.agregaDuep.id_duep_reclas_pres%"/>
+                            <campo name="id_duep_reclas_pres_det" calc="%agregaDuep_detalle.agregaDuep_detalle.id_duep_reclas_presup_e_det%" />
+                            <campo name="mes" calc="%agregaDuep_detalle.agregaDuep_detalle.mes%"/>
+                            <campo name="cve_pres_origen1" calc="%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen1%"/>
+                            <campo name="cve_pres_destino1" calc="@ifThenElse(%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%==null,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_origen1%,%agregaDuep_detalle.agregaDuep_detalle.cve_pres_destino1%)"/>
+                            <campo name="tipo_detalle" calc="%agregaDuep_detalle.agregaDuep_detalle.tipo_detalle%"/>
+                            <campo name="articulo" calc="%barre_duep_dt.barre_duep_dt.articulo%"/>
+                            <campo name="cantidad"  calc="%agregaDuep_detalle.agregaDuep_detalle.cantidad%"/>
+                            <campo name="u_medida" calc="%barre_duep_dt.barre_duep_dt.u_medida%"/>
+                            <campo name="descripcion_especifica" calc="%barre_duep_dt.barre_duep_dt.descripcion_especifica%"/>
+                            <campo name="precio_unitario"  calc="%agregaDuep_detalle.agregaDuep_detalle.importe_unitario%"/>
+                            <campo name="id_cat_objeto_gasto"  calc="%agregaDuep_detalle.agregaDuep_detalle.id_cog%"/>
+                            <campo name="c_objeto_gasto"  calc="%agregaDuep_detalle.agregaDuep_detalle.cog%"/>
+                            <campo name="id_cat_programa_presupuestal" calc="%barre_pog_pre.barre_pog_pre.id_cat_progra_presup%"/>
+                            <campo name="programa_presupuestal" calc="%barre_pog_pre.barre_pog_pre.programa_presupuestario%"/>
+                            <campo name="indicador" calc="%barre_duep_dt.barre_duep_dt.indicador%"/>
+                            <campo name="total"  calc="%agregaDuep_detalle.agregaDuep_detalle.importe_total%"/>
+                            <campo name="registro_original" calc="%agregaDuep_detalle.agregaDuep_detalle.registro_original%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>-->
+    
+       <!--INICIO DEL MAESTRO DETALLE--> 
+        <nivel id="modificaOrdenPagoNiv2" nombre="Reclasificación Presupuestal de Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==1" interactivo="true">
+            <componente id="modificaOrdenPagoComp2" nombre="Reclasificación Presupuestal de Egreso" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_reclas_pres">
+                        <campo name="ur" text="Unidad Responsable" calc="%dgr.dgr.ur%" visible="false" />
+                        <campo name="periodo" text="Periodo" calc="%dgr.dgr.periodo%" visible="false"/>
+                        <campo name="id_duep_reclas_pres" text="Folio Orden de Pago" calc="$inParam.id_duep_reclas$" visible="false" />
+                        <campo name="duep_asociado" text="Folio Asociado" habilitado="false" columnas="3" margen-izquierdo="1"/>
+                        <campo name="fecha_emision" text="Fecha de Emisión" habilitado="false" columnas="3"/>
+                        <campo name="duep" text="Folio de Reclasificación" habilitado="false" columnas="3" />
+                        <campo name="tramite" text="Trámite" habilitado="false" columnas="3" margen-izquierdo="1" descripcionForanea="siglas,nombre"/>
+                        <campo name="beneficiario" text="Beneficiario" habilitado="false" visible="false" descripcionForanea="nombre" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_fuente_financiamiento" text="FF" visible="false" llaveForanea="false" />
+                        <campo name="fuente_financiamiento" text="Fuente Financiamiento" visible="true" habilitado="false" columnas="3"  descripcionForanea="id_cat,descripcion"/>
+                        <campo name="id_cat_centro_registro" text="CR" visible="false" llaveForanea="false" />
+                        <campo name="centro_registro" text="Centro de Registro" visible="true" habilitado="false" columnas="3"  descripcionForanea="id_cat,descripcion"/>
+                        <campo name="adjuntar archivo" text="Adjunta Archivo" visible="true" habilitado="false" columnas="3" margen-izquierdo="1" local="true" type="file"/>
+                        <campo name="id_cat_fondo_contable" text="FF" calc="3" visible="false" llaveForanea="false" />
+                        <campo name="fondo_contable" text="Fondo Contable" habilitado="false" columnas="3" descripcionForanea="id_cat,descripcion" />
+                        <campo name="concepto" text="Concepto" habilitado="false" columnas="9" margen-izquierdo="1" height="100"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" columnas="3" margen-izquierdo="4" />
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles> <!--  -->
+                    <tabla id="identificador_detalle" schema="operation" nombre="duep_reclas_pres_det" tituloDetalle="Renglones" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres" llaveForanea="false" text="Folio de Reclasificación" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres_det" text="Renglón" width="80"/>
+                        <campo name="fecha_registro" text="Fecha de Emisión" habilitado="false" columnas="3" visible="false" columna-visible="false"/>
+                        <campo name="mes" text="mes" llaveForanea="false" width="100" visible="false" columna-visible="false"/>
+                        <campo name="cve_pres_destino1" text="Clave Presupuestal"  width="100" descripcionForanea="clave_presupuestal" descripcionForaneaTabla="clave_presupuestal"/>
+                        <campo name="tipo_detalle" text="Tipo de Bloque" width="100" columna-visible="false"/>
+                        <campo name="tipo_operacion" text="Tipo Operación"/>
+                        <campo name="genero_contable" text="Género Contable"/>
+                        <campo name="tipo_afectacion" text="Tipo Afección"/>
+                        <campo name="total" text="Total" formatoMoneda="true" width="150" muestraAcumulado="true"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <nivel id="Rep_reclas" nombre="Documento de Reclasificación Presupuestal de Egreso" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==1" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente id="Rep_reclas" nombre="Documento de Reclasificación Presupuestal de Egreso" tipo="reporte">
+                <reporte nombre="R_ReporteDUEP_iJ" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Reporte de Reclasificación'" grupo="$inParam.id_duep_reclas$" url="$confi
+                g.repository_upload_file$" update="true">
+                    <!-- expediente="Expediente Reclasificación Presupuesto Egreso/Reportes" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas_pres" type="long" calc="$inParam.id_duep_reclas$"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <!-- FIN SECCIÓN RECLASIFICACIÓN DE CLAVES PRESUPUESTALES-->
+        <!-- INICIO SECCIÓN RECLASIFICACIÓN POR REINTEGRO--><!--mostrarImportacion="true"-->
+        <!--<nivel id="verDuep" nombre="Reclasificación Presupuestal de Egreso por Reintegro" mostrarProximoNivel="false" mostrarNivelAnterior="false"  ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==2" interactivo="true">
+            <componente id="verDuep" tipo="tabla" nombre="Reclasificación Presupuestal de Egreso por Reintegro" filtro="true" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false"> 
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" text="Unidad Responsable" visible="false" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" calc="$config.ur$" habilitado="false"/>
+                    <campo name="periodo" text="Periodo" columnas="3" margen-izquierdo="2" visible="false" llaveForanea="false" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"  calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false"/>
+                    <campo name="folio_duep" text="folio_duep" columnas="3" margen-derecho="2" visible="false" columna-visible="false" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%dgr.dgr.folio_orden_pago%"/>
+                    <campo name="id_duep_reclas_presup_e" text="id_parametro" visible="false" width="100" columna-visible="false" calc="%dgr.dgr.id_duep_reclas_presup_e%" local="true" type="long"/>
+                    <campo name="tipo_gestion" text="parametro_Gestión" visible="false" width="100" columna-visible="false" calc="%buscaPeriodo.buscaPeriodo.tipo_gestion%" local="true" type="long"/>
+                    <campo name="folio_duep_detalle" text="Renglón" visible="true" width="100" columna-visible="true"/>
+                    <campo name="fecha_registro" text="Fecha" visible="false" columna-visible="false"/>
+                    <campo name="articulo" text="Artículo"  habilitado="false" width="200" descripcionForaneaTabla="descripcion"/>
+                    <campo name="c_objeto_gasto" text="COG"  habilitado="false"/>
+                    <campo name="mes_cve_presupuestal" text="mes" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" width="150" habilitado="false" descripcionForaneaTabla="clave_presupuestal"/>
+                    <campo name="cantidad" text="Cantidad"  habilitado="false" width="100"/>
+                    <campo name="u_medida" text="Unidad de Medida"  habilitado="false" width="100"/>
+                    <campo name="precio_unitario" text="Importe Unitario"  habilitado="false" width="100"/>
+                    <campo name="importe" text="Importe"  habilitado="false" width="100"/>
+                    <campo name="reclasificaciones_asignadas_bloq" text="Reclasificaciones Asignadas al Renglón"  width="160" habilitado="false"/>
+                    <tareas>
+                        <tarea nombre="Seleccionar" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_duep_reclas_presup_e,folio_duep,folio_duep_detalle,tipo_gestion" ref="task=b708dafa-b1fb-46ea-b554-b68662dfea79"/>
+                    </tareas>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+        </nivel>-->
+        <!--<nivel id="bduRI" nombre="bdu" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="bduRI" nombre="bdu" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%dgr.dgr.folio_d%"/>
+                    <campo name="beneficiario"/>
+                    <campo name="tramite"/>
+                    <campo name="id_cat_unidad_ejecutora_gasto"/>
+                    <campo name="id_unidad_ejecutora_gasto"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaDuep_RI" nombre="agregaDuep" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="agregaDuep_RI" nombre="agregaDuep" tipo="altaDirect">
+                <tabla schema="operation" nombre="duep_reclas_pres">
+                    <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_duep_reclas_pres" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="beneficiario" calc="@consultaDirec('SELECT beneficiario as bene FROM operation.duep WHERE periodo='+%dgr.dgr.periodo%+' AND folio_duep='+%dgr.dgr.folio_d%,'bene','long','MAGNITUS')"/>
+                    <campo name="duep_asociado" calc="%dgr.dgr.folio_d%"/>
+                    <campo name="duep" calc="%AFRPE.AFRPE.folio_duep%"/>
+                    <campo name="fecha_emision" calc="@fechaSistema()"/>
+                    <campo name="tramite" calc="10"/>
+                    <campo name="id_cat_fuente_financiamiento" calc="%dgr.dgr.id_cat_fuente%"/>
+                    <campo name="fuente_financiamiento" calc="%dgr.dgr.fuente_financiamiento%"/>
+                    <campo name="id_cat_fondo_contable" calc="%dgr.dgr.id_cat_fondo%"/>
+                    <campo name="fondo_contable" calc="%dgr.dgr.id_fondo_contable%"/>
+                    <campo name="id_cat_centro_registro" calc="%bduRI.bduRI.id_cat_unidad_ejecutora_gasto%"/>
+                    <campo name="centro_registro" calc="%bduRI.bduRI.id_unidad_ejecutora_gasto%"/>
+                    <campo name="estatus" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaDuep_detalle_ri" nombre="agregaDuep_detalle_ri" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="agregaDuep_detalle_ri" nombre="agregaDuep_detalle_ri" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_presup_e_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_duep_reclas_presup_e" filtroCampo="id_duep_reclas_presup_e" filtroOperador="=" filtroValor="%dgr.dgr.id_duep_reclas_presup_e%"/>
+                    <campo name="id_duep_reclas_presup_e_det"/>
+                    <campo name="id_duep"/>
+                    <campo name="id_duep_det"/>
+                    <campo name="mes"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="tipo_operacion"/>
+                    <campo name="genero_contable"/>
+                    <campo name="tipo_afectacion"/>
+                    <campo name="importe_total"/>
+                    <campo name="tipo_detalle"/>
+                    <campo name="registro_original"/>
+                </tabla>
+                <nivel id="barre_duep_dt_RI" nombre="barre_duep_dt_RI" interactivo="false">
+                    <componente id="barre_duep_dt_RI" nombre="barre_duep_dt_RI" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.id_duep%"/>
+                            <campo name="folio_duep_detalle" filtroCampo="folio_duep_detalle" filtroOperador="=" filtroValor="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.id_duep_det%"/>
+                            <campo name="tipo_detalle"/>
+                            <campo name="articulo"/>
+                            <campo name="cantidad"  />
+                            <campo name="precio_unitario"  />
+                            <campo name="u_medida" />
+                            <campo name="descripcion_especifica"/>
+                            <campo name="id_cat_programa_presupuestal"/>
+                            <campo name="programa_presupuestal"/>
+                            <campo name="indicador"/>
+                            <campo name="total"/>
+                            <campo name="proveedor"/>
+                        </tabla>
+                   </componente>
+                </nivel>
+                <nivel id="agregaDuep_det_RI" nombre="agregaDuep_det_RI" interactivo="false">
+                    <componente id="agregaDuep_det_RI" nombre="agregaDuep_det_RI" tipo="altaDirect">
+                        <tabla schema="operation" nombre="duep_reclas_pres_det">
+                            <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                            <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <campo name="id_duep_reclas_pres" calc="%agregaDuep_RI.agregaDuep_RI.id_duep_reclas_pres%"/>
+                            <campo name="id_duep_reclas_pres_det" calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.id_duep_reclas_presup_e_det%"/>
+                            <campo name="mes" calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.mes%" llaveForanea="false"/>
+                            <campo name="cve_pres_origen1" calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.cve_pres_origen1%"/>
+                            <campo name="cve_pres_destino1" calc="@ifThenElse(%agregaDuep_detalle_ri.agregaDuep_detalle_ri.cve_pres_destino1%==null,%agregaDuep_detalle_ri.agregaDuep_detalle_ri.cve_pres_destino1%,%agregaDuep_detalle_ri.agregaDuep_detalle_ri.cve_pres_destino1%)"/>
+                            <campo name="tipo_detalle" calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.tipo_detalle%"/>
+                            <campo name="tipo_operacion" calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.tipo_operacion%"/>
+                            <campo name="genero_contable"  calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.genero_contable%"/>
+                            <campo name="tipo_afectacion" calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.tipo_afectacion%"/>
+                            <campo name="total"  calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.importe_total%"/>
+                            <campo name="cantidad"  calc="%barre_duep_dt_RI.barre_duep_dt_RI.cantidad%"/>
+                            <campo name="precio_unitario"  calc="%barre_duep_dt_RI.barre_duep_dt_RI.precio_unitario%"/>
+                            <campo name="articulo"  calc="%barre_duep_dt_RI.barre_duep_dt_RI.articulo%"/>
+                            <campo name="registro_original" calc="%agregaDuep_detalle_ri.agregaDuep_detalle_ri.registro_original%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>-->
+       
+       <!--INICIO DEL MAESTRO DETALLE--> 
+        <nivel id="modificaOrdenPagoNiv2_RI" nombre="Reclasificación Presupuestal de Egreso por Reintegro" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==2" interactivo="true">
+            <componente id="modificaOrdenPagoNiv2_RI" nombre="Reclasificación Presupuestal de Egreso por Reintegro" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="duep_reclas_pres">
+                        <campo name="ur" text="Unidad Responsable" calc="%dgr.dgr.ur%" visible="false" />
+                        <campo name="periodo" text="Periodo" calc="%dgr.dgr.periodo%" visible="false"/>
+                        <campo name="id_duep_reclas_pres" text="Folio Orden de Pago" calc="$inParam.id_duep_reclas$" visible="false" />
+                        <campo name="duep_asociado" text="Folio Asociado" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="fecha_emision" text="Fecha de Emisión" habilitado="false" columnas="3" margen-derecho="2"/>
+                        <campo name="duep" text="Folio de Reclasificación" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="tramite" text="Trámite" habilitado="false" columnas="3" margen-derecho="2" descripcionForanea="nombre"/>
+                        <campo name="beneficiario" text="Beneficiario" habilitado="false" descripcionForanea="nombre" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_fuente_financiamiento" text="Llave Fuente Financiamiento" visible="false" llaveForanea="false" />
+                        <campo name="fuente_financiamiento" text="Fuente Financiamiento" visible="true" habilitado="false" columnas="3" margen-derecho="2"/>
+                        <campo name="id_cat_centro_registro" text="Llave Centro de Registro" visible="false" llaveForanea="false" />
+                        <campo name="centro_registro" text="Centro de Registro" visible="true" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="adjuntar archivo" text="Adjunta Archivo" visible="true" habilitado="false" columnas="3" margen-derecho="2" local="true" type="file"/>
+                        <campo name="id_cat_fondo_contable" text="Llave Fondo Contable" visible="false" llaveForanea="false" />
+                        <campo name="fondo_contable" text="Fondo Contable" visible="true" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="concepto" text="Concepto" habilitado="false" columnas="3" margen-derecho="2"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" />
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles> <!--  -->
+                    <tabla id="identificador_detalle" schema="operation" nombre="duep_reclas_pres_det" tituloDetalle="Renglones" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres" llaveForanea="false" text="Reclasificación" columna-visible="false"/>
+                        <campo name="id_duep_reclas_pres_det" text="Renglón" generacion="@prox()+1" autogenerado="true" width="200"/>
+                        <campo name="fecha_registro" text="Fecha de Emisión" calc="@fechaSistema()" habilitado="false" columnas="3" visible="false" columna-visible="false"/>
+                        <campo name="mes" text="id_pres" llaveForanea="false" width="100" visible="false" columna-visible="false"/>
+                        <campo name="cve_pres_origen1" text="Clave Presupuestal"  width="200" descripcionForaneaTabla="clave_presupuestal" />
+                        <campo name="tipo_detalle" text="Tipo de Renglón" width="100" columna-visible="false"/>
+                        <campo name="tipo_operacion" text="Tipo Operación" width="100"/>
+                        <campo name="genero_contable" text="Género Contable" width="100"/>
+                        <campo name="tipo_afectacion" text="Tipo Afección" width="100"/>
+                        <campo name="total" text="Total"/>
+                    </tabla>
+                </detalles>
+            </componente>
+        </nivel>
+        <nivel id="Rep_reclas_reint" nombre="Reporte Reclasificación Presupuestal de Egreso por Reintegro" ejecutar="%buscaPeriodo.buscaPeriodo.tipo_gestion%==2" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente id="Rep_reclas_reint" nombre="Reporte Reclasificación Presupuestal de Egreso por Reintegro" tipo="reporte">
+                <reporte nombre="R_Reporte_DUEP_Pe_AL" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Reclasificación'"  grupo="$inParam.id_duep_reclas$" url="$config.repository_upload_file$" update="true">
+                    <!--expediente="Expediente Reclasificación Presupuesto Egreso/Reportes"-->
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_duep_reclas_pres" type="long" calc="$inParam.id_duep_reclas$"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <!-- FIN SECCIÓN RECLASIFICACIÓN POR REINTEGRO-->
+        <nivel id="Autoriza" nombre="Autoriza Reclasificación presupuestal del egreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="Autoriza" nombre="Autoriza Reclasificación Presupuestal de Egreso" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="duep_reclas_pres">
+                    <campo name="ur" text="ur" llaveForanea="false" visible="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_duep_reclas_pres" visible="false" calc="$inParam.id_duep_reclas$"/>
+                    <campo name="autoriza" text="Autorizar" columnas="4" margen-izquierdo="3"/>
+                    <campo name="observaciones_autoriza" text="Motivo de Rechazo" columnas="6" height="100" margen-izquierdo="2" interaccion="%autoriza%==null OR %autoriza%==false" 
+                    validacion="%observaciones_autoriza%==null AND %autoriza%==false" 
+                    validacionMensaje="Favor de insertar el Motivo de Rechazo para continuar." calc="@ifThenElse(%autoriza%==true,'',%observaciones_autoriza%)"/>
+                    <campo name="estatus" visible="false"/>
+                    <campo name="id_cat_fondo_contable" text="cat fondo" visible="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" visible="false"/>
+                    <campo name="duep" text="Folio" visible="false"/>
+                    <campo name="concepto" text="Concepto" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar"  columnas="4" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+
+        <!-- NO AUTORIZA LA RECLASIFICACIÓN DEL PRESUPUESTO Y LO REGRESA-->
+        <nivel id="nlNegociarInstancia" nombre="Enlace con Dynamo" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==false" >
+            <componente id="cpNegociarInstancia" nombre="Enlace con Dynamo" tipo="solicitud" >
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!--MENSAJES-->
+        <nivel id="nlRetroalimentarMensaje" nombre="Envio de Parámetros Dynamo" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==false" >
+           <componente id="cpRetroalimentarMensaje" nombre="Envio de Parámetros Dynamo" tipo="solicitud" >  
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%Autoriza.Autoriza.observaciones_autoriza%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+        
+        <!--<nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==false">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>-->
+        
+        <!--AUTORIZA LA RECLASIFICACIÓN DEL PRESUPUESTO-->
+
+        <nivel id="actualizaEstatus" nombre="actualizaEstatus" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true">
+            <componente id="actualizaEstatus" nombre="actualizaEstatus" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres">
+                    <campo name="ur" text="ur" llaveForanea="false" visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_duep_reclas_pres" visible="false" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="$inParam.id_duep_reclas$"/>
+                    <campo name="estatus" calc="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="AOP" nombre="Actualiza Orden Pago" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true">
+            <componente id="AOP" tipo="cursor" nombre="Filtro Orden Pago">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.op%"/>
+                    <campo name="estatus_reclasificacion" calc="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- Genera PÓLIZA PRESUPUESTO COMPROMETIDO -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="GeneraPolizaComp" nombre="Generación del Encabezado de la Póliza Presupuesto Comprometido" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="GeneraPolizaComp" nombre="Generación del Encabezado de la Póliza Presupuesto Comprometido" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%Autoriza.Autoriza.ur%"/> 
+                   <campo name="periodo" calc="%Autoriza.Autoriza.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%Autoriza.Autoriza.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%Autoriza.Autoriza.fondo_contable%"/>
+                   <campo name="duep_origen" calc="$inParam.id_duep_reclas$"/>
+                   <campo name="momento_contable" calc="4"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="concepto_general" calc="@concatenar('Póliza de Reclasificación del Presupuesto de Egresos del Comprometido '+%Autoriza.Autoriza.duep%)"/>
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="agregaFolioPolizaComp" nombre="Agrega folio Poliza Comprometido" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente tipo="cursor" id="agregaFolioPolizaComp" nombre="Agrega folio Poliza Comprometido">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%GeneraPolizaComp.GeneraPolizaComp.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GeneraPolizaComp.GeneraPolizaComp.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%GeneraPolizaComp.GeneraPolizaComp.periodo%+'-'+
+                    @ifThenElse(%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar% &lt;10,'00000',
+                    @ifThenElse(%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%&lt;100000,'0',null)))))
+                    +%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="barreDuepReclas" nombre="Barrido de los Detalles" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="barreDuepReclas" nombre="Barrido de los Detalles" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%Autoriza.Autoriza.id_duep_reclas_pres%"/>
+                    <campo name="id_presupuesto_e" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="id_presupuesto_e_origen"/>
+                    <campo name="clave_presupuestal_origen"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="total" />
+                    <campo name="tipo_detalle" />
+                    <campo name="articulo" />
+                    <campo name="fecha_registro" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                
+                <nivel id="barrePresSUM" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclas.barreDuepReclas.cve_pres_destino1%!=null AND %barreDuepReclas.barreDuepReclas.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresSUM" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclas.barreDuepReclas.cve_pres_destino1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_comprometido" calc="@consultaDirec('SELECT '+%barrePresSUM.barrePresSUM.presupuesto_comprometido%+' + '+%barreDuepReclas.barreDuepReclas.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="barrePresRES" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclas.barreDuepReclas.cve_pres_destino1%!=null AND %barreDuepReclas.barreDuepReclas.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresRES" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclas.barreDuepReclas.cve_pres_origen1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_comprometido" calc="@consultaDirec('SELECT '+%barrePresRES.barrePresRES.presupuesto_comprometido%+' -'+ %barreDuepReclas.barreDuepReclas.total%' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclas.barreDuepReclas.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01')"/>
+                            <campo name="importe_cargo" calc="%barreDuepReclas.barreDuepReclas.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclas.barreDuepReclas.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclas.barreDuepReclas.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01')" />
+                            <campo name="importe_abono" calc="%barreDuepReclas.barreDuepReclas.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclas.barreDuepReclas.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--FIN Genera PÓLIZA PRESUPUESTO COMPROMETIDO -->
+        <!--Genera PÓLIZA PRESUPUESTO DEVENGADO -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="GeneraPolizaDev" nombre="Generación del Encabezado de la Póliza Presupuesto Comprometido" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="GeneraPolizaDev" nombre="Generación del Encabezado de la Póliza Presupuesto Comprometido" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%Autoriza.Autoriza.ur%"/> 
+                   <campo name="periodo" calc="%Autoriza.Autoriza.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%Autoriza.Autoriza.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%Autoriza.Autoriza.fondo_contable%"/>
+                   <campo name="duep_origen" calc="$inParam.id_duep_reclas$" />
+                   <campo name="momento_contable" calc="2"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="concepto_general" calc="@concatenar('Póliza de Reclasificación del Presupuesto de Egresos del Devengado del Documento Único del Ejercicio del Presupuesto '+%Autoriza.Autoriza.duep%)"/>
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaFolioPolizaDev" nombre="Agrega folio Poliza Comprometido" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente tipo="cursor" id="agregaFolioPolizaDev" nombre="Agrega folio Poliza Comprometido">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%GeneraPolizaDev.GeneraPolizaDev.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GeneraPolizaDev.GeneraPolizaDev.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%GeneraPolizaDev.GeneraPolizaDev.periodo%+'-'+
+                    @ifThenElse(%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar% &lt;10,'00000',
+                    @ifThenElse(%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%&lt;100000,'0',null)))))
+                    +%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreDuepReclasDev" nombre="Barrido de los Detalles" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="barreDuepReclasDev" nombre="Barrido de los Detalles" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%Autoriza.Autoriza.id_duep_reclas_pres%"/>
+                    <campo name="id_presupuesto_e" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="id_presupuesto_e_origen"/>
+                    <campo name="clave_presupuestal_origen"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="mes"/>
+                    <campo name="total" />
+                    <campo name="articulo" />
+                    <campo name="fecha_registro" local="true" type="string" calc="@fechaSistema()" />
+                    <campo name="tipo_detalle" />
+                    <campo name="registro_original" />
+                </tabla>
+                <nivel id="barrePresSUMDev" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasDev.barreDuepReclasDev.cve_pres_destino1%!=null AND %barreDuepReclasDev.barreDuepReclasDev.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresSUMDev" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasDev.barreDuepReclasDev.cve_pres_destino1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <!-- @subCadena(%barreDuepReclasDev.barreDuepReclasDev.fecha_elaboracion%,5,7) -->
+                            <campo name="presupuesto_devengado" calc="@consultaDirec('SELECT '+%barrePresSUMDev.barrePresSUMDev.presupuesto_devengado%+' + '+%barreDuepReclasDev.barreDuepReclasDev.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="barrePresRESDev" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasDev.barreDuepReclasDev.cve_pres_destino1%!=null AND %barreDuepReclasDev.barreDuepReclasDev.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresRESDev" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasDev.barreDuepReclasDev.cve_pres_origen1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <!-- @subCadena(%barreDuepReclasDev.barreDuepReclasDev.fecha_elaboracion%,5,7) -->
+                            <campo name="presupuesto_devengado" calc="@consultaDirec('SELECT '+%barrePresRESDev.barrePresRESDev.presupuesto_devengado%+' -'+ %barreDuepReclasDev.barreDuepReclasDev.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoDev" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargoDev" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasDev.barreDuepReclasDev.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '5'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '01')" />
+                            <campo name="importe_cargo" calc="%barreDuepReclasDev.barreDuepReclasDev.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasDev.barreDuepReclasDev.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '5'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoDev" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbonoDev" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasDev.barreDuepReclasDev.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01')" />
+                            <campo name="importe_abono" calc="%barreDuepReclasDev.barreDuepReclasDev.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasDev.barreDuepReclasDev.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="altaDetalleDirecCargoDev2" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargoDev2" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasDev.barreDuepReclasDev.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable"  calc="@consultaDirec('SELECT cuenta_contable FROM catalog.articulos WHERE clasificador_objeto_gasto_clave = (SELECT cog FROM operation.presupuesto_egresos_mes_det WHERE id_unidad_responsable='+%Autoriza.Autoriza.ur%+' AND id_periodo='+%Autoriza.Autoriza.periodo%+' AND mes='+@fechaSistema(&quot;MM&quot;)+' AND clave_presupuestal = \\''+%barreDuepReclasDev.barreDuepReclasDev.cve_pres_origen1%+'\\') AND cuenta_contable IS NOT NULL LIMIT 1','cuenta_contable','string','MAGNITUS')"/>
+                            
+                            <!-- calc="@concatenar('5'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '113'+%obSeparador.obSeparador.caracter%+
+                                '01'+%obSeparador.obSeparador.caracter%+
+                                '001')" -->
+                            <campo name="importe_cargo" calc="%barreDuepReclasDev.barreDuepReclasDev.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasDev.barreDuepReclasDev.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('5'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+'0') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!--NUEVA -->
+                <nivel id="altaDetalleDirecAbonoDev3" nombre="Alta Detalle Abono de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecAbonoDev3" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasDev.barreDuepReclasDev.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '001'+%obSeparador.obSeparador.caracter%+
+                                '01'+%obSeparador.obSeparador.caracter%+
+                                '001')" />
+                            <campo name="importe_abono" calc="%barreDuepReclasDev.barreDuepReclasDev.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasDev.barreDuepReclasDev.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+'0') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--FIN Genera PÓLIZA PRESUPUESTO DEVENGADO -->
+        
+        <!--Genera PÓLIZA PRESUPUESTO EJERCIDO -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="GeneraPolizaEjer" nombre="Generación del Encabezado de la Póliza Presupuesto EJERCIDO" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="GeneraPolizaEjer" nombre="Generación del Encabezado de la Póliza Presupuesto EJERCIDO" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%Autoriza.Autoriza.ur%"/> 
+                   <campo name="periodo" calc="%Autoriza.Autoriza.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%Autoriza.Autoriza.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%Autoriza.Autoriza.fondo_contable%"/>
+                   <campo name="duep_origen" calc="$inParam.id_duep_reclas$" />
+                   <campo name="momento_contable" calc="6"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="concepto_general" calc="@concatenar('Póliza de Reclasificación del Presupuesto de Egresos del Ejercido '+%Autoriza.Autoriza.duep%)"/>
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="agregaFolioPolizaEjer" nombre="Agrega folio Poliza Comprometido" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente tipo="cursor" id="agregaFolioPolizaEjer" nombre="Agrega folio Poliza Comprometido">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%GeneraPolizaEjer.GeneraPolizaEjer.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GeneraPolizaEjer.GeneraPolizaEjer.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%GeneraPolizaEjer.GeneraPolizaEjer.periodo%+'-'+
+                    @ifThenElse(%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar% &lt;10,'00000',
+                    @ifThenElse(%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%&lt;100000,'0',null)))))
+                    +%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreDuepReclasEjer" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="barreDuepReclasEjer" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%Autoriza.Autoriza.id_duep_reclas_pres%"/>
+                    <campo name="id_presupuesto_e" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="id_presupuesto_e_origen"/>
+                    <campo name="clave_presupuestal_origen"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="total" />
+                    <campo name="articulo" />
+                    <campo name="fecha_registro" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                <nivel id="barrePresSUMEjer" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasEjer.barreDuepReclasEjer.cve_pres_destino1%!=null AND %barreDuepReclasEjer.barreDuepReclasEjer.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresSUMEjer" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasEjer.barreDuepReclasEjer.cve_pres_destino1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <!-- @subCadena(%barreDuepReclasEjer.barreDuepReclasEjer.fecha_elaboracion%,5,7) -->
+                            <campo name="presupuesto_ejercido" calc="@consultaDirec('SELECT '+%barrePresSUMEjer.barrePresSUMEjer.presupuesto_ejercido%+' + '+%barreDuepReclasEjer.barreDuepReclasEjer.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="barrePresRESEjer" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasEjer.barreDuepReclasEjer.cve_pres_destino1%!=null AND %barreDuepReclasEjer.barreDuepReclasEjer.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresRESEjer" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasEjer.barreDuepReclasEjer.cve_pres_origen1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <!-- @subCadena(%barreDuepReclasEjer.barreDuepReclasEjer.fecha_elaboracion%,5,7) -->
+                            <campo name="presupuesto_ejercido" calc="@consultaDirec('SELECT '+%barrePresRESEjer.barrePresRESEjer.presupuesto_ejercido%+' -'+ %barreDuepReclasEjer.barreDuepReclasEjer.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoEjer" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasEjer.barreDuepReclasEjer.cve_pres_destino1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '6'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '001'+%obSeparador.obSeparador.caracter%+
+                                    '01'+%obSeparador.obSeparador.caracter%+
+                                    '001')" />
+                            <campo name="importe_cargo" calc="%barreDuepReclasEjer.barreDuepReclasEjer.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasEjer.barreDuepReclasEjer.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '6'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoEjer" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasEjer.barreDuepReclasEjer.cve_pres_destino1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '5'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '001'+%obSeparador.obSeparador.caracter%+
+                                    '01'+%obSeparador.obSeparador.caracter%+
+                                    '001')" />
+                            <campo name="importe_abono" calc="%barreDuepReclasEjer.barreDuepReclasEjer.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasEjer.barreDuepReclasEjer.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '5'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--FIN Genera PÓLIZA PRESUPUESTO EJERCIDO -->
+        
+        <!--Genera PÓLIZA PRESUPUESTO PAGADO -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="GeneraPolizaPag" nombre="Generación del Encabezado de la Póliza Presupuesto PAGADO" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="GeneraPolizaPag" nombre="Generación del Encabezado de la Póliza Presupuesto PAGADO" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%Autoriza.Autoriza.ur%"/> 
+                   <campo name="periodo" calc="%Autoriza.Autoriza.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%Autoriza.Autoriza.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%Autoriza.Autoriza.fondo_contable%"/>
+                   <campo name="duep_origen" calc="$inParam.id_duep_reclas$" />
+                   <campo name="momento_contable" calc="7"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="concepto_general" calc="@concatenar('Póliza de Reclasificación del Presupuesto de Egresos del Pagado '+%Autoriza.Autoriza.duep%)"/>
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaFolioPolizaPag" nombre="Agrega folio Poliza Pagado" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente tipo="cursor" id="agregaFolioPolizaPag" nombre="Agrega folio Poliza Pagado">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%GeneraPolizaPag.GeneraPolizaPag.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GeneraPolizaPag.GeneraPolizaPag.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%GeneraPolizaPag.GeneraPolizaPag.periodo%+'-'+'T'+
+                    @ifThenElse(%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar% &lt;10,'00000',
+                    @ifThenElse(%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%&lt;100000,'0','1')))))
+                    +%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreDuepReclasPag" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1">
+            <componente id="barreDuepReclasPag" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%Autoriza.Autoriza.id_duep_reclas_pres%"/>
+                    <campo name="id_presupuesto_e" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="id_presupuesto_e_origen"/>
+                    <campo name="clave_presupuestal_origen"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="total" />
+                    <campo name="articulo" />
+                    <campo name="fecha_registro" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                <nivel id="barrePresSUMPag" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasPag.barreDuepReclasPag.cve_pres_destino1%!=null AND %barreDuepReclasPag.barreDuepReclasPag.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresSUMPag" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasPag.barreDuepReclasPag.cve_pres_destino1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <!-- @subCadena(%barreDuepReclasPag.barreDuepReclasPag.fecha_elaboracion%,5,7) -->
+                            <campo name="presupuesto_pagado" calc="@consultaDirec('SELECT '+%barrePresSUMPag.barrePresSUMPag.presupuesto_pagado%+' + '+%barreDuepReclasPag.barreDuepReclasPag.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="barrePresRESpag" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasPag.barreDuepReclasPag.cve_pres_destino1%!=null AND %barreDuepReclasPag.barreDuepReclasPag.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresRESpag" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasPag.barreDuepReclasPag.cve_pres_origen1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <!-- @subCadena(%barreDuepReclasPag.barreDuepReclasPag.fecha_elaboracion%,5,7) -->
+                            <campo name="presupuesto_pagado" calc="@consultaDirec('SELECT '+%barrePresRESpag.barrePresRESpag.presupuesto_pagado%+' - '+%barreDuepReclasPag.barreDuepReclasPag.total%+' as suma','suma',numeric',MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoPag" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasPag.barreDuepReclasPag.cve_pres_destino1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '7'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '001'+%obSeparador.obSeparador.caracter%+
+                                    '01'+%obSeparador.obSeparador.caracter%+
+                                    '001')" />
+                            <campo name="importe_cargo" calc="%barreDuepReclasPag.barreDuepReclasPag.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasPag.barreDuepReclasPag.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '7'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoPag" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasPag.barreDuepReclasPag.cve_pres_destino1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '6'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '001'+%obSeparador.obSeparador.caracter%+
+                                    '01'+%obSeparador.obSeparador.caracter%+
+                                    '001')" />
+                            <campo name="importe_abono" calc="%barreDuepReclasPag.barreDuepReclasPag.total%*-1"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasPag.barreDuepReclasPag.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '6'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- PATRIMONIAL 
+                <nivel id="altaDetalleDirecCargoPagPat" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargoPat" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasPag.barreDuepReclasPag.cve_pres_destino1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '001'+%obSeparador.obSeparador.caracter%+
+                                    '01'+%obSeparador.obSeparador.caracter%+
+                                    '001')" />
+                            <campo name="importe_cargo" calc="%barreDuepReclasPag.barreDuepReclasPag.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasPag.barreDuepReclasPag.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+'0') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="altaDetalleDirecAbonoPagPat" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbonoPat" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasPag.barreDuepReclasPag.cve_pres_destino1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '002'+%obSeparador.obSeparador.caracter%+
+                                    '02'+%obSeparador.obSeparador.caracter%+
+                                    '002')" />
+                            <campo name="importe_abono" calc="%barreDuepReclasPag.barreDuepReclasPag.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasPag.barreDuepReclasPag.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+'0') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                -->
+            </componente>
+        </nivel>
+        <!--FIN Genera PÓLIZA PRESUPUESTO PAGADO -->
+        
+        <!--Genera PÓLIZA PRESUPUESTO COMPROMETIDO POR REINTEGRO -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="GeneraPolizaCompRI" nombre="Generación del Encabezado de la Póliza Presupuesto COMPROMETIDO RI" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="GeneraPolizaCompRI" nombre="Generación del Encabezado de la Póliza Presupuesto COMPROMETIDO RI" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="%Autoriza.Autoriza.ur%"/> 
+                   <campo name="periodo" calc="%Autoriza.Autoriza.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%Autoriza.Autoriza.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%Autoriza.Autoriza.fondo_contable%"/>
+                   <!--<campo name="duep_origen" calc="$inParam.id_duep_reclas$" />-->
+                   <campo name="momento_contable" calc="4"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaFolioPolizaCompRI" nombre="Agrega folio Poliza Comprometido" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente tipo="cursor" id="agregaFolioPolizaCompRI" nombre="Agrega folio Poliza Comprometido">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%GeneraPolizaCompRI.GeneraPolizaCompRI.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GeneraPolizaCompRI.GeneraPolizaCompRI.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%GeneraPolizaCompRI.GeneraPolizaCompRI.periodo%+'-'+
+                    @ifThenElse(%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar% &lt;10,'00000',
+                    @ifThenElse(%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%&lt;100000,'0',null)))))
+                    +%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreDuepReclasCompRI" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="barreDuepReclasCompRI" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%Autoriza.Autoriza.id_duep_reclas_pres%"/>
+                    <campo name="id_presupuesto_e" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="id_presupuesto_e_origen"/>
+                    <campo name="clave_presupuestal_origen"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="total" />
+                    <campo name="tipo_detalle" />
+                    <campo name="articulo" />
+                </tabla>
+                <nivel id="barrePresSUMCompRI" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasCompRI.barreDuepReclasCompRI.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresSUMCompRI" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasCompRI.barreDuepReclasCompRI.cve_pres_origen1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_comprometido" calc="@consultaDirec('SELECT '+%barrePresSUMCompRI.barrePresSUMCompRI.presupuesto_comprometido%+' + '+%barreDuepReclasCompRI.barreDuepReclasCompRI.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoCompRI" nombre="Alta Detalle Cargo de Duep" interactivo="false" ejecutar="%barreDuepReclasCompRI.barreDuepReclasCompRI.tipo_detalle%==1">
+                    <componente id="altaDetalleDirecCargoCompRI" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasCompRI.barreDuepReclasCompRI.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01')" />
+                            <campo name="importe_cargo" calc="%barreDuepReclasCompRI.barreDuepReclasCompRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasCompRI.barreDuepReclasCompRI.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoCompRI" nombre="AltaDetalleDirecAbono" interactivo="false" ejecutar="%barreDuepReclasCompRI.barreDuepReclasCompRI.tipo_detalle%==1">
+                    <componente id="altaDetalleDirecAbonoCompRI" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasCompRI.barreDuepReclasCompRI.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <campo name="importe_abono" calc="%barreDuepReclasCompRI.barreDuepReclasCompRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasCompRI.barreDuepReclasCompRI.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--FIN Genera PÓLIZA PRESUPUESTO COMPROMETIDO POR REINTEGRO -->
+        
+          <!--Genera PÓLIZA PRESUPUESTO DEVENGADO POR REINTEGRO -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="GeneraPolizaDevRI" nombre="Generación del Encabezado de la Póliza Presupuesto DEVENGADO RI" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="GeneraPolizaDevRI" nombre="Generación del Encabezado de la Póliza Presupuesto DEVENGADO RI" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%Autoriza.Autoriza.ur%"/> 
+                   <campo name="periodo" calc="%Autoriza.Autoriza.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%Autoriza.Autoriza.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%Autoriza.Autoriza.fondo_contable%"/>
+                   <campo name="momento_contable" calc="2"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaFolioPolizaDevRI" nombre="Agrega folio Poliza Comprometido" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente tipo="cursor" id="agregaFolioPolizaDevRI" nombre="Agrega folio Poliza Comprometido">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%GeneraPolizaDevRI.GeneraPolizaDevRI.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GeneraPolizaDevRI.GeneraPolizaDevRI.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%GeneraPolizaDevRI.GeneraPolizaDevRI.periodo%+'-'+
+                    @ifThenElse(%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar% &lt;10,'00000',
+                    @ifThenElse(%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%&lt;100000,'0','1')))))
+                    +%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreDuepReclasDevRI" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="barreDuepReclasDevRI" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%Autoriza.Autoriza.id_duep_reclas_pres%"/>
+                    <campo name="id_presupuesto_e" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="id_presupuesto_e_origen"/>
+                    <campo name="clave_presupuestal_origen"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="total" />
+                    <campo name="tipo_detalle" />
+                    <campo name="articulo" />
+                    <campo name="fecha_registro" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                <nivel id="barrePresSUMDevRI" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasDevRI.barreDuepReclasDevRI.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresSUMDevRI" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasDevRI.barreDuepReclasDevRI.cve_pres_origen1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_devengado" calc="@consultaDirec('SELECT '+%barrePresSUMDevRI.barrePresSUMDevRI.presupuesto_devengado%+' + '+%barreDuepReclasDevRI.barreDuepReclasDevRI.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoDevRI" nombre="Alta Detalle Cargo de Duep" interactivo="false" ejecutar="%barreDuepReclasDevRI.barreDuepReclasDevRI.tipo_detalle%==1">
+                    <componente id="altaDetalleDirecCargoDevRI" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '5'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <campo name="importe_cargo" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '5'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoDevRI" nombre="AltaDetalleDirecAbono" interactivo="false" ejecutar="%barreDuepReclasDevRI.barreDuepReclasDevRI.tipo_detalle%==1">
+                    <componente id="altaDetalleDirecAbonoDevRI" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <campo name="importe_abono" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoDevRI2" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargoDevRI2" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.cve_pres_destino1%"/>-->
+                            <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT cuenta_contable cc FROM catalog.articulos WHERE periodo='+%Autoriza.Autoriza.periodo%+' AND clave_articulo='+'\\''+%barreDuepReclasDevRI.barreDuepReclasDevRI.articulo%+'\\'','cc','string','MAGNITUS')" />
+                            <campo name="importe_cargo" calc="(%barreDuepReclasDevRI.barreDuepReclasDevRI.total%)"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+%altaDetalleDirecCargoDevRI2.altaDetalleDirecCargoDevRI2.clave_cuenta_contable%+'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoDevRI3" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargoDevRI3" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.cve_pres_destino1%"/>-->
+                            <campo name="clave_cuenta_contable" calc="@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00001'+%obSeparador.obSeparador.caracter%+%dgr.dgr.id_fondo_contable%)" />
+                            <campo name="importe_abono" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasDevRI.barreDuepReclasDevRI.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+%altaDetalleDirecCargoDevRI3.altaDetalleDirecCargoDevRI3.clave_cuenta_contable%+'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--FIN Genera PÓLIZA PRESUPUESTO DEVENGADO POR REINTEGRO -->
+        
+        
+        <!--Genera PÓLIZA PRESUPUESTO EJERCIDO POR REINTEGRO -->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="GeneraPolizaEjerRI" nombre="Generación del Encabezado de la Póliza Presupuesto EJERCIDO" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="GeneraPolizaEjerRI" nombre="Generación del Encabezado de la Póliza Presupuesto EJERCIDO" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%Autoriza.Autoriza.ur%"/> 
+                   <campo name="periodo" calc="%Autoriza.Autoriza.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%Autoriza.Autoriza.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%Autoriza.Autoriza.fondo_contable%"/>
+                   <!--<campo name="duep_origen" calc="%md_auto_orden_compra.md_auto_orden_compra.duep%" />-->
+                   <campo name="momento_contable" calc="6"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaFolioPolizaEjerRI" nombre="Agrega folio Poliza Comprometido" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente tipo="cursor" id="agregaFolioPolizaEjerRI" nombre="Agrega folio Poliza Comprometido">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%GeneraPolizaEjerRI.GeneraPolizaEjerRI.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GeneraPolizaEjerRI.GeneraPolizaEjerRI.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%GeneraPolizaEjerRI.GeneraPolizaEjerRI.periodo%+'-'+
+                    @ifThenElse(%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar% &lt;10,'00000',
+                    @ifThenElse(%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%&lt;100000,'0','1')))))
+                    +%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreDuepReclasEjerRI" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="barreDuepReclasEjerRI" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%Autoriza.Autoriza.id_duep_reclas_pres%"/>
+                    <campo name="id_presupuesto_e" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="id_presupuesto_e_origen"/>
+                    <campo name="clave_presupuestal_origen"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="total" />
+                    <campo name="tipo_detalle" />
+                    <campo name="articulo" />
+                    <campo name="fecha_registro" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                <nivel id="barrePresSUMEjerRI" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasEjerRI.barreDuepReclasEjerRI.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresSUMEjerRI" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.cve_pres_origen1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_ejercido" calc="@consultaDirec('SELECT '+%barrePresSUMEjerRI.barrePresSUMEjerRI.presupuesto_ejercido%+' + '+%barreDuepReclasEjerRI.barreDuepReclasEjerRI.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoEjerRI" nombre="Alta Detalle Cargo de Duep" interactivo="false" ejecutar="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.tipo_detalle%==1">
+                    <componente id="altaDetalleDirecCargoEjerRI" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '6'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+'0'
+                            +%obSeparador.obSeparador.caracter%+'01')" />
+                            <campo name="importe_cargo" calc="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '6'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+'0'
+                            +%obSeparador.obSeparador.caracter%+'01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoEjerRI" nombre="AltaDetalleDirecAbono" interactivo="false" ejecutar="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.tipo_detalle%==1">
+                    <componente id="altaDetalleDirecAbonoEjerRI" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '5'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+'0'
+                            +%obSeparador.obSeparador.caracter%+'01')" />
+                            <campo name="importe_abono" calc="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasEjerRI.barreDuepReclasEjerRI.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '5'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0'
+                            +%obSeparador.obSeparador.caracter%+'01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--FIN Genera PÓLIZA PRESUPUESTO EJERCIDO POR REINTEGRO -->
+        
+        <!--Genera PÓLIZA PRESUPUESTO PAGADO  POR RE INTEGRO-->
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="GeneraPolizaPagRI" nombre="Generación del Encabezado de la Póliza Presupuesto PAGADO X RI" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="GeneraPolizaPagRI" nombre="Generación del Encabezado de la Póliza Presupuesto PAGADO X RI" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%Autoriza.Autoriza.ur%"/> 
+                   <campo name="periodo" calc="%Autoriza.Autoriza.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%Autoriza.Autoriza.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%Autoriza.Autoriza.fondo_contable%"/>
+                   <!--<campo name="duep_origen" calc="%md_auto_orden_compra.md_auto_orden_compra.duep%" />-->
+                   <campo name="momento_contable" calc="7"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="agregaFolioPolizaPagRI" nombre="Agrega folio Poliza Pagado" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente tipo="cursor" id="agregaFolioPolizaPagRI" nombre="Agrega folio Poliza Pagado">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%GeneraPolizaPagRI.GeneraPolizaPagRI.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%GeneraPolizaPagRI.GeneraPolizaPagRI.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%GeneraPolizaPag.GeneraPolizaPag.periodo%+'-'+
+                    @ifThenElse(%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar% &lt;10,'00000',
+                    @ifThenElse(%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%&lt;100,'0000',
+                    @ifThenElse(%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%&lt;1000,'000',
+                    @ifThenElse(%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%&lt;10000,'00',
+                    @ifThenElse(%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%&lt;100000,'0','1')))))
+                    +%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreDuepReclasPagRI" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2">
+            <componente id="barreDuepReclasPagRI" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_reclas_pres_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%"/>
+                    <campo name="id_duep_reclas_pres" filtroCampo="id_duep_reclas_pres" filtroOperador="=" filtroValor="%Autoriza.Autoriza.id_duep_reclas_pres%"/>
+                    <campo name="id_presupuesto_e" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="id_presupuesto_e_origen"/>
+                    <campo name="clave_presupuestal_origen"/>
+                    <campo name="cve_pres_origen1"/>
+                    <campo name="cve_pres_destino1"/>
+                    <campo name="total" />
+                    <campo name="tipo_detalle" />
+                    <campo name="articulo" />
+                    <campo name="fecha_registro" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                <nivel id="barrePresSUMPagRI" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %barreDuepReclasPagRI.barreDuepReclasPagRI.cve_pres_origen1%!=null"> 
+                    <componente id="barrePresSUMPagRI" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%Autoriza.Autoriza.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%Autoriza.Autoriza.periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barreDuepReclasPagRI.barreDuepReclasPagRI.cve_pres_origen1%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_pagado" calc="@consultaDirec('SELECT '+%barrePresSUMPagRI.barrePresSUMPagRI.presupuesto_pagado%+'+'+ %barreDuepReclasPagRI.barreDuepReclasPagRI.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="altaDetalleDirecCargoPagRI" nombre="Alta Detalle Cargo de Duep" interactivo="false" ejecutar="%barreDuepReclasPagRI.barreDuepReclasPagRI.tipo_detalle%==1">
+                    <componente id="altaDetalleDirecCargoPagRI" nombre="altaDetalleDirecCargoPagRI" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasPagRI.barreDuepReclasPagRI.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '7'+%obSeparador.obSeparador.caracter%+
+                           '0'+%obSeparador.obSeparador.caracter%+'0'
+                            +%obSeparador.obSeparador.caracter%+'01')" />
+                            <campo name="importe_cargo" calc="%barreDuepReclasPagRI.barreDuepReclasPagRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasPagRI.barreDuepReclasPagRI.articulo%"/>
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '7'+%obSeparador.obSeparador.caracter%+
+                               '0'+%obSeparador.obSeparador.caracter%+'0'
+                            +%obSeparador.obSeparador.caracter%+'01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoPagRI" nombre="AltaDetalleDirecAbono" interactivo="false" ejecutar="%barreDuepReclasPagRI.barreDuepReclasPagRI.tipo_detalle%==1">
+                    <componente id="altaDetalleDirecAbonoPagRI" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="%Autoriza.Autoriza.ur%" />
+                            <campo name="id_periodo" calc="%Autoriza.Autoriza.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%barreDuepReclasPagRI.barreDuepReclasPagRI.cve_pres_origen1%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '6'+%obSeparador.obSeparador.caracter%+
+                           '0'+%obSeparador.obSeparador.caracter%+'0'
+                            +%obSeparador.obSeparador.caracter%+'01')"/>
+                            <campo name="importe_abono" calc="%barreDuepReclasPagRI.barreDuepReclasPagRI.total%"/>
+                            <campo name="concepto_bloque" calc="%barreDuepReclasPagRI.barreDuepReclasPagRI.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '6'+%obSeparador.obSeparador.caracter%+
+                               '0'+%obSeparador.obSeparador.caracter%+'0'
+                            +%obSeparador.obSeparador.caracter%+'01') +'\\' AND ur='+%Autoriza.Autoriza.ur%+' AND periodo='+%Autoriza.Autoriza.periodo%,'descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+         <nivel nombre="TurnarInstancia" id="turnar_instancia" interactivo="false" ejecutar="%Autoriza.Autoriza.autoriza%==true">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>  
+        <!--FIN Genera PÓLIZA PRESUPUESTO PAGADO POR REINTEGRO -->
+        <!--REPORTES RECLASIFICACION PRESUPUESTAL 1-->
+        <nivel id="reportes_poliza" nombre="Reclasificación Presupuestal de Egreso" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==1" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente id="Rep_comp" nombre="Reclasificación Presupuestal de Egreso Póliza COMPROMETIDO" tipo="reporte" colapsado="si">
+                <reporte nombre="poliza_contable" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Póliza Comprometido'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true">                
+                <!-- expediente="Expediente Reclasificación Presupuesto Egreso" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%GeneraPolizaComp.GeneraPolizaComp.folio_movimiento_auxiliar%"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="Rep_dev" nombre="Reclasificación Presupuestal de Egreso Póliza DEVENGADO" tipo="reporte" colapsado="si">
+                <reporte nombre="poliza_contable" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Póliza Devengado'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true">                
+                <!-- expediente="Expediente Reclasificación Presupuesto Egreso" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%GeneraPolizaDev.GeneraPolizaDev.folio_movimiento_auxiliar%"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="Rep_ejer" nombre="Reclasificación Presupuestal de Egreso Póliza EJERCIDO" tipo="reporte" colapsado="si">
+                <reporte nombre="poliza_contable" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Póliza Ejercido'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true">                
+                <!-- expediente="Expediente Reclasificación Presupuesto Egreso" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%GeneraPolizaEjer.GeneraPolizaEjer.folio_movimiento_auxiliar%"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="Rep_pag" nombre="Reclasificación Presupuestal de Egreso Póliza PAGADO" tipo="reporte" colapsado="si">
+                <reporte nombre="poliza_contable" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Póliza Pagado'" grupo="$inParam.adquisicion$"  url="$config.repository_upload_file$" update="true">                
+                <!-- expediente="Expediente Reclasificación Presupuesto Egreso" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%GeneraPolizaPag.GeneraPolizaPag.folio_movimiento_auxiliar%"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <!--REPORTES CLASIFICACIÓN PRESUPUESTAL POR REINTEGRO-->
+        <nivel id="reportes_poliza_RI" nombre="Reporte Reclasificación Presupuestal de Egreso por Reintegro" ejecutar="%Autoriza.Autoriza.autoriza%==true AND %buscaPeriodo.buscaPeriodo.tipo_gestion%==2" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="Rep_comp" nombre="Reporte Reclasificación Presupuestal de Egreso Póliza COMPROMETIDO" tipo="reporte" colapsado="si">
+               <reporte nombre="poliza_contable" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Póliza Comprometido'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true">               
+               <!-- expediente="Expediente Reclasificación Presupuesto Egreso" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%GeneraPolizaCompRI.GeneraPolizaCompRI.folio_movimiento_auxiliar%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="Rep_dev" nombre="Reporte Reclasificación Presupuestal de Egreso Póliza DEVENGADO" tipo="reporte" colapsado="si">
+                <reporte nombre="poliza_contable" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Póliza Devengado'" grupo="$inParam.adquisicion$"  url="$config.repository_upload_file$" update="true">                
+                <!-- expediente="Expediente Reclasificación Presupuesto Egreso" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%GeneraPolizaDevRI.GeneraPolizaDevRI.folio_movimiento_auxiliar%"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="Rep_ejer" nombre="Reporte Reclasificación Presupuestal de Egreso Póliza EJERCIDO" tipo="reporte" colapsado="si">
+                <reporte nombre="poliza_contable" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Póliza Ejercido'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true">                
+                <!-- expediente="Expediente Reclasificación Presupuesto Egreso" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%GeneraPolizaEjerRI.GeneraPolizaEjerRI.folio_movimiento_auxiliar%"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="Rep_pag" nombre="Reporte Reclasificación Presupuestal de Egreso Póliza PAGADO" tipo="reporte" colapsado="si">
+                <reporte nombre="poliza_contable" expediente="IEA/Reclasificación del Egreso" nombreDocumento="'Póliza Pagado'" grupo="$inParam.adquisicion$" url="$config.repository_upload_file$" update="true">                
+                <!-- expediente="Expediente Reclasificación Presupuesto Egreso" -->
+                    <campo name="ur" type="long" calc="%dgr.dgr.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%GeneraPolizaPagRI.GeneraPolizaPagRI.folio_movimiento_auxiliar%"/>
+                   <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <!--FINALIZA PROCESO -->
+       
+    </pagina>
+</tarea>
