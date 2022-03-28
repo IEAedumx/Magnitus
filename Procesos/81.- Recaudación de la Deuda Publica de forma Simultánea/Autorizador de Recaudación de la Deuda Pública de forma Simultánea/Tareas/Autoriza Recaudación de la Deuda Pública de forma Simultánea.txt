@@ -1,0 +1,724 @@
+<tarea id="autorizaRecaudacionSimultaneaDeudaPublica" nombre="Autoriza Recaudación Simultánea de Deuda Pública" autor="Luis Eduardo Castañeda Delgadillo" version="1.0.0" fechaModificacion="22/06/2019" >
+    <pagina id="uno">
+        
+        <!-- PASO DE PARÁMETROS -->
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="importe" local="true" type="string" calc="$inParam.importe$"/>
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="id_recaudacion_simultanea" local="true" type="string" calc="$inParam.id_recaudacion_simultanea$"/>
+                    <campo name="folio_recaudacion" text="" local="true" type="string" calc="$inParam.folio$"/>
+                    <campo name="fecha" local="true" type="string" calc="$inParam.fecha$"/>
+                    <campo name="tipo_deuda" local="true" type="string" calc="$inParam.tipo_deuda$"/>
+                    <campo name="beneficiario" local="true" type="string" calc="$inParam.beneficiario$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        
+        <nivel id="nlMd_recaudacion_simultanea" nombre="Recaudación de la Deuda Pública de Forma Simultanea" mostrarNivelAnterior="false">
+            <componente tipo="maestrodetalle"  id="cpMd_recaudacion_simultanea" nombre="Recaudación de la Deuda Pública de Forma Simultanea">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="recaudacion_simultanea_dp">
+                        <campo name="ur" visible="false" llaveForanea="false" calc="%inParam.inParam.ur%"/>
+                        <campo name="periodo" visible="false" llaveForanea="false" calc="%inParam.inParam.periodo%"/>
+                        <campo name="id_recaudacion_simultanea_dp" visible="false" llaveForanea="false" calc="%inParam.inParam.id_recaudacion_simultanea%"/>
+                        <campo name="folio_recaudacion_sim_dp" text="Folio" margen-izquierdo="2" columnas="2" habilitado="false"/>
+                        <campo name="beneficiario" local="true" type="string" text="Beneficiario" columnas="2" marcador="Seleccione un beneficiario" referenciaForanea="fudep" celdaForanea="institucion_acreedora" autocompletar="true"/>
+                        <campo name="fecha_registro" text="Fecha" columnas="2" margen-derecho="2" habilitado="false" validacion="%fecha_registro%==null" validacionMensaje="Ingrese una fecha para continuar."/>
+                        <campo name="cuenta_bancaria" text="Cuenta Bancaria" margen-izquierdo="2" columnas="2" habilitado="false" descripcionForanea="clave_cuenta" marcador="Seleccione una cuenta bancaria"/>
+                        <campo name="fudep" text="DDEDP" descripcionForanea="folio_fudep" habilitado="false" columnas="2" marcador="Seleccione un FUDEP" validacion="%fudep%==null" validacionMensaje="Seleccione Folio de Deuda a Recaudar"/>
+                        <campo name="saldo_recaudar" text="Saldo por Recaudar" columnas="2" referenciaForanea="fudep" habilitado="false" celdaForanea="saldo_recaudar" autocompletar="true" />
+                        <campo name="concepto" text="Descripción" margen-izquierdo="2" columnas="6" height="200" habilitado="false" marcador="Ingrese un concepto" validacion="%concepto%==null" validacionMensaje="Ingrese el concepto"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2" margen-derecho="4" visible="false"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla id="detRegRecSim" titiloDetalle="Bloque Presupuestal" schema="operation" nombre="recaudacion_simultanea_dp_det" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false">
+                        <campo name="ur" visible="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" visible="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_recaudacion_simultanea_dp" visible="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_recaudacion_simultanea_dp_det" visible="false" text="Renglón" autogenerado="true" generacion="@prox()+1"  columna-visible="true"/>
+                        <campo name="numero_bloque" text="Número de bloque" columna-visible="false" local="true" type="string" margen-izquierdo="1" columnas="4"
+                        calc="@ifThenElse(@consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp_det)+1 max FROM operation.recaudacion_simultanea_dp_det
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND periodo = '+'\\''+%inParam.inParam.periodo%+'\\' 
+                            AND id_recaudacion_simultanea_dp = '+'\\''+@ifThenElse(%inParam.inParam.id_recaudacion_simultanea%==null,1,%inParam.inParam.id_recaudacion_simultanea%)+'\\'','max','string','MAGNITUS')==null,'1',
+                            @consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp_det)+1 max FROM operation.recaudacion_simultanea_dp_det
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND periodo = '+'\\''+%inParam.inParam.periodo%+'\\' AND id_recaudacion_simultanea_dp = '+'\\''+@ifThenElse(%inParam.inParam.id_recaudacion_simultanea%==null,1,%inParam.inParam.id_recaudacion_simultanea%)+'\\'','max','string','MAGNITUS'))"/>
+                        <campo name="mes" llaveForanea="false" visible="false" columna-visible="false" calc="@fechaSistema(&quot;MM&quot;)"/>
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" descripcionForanea="clave_presupuestal" marcador="Seleccione una clave presupuestal" columnas="4"/>
+                        <campo name="id_cat_cri" llaveForanea="false" visible="false" columna-visible="false" calc="11"/>
+                        <campo name="id_clasif_objeto_rubro_ing" text="Clasificador por Rubro del Ingreso" margen-izquierdo="1" columnas="4" marcador="Seleccione un CRI"/>
+                        <campo name="id_cat_fondo_contable" llaveForanea="false" visible="false" columna-visible="false" calc="3"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" columnas="4" autoFiltrado="true" maxLength="50" marcador="Seleccione un fondo contable"/>
+                        <campo name="id_cat_centro_registro" llaveForanea="false" visible="false" columna-visible="false" calc="2"/>
+                        <campo name="id_centro_registro" text="Centro de Registro" margen-izquierdo="1" columnas="4" autoFiltrado="true" maxLength="50" marcador="Seleccione un centro de registro"/>
+                        <campo name="referencia" text="Referencia" columnas="4" marcador="Ingrese una referencia"/>
+                        <campo name="cantidad" text="Cantidad" margen-izquierdo="1" columnas="4" marcador="Ingrese una cantidad"/>
+                        <campo name="importe" text="Importe" columnas="4"/>
+                        <campo name="descuento" text="Descuento" margen-izquierdo="1" columnas="4"/>
+                        <campo name="iva" text="Impuesto al Valor Agregado" columnas="4"/>
+                        <campo name="total" text="Total" margen-izquierdo="1" columnas="4"/>
+                        <campo name="adjuntar_documentacion" local="true" type="file" text="Adjuntar Documentación" columnas="4"/>
+                        <campo name="concepto_recaudacion" text="Concepto de Recaudación" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" habilitado="false" margen-izquierdo="1" columnas="8"/>
+                    </tabla>
+                </detalles>
+            </componente>
+            <componente tipo="reporte" nombre="Recaudación de la Deuda Pública de Forma Simultanea" id="cpRepRecSimDeudaPu">
+               <reporte nombre="R_Reg_Rec_Sim_Fin_AR">
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%" />
+                    <campo name="recaudacion" type="long" calc="%inParam.inParam.id_recaudacion_simultanea%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlAtzRecSimDeudaPub" nombre="Autoriza Recaudación de la Deuda Pública de Forma Simultanea" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpAtzRecSimDeudaPub" nombre="Autoriza Recaudación de la Deuda Pública de Forma Simultanea" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="recaudacion_simultanea_dp">
+                    <campo name="ur" visible="false" llaveForanea="false" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" visible="false" llaveForanea="false" calc="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_simultanea_dp" visible="false" llaveForanea="false" calc="%inParam.inParam.id_recaudacion_simultanea%"/>
+                    <campo name="observaciones" text="Observaciones" margen-izquierdo="2" columnas="6" height="200" interaccion="%autoriza%==false" validacion="%autoriza%==false AND %observaciones%==null" validacionMensaje="Faltan observaciones."/>
+                    <campo name="autoriza" text="Autoriza" margen-izquierdo="2" columnas="6"/>
+                    <campo name="estatus" visible="false" calc="@ifThenElse(%autoriza%==true,2,4)"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" margen-izquierdo="4" columnas="2" margen-derecho="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreRecSimDeudaPub" nombre="Barre Recaudación Simultánea de Deuda Pública" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true">
+            <componente id="cpBarreRecSimDeudaPub" nombre="Barre Recaudación Simultánea de Deuda Pública" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_simultanea_dp">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_simultanea_dp" filtroCampo="id_recaudacion_simultanea_dp" filtroOperador="=" filtroValor="%inParam.inParam.id_recaudacion_simultanea%"/>
+                    <campo name="fudep"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreRecSimDeudaDePubDet" nombre="Barre Recaudación Simultánea de Deuda Pública" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true">
+            <componente id="cpBarreRecSimDeudaPubDet" nombre="Barre Recaudación Simultánea de Deuda Pública" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_simultanea_dp_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_simultanea_dp" filtroCampo="id_recaudacion_simultanea_dp" filtroOperador="=" filtroValor="%inParam.inParam.id_recaudacion_simultanea%"/>
+                    <campo name="id_recaudacion_simultanea_dp_det"/>
+                    <campo name="id_cat_fondo_contable" />
+                    <campo name="id_fondo_contable" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="obIdSeparador" nombre="obtenerSeparadorPeriodo" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true" interactivo="false" >
+            <componente id="obIdSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--SEPARADOR PARA REALIZAR EL SUBSTRING -->
+        <nivel id="obSeparador" nombre="obtenerSeparadorPeriodo" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true" interactivo="false">
+            <componente id="obSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%obIdSeparador.obIdSeparador.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true">
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%inParam.inParam.ur%"/> 
+                   <campo name="periodo" calc="%inParam.inParam.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%nlBarreRecSimDeudaDePubDet.cpBarreRecSimDeudaPubDet.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%nlBarreRecSimDeudaDePubDet.cpBarreRecSimDeudaPubDet.id_fondo_contable%"/>
+                   <campo name="duep_origen" calc="%nlBarreRecSimDeudaPub.cpBarreRecSimDeudaPub.fudep%" />
+                   <campo name="momento_contable" calc="13"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   
+                   
+                   <campo name="id_beneficiario_ganador" calc="%nlMd_recaudacion_simultanea.cpMd_recaudacion_simultanea.fudep%" />
+                   
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+                   
+        <nivel nombre="actualizar folio" id="af" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true" interactivo="false">
+            <componente tipo="cursor" nombre="actualizar folio" id="af">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/> 
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"  />
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                     <campo name="folio_reporte" calc="@concatenar(%inParam.inParam.periodo%+'-'+
+                   @ifThenElse(%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%)" />
+                   <campo name="concepto_general" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública'+' '+ %nlMd_recaudacion_simultanea.cpMd_recaudacion_simultanea.folio_recaudacion_sim_dp%)"  />
+                </tabla>
+            </componente>
+        </nivel>
+
+        <nivel id="nlBarreRecSimDeudaPubDetCom" nombre="Barrido de los Detalles Recaudación Simultánea de Deuda Pública" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true">
+            <componente id="cpBarreRecSimDeudaPubDetCom" nombre="Barrido de los Detalles Recaudación Simultánea de Deuda Pública" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_simultanea_dp_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_simultanea_dp" filtroCampo="id_recaudacion_simultanea_dp" filtroOperador="=" filtroValor="%inParam.inParam.id_recaudacion_simultanea%"/>
+                    <campo name="id_recaudacion_simultanea_dp_det"/>
+                    <campo name="mes"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="total"/>
+                    <campo name="id_cat_cri"/>
+                    <campo name="id_clasif_objeto_rubro_ing"/>
+                </tabla>
+                
+                <!-- INGRESA EL CARGO 1 A LA PÓLIZA (AFECTACIÓN PRESUPUESTAL)-->
+                <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.clave_presupuestal%"/>
+                            
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            
+                            <campo name="importe_cargo" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.total%"/>
+                            
+                            <campo name="concepto_bloque" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública')"/>
+                            
+                            <!-- "@concatenar(%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+' '+ @consultaDirec('SELECT descripcion FROM catalog.catalogos 
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND id_periodo = '+'\\''+%inParam.inParam.periodo%+'\\' 
+                            AND id_cat = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+'\\' 
+                            AND id_catalogo = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_cat_cri%+'\\'','descripcion','string','MAGNITUS'))" -->
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO 1 A LA PÓLIZA (AFECTACIÓN PRESUPUESTAL)-->
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            
+                            
+                            <campo name="importe_abono" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.total%"/>
+                            
+                            <campo name="concepto_bloque" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública')"/>
+                            
+                            <!-- "@concatenar(%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+' '+ @consultaDirec('SELECT descripcion FROM catalog.catalogos 
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND id_periodo = '+'\\''+%inParam.inParam.periodo%+'\\' 
+                            AND id_cat = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+'\\' 
+                            AND id_catalogo = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_cat_cri%+'\\'','descripcion','string','MAGNITUS'))" -->
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL CARGO 2 A LA PÓLIZA (AFECTACIÓN PRESUPUESTAL)-->
+                <nivel id="altaDetalleDirecCargo2" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.clave_presupuestal%"/>
+                            
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            
+                            <campo name="importe_cargo" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.total%"/>
+                            
+                            <campo name="concepto_bloque" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública')"/>
+                            
+                            <!-- @concatenar(%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+' '+ @consultaDirec('SELECT descripcion FROM catalog.catalogos 
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND id_periodo = '+'\\''+%inParam.inParam.periodo%+'\\' 
+                            AND id_cat = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+'\\' 
+                            AND id_catalogo = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_cat_cri%+'\\'','descripcion','string','MAGNITUS')) -->
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL ABONO 2 A LA PÓLIZA (AFECTACIÓN PRESUPUESTAL)-->
+                <nivel id="altaDetalleDirecAbono2" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.clave_presupuestal%"/>
+                             
+                             <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '5'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                             
+                            
+                            <campo name="importe_abono" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.total%"/>
+                            
+                            <campo name="concepto_bloque" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública')"/>
+                            
+                            <!-- @concatenar(%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+' '+ @consultaDirec('SELECT descripcion FROM catalog.catalogos 
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND id_periodo = '+'\\''+%inParam.inParam.periodo%+'\\' 
+                            AND id_cat = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+'\\' 
+                            AND id_catalogo = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_cat_cri%+'\\'','descripcion','string','MAGNITUS')) -->
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '5'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL CARGO A LA PÓLIZA (AFECTACIÓN PATRIMONIAL)-->
+                <nivel id="altaDetalleDirecCargoPat" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.clave_presupuestal%"/>
+                            
+                            
+                            
+                            <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            
+                            <campo name="importe_cargo" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.total%"/>
+                            
+                            <campo name="concepto_bloque" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública')"/>
+                            
+                            <!-- @concatenar(%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+' '+ @consultaDirec('SELECT descripcion FROM catalog.catalogos 
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND id_periodo = '+'\\''+%inParam.inParam.periodo%+'\\' 
+                            AND id_cat = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+'\\' 
+                            AND id_catalogo = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_cat_cri%+'\\'','descripcion','string','MAGNITUS')) -->
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="altaDetalleDirecCargoDEVPatDos" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargoDEVPatDos" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%barreDuepReclas.barreDuepReclas.clave_presupuestal%"/>-->
+                            <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            <campo name="importe_cargo" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.total%"/>
+                            
+                            <campo name="concepto_bloque" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública')"/>
+                            
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <!-- INGRESA EL ABONO A LA PÓLIZA (AFECTACIÓN PATRIMONIAL)-->
+                <nivel id="altaDetalleDirecAbonoPat" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.clave_presupuestal%"/>
+                            
+                            <campo name="clave_cuenta_contable" calc="@concatenar('4'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '3'+%obSeparador.obSeparador.caracter%+
+                            '0')" />
+                            
+                            <campo name="importe_abono" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.total%"/>
+                            
+                            <campo name="concepto_bloque" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública')"/>
+                            
+                            <!-- @concatenar(%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+' '+ @consultaDirec('SELECT descripcion FROM catalog.catalogos 
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND id_periodo = '+'\\''+%inParam.inParam.periodo%+'\\' 
+                            AND id_cat = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+'\\' 
+                            AND id_catalogo = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_cat_cri%+'\\'','descripcion','string','MAGNITUS')) -->
+                            
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('4'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '4'+%obSeparador.obSeparador.caracter%+
+                                '3'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="altaDetalleDirecAbonoDEVPatTRES" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecAbonoDEVPatTRES" nombre="altaDetalleDirecAbonoDEVPat" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <!--<campo name="clave_presupuestal" calc="%barreDuepReclas.barreDuepReclas.clave_presupuestal%"/>-->
+                            <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '001'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '001')" />
+                            <campo name="importe_abono" calc="%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.total%"/>
+                            <!--<campo name="concepto_bloque" calc="%barreDuepReclas.barreDuepReclas.articulo%"/>-->
+                            <campo name="concepto_bloque" calc="@concatenar('Poliza de Recaudacion de Forma Simultanea de la Deuda Pública')"/>
+                            
+                            <!-- @concatenar(%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+' '+ @consultaDirec('SELECT descripcion FROM catalog.catalogos 
+                            WHERE ur = '+'\\''+%inParam.inParam.ur%+'\\' AND id_periodo = '+'\\''+%inParam.inParam.periodo%+'\\' 
+                            AND id_cat = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_clasif_objeto_rubro_ing%+'\\' 
+                            AND id_catalogo = '+'\\''+%nlBarreRecSimDeudaPubDetCom.cpBarreRecSimDeudaPubDetCom.id_cat_cri%+'\\'','descripcion','string','MAGNITUS')) -->
+                            
+                            
+                           <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+'0') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+            </componente>
+        </nivel>
+        
+        <!-- PASAR DATOS DE LA RECAUDACIÓN SIMULTÁNEA DE DEUDA PÚBLICA A LA RECAUDACIÓN DE INGRESOS -->
+        <nivel id="nlBarreRecSimDP" nombre="Barre Recaudación Simultánea de Deuda Pública" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true">
+            <componente id="cpBarreRecSimDP" nombre="Barre Recaudación Simultánea de Deuda Pública" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_simultanea_dp">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_simultanea_dp" filtroCampo="id_recaudacion_simultanea_dp" filtroOperador="=" filtroValor="%inParam.inParam.id_recaudacion_simultanea%"/>
+                    <campo name="caja_recaudacion" />
+                    <campo name="tipo_recaudacion" />
+                    <campo name="fudep" />
+                    <campo name="folio_recaudacion_sim_dp" />
+                    <campo name="fecha_registro" />
+                    <campo name="concepto" />
+                    <campo name="saldo_recaudar" />
+                    <campo name="ultimo_usuario_modificador" />
+                    <campo name="cuenta_bancaria" />
+                    <campo name="fecha_factura" />
+                    <campo name="factura" />
+                    <campo name="referencia" />
+                    <campo name="estatus" />
+                </tabla>
+                <nivel id="nlActRecIng" nombre="Actualiza Recaudación de Ingresos" interactivo="false">
+                    <componente id="cpActRecIng" nombre="Actualiza Recaudación de Ingresos" tipo="altaDirect">
+                        <tabla schema="operation" nombre="recaudacion_registro">
+                            <campo name="ur" calc="%nlBarreRecSimDP.cpBarreRecSimDP.ur%" />
+                            <campo name="periodo" calc="%nlBarreRecSimDP.cpBarreRecSimDP.periodo%" />
+                            <campo name="id_recaudacion_registro" autogenerado="true" generacion="@prox()+1" />
+                            <campo name="caja_recaudacion" calc="%nlBarreRecSimDP.cpBarreRecSimDP.caja_recaudacion%" />
+                            <campo name="tipo_rec_dp" calc="%nlBarreRecSimDP.cpBarreRecSimDP.tipo_recaudacion%" />
+                            <campo name="fudep" calc="%nlBarreRecSimDP.cpBarreRecSimDP.fudep%" />
+                            <campo name="folio" calc="%nlBarreRecSimDP.cpBarreRecSimDP.folio_recaudacion_sim_dp%" />
+                            <campo name="fecha_recaudacion" calc="%nlBarreRecSimDP.cpBarreRecSimDP.fecha_registro%" />
+                            <campo name="concepto" calc="%nlBarreRecSimDP.cpBarreRecSimDP.concepto%" />
+                            <campo name="saldo_recaudar" calc="%nlBarreRecSimDP.cpBarreRecSimDP.saldo_recaudar%" />
+                            <campo name="ultimo_usuario_modificador_recaudacion" calc="%nlBarreRecSimDP.cpBarreRecSimDP.ultimo_usuario_modificador_recaudacion%" />
+                            <campo name="cuenta_bancaria" calc="%nlBarreRecSimDP.cpBarreRecSimDP.cuenta_bancaria%" />
+                            <campo name="fecha_factura" calc="%nlBarreRecSimDP.cpBarreRecSimDP.fecha_factura%" />
+                            <campo name="factura" calc="%nlBarreRecSimDP.cpBarreRecSimDP.factura%" />
+                            <campo name="referencia" calc="%nlBarreRecSimDP.cpBarreRecSimDP.referencia%" />
+                            <campo name="estatus" calc="%nlBarreRecSimDP.cpBarreRecSimDP.estatus%" />
+                            <campo name="tipo_recaudacion_ingreso" calc="4"/>
+                            <campo name="exp_ingreso" calc="$inParam.folio_ingreso$" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreRecSimDPDet" nombre="Barre Recaudación Simultánea de Deuda Pública Detalle" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true">
+            <componente id="cpBarreRecSimDPDet" nombre="Barre Recaudación Simultánea de Deuda Pública Detalle" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_simultanea_dp_det">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_simultanea_dp" filtroCampo="id_recaudacion_simultanea_dp" filtroOperador="=" filtroValor="%inParam.inParam.id_recaudacion_simultanea%"/>
+                    <campo name="id_recaudacion_simultanea_dp_det" />
+                    <campo name="tipo_bloque" />
+                    <campo name="id_cat_cri" />
+                    <campo name="id_clasif_objeto_rubro_ing" />
+                    <campo name="id_cat_fondo_contable" />
+                    <campo name="id_fondo_contable" />
+                    <campo name="id_cat_centro_registro" />
+                    <campo name="id_centro_registro" />
+                    <campo name="referencia" />
+                    <campo name="importe" />
+                    <campo name="ruta_documento" />
+                    <campo name="ultimo_usuario_modificador" />
+                    <campo name="fecha_registro" />
+                    <campo name="cantidad" />
+                    <campo name="descuento" />
+                    <campo name="iva" />
+                    <campo name="total" />
+                    <campo name="concepto_recaudacion" />
+                    <campo name="mes" />
+                    <campo name="clave_presupuestal" />
+                </tabla>
+                <nivel id="nlActRecIngDet" nombre="Actualiza Recaudación de Ingresos Detalle" interactivo="false">
+                    <componente id="cpActRecIngDet" nombre="Actualiza Recaudación de Ingresos Detalle" tipo="altaDirect">
+                        <tabla schema="operation" nombre="recaudacion_registro_detalle">
+                            <campo name="ur" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.ur%" />
+                            <campo name="periodo" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.periodo%" />
+                            <campo name="id_recaudacion_registro" calc="%nlActRecIng.cpActRecIng.id_recaudacion_registro%" />
+                            <campo name="id_recaudacion_registro_det" autogenerado="true" generacion="@prox()+1" />
+                            <campo name="tipo_bloque" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.tipo_bloque%" />
+                            <campo name="id_cat_cri" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.id_cat_cri%" />
+                            <campo name="id_cri" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.id_clasif_objeto_rubro_ing%" />
+                            <campo name="id_cat_fondo_contable" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.id_cat_fondo_contable%" />
+                            <campo name="id_fondo_contable" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.id_fondo_contable%" />
+                            <campo name="id_cat_centro_registro" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.id_cat_centro_registro%" />
+                            <campo name="id_centro_registro" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.id_centro_registro%" />
+                            <campo name="mes" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.mes%" />
+                            <campo name="clave_presupuestal" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.clave_presupuestal%" />
+                            <campo name="referencia" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.referencia%" />
+                            <campo name="cantidad" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.cantidad%" />
+                            <campo name="importe" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.importe%" />
+                            <campo name="descuento" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.descuento%" />
+                            <campo name="iva" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.iva%" />
+                            <campo name="total" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.total%" />
+                            <campo name="concepto_recaudacion" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.concepto_recaudacion%" />
+                            <campo name="ruta_documento" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.ruta_documento%" />
+                            <campo name="fecha_registro" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.fecha_registro%" />
+                            <campo name="ultimo_usuario_modificador" calc="%nlBarreRecSimDPDet.cpBarreRecSimDPDet.ultimo_usuario_modificador%" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- GENERAR EL IMPORTE TOTAL -->
+        <nivel id="nlBarreRecIngDet" nombre="Barre Recaudación Ingresos Detalle" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true" interactivo="false">
+            <componente id="cpBarreRecIngDet" nombre="Barre Recaudación Ingresos Detalle" tipo="cursor">
+                <tabla schema="operation" nombre="recaudacion_registro_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%nlActRecIng.cpActRecIng.id_recaudacion_registro%"/>
+                    <campo name="id_recaudacion_registro_det"/>
+                    <campo name="total" />
+                </tabla>
+                
+                <nivel id="nlBarreRecIng" nombre="Barre Recaudación Ingresos" interactivo="false">
+                    <componente id="cpBarreRecIng" nombre="Barre Recaudación Ingresos" tipo="cursor">
+                        <tabla schema="operation" nombre="recaudacion_registro">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                            <campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%nlActRecIng.cpActRecIng.id_recaudacion_registro%"/>
+                            <campo name="importe_total"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="nlActRecIngB" nombre="Actualiza Recaudación Ingresos" interactivo="false">
+                    <componente id="cpActRecIngB" nombre="Actualiza Ingresos" tipo="cursor">
+                        <tabla schema="operation" nombre="recaudacion_registro">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                            <campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%nlActRecIng.cpActRecIng.id_recaudacion_registro%"/>
+                            <campo name="importe_total" calc="@ifThenElse(%nlBarreRecIng.cpBarreRecIng.importe_total%==null, 0, %nlBarreRecIng.cpBarreRecIng.importe_total%)+%nlBarreRecIngDet.cpBarreRecIngDet.total%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- COMPONENTES SOLICITUD PARA NEGOCIAR LA INSTANCIA Y MANDAR MENSAJE DE RETROALIMENTACIÓN -->
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==false">
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.observaciones%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+        
+        
+        <!-- TERMINAR INSTANCIA -->
+         <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true">
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!-- REPORTE DE LA PÓLIZA CONTABLE -->
+        <nivel id="nlRepRecSimDeudaPub" nombre="Autoriza Recaudación Simultánea de Deuda Pública" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlAtzRecSimDeudaPub.cpAtzRecSimDeudaPub.autoriza%==true">
+            <componente id="nlPlzRecSimDeudaPub" nombre="Póliza de Recaudación de Forma Simultanea de la Deuda Pública" tipo="reporte">
+                <reporte nombre="polizacontable_cp" expediente="Expediente de Ingresos/Recaudacion de la Deuda Publica de Forma Simultanea" nombreDocumento="'Póliza'" grupo="$inParam.folio_ingreso$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>

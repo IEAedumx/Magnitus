@@ -1,0 +1,173 @@
+<tarea id="admFolUniDeuPub" nombre="Administra Folio Unico de Deuda Pública"  autor="Francisco">
+    <pagina id="1">
+        <!--OBTENER PERIODO ACTIVO-->
+        <nivel id="nlBarrePeriodo" nombre="Barre Periodo" interactivo="false">
+            <componente id="cpBarrePeriodo" nombre="Barre Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/> <!-- filtroCampo="id_periodo" filtroOperador="=" filtroValor="2019" -->
+                    <campo name="aperturar" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/> <!-- -->
+                    <campo name="permisos_especiales"/>
+                    <campo name="id_cat_centro_registro" />
+                    <campo name="id_centro_registro" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--SELECCIÓN DE TIPO DE ACCIÓN -->
+        <!--<nivel id="datGen" nombre="Datos Generales" mostrarNivelAnterior="false" mostrarProximoNivel="false"> 
+            <componente id="selOpc" nombre="Selecciona Tipo de Recaudación Simultánea de Deuda Pública" tipo="formulario" accionDefault ="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1"  visible="false"/>
+                    <campo name="selecOpcion" text="Seleccione" marcador="Seleccione una opción" local="true" type="long" validacion="%selecOpcion%==null" validacionMensaje="Seleccionar una de las opciones para continuar" columnas="4" margen-izquierdo="3">
+                        <opciones>-->
+                            <!--<opcion texto="Consulta" valor="1"/>-->
+                            <!--<opcion texto="Gestión" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+                -->
+        <!--Consulta DE FOLIOS-->
+        <!--
+        <nivel id="conFol" nombre="Consulta de Folios" ejecutar="%datGen.selOpc.selecOpcion%==1" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="repRecSimRefDeu" nombre="Reporte de Recaudación Simultánea de Refinanciamiento de Deuda" tipo="tabla" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false" exportarPDF="false" exportarExcel="false">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="ur" text="UR" calc="$config.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+            		<campo name="periodo" text="Periodo" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+            		<campo name="id_fudep" text="ID FUDEP" generacion="@prox()+1" visible="false" columna-visible="false"/>
+            		
+            		<campo name="folio_fudep" text="Folio" margen-izquierdo="2" columnas="3" 
+            		calc="@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS')==null,'Folio-000001',@concatenar('Folio-'+
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS')&lt;10,'00000',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS') &lt;100,'0000',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS') &lt;1000,'000',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS') &lt;10000,'00',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS')))"/>
+            		
+            		<campo name="frecuencia_pago" text="Frecuencia Pago" marcador="Ingrese la Frecuencia de pago" margen-derecho="2" columnas="3" columna-visible="false" validacion="%frecuencia_pago%==null" validacionMensaje="Favor de Capturar Frecuencia Pago"/>
+            		
+            		<campo name="entidad_contratante" text="Entidad Contratante" marcador="Ingrese la entidad contratante" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%entidad_contratante%==null" validacionMensaje="Favor de Capturar Entidad Contratante"/>
+            		<campo name="perfil_amortizacion" text="Perfil Armonización" marcador="Seleccione el perfil de amortización" margen-derecho="2" columnas="3" columna-visible="false" validacion="%perfil_amortizacion%==null" validacionMensaje="Favor de Capturar Perfil Armonización"/>
+            		
+            		<campo name="num_credito" text="Número Credito" marcador="Ingrese el número de crédito" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%num_credito%==null" validacionMensaje="Favor de Capturar Número Credito"/>
+            		<campo name="tipo_tasa_amortizacion" text="Tipo de Taza de Armonización" marcador="Seleccione el tipo de tasa de amortización" margen-derecho="2" columnas="3" columna-visible="false" validacion="%tipo_tasa_amortizacion%==null" validacionMensaje="Favor de Capturar Tipo de Taza de Armonización"/>
+            		
+            		<campo name="nombre_credito" text="Nombre Credito" marcador="Ingrese el nombre del crédito" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%nombre_credito%==null" validacionMensaje="Favor de Capturar Nombre Credito"/>
+            		<campo name="tasa_amortizacion" text="Taza de Armonización" marcador="Ingrese la tasa de amortización" margen-derecho="2" columnas="3" columna-visible="false" validacion="%tasa_amortizacion%==null" validacionMensaje="Favor de Capturar Taza de Armonización"/>
+            		
+            		<campo name="destino" text="Destino" marcador="Ingrese el destino" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%destino%==null" validacionMensaje="Favor de Capturar Destino"/>
+            		<campo name="referencia_autorizacion" text="Referencia de Autorización" marcador="Ingrese la referencia de autorización" margen-derecho="2" columnas="3" columna-visible="false" validacion="%referencia_autorizacion%==null" validacionMensaje="Favor de Capturar Referencia de Autorización"/>
+            		
+            		<campo name="tipo_deuda" text="Tipo Deuda" marcador="Seleccione el tipo de deuda" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%tipo_deuda%==null" validacionMensaje="Favor de Capturar Tipo Deuda"/>-->
+            		<!--<campo name="ruta_documento" text="Documentación Soporte" margen-derecho="2" columnas="3" columna-visible="false" validacion="%ruta_documento%==null" validacionMensaje="Favor de Capturar Documentación Soporte"/>-->
+            		<!--<campo name="adjuntar_documento" text="Documentación Soporte" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" margen-derecho="2" columnas="3" columna-visible="false"/>-->
+            		
+            		<!--
+            		<campo name="ambito" text="Ambito" marcador="Selecione el ámbito" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%ambito%==null" validacionMensaje="Favor de Capturar Ambito"/>
+            		<campo name="institucion_acreedora" text="Institución Acreedora" marcador="Ingrese la Institución acreedora" margen-derecho="2" columnas="3" validacion="%institucion_acreedora%==null" validacionMensaje="Favor de Capturar Institución Acreedora"/>
+            		
+            		<campo name="tipo_entidad" text="Tipo Entidad" marcador="Seleccione el tipo de entidad" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%tipo_entidad%==null" validacionMensaje="Favor de Capturar Tipo Entidad"/>
+            		<campo name="num_inscripcion_shcp" text="No. de Inscripción SHCP" marcador="Ingrese el No. de Inscripción SHCP" margen-derecho="2" columnas="3" validacion="%num_inscripcion_shcp%==null" validacionMensaje="Favor de Capturar No. de Inscripción SHCP"/>
+            		
+            		<campo name="fecha_contratacion" text="Fecha Contratación" marcador="Ingrese la fecha de contratación" margen-izquierdo="2" columnas="3" validacion="%fecha_contratacion%==null" validacionMensaje="Favor de Capturar Fecha Contratación"/>
+            		<campo name="registro_estatal" text="Registro Estatal" marcador="Ingrese el registro estatal" margen-derecho="2" columnas="3" columna-visible="false" validacion="%registro_estatal%==null" validacionMensaje="Favor de Capturar Registro Estatal"/>
+            		
+            		<campo name="fecha_vencimiento" text="Fecha Vencimiento" marcador="Ingrese la fecha de vencimiento" margen-izquierdo="2" columnas="3" columna-visible="false" validacion="%fecha_vencimiento%==null" validacionMensaje="Favor de Capturar Fecha Vencimiento"/>
+            		<campo name="monto_original_contratado" text="Monto Original Contrato en Pesos" marcador="Ingrese el Monto Original Contrato en Pesos" margen-derecho="2" columnas="3" columna-visible="false" validacion="%monto_original_contratado%==null" validacionMensaje="Favor de Capturar Monto Original Contrato en Pesos"/>
+            		
+            		<campo name="saldo_recaudar" text="Saldo por Recaudar" marcador="Ingrese el saldo a recaudar" margen-izquierdo="5" columnas="3" validacion="%saldo_recaudar%==null" validacionMensaje="Favor de Capturar Saldo por Recaudar"/>
+            		<campo name="estatus" text="Estatus" margen-izquierdo="5" columnas="3" marcador="Seleccione el estatus" validacion="%estatus%==null" validacionMensaje="Favor de Capturar Estatus"/>
+            		
+            		<campo name="fecha_registro" text="Fecha" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+            		<campo name="ultimo_usuario_modificador" text="Usuario Modificador" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" columna-visible="false"/>
+            		<campo name="usuario" text="usuario" calc="$protocolarios.user$" visible="false" columna-visible="false"/>
+            		<tareas>
+                        <tarea nombre="Reporte FUDEP" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,id_fudep,usuario" ref="task=99b29db4-03c7-482a-b4a6-2a2a82ef0ff3"/>
+                    </tareas>
+                </tabla>
+            </componente>
+        </nivel>
+        -->
+        <!--GESTIÓN DE FOLIOS-->
+        <nivel id="gestFol" nombre="Gestión de Folios" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="repRecSimRefDeu" nombre="Registra Documento Digital Electrónico de la Deuda Publica" tipo="tabla">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="ur" text="UR" calc="$config.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+            		<campo name="periodo" text="Periodo" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+            		<campo name="id_fudep" text="ID FUDEP" generacion="@prox()+1" visible="false" columna-visible="false"/>
+            		
+            		<campo name="folio_fudep" text="DDEDP" margen-izquierdo="1" columnas="3" 
+            		calc="@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS')==null,'DDEDP-000001',@concatenar('DDEDP-'+
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS')&lt;10,'00000',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS') &lt;100,'0000',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS') &lt;1000,'000',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS') &lt;10000,'00',
+					@ifThenElse(@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS') &lt;100000,'','')))))+@consultaDirec('SELECT MAX(id_fudep)+1 fierro FROM operation.fudep WHERE ur= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_unidad_responsable%+'\\' AND periodo= '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' ','fierro','string' ,'MAGNITUS')))"/>
+            		
+            		<campo name="frecuencia_pago" text="Frecuencia Pago" marcador="Ingrese la Frecuencia de pago" columnas="3" columna-visible="false" validacion="%frecuencia_pago%==null" validacionMensaje="Favor de Capturar Frecuencia Pago"/>
+            		
+            		<campo name="entidad_contratante" text="Entidad Contratante" marcador="Ingrese la entidad contratante" columnas="3" columna-visible="false" validacion="%entidad_contratante%==null" validacionMensaje="Favor de Capturar Entidad Contratante"/>
+            		<campo name="perfil_amortizacion" text="Perfil Armonización" marcador="Seleccione el perfil de amortización" margen-izquierdo="1" columnas="3" columna-visible="false" validacion="%perfil_amortizacion%==null" validacionMensaje="Favor de Capturar Perfil Armonización"/>
+            		
+            		<campo name="num_credito" text="Número Credito" marcador="Ingrese el número de crédito" columnas="3" columna-visible="false" validacion="%num_credito%==null" validacionMensaje="Favor de Capturar Número Credito"/>
+            		<campo name="tipo_tasa_amortizacion" text="Tipo de Taza de Armonización" marcador="Seleccione el tipo de tasa de amortización" columnas="3" columna-visible="false" validacion="%tipo_tasa_amortizacion%==null" validacionMensaje="Favor de Capturar Tipo de Taza de Armonización"/>
+            		
+            		<campo name="nombre_credito" text="Nombre Credito" margen-izquierdo="1" marcador="Ingrese el nombre del crédito" columnas="3" columna-visible="false" validacion="%nombre_credito%==null" validacionMensaje="Favor de Capturar Nombre Credito"/>
+            		<campo name="tasa_amortizacion" text="Taza de Armonización" marcador="Ingrese la tasa de amortización" columnas="3" columna-visible="false" validacion="%tasa_amortizacion%==null" validacionMensaje="Favor de Capturar Taza de Armonización"/>
+            		
+            		<campo name="destino" text="Destino" marcador="Ingrese el destino" columnas="3" columna-visible="false" validacion="%destino%==null" validacionMensaje="Favor de Capturar Destino"/>
+            		<campo name="referencia_autorizacion" text="Referencia de Autorización" marcador="Ingrese la referencia de autorización" columnas="3" margen-izquierdo="1" columna-visible="false" validacion="%referencia_autorizacion%==null" validacionMensaje="Favor de Capturar Referencia de Autorización"/>
+            		
+            		<campo name="tipo_deuda" text="Tipo Deuda" marcador="Seleccione el tipo de deuda" columnas="3" columna-visible="false" validacion="%tipo_deuda%==null" validacionMensaje="Favor de Capturar Tipo Deuda"/>
+            		<!--<campo name="ruta_documento" text="Documentación Soporte" margen-derecho="2" columnas="3" columna-visible="false" validacion="%ruta_documento%==null" validacionMensaje="Favor de Capturar Documentación Soporte"/>-->
+            		<!--<campo name="adjuntar_documento" text="Documentación Soporte" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" margen-derecho="2" columnas="3" columna-visible="false"/>-->
+            		
+            		<campo name="ambito" text="Ambito" marcador="Selecione el ámbito" columnas="3" columna-visible="false" validacion="%ambito%==null" validacionMensaje="Favor de Capturar Ambito"/>
+            		<campo name="institucion_acreedora" text="Institución Acreedora" marcador="Ingrese la Institución acreedora" margen-izquierdo="1" columnas="3" validacion="%institucion_acreedora%==null" validacionMensaje="Favor de Capturar Institución Acreedora"/>
+            		
+            		<campo name="tipo_entidad" text="Tipo Entidad" marcador="Seleccione el tipo de entidad" columnas="3" columna-visible="false" validacion="%tipo_entidad%==null" validacionMensaje="Favor de Capturar Tipo Entidad"/>
+            		<campo name="num_inscripcion_shcp" text="No. de Inscripción SHCP" marcador="Ingrese el No. de Inscripción SHCP" columnas="3" validacion="%num_inscripcion_shcp%==null" validacionMensaje="Favor de Capturar No. de Inscripción SHCP"/>
+            		
+            		<campo name="fecha_contratacion" text="Fecha Contratación" marcador="Ingrese la fecha de contratación" margen-izquierdo="1" columnas="3" validacion="%fecha_contratacion%==null" validacionMensaje="Favor de Capturar Fecha Contratación"/>
+            		<campo name="registro_estatal" text="Registro Estatal" marcador="Ingrese el registro estatal"  columnas="3" columna-visible="false" validacion="%registro_estatal%==null" validacionMensaje="Favor de Capturar Registro Estatal"/>
+            		
+            		<campo name="fecha_vencimiento" text="Fecha Vencimiento" marcador="Ingrese la fecha de vencimiento" columnas="3" columna-visible="false" validacion="%fecha_vencimiento%==null" validacionMensaje="Favor de Capturar Fecha Vencimiento"/>
+            		<campo name="monto_original_contratado" text="Monto Original Contrato en Pesos" marcador="Ingrese el Monto Original Contrato en Pesos" margen-izquierdo="1" columnas="3" columna-visible="false" validacion="%monto_original_contratado%==null" validacionMensaje="Favor de Capturar Monto Original Contrato en Pesos"/>
+            		
+            		<campo name="saldo_recaudar" text="Saldo por Recaudar" marcador="Ingrese el saldo a recaudar" columnas="3" validacion="%saldo_recaudar%==null" validacionMensaje="Favor de Capturar Saldo por Recaudar"/>
+            		<campo name="estatus" text="Estatus" columnas="3" marcador="Seleccione el estatus" validacion="%estatus%==null" validacionMensaje="Favor de Capturar Estatus"/>
+            		
+            		<campo name="fecha_registro" text="Fecha" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+            		<campo name="ultimo_usuario_modificador" text="Usuario Modificador" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" columna-visible="false"/>
+            		<campo name="usuario" text="usuario" local="true" type="string" calc="$protocolarios.user$" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="formulario" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                </estilos>
+                <validaciones>
+                    <validacion tipo="borrar" validacion="@consultaDirec('select count (fudep) >0 encontrado from operation.recaudacion_simultanea_dp where ur ='+'\\''+%ur%+'\\' AND periodo ='+'\\''+%periodo%+'\\' AND fudep ='+'\\''+%id_fudep%+'\\'','encontrado','bool','MAGNITUS') == true " validacionMensaje="No se puede eliminar porque se esta usando en otro proceso"/>
+                </validaciones>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

@@ -1,0 +1,177 @@
+<tarea id="registraRecaudacionSimultaneaDeudaPublica" nombre="Registra Recaudacion de la Deuda Publica de Forma Simultanea" fechaModificacion="18/06/2019" autor="Luis Eduardo Castañeda Delgadillo" version="1.0.0">
+    <pagina id="uno">
+        
+        <nivel id="nlBarrePeriodo" nombre="Barre Periodo" interactivo="false">
+            <componente id="cpBarrePeriodo" nombre="Barre Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/> <!-- filtroCampo="id_periodo" filtroOperador="=" filtroValor="2019" -->
+                    <campo name="aperturar" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/> <!-- -->
+                    <campo name="permisos_especiales"/>
+                    <campo name="id_cat_centro_registro" />
+                    <campo name="id_centro_registro" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="GFE" nombre="generaFolioExpediente" interactivo="false">
+            <componente id="GFE" nombre="generaFolioExpediente" tipo="altaDirect">
+                <tabla schema="entity" nombre="ingresos">
+                    <campo name="ur" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" llaveForanea="false"/>
+                    <campo name="folio_ingreso" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/> 
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRegRecSimDeuPub" nombre="Recaudacion de la Deuda Publica de Forma Simultanea" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpSelecTipRecDeuda" nombre="Recaudacion de la Deuda Publica de Forma Simultanea" tipo="formulario">
+                <tabla schema="operation" nombre="recaudacion_simultanea_dp">
+                    <campo name="ur" visible="false" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" visible="false" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" llaveForanea="false"/>
+                    <campo name="id_recaudacion_simultanea_dp" visible="false" autogenerado="true" generacion="@prox()+1"/>
+                    <campo name="caja_recaudacion" text="Caja de Recaudación" margen-izquierdo="1" columnas="3" marcador="Seleccione una caja de recaudación" validacion="%caja_recaudacion%==null" validacionMensaje="Seleccione Caja de Recaudacion."/>
+                    <campo name="tipo_recaudacion" text="Tipo de Recaudación" columnas="3" marcador="Seleccione un tipo de recaudación" validacion="%tipo_recaudacion%==null" validacionMensaje="Selecciona Tipo de Recaudación."/>
+                    <campo name="fudep" text="Folio Deuda Pública" columnas="3"   maxLength="50" descripcionForanea="folio_fudep" marcador="seleccione Folio de deuda pública"  validacion="%fudep%==null" validacionMensaje="Seleccione Folio de Deuda Pública."/> <!-- autoFiltrado="true" -->
+                    <campo name="fecha_registro" visible="false" calc="@fechaSistema()"/>
+                    <campo name="ultimo_usuario_modificador" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="estatus" calc="1" visible="false"/>
+                    <campo name="folio_recaudacion_sim_dp" text="Folio Recaudación Simultánea" visible="false"
+                    calc="@ifThenElse(@consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp)+1 resultado FROM operation.recaudacion_simultanea_dp
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\'','resultado','string','MAGNITUS')==null,'DDERS-000001',@concatenar('DDERS-'+
+					    @ifThenElse(@consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp)+1 resultado FROM operation.recaudacion_simultanea_dp
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\'','resultado','string','MAGNITUS') &lt;10,'00000',
+					    @ifThenElse(@consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp)+1 resultado FROM operation.recaudacion_simultanea_dp
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\'','resultado','string','MAGNITUS') &lt;100,'0000',
+					    @ifThenElse(@consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp)+1 resultado FROM operation.recaudacion_simultanea_dp
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\'','resultado','string','MAGNITUS') &lt;1000,'000',
+					    @ifThenElse(@consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp)+1 resultado FROM operation.recaudacion_simultanea_dp
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\'','resultado','string','MAGNITUS') &lt;10000,'00',
+					    @ifThenElse(@consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp)+1 resultado FROM operation.recaudacion_simultanea_dp
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\'','resultado','string','MAGNITUS') &lt;100000,'','')))))+
+                            @consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp)+1 resultado FROM operation.recaudacion_simultanea_dp
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo='+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\'','resultado','string','MAGNITUS')))"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+            </componente>
+            
+            <componente id="cpRegRecSimDeudaPub" nombre="Recaudacion de la Deuda Publica de Forma Simultanea" tipo="maestroDetalle" ejecutar="%nlRegRecSimDeuPub.cpSelecTipRecDeuda.id_recaudacion_simultanea_dp%!=null" >
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="recaudacion_simultanea_dp">
+                        <campo name="ur" visible="false" llaveForanea="false" calc="$config.ur$"/>
+                        <campo name="periodo" visible="false" llaveForanea="false" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%"/>
+                        <campo name="id_recaudacion_simultanea_dp" visible="false" llaveForanea="false" calc="%nlRegRecSimDeuPub.cpSelecTipRecDeuda.id_recaudacion_simultanea_dp%"/>
+                        <campo name="folio_recaudacion_sim_dp" text="Folio" margen-izquierdo="2" columnas="2" habilitado="false"/>
+                        <campo name="beneficiario" local="true" type="string" text="Beneficiario" columnas="2" marcador="Seleccione un beneficiario" referenciaForanea="fudep" celdaForanea="institucion_acreedora" autocompletar="true"/>
+                        <campo name="fecha_registro" text="Fecha"  columnas="2" margen-derecho="2" validacion="%fecha_registro%==null" validacionMensaje="Ingrese una fecha para continuar."/>
+                        <campo name="cuenta_bancaria" text="Cuenta Bancaria" margen-izquierdo="2" columnas="2" autoFiltradoDescripcion="clave_cuenta,descripcion" descripcionForanea="clave_cuenta,descripcion" llavesFijas="tipo_cuenta=2" marcador="Seleccione una cuenta bancaria"/>
+                        <campo name="fudep" text="FUDEP" descripcionForanea="folio_fudep" columnas="2" marcador="Seleccione un FUDEP" validacion="%fudep%==null" validacionMensaje="Seleccione Folio de Deuda a Recaudar"/>
+                        <campo name="saldo_recaudar" text="Saldo por Recaudar"  columnas="2" referenciaForanea="fudep" celdaForanea="saldo_recaudar" autocompletar="true" />
+                        <campo name="concepto" text="Descripción" margen-izquierdo="2" columnas="6" height="200" marcador="Descripción" validacion="%concepto%==null" validacionMensaje="Ingrese el concepto"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles>
+                    <tabla id="detRegRecSim" titiloDetalle="Renglones" schema="operation" nombre="recaudacion_simultanea_dp_det">
+                        <campo name="ur" visible="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="periodo" visible="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_recaudacion_simultanea_dp" visible="false" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_recaudacion_simultanea_dp_det" text="Renglón" autogenerado="true" generacion="@prox()+1" width="85" cellsalign="center" columnas="3" margen-izquierdo="1"/>
+                        <!--
+                        <campo name="numero_bloque" text="Renglón" columna-visible="false" local="true" type="string" margen-izquierdo="1" columnas="4"
+                        calc="@ifThenElse(@consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp_det)+1 max FROM operation.recaudacion_simultanea_dp_det
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' 
+                            AND id_recaudacion_simultanea_dp = '+'\\''+@ifThenElse(%nlRegRecSimDeuPub.cpRegRecSimDeudaPub.id_recaudacion_simultanea_dp%==null,1,%nlRegRecSimDeuPub.cpRegRecSimDeudaPub.id_recaudacion_simultanea_dp%)+'\\'','max','string','MAGNITUS')==null,'1',
+                            @consultaDirec('SELECT MAX(id_recaudacion_simultanea_dp_det)+1 max FROM operation.recaudacion_simultanea_dp_det
+                            WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' AND id_recaudacion_simultanea_dp = '+'\\''+@ifThenElse(%nlRegRecSimDeuPub.cpRegRecSimDeudaPub.id_recaudacion_simultanea_dp%==null,1,%nlRegRecSimDeuPub.cpRegRecSimDeudaPub.id_recaudacion_simultanea_dp%)+'\\'','max','string','MAGNITUS'))"/>
+                        -->
+                        
+                        <campo name="id_cat_cri" llaveForanea="false" visible="false" columna-visible="false" calc="11"/>
+                        <campo name="id_clasif_objeto_rubro_ing" text="Clasificador por Rubro del Ingreso" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" marcador="Seleccione un CRI" width="200"/>
+                        <campo name="mes" text="mes" llaveForanea="false" calc="@fechaSistema(&quot;MM&quot;)" visible="false" columna-visible="false"/>
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" descripcionForanea="clave_presupuestal" marcador="Seleccione una clave presupuestal" width="250" columnas="3"/>
+                        
+                        <campo name="id_cat_fondo_contable" llaveForanea="false" visible="false" columna-visible="false" calc="3"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" columnas="3" marcador="Seleccione un fondo contable" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" width="200" margen-izquierdo="1"/>
+                        <campo name="id_cat_centro_registro" llaveForanea="false" visible="false" columna-visible="false" calc="2"/>
+                        <campo name="id_centro_registro" text="Centro de Registro" columnas="3"  autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion"  marcador="Seleccione un centro de registro"/>
+                        <campo name="referencia" text="Referencia" columnas="3" marcador="Ingrese una referencia" columna-visible="false"/>
+                        <campo name="cantidad" text="Cantidad" margen-izquierdo="1" columnas="3" calc="0" habilitado="true"/>
+                        <campo name="importe" text="Importe" columnas="3"/>
+                        <campo name="descuento" text="Descuento" margen-izquierdo="1" columnas="4" />
+                        <campo name="iva" text="Impuesto al Valor Agregado" columnas="4" calcCliente="((%importe%)*0.16)"/>
+                        <campo name="total" text="Total" margen-izquierdo="1" columnas="4" calcCliente="(%cantidad%)*((%importe%)+%iva%)-%descuento%" habilitado="false"/>
+                        <!--<campo name="adjuntar_documentacion" local="true" type="file" text="Adjuntar Documentación" columnas="4"/>-->
+                        <campo name="concepto_recaudacion" text="Concepto de Recaudación" descripcionForanea="clave_recaudacion,descripcion" margen-izquierdo="1" columnas="8"/>
+                    </tabla>
+                    <estilos>
+                        <!--<boton nombre="formulario" texto="GUARDAR" margen-izquierdo="3" columnas="4" margen-derecho="3"/>-->
+                        <!--<boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="3" columnas="4" margen-derecho="3"/>-->
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </detalles>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(id_recaudacion_simultanea_dp_det)&lt;1 existe FROM operation.recaudacion_simultanea_dp_det
+                    WHERE ur = '+'\\''+$config.ur$+'\\' AND periodo = '+'\\''+%nlBarrePeriodo.cpBarrePeriodo.id_periodo%+'\\' 
+                    AND id_recaudacion_simultanea_dp = '+'\\''+%nlRegRecSimDeuPub.cpSelecTipRecDeuda.id_recaudacion_simultanea_dp%+'\\'','existe','bool','MAGNITUS')==true" validacionMensaje="'El detalle debe tener mínimo un registro para continuar.'"/>
+            </validaciones>
+        </nivel>
+        
+        
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false" >
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'6959e873-3f79-4924-82c2-9ac35fe3d82e'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="$config.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" mostrarEsc="true" />
+                    <parametro name="out_id_recaudacion_simultanea" calc="%nlRegRecSimDeuPub.cpSelecTipRecDeuda.id_recaudacion_simultanea_dp%" mostrarEsc="true" />
+                    <parametro name="out_folio" calc="%nlRegRecSimDeuPub.cpSelecTipRecDeuda.folio_recaudacion_sim_dp%" mostrarEsc="true" />
+                    <parametro name="out_fecha" calc="%nlRegRecSimDeuPub.cpRegRecSimDeudaPub.fecha_registro%" mostrarEsc="true" />
+                    <parametro name="out_tipo_deuda" calc="@consultaDirec('SELECT descripcion FROM catalog.tipo_recaudacion_dp WHERE id_tipo_recaudacion =  '+'\\''+%nlRegRecSimDeuPub.cpSelecTipRecDeuda.tipo_recaudacion%+'\\'','descripcion','string','MAGNITUS')" mostrarEsc="true" />
+                    <parametro name="out_beneficiario" calc="%nlRegRecSimDeuPub.cpRegRecSimDeudaPub.beneficiario%" mostrarEsc="true" />
+                    <parametro name="out_importe" calc="%nlRegRecSimDeuPub.cpRegRecSimDeudaPub.saldo_recaudar%" mostrarEsc="true" />
+                    <parametro name="out_folio_ingreso" calc="%GFE.GFE.folio_ingreso%" mostrarEsc="false" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRepRecSimDeudaPub" nombre="Recaudacion de la Deuda Publica de Forma Simultanea" mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Recaudacion de la Deuda Publica de Forma Simultanea" id="cpRepRecSimDeudaPu">
+               <reporte nombre="R_Reg_Rec_Sim_Fin_AR" expediente="Expediente de Ingresos/Recaudacion de la Deuda Publica de Forma Simultanea" nombreDocumento="'Documento'" grupo="%GFE.GFE.folio_ingreso%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="$config.ur$" />
+                    <campo name="periodo" type="long" calc="%nlBarrePeriodo.cpBarrePeriodo.id_periodo%" />
+                    <campo name="recaudacion" type="long" calc="%nlRegRecSimDeuPub.cpSelecTipRecDeuda.id_recaudacion_simultanea_dp%" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
