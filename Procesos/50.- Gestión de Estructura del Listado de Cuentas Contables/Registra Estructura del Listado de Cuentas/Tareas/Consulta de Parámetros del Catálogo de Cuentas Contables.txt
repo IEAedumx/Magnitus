@@ -1,0 +1,90 @@
+<tarea id="consulta_listado_cuentas" nombre="Consulta Listado de Cuentas">
+    <pagina id="1">
+        
+        <nivel id="nlBuscaPeriodo" nombre="Busca Periodo" interactivo="false">
+            <componente id="nlBuscaPeriodo" nombre="Busca Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreCC" nombre="Barre Catalogo Cuenta Contable" interactivo="false">
+            <componente id="nlBarreCC" tipo="cursor">
+                <tabla schema="entity" nombre="mascara_cuenta_contable_ini">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="@castTo($config.ur$,'long')" llaveForanea="false"/>
+                    <campo name="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBuscaPeriodo.nlBuscaPeriodo.id_periodo%"/>
+                    <campo name="id_mascara" autogenerado="true" generacion="@prox()+1" llaveForanea="false"/>
+                    <campo name="nivel" text="Nivel"/>
+                    <campo name="num_caracteres" text="Caracter"/>
+                    <campo name="descripcion" text="Descripcion"/>
+                    <campo name="fecha_registro" text="Fecha Registro"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario"/>
+                </tabla>
+                <nivel id="nlBarreCC1" nombre="Barre Catalogo Cuenta Contable" interactivo="false">
+                    <componente id="nlBarreCC1" tipo="altaDirect">
+                        <tabla schema="entity" nombre="mascara_cuenta_contable">
+                            <campo name="id_unidad_responsable" calc="@castTo($config.ur$,'long')" llaveForanea="false"/>
+                            <campo name="periodo" calc="%nlBarreCC.nlBarreCC.periodo%" llaveForanea="false"/>
+                            <campo name="id_mascara" calc="%nlBarreCC.nlBarreCC.id_mascara%" llaveForanea="false"/>
+                            <campo name="nivel" calc="%nlBarreCC.nlBarreCC.nivel%"/>
+                            <campo name="num_caracteres" calc="%nlBarreCC.nlBarreCC.num_caracteres%"/>
+                            <campo name="descripcion" calc="%nlBarreCC.nlBarreCC.descripcion%"/>
+                            <campo name="fecha_registro" calc="%nlBarreCC.nlBarreCC.fecha_registro%"/>
+                            <campo name="ultimo_usuario_modificador" calc="%nlBarreCC.nlBarreCC.ultimo_usuario_modificador%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlMenuListas" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="nlMenuListas" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false" />
+                    <campo name="selecOpcion" text="Selecciona opción" local="true" type="long" validacion="%selecOpcion%==null" validacionMensaje="Selecciona una opción para continuar..." margen-izquierdo="3" columnas="4" margen-derecho="3">
+                        <opciones>
+                            <opcion texto="Editar Listado de Cuentas" valor="1"/>
+                            <opcion texto="Consultar Listado de Cuentas" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="tabla_lista" nombre="Consuta Listado de Cuentas" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlMenuListas.nlMenuListas.selecOpcion%==1">
+            <componente id="tabla_lista" nombre="Consuta Listado de Cuentas" tipo="tabla" mostrarEliminar="false" >
+                <tabla schema="entity" nombre="mascara_cuenta_contable">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%nlBuscaPeriodo.nlBuscaPeriodo.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="%nlBuscaPeriodo.nlBuscaPeriodo.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_mascara" text="Nivel" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="true" cellsalign="center" width="50"/>
+                    <campo name="nivel" text="Nivel" calc="@consultaDirec('SELECT MAX(nivel) AS result FROM entity.mascara_cuenta_contable WHERE id_unidad_responsable= '+%nlBuscaPeriodo.nlBuscaPeriodo.id_unidad_responsable%+' AND periodo='+%nlBuscaPeriodo.nlBuscaPeriodo.id_periodo%,'result','long','MAGNITUS')+1" visible="true" columna-visible="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="descripcion" text="Descripción" cellsalign="left" width="300" mascara="C" validacion="%descripcion%==null" validacionMensaje="Debe Capturarse Descripción..." columnas="2" margen-izquierdo="1"/>
+                    <campo name="val_duplicado_descripcion" type="long" local="true" calc="%descripcion%" validacion="@ValidarRegistro('entity','mascara_cuenta_contable','descripcion='+'\\''+%descripcion%+'\\''+' AND'+' periodo='+'\\''+%periodo%+'\\'',';','MAGNITUS')" validacionMensaje="La Descripción que se desea registrar ya existe." visible="false" columna-visible="false"/>
+                    <campo name="num_caracteres" text="Longitud del Nivel" cellsalign="center" width="200" mascara="##" validacion="%num_caracteres%==null" validacionMensaje="Debe Capturarse Número de Caracteres..." columnas="2" margen-izquierdo="1"/>
+                    <campo name="fecha_registro" text="Fecha de registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="último Usuario Modificador" calc="1" visible="false" columna-visible="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <nivel id="reporte" nombre="Consulta Listado de Cuentas" ejecutar="%nlMenuListas.nlMenuListas.selecOpcion%==2">
+            <componente id="reporte" nombre="Parámetros del Catálogo de Cuentas Contables" tipo="reporte">
+                <reporte nombre="Estruct_List_ctas_conta" expediente="Expediente de Estructura de Listado de cuentas" nombreDocumento="'Parámetros del Catálogo de Cuentas Contables'" grupo="$inParam.periodo$" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" type="long" calc="@castTo(1,'long')"/>
+                    <campo name="id_periodo" type="long" calc="%nlBuscaPeriodo.nlBuscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

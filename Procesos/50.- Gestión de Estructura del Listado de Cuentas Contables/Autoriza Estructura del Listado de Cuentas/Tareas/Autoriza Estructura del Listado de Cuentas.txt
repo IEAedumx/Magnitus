@@ -1,0 +1,66 @@
+<tarea id="Autoriza_LisCont" nombre="Autoriza Estructura de Listado de Cuentas" autor="Juan Alberto" version="1">
+    <pagina id="uno" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+        <nivel id="nlLisCont" nombre="Autoriza Estructura de Cuentas" mostrarProximoNivel="false">
+            <componente id="reporte" nombre="Parámetros del Catálogo de Cuentas Contables" tipo="reporte">
+                <reporte nombre="Estruct_List_ctas_conta" expediente="Expediente de Estructura de Listado de cuentas" nombreDocumento="'Parámetros del Catálogo de Cuentas Contables'" grupo="$inParam.periodo$" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" type="long" calc="@castTo(1,'long')"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <componente id="cpLisCont" nombre="Autoriza Parámetros del Catálogo de Cuentas Contables" tipo="formulario" accionDefault="editar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="observaciones_cuenta_contable" text="Observaciones" height="250" interaccion="%autoriza_estructura_cuenta%==false" validacion="%observaciones_cuenta_contable%==null AND %autoriza_estructura_cuenta%==false" validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%autoriza_estructura_cuenta%==true,'',%observaciones_cuenta_contable%)" columnas="6" margen-izquierdo="2"/>
+                    <campo name="autoriza_estructura_cuenta" text="Autorizar" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%nlLisCont.cpLisCont.autoriza_estructura_cuenta%==false"> 
+             <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado"> 
+                 <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                     <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                     <parametro name="process" calc="$protocolarios.process$"/>    
+                     <parametro name="version" calc="$protocolarios.version$"/> 
+                     <parametro name="user" calc="$protocolarios.user$"/>  
+                     <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                     <parametro name="message" calc="%nlLisCont.cpLisCont.observaciones_cuenta_contable%"/>
+                     <parametro name="type" calc="'1'"/> 
+                 </parametros> 
+             </componente>
+         </nivel>
+        <nivel nombre="Instancia Rechazo" id="RechazoInstancia" interactivo="false" ejecutar="%nlLisCont.cpLisCont.autoriza_estructura_cuenta%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="RechazoInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                    <parametro name="out_observaciones" calc="%nlLisCont.cpLisCont.observaciones_cuenta_contable%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlLisCont.cpLisCont.autoriza_estructura_cuenta%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

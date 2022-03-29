@@ -1,0 +1,115 @@
+<tarea id="gestionEstructuraListadoCuentas" nombre="Agrega, Modifica y Elimina Nivel de Estructura del Listado de Cuentas" version="1">
+    <pagina id="uno">
+        <nivel id="nlBarreCC" nombre="Barre Catalogo Cuenta Contable" interactivo="false">
+            <componente id="nlBarreCC" tipo="cursor">
+                <tabla schema="entity" nombre="mascara_cuenta_contable_ini">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                    <campo name="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="2019"/>
+                    <campo name="id_mascara" autogenerado="true" generacion="@prox()+1" llaveForanea="false"/>
+                    <campo name="nivel" text="Nivel"/>
+                    <campo name="num_caracteres" text="Caracter"/>
+                    <campo name="descripcion" text="Descripcion"/>
+                    <campo name="fecha_registro" text="Fecha Registro"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario"/>
+                </tabla>
+                <nivel id="nlBarreCC1" nombre="Barre Catalogo Cuenta Contable" interactivo="false">
+                    <componente id="nlBarreCC1" tipo="altaDirect">
+                        <tabla schema="entity" nombre="mascara_cuenta_contable">
+                            <campo name="id_unidad_responsable" calc="@castTo($inParam.ur$,'long')" llaveForanea="false"/>
+                            <campo name="periodo" calc="$inParam.periodo$" llaveForanea="false"/>
+                            <campo name="id_mascara" calc="%nlBarreCC.nlBarreCC.id_mascara%" llaveForanea="false"/>
+                            <campo name="nivel" calc="%nlBarreCC.nlBarreCC.nivel%"/>
+                            <campo name="num_caracteres" calc="%nlBarreCC.nlBarreCC.num_caracteres%"/>
+                            <campo name="descripcion" calc="%nlBarreCC.nlBarreCC.descripcion%"/>
+                            <campo name="fecha_registro" calc="%nlBarreCC.nlBarreCC.fecha_registro%"/>
+                            <campo name="ultimo_usuario_modificador" calc="%nlBarreCC.nlBarreCC.ultimo_usuario_modificador%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel id="nlGestionEstrListadoCtas" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpGestionEstrListadoCtas" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" text="UR" llaveForanea="false" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Ejercicio Fiscal" llaveForanea="false" calc="$inParam.periodo$" visible="true" margen-izquierdo="3" columnas="4" margen-derecho="3"/>
+                    <campo name="selecOpcion" text="Selecciona opción" local="true" type="long" validacion="%selecOpcion%==null" validacionMensaje="Selecciona una opción para continuar..." margen-izquierdo="3" columnas="4" margen-derecho="3">
+                        <opciones>
+                            <opcion texto="Agregar Nivel" valor="1"/>
+                            <opcion texto="Modificar Nivel" valor="2"/>
+                            <opcion texto="Eliminar Nivel" valor="3"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nlGestionEstrListadoCtas1" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables   Agrega Segmento" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.selecOpcion%==1">
+            <componente id="cpGestionEstrListadoCtas1" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables" tipo="tabla" filtro="false" mostrarEliminar="false" mostrarEditar="true" >
+                <tabla schema="entity" nombre="mascara_cuenta_contable">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_mascara" text="Nivel" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="true" cellsalign="center" width="50"/>
+                    <campo name="nivel" text="Nivel" calc="@consultaDirec('SELECT MAX(nivel) AS result FROM entity.mascara_cuenta_contable WHERE id_unidad_responsable= '+%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_unidad_responsable%+' AND periodo='+%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_periodo%,'result','long','MAGNITUS')+1" visible="true" columna-visible="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="descripcion" text="Descripción" cellsalign="left" width="300" mascara="C" validacion="%descripcion%==null" validacionMensaje="Debe Capturarse Descripción..." columnas="2" margen-izquierdo="1"/>
+                    <campo name="val_duplicado_descripcion" type="long" local="true" calc="%descripcion%" validacion="@ValidarRegistro('entity','mascara_cuenta_contable','descripcion='+'\\''+%descripcion%+'\\''+' AND'+' periodo='+'\\''+%periodo%+'\\'',';','MAGNITUS')" validacionMensaje="La Descripción que se desea registrar ya existe." visible="false" columna-visible="false"/>
+                    <campo name="num_caracteres" text="Longitud del Nivel" cellsalign="center" width="200" mascara="##" validacion="%num_caracteres%==null" validacionMensaje="Debe Capturarse Número de Caracteres..." columnas="2" margen-izquierdo="1"/>
+                    <campo name="fecha_registro" text="Fecha de registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="último Usuario Modificador" calc="1" visible="false" columna-visible="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Barre Mascara Cuenta Contable" id="nlM_Cuenta_Cont" interactivo="false">
+            <componente tipo="cursor" id="cpM_Cuenta_Cont">
+                <tabla schema="entity" nombre="mascara_cuenta_contable">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.periodo%"/>
+                    <campo name="id_mascara"/>
+                    <campo name="nivel" text="Nivel"/>
+                    <campo name="num_caracteres" text="núm caracteres"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlGestionEstrListadoCtas2" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables   Edita Segmento" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.selecOpcion%==2">
+            <componente id="cpGestionEstrListadoCtas2" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables" tipo="tabla" filtro="false" mostrarEliminar="false" mostrarEditar="true" mostrarAgregar="false" >
+                <tabla schema="entity" nombre="mascara_cuenta_contable">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_mascara" text="Nivel" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="true" cellsalign="center" width="50"/>
+                    <campo name="nivel" text="Nivel" visible="true" columna-visible="false" columnas="2" margen-izquierdo="1"/>
+                    <campo name="descripcion" text="Descripción" cellsalign="left" width="300" mascara="C" validacion="%descripcion%==null" validacionMensaje="Debe Capturarse Descripción..." columnas="2" margen-izquierdo="1"/>
+                    <campo name="val_duplicado_descripcion" type="long" local="true" calc="%descripcion%" validacion="@ValidarRegistro('entity','mascara_cuenta_contable','descripcion='+'\\''+%descripcion%+'\\''+' AND'+' id_periodo='+'\\''+%id_periodo%+'\\'',';','MAGNITUS')" validacionMensaje="La Descripción que se desea registrar ya existe." visible="false" columna-visible="false"/>
+                    <campo name="num_caracteres" text="Longitud del Nivel" cellsalign="center" width="200" mascara="##" validacion="%num_caracteres%==null" validacionMensaje="Debe Capturarse Número de Caracteres..." columnas="2" margen-izquierdo="1"/> 
+                    <campo name="fecha_registro" text="Fecha de registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="último Usuario Modificador" calc="1" visible="false" columna-visible="false"/>
+                </tabla>
+                <validaciones>
+                    <validacion tipo="editar" validacion="%id_mascara%&lt;6" validacionMensaje="'Los Registros no pueden ser editados'"/>
+                </validaciones>
+            </componente>
+        </nivel>
+        <nivel id="nlGestionEstrListadoCtas3" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables   Elimina Segmento" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.selecOpcion%==3">
+            <componente id="cpGestionEstrListadoCtas3" nombre="Configuración de Parámetros de Catálogo de Cuentas Contables" tipo="tabla" filtro="false" mostrarEliminar="true" mostrarEditar="false" mostrarAgregar="false">
+                <tabla schema="entity" nombre="mascara_cuenta_contable">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo Contable" calc="%nlGestionEstrListadoCtas.cpGestionEstrListadoCtas.id_periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_mascara" text="Nivel" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="true" cellsalign="center" width="50"/>
+                    <campo name="nivel" text="Nivel" visible="true" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="descripcion" text="Descripción" cellsalign="left" width="300" mascara="C" validacion="%descripcion%==null" validacionMensaje="Debe Capturarse Descripción..." columnas="3" margen-derecho="2"/>
+                    <campo name="val_duplicado_descripcion" type="long" local="true" calc="%descripcion%" validacion="@ValidarRegistro('entity','mascara_cuenta_contable','descripcion='+'\\''+%descripcion%+'\\''+' AND'+' id_periodo='+'\\''+%id_periodo%+'\\'',';','MAGNITUS')" validacionMensaje="La Descripción que se desea registrar ya existe." visible="false" columna-visible="false"/>
+                    <campo name="num_caracteres" text="Longitud del Nivel" cellsalign="center" width="200" mascara="##" validacion="%num_caracteres%==null" validacionMensaje="Debe Capturarse Número de Caracteres..." columnas="3" margen-izquierdo="2"/>
+                    <campo name="fecha_registro" text="Fecha de registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="último Usuario Modificador" calc="1" visible="false" columna-visible="false"/>
+                </tabla>
+                <validaciones>
+                    <validacion tipo="borrar" validacion="%id_mascara%&lt;=5 OR %id_mascara%!=%nlM_Cuenta_Cont.cpM_Cuenta_Cont.id_mascara%" validacionMensaje="'Los Registros no pueden ser borrados'"/>
+                </validaciones>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
