@@ -1,0 +1,92 @@
+<tarea id="cajarecaudacion" nombre="CAJA DE RECAUDACIÓN" autor="Alfredo Ezequiel Arenas Ledesma" version="1.0.0">
+    <pagina id="1">
+        <!-- CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+    
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo" />
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<!--FIN CURSORES-->
+		
+        <!-- INICIO DEL CURSOR PARA OBTENER EL BENEFICIARIO-->
+        <nivel id="obtenerDatos" nombre="Actualizar Estatus" interactivo="false">
+            <componente id="obtenerDatos" nombre="Actualizar Estatus" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="orden_pago"/>
+                    <campo name="beneficiario" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- FORMULARI-->
+        
+        <nivel id="registraDevengadoIngresos" nombre="TIPOS DE CAJA DE RECAUDACION" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="registraDevengadoIngresos" nombre="SELECCIONA EJERCICIO FISCAL" tipo="formulario">
+                <tabla schema="operation" nombre="tipo_devengado_ingreso">
+                    <campo name="ur" calc="$config.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="id_tipo_ingreso" text="tipo ingreso" generacion="@prox()+1" autogenerado="true" visible="false"/>
+                    <campo name="periodo" text="EJERCICIO FISCAL" marcador="Ejercicio Fiscal" validacion="%periodo%==null" validacionMensaje="Selecciona Período contable." llavesFijas="estatus=true AND id_estatus=3" margen-izquierdo="3" columnas="4" margen-derecho="4" descripcionForanea="id_periodo"/>
+		        </tabla>
+                <estilos>
+		            <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+		        </estilos>
+		        <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!--FORMULARIO-->
+        
+          
+        <!--TABLA-->
+        <nivel nombre="tablass" id="tb117" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+            <componente id="tb117" nombre="DATOS CAJAS DE RECAUDACIÓN" tipo="tabla" filtro="true" >
+                <tabla schema="operation" nombre="caja_recaudacion">
+                    <campo name="ur" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="%registraDevengadoIngresos.registraDevengadoIngresos.periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="clave_caja_recaudacion" text="Clave" generacion="@prox()+1" autogenerado="true" habilitado="false" columnas="3" />
+
+                    <campo name="descripcion" text="Descripción" marcador="Capture la Descripción" validacion="%descripcion%==null" validacionMensaje="Favor de agregar una descripción." columna-visible="true" columnas="3"  llaveForanea="false"/>
+                    <campo name="serie" text="Serie" marcador="Capture la Serie" validacion="%serie%==null" validacionMensaje="Favor de agregar una serie"  columnas="3"  mascara="C"/>
+                    <campo name="ubicacion_fisica" text="Ubicación Física"  llaveForanea="false" marcador="Capture la Ubicación Física" validacion="%ubicacion_fisica%==null" validacionMensaje="Favor de agregar una ubicación fiscal." columnas="3" />
+                    <campo name="responsable" text="Responsable"    marcador="Capture el Responsable"  descripcionForanea="nombre, primer_apellido, segundo_apellido" calc="%barreUsuarios.barreUsuarios.id_usuario%" validacion="%periodo%==null" validacionMensaje="Favor de Seleccionar un Responsable."  habilitado="false" columnas="3" />
+                    <!-- <campo name="carrera" text="Carrera" columna-visible="false" visible="false" margen-izquierdo="3" columnas="4" margen-derecho="4"/> -->
+                    <campo name="fondo_asignado" text="Fondo Asignado" marcador="Capture el Fondo Asignado" validacion="%fondo_asignado%==null" validacionMensaje="Favor de agregar un fondo asigando." columnas="3"  formatoMoneda="true"/>
+                    <campo name="clave_cuenta" text="Cuenta Contable" columnas="3" validacion="%clave_cuenta%==null" validacionMensaje="Seleccione una cuenta contable para la caja de recaudación" autoFiltradoDescripcion="clave_cuenta,descripcion" autoFiltrado="true" descripcionForaneaTabla="clave_cuenta,descripcion"/>
+                    <campo name="estatus" text="Estatus" calc="1" habilitado="false" columnas="3" />
+                </tabla>
+               
+            </componente>
+        </nivel>
+        <!-- FIN TABLA -->
+        <!-- REPORTE -->
+              <nivel nombre="rep" id="Rcaja">
+                <componente id="repCajaRecaudacion" nombre="CAJAS DE RECAUDACIÓN" tipo="reporte" ejecutarComponente="%registraDevengadoIngresos.registraDevengadoIngresos.ur%!=null">
+                    <reporte nombre="Rep_Cajas_Recaudo" expediente="Expediente Devengado Ingresos/Recaudo" nombreDocumento="'Recaudo'"  grupo="$inParam.folio_devengado_ingreso$" url="$config.repository_upload_file$" update="true">
+                        <campo name="ur" type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" />
+                        <campo name="periodo"  type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                        <campo name="usuario"  type="string" calc="$protocolarios.user$"/>
+                    </reporte>
+                </componente>
+              </nivel>
+       <!--FIN DEL REPORTE--> 
+    </pagina>
+</tarea> 

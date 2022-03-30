@@ -1,0 +1,261 @@
+    <tarea id="RMRSVT" nombre="Registra-Modifica Reintegro de Sobrantes de Viáticos">
+        <pagina id="RMRSVP" nombre="Registra-Modifica Reintegro de Sobrantes de Viáticos">
+            <!--CURSORES-->
+        
+        <nivel id="per" nombre="per" interactivo="false">
+            <componente tipo="cursor" id="per" nombre="per">
+              <tabla schema="catalog" nombre="periodo">
+                <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                <campo name="id_periodo"/>
+                <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+              </tabla>
+            </componente>
+        </nivel>
+
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="nombre"/>
+                    <campo name="primer_apellido"/>
+                    <campo name="segundo_apellido"/>
+                    <campo name="permisos_especiales"/>
+                    <campo name="id_cat_centro_registro"/>
+                    <campo name="id_centro_registro"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <!--FIN CURSORES-->
+        
+        <nivel id="DE" nombre="Determina Expediente"  interactivo="false">
+	      	    <componente id="DE" tipo="cursor" nombre="Determina Expediente">
+	      	        <tabla schema="catalog" nombre="dummy">
+	      	            <campo name="id" text="ID" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+	      	            <campo name="expediente" text="Nombre Expediente" local="true" type="string" calc="@ifThenElse($inParam.tipo_expediente$=='2','Expediente de Solicitud de Gastos por Comprobar/Reintegro de Viáticos', 'Expediente de Viáticos/Reintegro de Viáticos')"/>
+	      	        </tabla>
+	      	    </componente>
+	      	</nivel>
+            
+        <!--  REPORTE-->
+        <nivel id="RDUEP" nombre="Consulta Formato DUEP y Registro de Viáticos" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+           <componente tipo="reporte" id="cp_Orden_PagoA" nombre="Consulta Documento Unico del Ejercicio del Presupuesto ">
+                <reporte nombre="documento_presupuesto_via">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="$inParam.ur$" />
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.folio_duep_B$"/>
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+        </nivel> 
+        <!--  FIN REPORTE -->
+          
+        <!--TABLA--> 
+       <nivel id="CFDUEP" nombre="Consulta Formato DUEP y Registro de Viáticos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="CDCV" nombre="Consulta Detalle de Comprobacion de Viáticos" tipo="tabla" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false" accionDefault="editar"> 
+                <tabla schema="operation" nombre="duep_detalle_solicitud_viaticos" >
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="$inParam.ur$" columna-visible="false" visible="true"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="$inParam.periodo$" columna-visible="false" visible="true"/>
+                    <campo name="folio_duep" text="Duep" llaveForanea="false" calc="$inParam.folio_duep$" columna-visible="false" visible="true"/>
+                    <campo name="folio_duep_detalle" text="Bloque" llaveForanea="false"/>
+                    <campo name="concepto_viatico" text="Concepto de Viático" descripcionForanea="concepto_viatico" descripcionForaneaTabla="concepto_viatico"/>
+                    <campo name="descripcion_especifica" text="Descripción"/>
+                    <campo name="id_cat_objeto_gasto" text="cog" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="c_objeto_gasto" text="COG" width="200"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal"/>
+                    <campo name="importe" text="Importe Entregado" muestraAcumulado="true"/>
+                    <campo name="comprobado" text="Comprobado" muestraAcumulado="true"/>
+                    <campo name="saldo" text="Saldo" muestraAcumulado="true"/>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+        </nivel>
+    <!--FIN TABLA-->
+
+    <!-- ALTA DIRECT -->
+    <!--<nivel id="barreOficioGC" nombre="barreOficioGC" interactivo="false">
+        <componente id="barreOficioGC" nombre="barreOficioGC" tipo="cursor">
+            <tabla schema="operation" nombre="duep">
+                  <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                  <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" />
+                  <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.folio_duep_B$" />
+                  <campo name="folio_duep_a"/>
+                  <campo name="fecha_solicitud"/>
+                  <campo name="beneficiario"/>
+                  <campo name="concepto"/>
+                  <campo name="estatus_duep"/>
+                  <campo name="institucion_bancaria"/>
+                  <campo name="forma_pago"/>
+                  <campo name="caja_recaudacion"/>
+                  <campo name="cuenta_bancaria"/>
+                  <campo name="referencia"/>
+                  <campo name="tipo_cuenta"/> 
+                  <campo name="total_importe"/> 
+            </tabla>
+        </componente>
+    </nivel>       
+
+    <nivel id="altaDuep" nombre="altaDuep" interactivo="false">
+        <componente id="altaDuep" nombre="altaDuep" tipo="altaDirect">
+            <tabla schema="operation" nombre="recaudacion_registro">
+                <campo name="ur"  calc="$config.ur$"/>
+                <campo name="periodo"  calc="%per.per.id_periodo%" />
+                
+                <campo name="id_recaudacion_registro" generacion="@prox()+1" autogenerado="true"/>  
+                <campo name="folio_asociado" />
+                <campo name="referencia" calc="%barreOficioGC.barreOficioGC.referencia%"/>
+                <campo name="forma_cobro" calc="%barreOficioGC.barreOficioGC.forma_pago%"/>
+                <campo name="cuenta_bancaria" calc="%barreOficioGC.barreOficioGC.cuenta_bancaria%"/>
+                <campo name="importe_total" calc="%barreOficioGC.barreOficioGC.total_importe%"/>
+                <campo name="tipo_cuenta" calc="%barreOficioGC.barreOficioGC.tipo_cuenta%"/>
+                <campo name="fecha_recaudacion" calc="@fechaSistema()" />
+                <campo name="estatus" calc="%barreOficioGC.barreOficioGC.estatus_duep%"/>
+                <campo name="beneficiario" calc="%barreOficioGC.barreOficioGC.beneficiario%"/>
+                <campo name="concepto"  calc="%barreOficioGC.barreOficioGC.concepto%"/>
+                <campo name="importe_efectivo"/>
+                <campo name="importe_cheque"/>
+                <campo name="importe_tarjeta"/>
+                <campo name="importe_otra_forma_pago"/>
+                <campo name="importe_total_recaudar"/>
+   
+    
+            </tabla>
+        </componente>
+    </nivel>
+    
+    <nivel id="OPC" nombre="OPC" interactivo="false">
+        <componente id="OPCI" nombre="OPCI" tipo="cursor"> 
+        <tabla schema="operation" nombre="recaudacion_registro">
+            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%altaDuep.altaDuep.ur%"/>
+            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%altaDuep.altaDuep.periodo%"/>
+            <campo name="id_recaudacion_registro" filtroCampo="id_recaudacion_registro" filtroOperador="=" filtroValor="%altaDuep.altaDuep.id_recaudacion_registro%" /> 
+            <campo name="folio_asociado" calc="@concatenar('DURIDEP-'+@ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt;10,'00000',
+                @ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt; 100,'0000',
+                @ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt; 1000,'000',
+                @ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt; 10000,'00',
+                @ifThenElse(%altaDuep.altaDuep.id_recaudacion_registro% &lt; 100000,'0',null)))))+%altaDuep.altaDuep.id_recaudacion_registro%)"/> 
+        </tabla>
+        </componente>
+    </nivel>
+
+    
+   <nivel id="barreDetalleGasto" nombre="barreDetalleGasto" interactivo="false">
+        <componente id="barreDetalleGasto" nombre="barreDetalleGasto" tipo="cursor">
+            <tabla schema="operation" nombre="duep_detalle">
+                  <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                  <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" />
+                  <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.folio_duep_B$" />
+                  <campo name="folio_duep_detalle" />
+                  <campo name="cantidad"/>
+                  <campo name="descuento"/>
+                  <campo name="iva"/>
+                  <campo name="importe"/>
+                  <campo name="total"/>
+                  <campo name="clave_presupuestal"/>
+                  <campo name="id_fondo_contable"/>
+                  <campo name="id_cat_fondo_contable"/>
+                  <campo name="id_centro_registro"/>
+                  <campo name="id_cat_centro_registro"/>
+                  <campo name="concepto_recaudacion"/>
+            </tabla>
+            <nivel id="altaDetalleDuep" nombre="altaDetalleDuep" interactivo="false">
+                <componente id="altaDetalleDuep" nombre="altaDetalleDuep" tipo="altaDirect">
+                    <tabla schema="operation" nombre="recaudacion_registro_detalle">
+                        <campo name="ur"  calc="$config.ur$"/>
+                        <campo name="periodo"  calc="%per.per.id_periodo%" />
+                        <campo name="id_recaudacion_registro" calc="%altaDuep.altaDuep.id_recaudacion_registro%"/>
+                        <campo name="id_recaudacion_registro_det" generacion="@prox()+1" autogenerado="true"/>
+                        
+                          <campo name="id_cat_fondo_contable" calc="%barreDetalleGasto.barreDetalleGasto.id_cat_fondo_contable%"/>
+                          <campo name="id_fondo_contable" calc="%barreDetalleGasto.barreDetalleGasto.id_fondo_contable%"/> 
+                          <campo name="cantidad" calc="%barreDetalleGasto.barreDetalleGasto.cantidad%"/>
+                          <campo name="importe" calc="%barreDetalleGasto.barreDetalleGasto.importe%"/>
+                          <campo name="descuento" calc="%barreDetalleGasto.barreDetalleGasto.descuento%"/>
+                          <campo name="iva" calc="%barreDetalleGasto.barreDetalleGasto.iva%"/>
+                          <campo name="total" calc="%barreDetalleGasto.barreDetalleGasto.total%"/>
+                          <campo name="tipo_bloque" calc="%barreDetalleGasto.barreDetalleGasto.folio_duep_detalle%"/>
+                          <campo name="concepto_recaudacion" calc="%barreDetalleGasto.barreDetalleGasto.concepto_recaudacion%"/>
+                          <campo name="id_cat_centro_registro" calc="%barreDetalleGasto.barreDetalleGasto.id_cat_centro_registro%"/>
+                          <campo name="id_centro_registro" calc="%barreDetalleGasto.barreDetalleGasto.id_centro_registro%"/>
+                          <campo name="id_cat_cri" calc="%barreDetalleGasto.barreDetalleGasto.id_cat_clasificador_rubro_ingreso%" />
+                          <campo name="id_cri" calc="%barreDetalleGasto.barreDetalleGasto.id_clasificador_rubro_ingreso%"/>
+                   
+                    </tabla>
+                </componente>
+            </nivel>
+        </componente>
+    </nivel>-->
+        <!-- FIN ALTA DIRECT -->
+
+        <!--  MAESTRO DETALLE  --> 
+       <nivel id="CRV" nombre="Consulta Registro de Reintegro de Viaticos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="CRSV" nombre="Consulta Reintegro de Sobrante de Viaticos" tipo="maestroDetalle"  mostrarEditar="true">
+                <encabezado accionDefault="editar">
+                    <tabla id="mdrm" schema="operation" nombre="recaudacion_registro">
+
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$inParam.ur$"/>
+                        <campo name="periodo" text="Periodo" visible="false" calc="$inParam.periodo$" llaveForanea="false"/> 
+                        <campo name="id_recaudacion_registro" text="Folio DUEP" calc="$inParam.folio_recauda$" visible="true" habilitado="false" columnas="3" />
+                        
+                        <campo name="folio_asociado" text="Folio DURIDEP" habilitado="false" columnas="3" />
+                        <campo name="caja_recaudacion" text="Caja de Recaudacion *" validacion="%caja_recaudacion%==null" validacionMensaje="Captura el Tipo de Caja" columnas="3" />
+                        <campo name="fecha_recaudacion" text="Fecha" columnas="3" />
+                        <!--<campo name="institucion_bancaria" text="Institucion Bancaria" columnas="3" margen-derecho="2" />-->
+
+                       <campo name="clave_cuenta" text="Cuenta Bancaria *"  autoFiltrado="true" autoFiltradoDescripcion="clave_cuenta,descripcion" columnas="3" />
+                        <campo name="beneficiario" text="Beneficiario" columnas="3"  descripcionForanea="razon_social" habilitado="false"/>
+                        <campo name="referencia" text="Referencia" columnas="3" mascara="#" validacion="%referencia%==null" validacionMensaje="Capture Referencia" />
+                        <campo name="forma_cobro" text="Forma de pago *" validacion="%forma_cobro%==null" validacionMensaje="Selecciona Forma de Pago" columnas="3"/>
+                        <campo name="estatus" text="Estatus" habilitado="false" columnas="3"  calc="1" descripcionForanea="descripcion" /> 
+                        <campo name="concepto" text="Concepto" columnas="6" margen-izquierdo="2"  habilitado="false" width="720" height="200"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2" margen-derecho="4" visible="true"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="recaudacion_registro_detalle" tituloDetalle="Bloques" mostrarEditar="true" mostrarEliminar="false" mostrarAgregar="false" >
+                        <campo name="ur" text="Unidad Responsable"  llaveForanea="false"  filtroCampo="ur" filtroOperador="="  filtroValor="$inParam.ur$" visible="false" columna-visible="false"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="="  filtroValor="$inParam.periodo$"  visible="false" columna-visible="false"/>
+                        <campo name="id_recaudacion_registro" text="Folio DUEP"  filtroCampo="id_recaudacion_registro" filtroOperador="="  filtroValor="$inParam.folio_recauda$"  visible="false"  columna-visible="false" llaveForanea="false" margen-izquierdo="2"/>
+                        <campo name="id_recaudacion_registro_det" text="Numero de Bloque" generacion="@prox()+1" autogenerado="true" habilitado="false" width="100" columnas="3" margen-izquierdo="2" />
+                        <campo name="tipo_bloque" text="Tipo Bloque"  autoFiltradoDescripcion="descripcion" width="100" columnas="3" margen-derecho="2" habilitado="false" calc="2" />
+                        <campo name="concepto_recaudacion" text="Concepto de Recaudacion *"   columnas="3" margen-izquierdo="2" 
+                        validacion="%concepto_recaudacion%==null"  validacionMensaje="Selecciona el concepto de recaudacion" autoFiltrado="true" maxlength="50" autoFiltradoDescripcion="clave_recaudacion,descripcion" descripcionForaneaTabla="clave_recaudacion,descripcion"/>
+                        
+                        <campo name="id_cat_fondo_contable" text="CAT Fondo Contable" llaveForanea="false" visible="false" columna-visible="false" calc="3" />
+                        <campo name="id_fondo_contable" text="Fondo Contable *" validacion="%id_fondo_contable%==null" validacionMensaje="Capturar el Fondo Contable" columnas="3" margen-derecho="2" autoFiltrado="true" maxlength="50" autoFiltradoDescripcion="id_cat,descripcion" habilitado="false" />
+                        <campo name="id_cat_centro_registro" text="Centro uno" calc="2" columna-visible="false" visible="false" llaveForanea="false"/>
+                        <campo name="id_centro_registro" text="Centro Registro*"  validacion="%id_centro_registro%==null" validacionMensaje="Captura el Centro de Registro" autoFiltrado="true" maxlength="50" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" margen-izquierdo="2"  habilitado="false" />
+                        <campo name="importe" text="Importe Deposito" columnas="3" margen-derecho="2" muestraAcumulado="true" habilitado="false" formatoMoneda="true"/>
+                      </tabla>
+                        <acciones>
+                        <accion nombre="grabar" visible="true" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </detalles>
+            </componente>
+        </nivel> 
+        <!-- FIN MAESTRO DETALLE  -->
+        
+           <!--  REPORTE-->
+            <nivel id="RRSVR" nombre="Reintegro de Sobrante de Viáticos">
+                <componente id="RRSVR" nombre="Reintegro de Sobrante de Viáticos" tipo="reporte">
+                <reporte nombre="Deposito_Viaticos_Jo" update="true" nombreDocumento="'Sobrante Viaticos'" expediente="%DE.DE.expediente%"  grupo="$inParam.folio_expediente$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="$inParam.ur$" />
+                    <campo name="periodo" type="long" calc="$inParam.periodo$" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folioDuep" type="long" calc="$inParam.folio_recauda$"/> 
+                </reporte>
+            </componente>
+            </nivel> 
+          <!--  FIN REPORTE -->
+        </pagina>
+    </tarea> 
