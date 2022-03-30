@@ -1,0 +1,160 @@
+<tarea id="tar_MRAF" nombre="Modifica Resguardo de Activo Fijo" autor="Sergio Guzman" version="1">
+    <pagina id="pag_MRAF">
+            <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <!--    <campo name="folio_af" text="folio_af" local="true" type="string" calc="@concatenar('RESG-'+@ifThenElse(-->
+                    <!--    @consultaDirec('-->
+                    <!--    SELECT (id_resguardo_activo_fijo) AS resultado-->
+                    <!--    FROM operation.resguardo_activo_fijo-->
+                    <!--    WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null-->
+                    <!--    ,-->
+                    <!--    '000001'-->
+                    <!--    ,-->
+                    <!--    @consultaDirec('-->
+                    <!--    SELECT to_char((((substring(id_resguardo_activo_fijo from char_length(id_resguardo_activo_fijo)-4)::int)+1)),\\''+'00000'+'\\') as resultado-->
+                    <!--    FROM operation.resguardo_activo_fijo-->
+                    <!--    WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' ORDER BY id_resguardo_activo_fijo DESC limit 1','resultado','string','MAGNITUS')-->
+                    <!--    ))" habilitado="false"/>-->
+                    <!--<campo name="letras" local="true" type="string" text="Contrato" calc="@subCadena(%barreUsuarios.barreUsuarios.folio_af%,0,5)"/>-->
+                    <!--<campo name="numeros" local="true" type="string" text="Contrato" calc="@subCadena(%barreUsuarios.barreUsuarios.folio_af%,6,11)"/>-->
+                    </tabla>
+                </componente>
+         </nivel>
+        <nivel id="nl_MRAF_Form" nombre="Datos Generales del Resguardo" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="nl_MRAF_Form" nombre="Datos Generales del Resguardo" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="resguardo_activo_fijo">
+                    <campo name="ur" text="ur" calc="$config.ur$" columnas="3" margen-izquierdo="2" visible="false"/>
+                    <campo name="periodo" text="periodo" calc="$inParam.periodo$" columnas="3" margen-izquierdo="2" visible="false"/>
+                    <campo name="id_resguardo_activo_fijo" text="id_resguardo_activo_fijo" calc="$inParam.folio_resguardo$" columnas="3" margen-izquierdo="2" visible="false"/>
+                    <campo name="folio" text="folio" calc="$inParam.duep$" columnas="3" margen-izquierdo="2" visible="false"/>
+                    <campo name="fecha_elaboracion" text="fecha_elaboracion" calc="@fechaSistema(&quot;DD-MM-YYYY&quot;)" columnas="3" margen-izquierdo="2" visible="false"/>
+                    
+                    <campo name="transaccion" text="Transacción" columnas="3" margen-izquierdo="2">
+                        <opciones>
+                    		<opcion texto="Alta Resguardo" valor="Alta Resguardo"/>
+                    		<opcion texto="Baja de Resguardo" valor="Baja de Resguardo"/>
+                    		<!--<opcion texto="Traspaso" valor="Traspaso"/>	-->
+                    	</opciones>
+                    </campo> 
+                    <campo name="concepto" text="Concepto" columnas="3" margen-derecho="2"/>
+                    <campo name="resguardante_origen" text="Resguardante Origen" descripcionForanea="razon_social"  columnas="3" margen-izquierdo="2"/>
+                    <campo name="resguardante_destino" text="Resguardante Destino" descripcionForanea="razon_social" columnas="3" margen-derecho="2"/>
+                    <campo name="corresponsable_resguardo" text="Corresponsable de Resguardo" descripcionForanea="razon_social" columnas="3" margen-izquierdo="2"/>
+                    <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" columnas="3" margen-derecho="2" visible="false"/>
+                </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Grabar"  columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+            </componente>
+         </nivel>
+         <nivel id="cp_MRAF_Tabla" nombre="Registra Alta de Activo Fijo" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nl_MRAF_Form.nl_MRAF_Form.transaccion%=='Alta Resguardo'">
+            <componente id="cp_MRAF_Tabla" nombre="Registra Alta de Activo Fijo" tipo="tabla" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" columna-visible="false" width="150"/>
+                    <campo name="periodo" text="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" columna-visible="false" width="150"/>
+                    <campo name="folio_duep" text="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.folio_duep$"  columna-visible="false" width="150"/>
+                    <campo name="folio_comprobante" text="Folio" columnas="3" margen-izquierdo="2" visible="false" columna-visible="false" width="150"/>
+                    <!--<campo name="folio_duep_a" text="Duep Asociado" columnas="3" margen-izquierdo="2" visible="false" columna-visible="false" width="150"/>-->
+                    <campo name="articulo" text="Artículo" descripcionForaneaTabla="descripcion_articulo" columnas="3" margen-izquierdo="2" width="200"/>
+                    <campo name="descripcion_especifica" text="Descripción específica" columnas="3" margen-izquierdo="2" width="150"/>
+                    <campo name="cantidad" text="Cantidad " columnas="3" margen-izquierdo="2" width="120"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" descripcionForaneaTabla="descripcion" columnas="3" margen-izquierdo="2" width="150"/>
+                    <campo name="total" text="Costo Total Unitario" columnas="3" margen-izquierdo="2" width="150"/>
+                    <campo name="proveedor" text="Beneficiario/Proveedor" descripcionForaneaTabla="razon_social" width="150"/>
+                    <campo name="tipo_detalle" text="Tipo" width="150"/>
+                    <campo name="id_resguardo_activo_fijo" text="id_resguardo_activo_fijo" columna-visible="false" local="true" type="string" calc="%nl_MRAF_Form.nl_MRAF_Form.id_resguardo_activo_fijo%"/>
+                    <campo name="folio_resguardo" text="folio_resguardo" columna-visible="false" local="true" type="string" calc="$inParam.folio_resguardo$"/>
+                    <campo name="id_activo_fijo" text="id_activo_fijo" columna-visible="false" local="true" type="string" calc="$inParam.duep$"/>
+                    <tareas>
+						<tarea nombre="Detalle" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" 
+						params="ur,periodo,folio_duep,folio_comprobante,folio_duep_a,articulo,descripcion_especifica,unidad_medida,total,beneficiario,tipo,id_resguardo_activo_fijo,folio_resguardo,id_activo_fijo" ref="task=e4e5d187-30e0-4072-8417-0838318964db"/>
+					</tareas>
+                </tabla>
+                <estilos>
+                            <boton nombre="grabar" visible="true" texto="Grabar"  columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                         </estilos>
+                        <acciones>
+                            <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                        </acciones>
+            </componente>
+        </nivel>
+        <nivel id="nl_MRAF_Rep" nombre="Reporte Resguardo de Activo Fijo" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nl_MRAF_Form.nl_MRAF_Form.transaccion%=='Alta Resguardo'">
+            <componente id="cp_MRAF_Rep" nombre="Reporte Alta de Resguardo de Activo Fijo" tipo="reporte">
+                <reporte nombre="repor_AltaResg_jsus" update="true" nombreDocumento="'Reporte Alta de Resguardo de Activo Fijo'" expediente="Resguardo de Activo Fijo"  grupo="$inParam.folio_resguardo$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_activo_fijo" type="string" calc="$inParam.folio_resguardo$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="rbaf" nombre="Registra Baja de Activo Fijo" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nl_MRAF_Form.nl_MRAF_Form.transaccion%=='Baja de Resguardo'">
+            <componente id="cp_MRAF" nombre="Datos Generales del Resguardo" tipo="tabla" accionDefault="editar" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="inventario_activofijo_aux" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                    <campo name="ur" text="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" columnas="3" llaveForanea="false" margen-izquierdo="2" visible="false"/>
+                    <campo name="periodo" text="periodo" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"  columnas="3" margen-izquierdo="2" visible="false"/>
+                    <campo name="id_inventario" text="id_inventario" columnas="3" margen-izquierdo="2" visible="false"/>
+                    <campo name="folio_inventario" text="folio" columnas="3" margen-izquierdo="2" visible="false"/>
+                    <campo name="fecha_elaboracion" text="fecha_elaboracion" columnas="3" margen-izquierdo="2" visible="false"/>
+                    <campo name="folio_resguardo" text="Folio de Resguardo" calc="$inParam.folio_resguardo$" columnas="3" margen-izquierdo="2"/>
+                    <campo name="clave_inventario" text="Clave de Inventario" columnas="3" margen-derecho="2"/>
+                    <campo name="descripcion_especifica" text="Descripción específica" columnas="3" margen-izquierdo="2"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" columnas="3" margen-derecho="2"/>
+                    <campo name="resguardante_destino" text="Resguardante" columnas="3" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="ubicacion_fisica" text="Ubicación Física" columnas="3" margen-derecho="2" margen-izquierdo="2"/>
+                    <campo name="area_requiriente" text="Centro de Registro" columnas="3" margen-derecho="2" visible="false"/>
+                    <campo name="tipo" text="Tipo" columnas="3" margen-derecho="2" visible="false"/>
+                    <campo name="costo_total_unitario" text="Costo Total Unitario" columnas="3" margen-derecho="2" visible="false"/>
+                    <campo name="asignacion_baja" text="Seleccción" filtroCampo="asignacion_baja" filtroOperador="=" filtroValor="false" columnas="3" margen-derecho="2" editable="true"/>
+                    <campo name="asignacion" text="Asigna Resguardo" filtroCampo="asignacion" filtroOperador="=" filtroValor="true" columna-visible="false"/>
+                    <campo name="folio_baja" text="folio_baja" filtroCampo="folio_baja" filtroOperador="=" filtroValor="'0'" columna-visible="false"/>
+
+                </tabla>
+                <estilos>
+                       <boton nombre="grabar" visible="true" texto="Grabar"  columnas="3" margen-derecho="4" margen-izquierdo="4"/>
+                         </estilos>
+                        <acciones>
+                            <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                        </acciones>
+            </componente>
+        </nivel>
+        <nivel id="folio" nombre="folio" interactivo="false">
+                <componente id="folio" nombre="folio" tipo="cursor">
+                    <tabla schema="operation" nombre="inventario_activofijo_aux">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                        <campo name="asignacion_baja" filtroCampo="asignacion_baja" filtroOperador="=" filtroValor="true"/>
+                        <campo name="folio_baja" filtroCampo="folio_baja" filtroOperador="=" filtroValor="'0'"/>
+                        <campo name="folio_resguardo"/>
+                        <campo name="id_inventario"/>
+                    </tabla>
+                        <nivel id="folio2" nombre="folio2" interactivo="false">
+                            <componente id="folio2" nombre="folio2" tipo="cursor">
+                                <tabla schema="operation" nombre="inventario_activofijo_aux">
+                                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                                    <campo name="folio_resguardo" filtroCampo="folio_resguardo" filtroOperador="=" filtroValor="%folio.folio.folio_resguardo%"/>
+                                    <campo name="id_inventario" filtroCampo="id_inventario" filtroOperador="=" filtroValor="%folio.folio.id_inventario%"/>
+                                    <campo name="folio_baja" calc="$inParam.folio_resguardo$"/>
+                                </tabla>
+                            </componente>
+                     </nivel>
+                </componente>
+         </nivel>
+        <nivel id="rep" nombre="Reporte Resguardo de Activo Fijo" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="nl_MRAF_Repb" nombre="Reporte Baja de Resguardo de Activo Fijo" tipo="reporte">
+                <reporte nombre="R_Baja_IJ">
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_activo_fijo" type="string" calc="$inParam.folio_resguardo$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
