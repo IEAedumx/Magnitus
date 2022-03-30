@@ -1,0 +1,457 @@
+<tarea id="Registra_validacion_garantías" nombre="Registra validacion de garantias">
+    <pagina id="1">
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+       
+		<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+					<campo name="estatus"/>
+					<campo name="id_estatus"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+		<!--VERIFICA SI REGISTRA O MODIFICA -->
+		<nivel id="RM" nombre="RM" interactivo="false">
+		    <componente id="RM" nombre="RM" tipo="cursor">
+		        <tabla schema="catalog" nombre="dummy">
+		            <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/> 
+		            <campo name="reg" local="true" type="bool" calc="@consultaDirec('SELECT COUNT(*)=1 AS result FROM operation.validacion_garantia WHERE ur='+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_duep_contrato_pedido='+$inParam.id_duep_contrato_pedido$+'','result','bool','MAGNITUS')"/>
+		        </tabla>
+		    </componente>
+		</nivel>
+		
+		<!--BARRE DATOS DE PROCESO CONTRATO-->
+		<nivel id="barreDuepContrato" nombre="Barre Contrato" interactivo="false">
+			<componente tipo="cursor" id="barreDuepContrato" nombre="Barre Contrato">
+				<tabla schema="operation" nombre="duep_contrato_pedido">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="$inParam.id_duep_contrato_pedido$"/> 
+					<campo name="contrato"/>
+					<campo name="tipo_documento"/>
+					<campo name="total"/>
+					<campo name="requiere_anticipo"/>
+				</tabla>
+				<!-- ALTA VALIDACIÓN DE GARANTÍA-->
+    			<nivel id="agregaValidacionG" nombre="Agrega Validación Garantía" interactivo="false" ejecutar="%RM.RM.reg%==false">
+    				<componente tipo="altaDirect" id="agregaValidacionG" nombre="Agrega Validación Garantía">
+    					<tabla schema="operation" nombre="validacion_garantia">
+                            <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                            <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                            <campo name="id_duep_contrato_pedido" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+                            <campo name="id_validacion_garantia" autogenerado="true" generacion="@prox()+1" />
+                            <campo name="tipo_documento" calc="%barreDuepContrato.barreDuepContrato.tipo_documento%" />
+                            <campo name="importe_contratado" calc="%barreDuepContrato.barreDuepContrato.total%"/>
+                            <campo name="garantia_anticipo" calc="%barreDuepContrato.barreDuepContrato.requiere_anticipo%"/>
+    					</tabla>
+    				</componente>
+    			</nivel>
+			</componente>
+	    </nivel>
+	    
+	    <nivel id="BVG" nombre="Barre Validación de Garantía" interactivo="false">
+	        <componente id="BVG" nombre="Barre Validación de Garantía" tipo="cursor">
+	            <tabla schema="operation" nombre="validacion_garantia">
+	                <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                <campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="$inParam.id_duep_contrato_pedido$"/>
+                <campo name="id_validacion_garantia"/>
+                <campo name="garantia_anticipo"/>
+	            </tabla>
+	        </componente>
+	    </nivel>
+	    
+	    <nivel id="valida_garantia" nombre="Datos Generales de Garantía" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="valida_garantia" nombre="Datos Generales de Garantía" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="validacion_garantia">
+                    <campo name="ur" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" llaveForanea="false"/>
+                    <campo name="id_duep_contrato_pedido" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%" visible="false" llaveForanea="false"/>
+                    <campo name="id_validacion_garantia" text="id_validacion_garantia" calc="%BVG.BVG.id_validacion_garantia%" visible="false"/>
+                    <campo name="contrato" text="Contrato" local="true" type="string" calc="%barreDuepContrato.barreDuepContrato.contrato%" columnas="4" margen-izquierdo="3" margen-derecho="3" habilitado="false"/>
+                    <campo name="importe_contratado" text="Importe Contratado" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                    <campo name="tipo_garantia" text="Tipo de Garantía" columnas="4" margen-izquierdo="3" margen-derecho="3">
+                        <opciones>
+                            <opcion texto="Fianza" valor="1"/>
+                            <opcion texto="Cheque Certificado" valor="2"/>
+                            <opcion texto="Otro" valor="3"/>
+                        </opciones>
+                    </campo>    
+                    <campo name="garantia_anticipo" text="Anticipo" visible="false" columna-visible="false"/>
+                    <campo name="garantia_anticipo_local" text="Garantía de Anticipo" local="true" type="long" columnas="4" margen-izquierdo="3" margen-derecho="3" calc="@ifThenElse(%BVG.BVG.garantia_anticipo%==true,1,2)" habilitado="false">
+                        <opciones>
+                            <opcion texto="Si" valor="1"/>
+                            <opcion texto="No" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="4" margen-izquierdo="3" margen-derecho="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>   
+        
+        
+        
+        <!-- ALTA FIANZA -->
+        <nivel id="agregaFianza" nombre="Alta Fianza" interactivo="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==1 AND @consultaDirec('SELECT COUNT(*)=1 AS result FROM operation.fianza WHERE ur='+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_duep_contrato_pedido='+$inParam.id_duep_contrato_pedido$+' AND id_validacion_garantia='+%BVG.BVG.id_validacion_garantia%+'','result','bool','MAGNITUS')==false">
+			<componente tipo="altaDirect" id="agregaFianza" nombre="Alta Fianza">
+				<tabla schema="operation" nombre="fianza">
+					<campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+					<campo name="id_validacion_garantia" calc="%BVG.BVG.id_validacion_garantia%" />
+					<campo name="id_fianza" text="fianza" autogenerado="true" generacion="@prox()+1" />
+				</tabla>
+			</componente>
+		</nivel>
+		
+		<nivel id="BF" nombre="Barre Fianza" interactivo="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==1">
+			<componente  id="BF" nombre="BF" tipo="cursor">
+				<tabla schema="operation" nombre="fianza">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+					<campo name="id_validacion_garantia" filtroCampo="id_validacion_garantia" filtroOperador="=" filtroValor="%BVG.BVG.id_validacion_garantia%" />
+					<campo name="id_fianza" />
+				</tabla>
+			</componente>
+		</nivel>
+		
+        <nivel id="valida_garantia_fianza" nombre="Datos Fianza" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==1">
+            <componente id="fianza" nombre="Fianza" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="fianza">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false"/>
+                    <campo name="id_duep_contrato_pedido" llaveForanea="false" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%" visible="false"/>
+                    <campo name="id_validacion_garantia" llaveForanea="false" text="id_validacion_garantia" calc="%BF.BF.id_validacion_garantia%" visible="false"/>
+                    <campo name="id_fianza" text="fianza" calc="%BF.BF.id_fianza%" visible="false"/>
+                    <!--ANTICIPO-->
+                    <etiqueta nombre="anticipo" texto="GARANTÍA DE ANTICIPO" columnas="9" color="black" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="afianzadora_anticipo" text="Afianzadora" columnas="3" mascara="C" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/> 
+                    <campo name="fecha_emision_anticipo" text="Fecha" columnas="3" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                    <campo name="vigencia_anticipo" text="Vigencia" columnas="3" margen-derecho="1" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                    <campo name="importe_anticipo" text="Importe" columnas="3" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                    
+                    <campo name="adjunta_anticipo" text="Soporte Documental"  
+                           local="true" 
+                           type="file" 
+                           update="false" 
+                           fileType="normal" 
+                           url="$config.repository_upload_file$" 
+                           nombreDocumento="'Anticipo'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Fianza/Anticipo" archivosAceptados="application/pdf" columna-visible="true" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" columnas="3"/>
+                    
+                    <campo name="observaciones_anticipo" text="Observaciones" columnas="3" margen-derecho="1" mascara="C" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                    <!--CUMPLIMIENTO-->
+                    <etiqueta nombre="cumplimiento" texto="GARANTÍA DE CUMPLIMIENTO" columnas="9" color="black" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="afianzadora_cumplimiento" text="Afianzadora" columnas="3" mascara="C"/>
+                    <campo name="fecha_emision_cumplimiento" text="Fecha" columnas="3"/>
+                    <campo name="vigencia_cumplimiento" text="Vigencia" columnas="3" margen-derecho="1"/>
+                    <campo name="importe_cumplimiento" text="Importe" columnas="3" />
+                    <campo name="adjunta_cumplimiento" text="Soporte Documental"
+                           local="true" type="file" update="false"  
+                           fileType="normal" url="$config.repository_upload_file$" 
+                           nombreDocumento="'Cumplimiento'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Fianza/Cumplimiento" archivosAceptados="application/pdf" columna-visible="true" columnas="3"/>
+                    <campo name="observaciones_cumplimiento" text="Observaciones" columnas="3" margen-derecho="1" mascara="C"/>
+                    <!-- CALIDAD -->
+                    <etiqueta nombre="calidad" texto="GARANTÍA DE CALIDAD" color="black" columnas="9" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="afianzadora_calidad" text="Afianzadora" columnas="3" mascara="C"/>
+                    <campo name="fecha_emision_calidad" text="Fecha" columnas="3"/>
+                    <campo name="vigencia_calidad" text="Vigencia" columnas="3" margen-derecho="1"/>
+                    <campo name="importe_calidad" text="Importe" columnas="3" />
+                    <campo name="adjunta_calidad" text="Soporte Documental" 
+                           local="true" 
+                           type="file" update="false"  fileType="normal" 
+                           url="$config.repository_upload_file$" 
+                           nombreDocumento="'Calidad'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Fianza/Calidad" archivosAceptados="application/pdf" columnas="3" columna-visible="true"/>
+                    <campo name="observaciones_calidad" text="Observaciones" columnas="3" margen-derecho="1" mascara="C"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="4" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- ALTA DE CHEQUE -->
+        <nivel id="agregacheque" nombre="Alta cheque" interactivo="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==2 AND  @consultaDirec('SELECT COUNT(*)=1 AS result FROM operation.cheque WHERE ur='+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_duep_contrato_pedido='+$inParam.id_duep_contrato_pedido$+' AND id_validacion_garantia='+%BVG.BVG.id_validacion_garantia%+'','result','bool','MAGNITUS')==false">
+			<componente tipo="altaDirect" id="agregacheque" nombre="Alta cheque">
+				<tabla schema="operation" nombre="cheque">
+					<campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+					<campo name="id_validacion_garantia" calc="%BVG.BVG.id_validacion_garantia%"/>
+					<campo name="id_cheque" text="cheque" autogenerado="true" generacion="@prox()+1"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<!-- BARRE CHEQUE -->
+		<nivel id="BC" nombre="Barre Cheque" interactivo="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==2">
+			<componente  id="BC" nombre="BC" tipo="cursor">
+				<tabla schema="operation" nombre="cheque">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+					<campo name="id_validacion_garantia" filtroCampo="id_validacion_garantia" filtroOperador="=" filtroValor="%BVG.BVG.id_validacion_garantia%" />
+					<campo name="id_cheque" />
+				</tabla>
+			</componente>
+		</nivel>
+		
+        <nivel id="valida_garantia_cheque" nombre="Datos Cheque" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==2">
+            <componente id="cheque" nombre="Cheque" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="cheque">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false"/>
+                    <campo name="id_duep_contrato_pedido" llaveForanea="false" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%" visible="false"/>
+                    <campo name="id_validacion_garantia" text="id_validacion_garantia" llaveForanea="false" calc="%valida_garantia.valida_garantia.id_validacion_garantia%" visible="false"/>
+                    <campo name="id_cheque" text="Cheque" calc="%BC.BC.id_cheque%" visible="false"/>
+                    <!--ANTICIPO-->
+                    <etiqueta nombre="anticipo" texto="GARANTÍA DE ANTICIPO" columnas="9" color="black" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="institucion_bancaria_anticipo" text="Institución Bancaria" columnas="3" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" mascara="C"/>
+                    <campo name="numero_cheque_anticipo" text="Número de Cheque" columnas="3" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                    <campo name="fecha_cheque_anticipo" text="Fecha de cheque" columnas="3" margen-derecho="1" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                    <campo name="importe_anticipo" text="Importe Cheque" columnas="3" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                    <campo name="adjunta_anticipo" text="Soporte Documental"  
+                           local="true" 
+                           type="file" 
+                           update="false" 
+                           fileType="normal" 
+                           url="$config.repository_upload_file$" 
+                           nombreDocumento="'Anticipo'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Cheque/Anticipo" 
+                           archivosAceptados="application/pdf" columna-visible="true" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" columnas="3"/>
+                    <campo name="observaciones_anticipo" text="Observaciones" columnas="3" margen-derecho="1" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" mascara="C" />
+                    <!--CUMPLIMIENTO-->
+                    <etiqueta nombre="cumplimiento" texto="GARANTÍA DE CUMPLIMIENTO" columnas="9" color="black" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="institucion_bancaria_cumplimiento" text="Institución Bancaria" columnas="3" mascara="C"/>
+                    <campo name="numero_cheque_cumplimiento" text="Número de Cheque" columnas="3"/>
+                    <campo name="fecha_cheque_cumplimiento" text="Fecha de cheque" columnas="3" margen-derecho="1"/>
+                    <campo name="importe_cumplimiento" text="Importe Cheque" columnas="3"/>
+                    <campo name="adjunta_cumplimiento" text="Soporte Documental"
+                           local="true" type="file" update="false"  
+                           fileType="normal" url="$config.repository_upload_file$" 
+                           nombreDocumento="'Cumplimiento'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Cheque/Cumplimiento" archivosAceptados="application/pdf" columna-visible="true" columnas="3"/>
+                    <campo name="observaciones_cumplimiento" text="Observaciones" columnas="3" margen-derecho="1" mascara="C"/>
+                    <!-- CALIDAD -->
+                    <etiqueta nombre="calidad" texto="GARANTÍA DE CALIDAD" color="black" columnas="9" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="institucion_bancaria_calidad" text="Institución Bancaria" columnas="3" mascara="C"/>
+                    <campo name="numero_cheque_calidad" text="Número de Cheque" columnas="3"/>
+                    <campo name="fecha_cheque_calidad" text="Fecha de cheque" columnas="3" margen-derecho="1"/>
+                    <campo name="importe_calidad" text="Importe Cheque" columnas="3"/>
+                    <campo name="adjunta_calidad" text="Soporte Documental" 
+                           local="true" 
+                           type="file" update="false"  fileType="normal" 
+                           url="$config.repository_upload_file$" 
+                           nombreDocumento="'Calidad'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Cheque/Calidad" archivosAceptados="application/pdf" columnas="3" columna-visible="true"/>
+                    <campo name="observaciones_calidad" text="Observaciones" columnas="3" margen-derecho="1" mascara="C"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="4" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- ALTA DE OTRAS GARANTÍAS -->
+        <nivel id="agregaotros" nombre="Alta otras garantías" interactivo="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==3 AND @consultaDirec('SELECT COUNT(*)=1 AS result FROM operation.otras_garantias WHERE ur='+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND id_duep_contrato_pedido='+$inParam.id_duep_contrato_pedido$+' AND id_validacion_garantia='+%BVG.BVG.id_validacion_garantia%+'','result','bool','MAGNITUS')==false">
+			<componente tipo="altaDirect" id="agregaotros" nombre="Agrega otras garantías">
+				<tabla schema="operation" nombre="otras_garantias">
+					<campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+					<campo name="id_validacion_garantia" calc="%BVG.BVG.id_validacion_garantia%"/>
+					<campo name="id_otras_garantias" text="Otras garantías" autogenerado="true" generacion="@prox()+1"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+		<!-- BARRE CHEQUE -->
+		<nivel id="BO" nombre="Barre Otras Garantias" interactivo="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==3">
+			<componente  id="BO" nombre="BO" tipo="cursor">
+				<tabla schema="operation" nombre="otras_garantias">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+					<campo name="id_duep_contrato_pedido" filtroCampo="id_duep_contrato_pedido" filtroOperador="=" filtroValor="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+					<campo name="id_validacion_garantia" filtroCampo="id_validacion_garantia" filtroOperador="=" filtroValor="%BVG.BVG.id_validacion_garantia%" />
+					<campo name="id_otras_garantias" />
+				</tabla>
+			</componente>
+		</nivel>
+        
+        <nivel id="valida_garantia_otros" nombre="Datos Otras Garantías" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==3">
+            <componente id="otros" nombre="Otras Garantías" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="otras_garantias">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false"/>
+                    <campo name="id_duep_contrato_pedido" llaveForanea="false" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%" visible="false"/>
+                    <campo name="id_validacion_garantia" text="id_validacion_garantia" llaveForanea="false" calc="%BVG.BVG.id_validacion_garantia%" visible="false"/>
+                    <campo name="id_otras_garantias" text="id otras" calc="%BO.BO.id_otras_garantias%" visible="false"/>
+                    
+                    <!--ANTICIPO-->
+                    <etiqueta nombre="anticipo" texto="GARANTÍA DE ANTICIPO" columnas="9" color="black" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="institucion_expide_anticipo" text="Institución que Expide documento" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" columnas="3" mascara="C"/>
+                    <campo name="nombre_docto_anticipo" text="Nombre Documento" columnas="3" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" mascara="C"/>
+                    <campo name="fecha_emision_anticipo" text="Fecha Emisión" columnas="3" margen-derecho="1" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                    <campo name="fecha_vigencia_anticipo" text="Fecha Vigencia" columnas="3" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" />
+                    <campo name="importe_anticipo" text="Importe" columnas="3" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)"/>
+                     <campo name="adjunta_anticipo" text="Soporte Documental"  
+                           local="true" 
+                           type="file" 
+                           update="false" 
+                           fileType="normal" 
+                           url="$config.repository_upload_file$" 
+                           nombreDocumento="'Anticipo'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Otras Garantías/Anticipo" 
+                           archivosAceptados="application/pdf" columna-visible="true" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" columnas="3"/>
+                    <campo name="observaciones_anticipo" text="Observaciones" habilitado="@ifThenElse(%valida_garantia.valida_garantia.garantia_anticipo_local%==1,true,false)" columnas="3" margen-derecho="4" mascara="C"/>
+                    <!--CUMPLIMIENTO-->
+                    <etiqueta nombre="cumplimiento" texto="GARANTÍA DE CUMPLIMIENTO" columnas="9" color="black" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="institucion_expide_cumplimiento" text="Institución que Expide documento" columnas="3" mascara="C"/>
+                    <campo name="nombre_docto_cumplimiento" text="Nombre Documento" columnas="3" mascara="C"/>
+                    <campo name="fecha_emision_cumplimiento" text="Fecha Emisión" columnas="3" margen-derecho="1"/>
+                    <campo name="fecha_vigencia_cumplimiento" text="Fecha Vigencia" columnas="3" />
+                    <campo name="importe_cumplimiento" text="Importe" columnas="3"/>
+                    <campo name="adjunta_cumplimiento" text="Soporte Documental"
+                           local="true" type="file" update="false"  
+                           fileType="normal" url="$config.repository_upload_file$" 
+                           nombreDocumento="'Cumplimiento'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Otras Garantías/Cumplimiento" archivosAceptados="application/pdf" columna-visible="true" columnas="3"/>
+                    <campo name="observaciones_cumplimiento" text="Observaciones" columnas="3" margen-derecho="4" mascara="C"/>
+                    <!--CALIDAD-->
+                    <etiqueta nombre="calidad" texto="GARANTÍA DE CALIDAD" color="black" columnas="9" bold="normal" tamaño="15px" alineacion="left" interlineado="25px" width="500px"/>
+                    <campo name="institucion_expide_calidad" text="Institución que Expide documento" columnas="3" mascara="C"/>
+                    <campo name="nombre_docto_calidad" text="Nombre Documento" columnas="3" mascara="C"/>
+                    <campo name="fecha_emision_calidad" text="Fecha Emisión" columnas="3" margen-derecho="1"/>
+                    <campo name="fecha_vigencia_calidad" text="Fecha Vigencia" columnas="3" />
+                    <campo name="importe_calidad" text="Importe" columnas="3"/>
+                    <campo name="adjunta_calidad" text="Soporte Documental" 
+                           local="true" 
+                           type="file" update="false"  fileType="normal" 
+                           url="$config.repository_upload_file$" 
+                           nombreDocumento="'Calidad'" 
+                           grupo="$inParam.adquisicion$" 
+                           expediente="Expediente Adquisiciones/Validación de Garantías/Otras Garantías/Calidad" archivosAceptados="application/pdf" columnas="3" columna-visible="true"/>
+                    <campo name="observaciones_calidad" text="Observaciones" columnas="3"  margen-derecho="4" mascara="C"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="4" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        <!-- <nivel id="nVisor" nombre="Visor" mostrarNivelAnterior="false">-->
+		<!--	<componente urlServidor="'http://localhost:8080/Polux/RepositoryController'" nombre="Documentos" tipo="VISOR" id="nVisor">-->
+		<!--		<rutas grupo="2">-->
+		<!--			<ruta>Solicitud/</ruta>          -->
+		<!--		</rutas>-->
+		<!--	</componente>-->
+		<!--</nivel>-->
+
+
+        <nivel id="reporteVGFianza" nombre="Reporte Validación de Garantías" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==1" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="reporte_vg_fianza" nombre="Reporte Validación de Garantías Fianza" tipo="reporte">
+                <reporte nombre="R_Formato_Fianza_IJ" update="true" nombreDocumento="'Validación de Garantías'" expediente="Expediente de Validación de Garantías"  
+                grupo="$inParam.id_duep_contrato_pedido$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%barreDuepContrato.barreDuepContrato.ur%"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="$inParam.id_duep_contrato_pedido$"/>
+                    <campo name="id_validacion" type="long" calc="%BVG.BVG.id_validacion_garantia%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/> 
+                </reporte>
+            </componente> 
+        </nivel>
+        
+        <nivel id="reporteVGCheque" nombre="Reporte Validación de Garantías" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==2" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="reporte_vg_cheque" nombre="Reporte Validación de Garantías Cheque" tipo="reporte" >
+                <reporte nombre="R_ftCheque_IJ" update="true" nombreDocumento="'Validación de Garantías'" expediente="Expediente de Validación de Garantías"  grupo="$inParam.id_duep_contrato_pedido$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%barreDuepContrato.barreDuepContrato.ur%"/>
+                    <campo name="periodo" type="long" calc="%barreDuepContrato.barreDuepContrato.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+                    <campo name="id_validacion" type="long" calc="%BVG.BVG.id_validacion_garantia%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>  
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="reporteVGOtros" nombre="Reporte Validación de Garantías" ejecutar="%valida_garantia.valida_garantia.tipo_garantia%==3" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="reporte_vg_otras" nombre="Reporte Validación de Garantías Otras" tipo="reporte">
+                <reporte nombre="R_Fto_Otros_AL" update="true" nombreDocumento="'Validación de Garantías '" expediente="Expediente de Validación de Garantías"   grupo="$inParam.id_duep_contrato_pedido$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%barreDuepContrato.barreDuepContrato.ur%"/>
+                    <campo name="periodo" type="long" calc="%barreDuepContrato.barreDuepContrato.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+                    <campo name="id_validacion" type="long" calc="%BVG.BVG.id_validacion_garantia%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/> 
+                </reporte>
+            </componente>
+        </nivel>
+
+        <!--
+        <nivel id="reporte_vg" nombre="Reporte validación Garantía" mostrarProximoNivel="false">
+            <componente id="reporte_vg_fianza" nombre="Reporte Validación de Garantías Fianza" tipo="reporte" ejecutarComponente="%valida_garantia.valida_garantia.tipo_garantia%==1">
+                <reporte nombre="R_Formato_Fianza_IJ">
+                    <campo name="ur" type="long" calc="%barreDuepContrato.barreDuepContrato.ur%"/>
+                    <campo name="periodo" type="long" calc="%barreDuepContrato.barreDuepContrato.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+                    <campo name="id_validacion" type="long" calc="1"/>
+                    <campo name="usuario" type="string" calc="'Luis'"/> 
+                </reporte>
+            </componente> 
+             <componente id="reporte_vg_cheque" nombre="Reporte Validación de Garantías Cheque" tipo="reporte" ejecutarComponente="%valida_garantia.valida_garantia.tipo_garantia%==2">
+                <reporte nombre="R_ftCheque_IJ">
+                    <campo name="ur" type="long" calc="%barreDuepContrato.barreDuepContrato.ur%"/>
+                    <campo name="periodo" type="long" calc="%barreDuepContrato.barreDuepContrato.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+                    <campo name="id_validacion" type="long" calc="1"/>
+                    <campo name="usuario" type="string" calc="'Luis'"/> 
+                </reporte>
+            </componente>
+             <componente id="reporte_vg_otras" nombre="Reporte Validación de Garantías Otras" tipo="reporte" ejecutarComponente="%valida_garantia.valida_garantia.tipo_garantia%==3">
+                <reporte nombre="R_Fto_Otros_AL">
+                    <campo name="ur" type="long" calc="%barreDuepContrato.barreDuepContrato.ur%"/>
+                    <campo name="periodo" type="long" calc="%barreDuepContrato.barreDuepContrato.periodo%"/>
+                    <campo name="id_duep_contrato_pedido" type="long" calc="%barreDuepContrato.barreDuepContrato.id_duep_contrato_pedido%"/>
+                    <campo name="id_validacion" type="long" calc="1"/>
+                    <campo name="usuario" type="string" calc="'Luis'"/> 
+                </reporte>
+            </componente>
+        </nivel>
+        -->
+    </pagina>
+</tarea>
