@@ -1,0 +1,77 @@
+<tarea nombre="Autorización de Solicitud de Personal" requisitosInstalacion="" autor="Julio Demetrio">
+    <pagina nombre="Autorización de Solicitud de Personal" id="r_SolPer">
+        <nivel nombre="Solicitud de personal" id="s_Personal" mostrarNivelAnterior="false" mostrarProximoNivel="true">
+            <componente tipo="reporte" nombre="Solicitud de personal" id="s_Personal">
+                <reporte nombre="SolicitudDePesonal" expediente="" nombreDocumento="" grupo="" url="$config.repository_upload_file$">
+                    <campo name="id_solicitud_personal" type="long" calc="$inParam.id_solicitud_personal$"/>
+                    <campo name="id_solicitante" type="long" calc="$inParam.id_solicitante$"/>
+                    <campo name="id_area" type="long" calc="$inParam.id_area$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel nombre="Autorización Solicitud de personal" id="s_per" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Requerimientos personales y logísticos" id="s_per">
+                <tabla schema="public" nombre="solicitud_personal">
+                    <campo name="id_solicitud_personal" text="Folio" calc="$inParam.id_solicitud_personal$" llaveForanea="false" visible="false"/>
+                    <campo name="id_solicitante" text="Solicitante" calc="$inParam.id_solicitante$" llaveForanea="false" visible="false"/>
+                    <campo name="id_area" text="Área" calc="$inParam.id_area$" llaveForanea="false" visible="false"/>
+                    <campo name="fecha_solicitud_autorizada" text="" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" visible="false"/>
+                    <campo name="comentarios_rechazo" text="Comentarios rechazo" height="200" interaccion="%solicitud_autorizada%==false" columnas="6" margen-izquierdo="2"/>
+                    <campo name="solicitud_autorizada" text="¿Autorizar Solicitud?" columnas="5" margen-izquierdo="4"/>
+                    <campo name="protocolario_autorizador" text="protocolario_autorizador" calc="$protocolarios.user$" llaveForanea="false" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="2" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel nombre="terminarInstancia" id="tIn" interactivo="false" ejecutar="%s_per.s_per.solicitud_autorizada%==true">
+            <componente tipo="solicitud" nombre="" id="tIn">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="negociarInstancia" id="nI" interactivo="false" ejecutar="%s_per.s_per.solicitud_autorizada%==false">
+            <componente tipo="solicitud" nombre="" id="nI">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%s_per.s_per.solicitud_autorizada%==false">
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal">
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                   <parametro name="process" calc="$protocolarios.process$"/>
+                   <parametro name="version" calc="$protocolarios.version$"/>
+                   <parametro name="user" calc="$protocolarios.user$"/>
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%s_per.s_per.comentarios_rechazo%"/>
+                   <parametro name="type" calc="'1'"/>
+               </parametros> 
+           </componente>
+        </nivel>
+        <nivel nombre="Solicitud de personal Autorizada" id="s_Personal_a" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%s_per.s_per.solicitud_autorizada%==true">
+            <componente tipo="reporte" nombre="Solicitud de personal Autorizada" id="s_Personal">
+                <reporte nombre="SolicitudDePesonal" expediente="" nombreDocumento="" grupo="" url="$config.repository_upload_file$">
+                    <campo name="id_solicitud_personal" type="long" calc="$inParam.id_solicitud_personal$"/>
+                    <campo name="id_solicitante" type="long" calc="$inParam.id_solicitante$"/>
+                    <campo name="id_area" type="long" calc="$inParam.id_area$"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
