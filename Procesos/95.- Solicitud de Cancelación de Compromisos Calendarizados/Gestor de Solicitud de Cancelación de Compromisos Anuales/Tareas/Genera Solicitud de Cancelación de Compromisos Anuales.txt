@@ -1,0 +1,158 @@
+<tarea id="Solicitud de Compromiso Anual para Cancelación" nombre="Solicitud de Compromiso Anual para Cancelación" version="1" autor="Erick Maya" mostrarCarrusel="false">
+    <pagina id="sol_can_comp_anual" mostrarCarrusel="false">
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo"/>
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+					<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+        <nivel id="busca_cancela_comp" nombre="Búsqueda del Compromiso Anual para Cancelación" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="busca_cancela_comp" nombre="Búsqueda del Compromiso Anual para Cancelación" tipo="busqueda">
+                <tabla schema="operation" nombre="compromisos_anual" mostrarEditar="true">
+                    <campo name="ur" text="Unidad Responsable" width="120" visible="false" columna-visible="false" llaveForanea="false" calc="$config.ur$" habilitado="false" />
+					<campo name="id_periodo" text="Año" visible="false" width="100" columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false"/>
+					<campo name="id_compromiso" text="Compromiso Anual" width="100" visible="false" columna-visible="false"/>
+					<campo name="id_duep" text="Compromiso Anual" width="120" columnas="3" margen-izquierdo="2"/>
+					<campo name="fecha_elaboracion" text="Fecha Registro" columnas="3" margen-derecho="2"  width="150" habilitado="false" visible="true"/>
+					<campo name="id_beneficiario" text="Beneficiario" columnas="3" width="250" descripcionForaneaTabla="nombre,primer_apellido,segundo_apellido" descripcionForanea="nombre,primer_apellido,segundo_apellido" margen-izquierdo="2"  />
+					<campo name="id_tipo_compromiso" text="Tipo Compromiso" columnas="3" width="170" margen-derecho="2" descripcionForanea="tipo_compromiso" descripcionForaneaTabla="tipo_compromiso"/>
+					<campo name="id_centro_registro" text="ID Centro de registro" width="100" visible="false" columna-visible="false" margen-izquierdo="2"/>
+					<campo name="centro_registro" text="Centro de registro" width="200" columnas="3" margen-izquierdo="2"/>
+				    <campo name="total_comprometido" text="Total Comprometido" width="200"  columnas="3" margen-izquierdo="2" formatoMoneda="true" visible="false"/>
+					<campo name="comprometido_no_devengado" text="Comprometido no Devengado" width="150" columnas="3" margen-derecho="2" formatoMoneda="true" visible="false"/>
+					<campo name="total_devengado" text="Total Devengado" width="150" columnas="3" margen-derecho="2" formatoMoneda="true" visible="false"/>
+					<campo name="estatus" text="Estatus" width="150" columnas="3" margen-derecho="2" calc="'AUTORIZADA'" visible="false" />
+					<campo name="autoriza_compromiso_anual" calc="true" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Buscar" columnas="3" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+					<accion nombre="seleccionar" hacer="saltar pagina 2"/>
+				</acciones>
+            </componente>
+        </nivel>
+    </pagina>
+    <pagina id="registro Can" mostrarCarrusel="false">
+         <nivel id="buscaDuep" nombre="Busca Consumo Compromisos" interactivo="false">
+			<componente tipo="cursor" id="buscaDuep" nombre="Busca Consumo Compromisos">
+				<tabla schema="operation" nombre="duep">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%busca_cancela_comp.busca_cancela_comp.ur%" />
+					<campo name="periodo"  filtroCampo="periodo" filtroOperador="=" filtroValor="%busca_cancela_comp.busca_cancela_comp.id_periodo%" />
+					<campo name="id_compromiso"  filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%busca_cancela_comp.busca_cancela_comp.id_compromiso%"/>
+					<campo name="folio_duep" />
+				</tabla>
+			</componente>
+		</nivel>
+        <nivel id="ConcomAnual" nombre="Consulta Compromiso Anual y Soporte Digital" mostrarNivelAnterior="false"> 
+            <componente tipo="reporte" nombre="Estado de Cuenta Detallado de Compromisos Anuales" id="Concomanual1" colapsado="no">
+                <reporte nombre="Edo_cta_can" update="true" nombreDocumento="'Cancelación de Compromiso Anual'" expediente="Expediente de Cancelación de Compromisos Anuales"  grupo="%busca_cancela_comp.busca_cancela_comp.id_compromiso%" url="$config.repository_upload_file$">
+                     <campo name="id_unidad_responsable" type="long" calc="%busca_cancela_comp.busca_cancela_comp.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%busca_cancela_comp.busca_cancela_comp.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%busca_cancela_comp.busca_cancela_comp.id_compromiso%"/>
+                    <!--<campo name="saldo" type="string" calc=""/>-->
+                    <campo name="nombre_usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <!-- Reporte de compromisos anuales y servicios personales 
+            Se cambian los parametro por los que siempre deben de llevar las tareas, quedamos en espera de los que nos pidan los reportes att. Julio-->
+            <!--<componente tipo="reporte" nombre="Compromisos Anuales y Servicios Personales" id="ConAnSerPer" colapsado="no">
+                <reporte nombre="repor_comprSevicios_jsus">
+                    <campo name="ur" type="long" calc="%busca_cancela_comp.busca_cancela_comp.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%busca_cancela_comp.busca_cancela_comp.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%busca_cancela_comp.busca_cancela_comp.id_compromiso%"/>
+                    <campo name="usuario" type="String" calc="'A'" />--> <!--calc="$inParam.usuario$-->
+                <!--</reporte>
+            </componente>-->
+      </nivel>
+        <nivel id="cancela_comp" nombre="Registro de Cancelacion del Compromiso Anual" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cancela_comp" nombre="Registro de Cancelacion del Compromiso Anual" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="compromisos_anual">
+                    <campo name="ur" text="Unidad Responsable" width="120"  visible="false" columna-visible="false" llaveForanea="false" calc="$config.ur$" habilitado="false" />
+					<campo name="id_periodo" text="Año" visible="false" width="100"  columna-visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false"/>
+					<campo name="id_compromiso" text="Compromiso Anual" width="100"  calc="%busca_cancela_comp.busca_cancela_comp.id_compromiso%" visible="false" columna-visible="false"/>
+					<campo name="id_duep" text="Folio Asociado" width="120" columnas="3" margen-izquierdo="2" habilitado="false"/>
+					<campo name="folio_duep_cancela" text="Folio" width="120" columnas="3" margen-derecho="2" habilitado="false" 
+					calc="@concatenar('CanCAN-'+@subCadena(@ifThenElse(@consultaDirec('SELECT (folio_duep_cancela) AS result FROM operation.compromisos_anual WHERE 
+					ur='+$config.ur$+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' ORDER BY folio_duep_cancela DESC limit 1','result','string','MAGNITUS')==null,'0000001',
+					@consultaDirec('SELECT to_char((CAST (substring(folio_duep_cancela from char_length(folio_duep_cancela)-4)AS INTEGER)+1),\\''+'000000'+'\\') as resultado FROM operation.compromisos_anual WHERE ur='+$config.ur$+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' ORDER BY folio_duep_cancela DESC limit 1','resultado','string','MAGNITUS')),1,7))"/>
+					<campo name="fecha_elaboracion" text="Fecha Registro" columnas="3" margen-izquierdo="2"  width="150" habilitado="false" visible="true"/>
+					<campo name="id_beneficiario" text="Beneficiario" columnas="3" width="250"  habilitado="false" descripcionForaneaTabla="razon_social" descripcionForanea="razon_social"  margen-derecho="2"/>
+					<campo name="id_tipo_compromiso" text="Tipo Compromiso" columnas="3" width="170"  habilitado="false" margen-izquierdo="2" descripcionForanea="tipo_compromiso"/>
+					<campo name="id_centro_registro" text="ID Centro de registro" width="100" llaveForanea="false" visible="false" columna-visible="false"/>
+					<campo name="centro_registro" text="Centro de registro" width="200"  habilitado="false" columnas="3" margen-derecho="2"/>
+					<campo name="justificacion_cancelacion" text="Justificación de la Cancelación" width="200" height="100" columnas="6" margen-izquierdo="2"/>
+					<campo name="liberar_comp" text="Liberar Compromiso" width="200"  columnas="3"  validacion="%liberar_comp%==false" validacionMensaje="Se debe selecionar el campo 'liberar compromiso' para continuar"  margen-izquierdo="4" margen-derecho="4"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar"  columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="actualiza_dev_det" nombre="Actualiza Devengado en Detalle de Compromiso" interactivo="false">
+				<componente tipo="cursor" id="actualiza_dev_det" nombre="Actualiza Devengado en Detalle de Compromiso">
+					<tabla schema="operation" nombre="compromisos_anual_det">
+						<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+						<campo name="id_periodo"  filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+						<campo name="id_compromiso"  filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%busca_cancela_comp.busca_cancela_comp.id_compromiso%"/>
+						<campo name="id_detalle_compromiso"/>
+						<campo name="importe_total"/>
+						<campo name="importe_devengado" calc="@consultaDirec('SELECT SUM(total) AS result FROM operation.duep_detalle WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_compromiso='+%cancela_comp.cancela_comp.id_compromiso%+' AND id_compromiso_det='+%actualiza_dev_det.actualiza_dev_det.id_detalle_compromiso%,'result','decimal','MAGNITUS')"/>
+						<campo name="importe_por_devengar" calc="@consultaDirec('SELECT SUM(total) AS result FROM operation.duep_detalle WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_compromiso='+%cancela_comp.cancela_comp.id_compromiso%+' AND id_compromiso_det='+%actualiza_dev_det.actualiza_dev_det.id_detalle_compromiso%,'result','decimal','MAGNITUS')"/>
+						<!--calc="@ifThenElse(%actualiza_dev_det.actualiza_dev_det.importe_total%==null,0,%actualiza_dev_det.actualiza_dev_det.importe_total%)-@consultaDirec('SELECT SUM(total) AS result FROM operation.duep_detalle WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_compromiso='+%cancela_comp.cancela_comp.id_compromiso%+' AND id_compromiso_det='+%actualiza_dev_det.actualiza_dev_det.id_detalle_compromiso%,'result','decimal','MAGNITUS')"-->
+					</tabla>
+				</componente>
+			</nivel>
+        <nivel id="actualiza_estatus" nombre="Actualiza Estatus" interactivo="false" ejecutar="%cancela_comp.cancela_comp.liberar_comp%">
+			<componente tipo="cursor" id="actualiza_estatus" nombre="Actualiza Estatus">
+				<tabla schema="operation" nombre="compromisos_anual">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%cancela_comp.cancela_comp.ur%" />
+					<campo name="id_periodo"  filtroCampo="id_periodo" filtroOperador="=" filtroValor="%cancela_comp.cancela_comp.id_periodo%" />
+					<campo name="id_compromiso"  filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%cancela_comp.cancela_comp.id_compromiso%"/>
+					<!--<campo name="estatus" calc="'LIBERACIÓN EN PROCESO'"/>-->
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="reporte2" nombre="Consulta Compromiso Anual y Soporte Digital" mostrarNivelAnterior="false"> 
+            <componente tipo="reporte" nombre="Solicitud de cancelación de Compromisos Anuales" id="reporte2" colapsado="no">
+                <reporte nombre="R_SolicituCancelacion_CAN_IJ" update="true" nombreDocumento="'Solicitud Compromisos Anuales'" expediente="Expediente Solicitud de cancelación de Compromisos Anuales" grupo="$inParam.id_compromiso$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%busca_cancela_comp.busca_cancela_comp.ur%"/>
+                    <campo name="periodo" type="long" calc="%busca_cancela_comp.busca_cancela_comp.id_periodo%"/>
+                    <campo name="folio_duep" type="long" calc="%busca_cancela_comp.busca_cancela_comp.id_compromiso%"/>
+                    <campo name="poliza" type="string" calc=""/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <!-- Reporte de compromisos anuales y servicios personales 
+            Se cambian los parametro por los que siempre deben de llevar las tareas, quedamos en espera de los que nos pidan los reportes att. Julio-->
+            <!--<componente tipo="reporte" nombre="Compromisos Anuales y Servicios Personales" id="ConAnSerPer" colapsado="no">
+                <reporte nombre="repor_comprSevicios_jsus">
+                    <campo name="ur" type="long" calc="%busca_cancela_comp.busca_cancela_comp.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%busca_cancela_comp.busca_cancela_comp.id_periodo%"/>
+                    <campo name="id_compromiso" type="long" calc="%busca_cancela_comp.busca_cancela_comp.id_compromiso%"/>
+                    <campo name="usuario" type="String" calc="'A'" />--> <!--calc="$inParam.usuario$-->
+                <!--</reporte>
+            </componente>-->
+      </nivel>
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false"  ejecutar="%cancela_comp.cancela_comp.liberar_comp%">
+			<componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+				<parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+					<parametro name="enterprise" calc="'MAGNITUS'"/>
+					<parametro name="process" calc="'b874cf2f-dd8f-4c14-b230-69bbdeee5f13'"/>
+					<parametro name="user" calc="$protocolarios.user$"/>
+					<parametro name="out_ur" calc="%cancela_comp.cancela_comp.ur%" mostrarEsc="true"/>
+					<parametro name="out_periodo" calc="%cancela_comp.cancela_comp.id_periodo%" mostrarEsc="true"/>
+					<parametro name="out_id_compromiso" calc="%cancela_comp.cancela_comp.id_compromiso%" mostrarEsc="false"/>
+				</parametros>
+			</componente>
+    	</nivel> 
+    </pagina>
+</tarea>
