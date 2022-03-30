@@ -1,0 +1,185 @@
+<tarea id="AutorizaConsumoCompromisosAnuales" nombre="Autoriza Consumo de Compromisos Anuales">
+    <pagina id="1">
+       <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="ValorDummy" id="ValorDummy" interactivo="false">
+            <componente nombre="ValorDummy" id="ValorDummy" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="tcompromiso" text="Valor Compromiso" local="true" type="long" visible="true" calc="$inParam.tipo_compromiso$"/>
+                </tabla>
+            </componente>   
+        </nivel>
+        <nivel id="BarreDuepCCA" nombre="BarreDuepCCA" interactivo="false">
+            <componente tipo="cursor" id="BarreDuepCCA" nombre="BarreDuepCCA">        
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> 
+                    <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                    <campo name="tramite" text="Tramite" descripcionForanea="siglas"/>
+                    <campo name="beneficiario" text="Beneficiario"/>
+                    <campo name="id_compromiso" text="Compromiso"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nlAutorizaCCA" nombre="Reporte Consumo de Compromisos Anuales Servicios Básicos" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="reporteSEDS" nombre="Consulta Consumo de Compromisos Anuales Servicios Básicos" tipo="reporte" colapsado="NO" ejecutarComponente="%ValorDummy.ValorDummy.tcompromiso%==1">
+                <reporte nombre="Ccan"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.duep$"/>
+                </reporte>
+            </componente>
+            <componente id="reporteSEDSSP" nombre="Documento de Consumo de Compromiso Calendarizado de Servicios Personales" tipo="reporte" colapsado="NO" ejecutarComponente="%ValorDummy.ValorDummy.tcompromiso%==2">
+                <reporte nombre="cCan_sp2" > 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.duep$"/>
+                </reporte>
+            </componente>
+            <!--<componente id="reporteSEDSD" nombre="Reporte Estado de Cuenta Detallado del DUEP" tipo="reporte" colapsado="SI">
+                <reporte nombre="Edo_cta_can"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.duep$"/>
+                    <campo name="id_compromiso" type="long" calc="$inParam.duep_asociado$"/>
+                </reporte>
+            </componente>-->
+             <componente id="cpAutorizaCCA" tipo="formulario" nombre="Autoriza Consumo de Compromiso Calendarizado" accionDefault="editar" colapsado="NO" >
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" calc="$inParam.ur$" visible="false"/>
+                    <campo name="periodo" text="Periodo" visible="false" calc="$inParam.periodo$" llaveForanea="false"/> 
+                    <campo name="folio_duep" text="Folio" visible="false" calc="$inParam.duep$"/>
+                    <campo name="observaciones" text="Observaciones" local="true" type="memo" height="250" columnas="6"  margen-izquierdo="2" interaccion="%autoriza_duep%==false" validacion="%observaciones%!=null AND %autoriza_duep%==false" validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%autoriza_duep%==true,'',%observaciones%)" />
+                    <campo name="autoriza_duep" text = "Autorización"  visible = "true" columnas="3"  margen-izquierdo="2"/>
+                    <campo name="fecha" text="Validar" local="true" type="string" visible="false"  calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                    <campo name="fecha_autoriza_duep" text="Fecha Autorización" calcCliente="@ifThenElse(%autoriza_duep%==true,%fecha%,'')" visible="false"/>
+                    <campo name="usuario_autoriza_duep" text="Usuario Autoriza" calc="%barreUsuarios.barreUsuarios.id_usuario%"  visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Continuar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente> 
+        </nivel> 
+        <nivel nombre="Instancia Validor" id="InstanciaVal" interactivo="false" ejecutar="%nlAutorizaCCA.cpAutorizaCCA.autoriza_duep%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAutorizaCCA.cpAutorizaCCA.observaciones%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+        </nivel>
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%nlAutorizaCCA.cpAutorizaCCA.autoriza_duep%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="out_observaciones" calc="%nlAutorizaCCA.cpAutorizaCCA.observaciones%" mostrarEsc="true"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlAutorizaCCA.cpAutorizaCCA.autoriza_duep%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!--<nivel nombre="cursor_altaDirect" id="CAD3" interactivo="false" ejecutar="%RegistraCCC.RegistraCCC.sel_registro%=='Importación'">-->
+        <!--    <componente tipo="cursor" nombre="cursor_altaDirect" id="CAD3">-->
+        <!--        <tabla schema="operation" nombre="compromisos_personales_importacion">-->
+        <!--            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo2.buscaPeriodo2.id_unidad_responsable%"/>-->
+        <!--            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo2.buscaPeriodo2.id_periodo%"/>-->
+        <!--            <campo name="id_importacion"/>-->
+        <!--            <campo name="tipo_renglon" filtroCampo="tipo_renglon" filtroOperador="=" filtroValor="1"/>-->
+        <!--            <campo name="clave_presupuestal"/>-->
+        <!--            <campo name="importe"/>-->
+        <!--        </tabla>-->
+        <!--        <nivel nombre="altaDirect" id="altaDirect1" interactivo="false">-->
+        <!--            <componente tipo="cursor" nombre="altaDirect" id="altaDirect1">-->
+        <!--                <tabla schema="operation" nombre="compromisos_anual_det">-->
+        <!--            <campo name="ur" text="UR" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo2.buscaPeriodo2.id_unidad_responsable%"/>-->
+        <!--            <campo name="id_periodo" text="Periodo" llaveForanea="false" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo2.buscaPeriodo2.id_periodo%"/>-->
+        <!--            <campo name="id_compromiso" text="ID Compromiso" filtroCampo="id_compromiso" filtroOperador="=" filtroValor="%GrabaDuepCCA2.GrabaDuepCCA2.id_compromiso%"/>-->
+        <!--            <campo name="id_detalle_compromiso"/>-->
+        <!--            <campo name="articulo" />-->
+        <!--            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%CAD3.CAD3.clave_presupuestal%"/>-->
+        <!--            <campo name="importe_total" calc="%importe_total%-%CAD3.CAD3.importe%"/>-->
+        <!--        </tabla>-->
+        <!--            </componente>-->
+        <!--        </nivel>-->
+        <!--    </componente>-->
+        <!--</nivel>-->
+        <!--CREA INSTANCIA-->
+        <nivel nombre="ALTA ORDEN PAGO" id="AOP" interactivo="false" ejecutar="%nlAutorizaCCA.cpAutorizaCCA.autoriza_duep%==true AND %ValorDummy.ValorDummy.tcompromiso%==2">
+            <componente tipo="altaDirect" nombre="ALTA ORDEN PAGO" id="AOP">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" calc="$inParam.periodo$"/>
+                    <campo name="orden_pago" generacion="@prox()+1" autogenerado="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="CreaInsDic4" nombre="Crea Instancia" interactivo="false" ejecutar="%nlAutorizaCCA.cpAutorizaCCA.autoriza_duep%==true AND %ValorDummy.ValorDummy.tcompromiso%==2">
+            <componente id="CreaInsDic4" nombre="EnvioParametrosInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="'90083dc5-0f2c-4cc0-a179-7d0b1711cba7'"/>
+                    <!--calc="'4858fae7-eb04-45e9-9dd7-d33130c59135'"-->
+                    <!--<parametro name="user" calc="$protocolarios.user$"/>-->
+                    <parametro name="out_ur" calc="$inParam.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                    <parametro name="out_folio_duep" calc="$inParam.duep$" mostrarEsc="true"/>
+                    <parametro name="out_folio_duep_asociado" calc="$inParam.duep_asociado$" mostrarEsc="true"/>
+                    <parametro name="out_beneficiario" calc="%BarreDuepCCA.BarreDuepCCA.beneficiario%" mostrarEsc="true"/>
+                    <parametro name="out_folio_contrato_compra" calc="%BarreDuepCCA.BarreDuepCCA.id_contrato%" mostrarEsc="true"/>
+                    <parametro name="out_tramite" calc="%BarreDuepCCA.BarreDuepCCA.tramite%" mostrarEsc="true"/>
+                    <parametro name="out_importe" calc="$inParam.importe$" mostrarEsc="true"/>
+                    <parametro name="out_expediente" calc="$inParam.expediente_compromiso$" mostrarEsc="false"/>
+                    <parametro name="out_orden" calc="%AOP.AOP.orden_pago%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="crearNuevaInstancia" id="cI" interactivo="false" ejecutar="%nlAutorizaCCA.cpAutorizaCCA.autoriza_duep%==true AND %ValorDummy.ValorDummy.tcompromiso%!=2">
+            <componente tipo="solicitud" nombre="Crear Instancia Devengado" id="cI">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="'4858fae7-eb04-45e9-9dd7-d33130c59135'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_expediente" calc="$inParam.expediente_compromiso$" mostrarEsc="true"/>
+                    <parametro name="out_tramite" calc="11" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="$inParam.periodo$" mostrarEsc="true"/>
+                    <parametro name="out_folio_duep" calc="$inParam.duep$" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

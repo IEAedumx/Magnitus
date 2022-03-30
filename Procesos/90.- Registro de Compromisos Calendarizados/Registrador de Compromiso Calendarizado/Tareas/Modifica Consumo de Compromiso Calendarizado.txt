@@ -1,0 +1,337 @@
+<tarea id="Modifica CCA" nombre="Registra Consumo de Compromisos Anuales" autor="Monserrat Gerardo">
+    <pagina id="1"> 
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="ValorDummy" id="ValorDummy" interactivo="false">
+            <componente nombre="ValorDummy" id="ValorDummy" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="tcompromiso" text="Valor Compromiso" local="true" type="long" visible="true" calc="$inParam.tipo_compromiso$"/>
+                </tabla>
+            </componente>   
+        </nivel>
+        
+        
+        <!--SERVICIOS PERSONALES-->
+        <nivel id="nlRecepcionCCA" nombre="Consumo de Compromiso Calendarizado de Servicios Personales" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==2">
+            <componente id="cpRecepcionCCA" nombre="Consumo de Compromiso Calendarizado de Servicios Personales" tipo="maestroDetalle" colapsado="NO">
+                <encabezado accionDefault="editar">
+                    <tabla id="tablaEncabezadoDUEP" schema="operation" nombre="duep">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$inParam.ur$"/>
+                        <campo name="periodo" text="Periodo" visible="false" calc="$inParam.periodo$" llaveForanea="false"/>
+                        <campo name="id_compromiso" text="ID Compromiso" habilitado="false" visible="false"/>
+                        <campo name="folio_duep_a" text="Folio Asociado" habilitado="false" visible="true" columnas="3" margen-izquierdo="1"/>
+                        <campo name="fecha_solicitud" text="Fecha" habilitado="false" visible="true" columnas="3"/>
+                        <campo name="folio_duep" text="Folio" visible="false" calc="$inParam.duep$"/>
+                        <campo name="id_duep" text="Folio" columnas="3"  habilitado="false"/>
+                        <campo name="id_tipo_compromiso" text="Tipo de Compromiso" descripcionForanea="tipo_compromiso" habilitado="false" columnas="3"  margen-izquierdo="1"/> 
+                        <campo name="tramite" text="Trámite" habilitado="false" marcador="Trámite" descripcionForanea="siglas,nombre" columnas="3" />
+                        <campo name="periodicidad" text="Periodicidad" habilitado="false" columnas="3"  />
+                        <campo name="beneficiario" text="Beneficiario" habilitado="true" llavesFijas="id_estatus_beneficiario=1" descripcionForanea="folio_beneficiario,razon_social" marcador="Seleccionar un Beneficiario" validacion="%beneficiario%==null" validacionMensaje="Seleccione un 'Beneficiario'" columnas="3" margen-izquierdo="1"/>
+                        <campo name="concepto" text="Concepto" height="100" marcador="Ingresa un Concepto" mascara="C" validacion="%concepto%==null" columnas="9" margen-izquierdo="1"/>
+                        <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                        <campo name="estatus_duep" text="Estatus" visible="false" llaveForanea="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="duep_detalle" tituloDetalle="Bloques" mostrarEditar="true" mostrarAgregar="true" mostrarEliminar="false">
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="folio_duep" text="Folio" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="folio_duep_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" width="100" columnas="3" margen-izquierdo="1"/>
+                        <campo name="tipo_detalle" text="Tipo Renglón" validacion="%tipo_detalle%==null" validacionMensaje="Debe de Capturar el Tipo de Bloque" width="100" columnas="3" calcCliente="@ifThenElse(%folio_duep_detalle%==null,2,1)" llavesFijas="id_detalle_duep=1 OR id_detalle_duep=2" habilitado="false"/>
+                        <campo name="id_cat_objeto_gasto" text="Cat Objeto del Gasto" visible="false" calc="4" columna-visible="false" llaveForanea="false"/>
+                        <campo name="c_objeto_gasto" text="COG" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" interaccion-visible="%tipo_detalle%==1" visible="true" width="200" validacion="%c_objeto_gasto%==null AND %tipo_detalle%==1" marcador="Clasificador por Objeto del Gasto" columnas="3" habilitado="false"/>
+                         <campo name="id_cat_fondo_contable" text="CAT FONDO" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" interaccion-visible="%tipo_detalle%==1" marcador="Fondo Contable" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" columna-visible="false" columnas="3" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="descripcion_especifica" text="Descripción Específica" validacion="%descripcion_especifica%==null" validacionMensaje="Debe Capturar 'Descripción Específica'" mascara="C" columnas="3"  marcador="Descripción Específica" width="200"/>
+                        <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_fuente" text="id_cat_fuente" calcCliente="%id_catalogo_foraneo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="fuente_financiamiento" text="Fuente de Financiamiento" interaccion-visible="%tipo_detalle%==1" descripcionForanea="id_cat,descripcion"  columnas="3" margen-izquierdo="1" calcCliente="%id_cat_foraneo%" habilitado="false" llavesFijas="afectable=true" columna-visible="false"/>
+                        <campo name="id_cat_centro_registro" llaveForanea="false" calc="2" visible="false" columna-visible="false"/>
+                        <campo name="id_centro_registro" text="Centro de Registro" interaccion-visible="%tipo_detalle%==1" columnas="3" descripcionForanea="id_cat,descripcion" columna-visible="false" habilitado="false"/>
+                        <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" interaccion-visible="%tipo_detalle%==1" validacion="%programa_presupuestal%==null AND %tipo_detalle%==1" validacionMensaje="Debe de Capturar 'Programa Presupuestal'" marcador="Programa Presupuestal" descripcionForanea="id_cat,descripcion" width="200" columnas="3"  habilitado="false" descripcionForaneaTabla="id_cat,descripcion"/>
+                        <campo name="id_cat_eje_pide" text="ID Programa Presupuestal" calc="13" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="eje_pide" text="Eje" interaccion-visible="%tipo_detalle%==1" validacion="%eje_pide%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturarse el 'Eje'" visible="true" columna-visible="false" columnas="3"  descripcionForanea="id_cat,descripcion" llavesFijas="afectable=true" habilitado="false" margen-izquierdo="1"/>
+                        <campo name="id_cat_proceso_proyecto" text="ID Proceso Proyecto" calc="14" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="proceso_proyecto" text="Proceso Proyecto" descripcionForanea="id_cat,descripcion" interaccion-visible="%tipo_detalle%==1" validacion="%proceso_proyecto%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturarse el Eje" visible="true" columna-visible="false" columnas="3"  habilitado="false" llavesFijas="afectable=true"/>
+                        <campo name="id_cat_proceso_proyecto_detalle" text="ID Proceso Proyecto Detalle" calc="15" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="detalle_proceso_proyecto" text="Detalle Proceso Proyecto" descripcionForanea="id_cat,descripcion" interaccion-visible="%tipo_detalle%==1" validacion="%detalle_proceso_proyecto%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturarse el Detalle Proceso Proyecto" visible="true" llavesFijas="afectable=true" columna-visible="false" columnas="3"  habilitado="false"/>
+                        <campo name="indicador" text="Indicador" calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="3"  margen-izquierdo="1"/>
+                        <campo name="clave_presupuestal" text="Clave presupuestal" columna-visible="true" habilitado="false" interaccion-visible="%tipo_detalle%==1" validacion="%tipo_detalle%==1 AND %clave_presupuestal%==null" validacionMensaje="No generó 'Clave Presupuestal'" columnas="3"  llaveForanea="false" width="200" calcCliente="@ifThenElse(%tipo_detalle%==1,@concatenar(@ifThenElse(%id_centro_registro%==null,'',%id_centro_registro%)+' '+@ifThenElse(%id_fondo_contable%==null,'',%id_fondo_contable%)+' '+@ifThenElse(%c_objeto_gasto%==null,'',%c_objeto_gasto%)+' '+@ifThenElse(%fuente_financiamiento%==null,'',%fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestal%==null,'',%programa_presupuestal%)+' '+@ifThenElse(%eje_pide%==null,'',%eje_pide%)+' '+@ifThenElse(%proceso_proyecto%==null,'',%proceso_proyecto%)+' '+@ifThenElse(%detalle_proceso_proyecto%==null,'',%detalle_proceso_proyecto%)),null)"/>
+                        <campo name="tipo_comprobante" text="Tipo de Comprobante" marcador="Tipo de Comprobante" interaccion-visible="%tipo_detalle%==1 OR %tipo_detalle%==2" columnas="3"  columna-visible="false" descripcionForanea="descripcion"/>
+                        <campo name="folio_comprobante" text="Folio Comprobante" marcador="Folio de Comprobante" interaccion-visible="%tipo_detalle%==1" visible="true" columna-visible="true" validacion="%tipo_detalle%==1 AND %folio_comprobante%==null" validacionMensaje="Debe Capturarse 'Folio de Comprobante'" width="200" columnas="3" />
+                        <!-- RETENCION -->
+                        <campo name="genero_contable" text="Género" marcador="Género Contable" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" llavesFijas="id_genero_contable=1 OR id_genero_contable=2" validacion="%tipo_detalle%==2 AND  %genero_contable%==null" validacionMensaje="Debe Capturar 'Género'"/>
+                        <campo name="tipo_afectacion" text="Tipo de Afectación" marcador="Tipo de Afectación" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" calcCliente="@ifThenElse(%tipo_detalle%==2,@ifThenElse(%genero_contable%==1,1,@ifThenElse(%genero_contable%==2,2,null)),null)" habilitado="false" validacion="%tipo_detalle%==2 AND %tipo_afectacion%==null" validacionMensaje="Debe Capturarse 'Tipo de Afectación'"/>
+                        <campo name="tipo_operacion" text="Operación" marcador="Tipo de Operación" columna-visible="true" interaccion-visible="%tipo_detalle%==2" columnas="3"  width="150" validacion="%tipo_detalle%==2 AND %tipo_operacion%==null" validacionMensaje="Debe Capturarse 'Tipo de Operación'"/>
+                        <!-- /RETENCION-->
+                        <campo name="importe" text="Importe" habilitado="true" validacion="@consultaDirec('SELECT comprometido_no_devengado AS result FROM operation.compromisos_anual WHERE ur='+%nlRecepcionCCA.cpRecepcionCCA.ur%+' AND id_periodo='+%nlRecepcionCCA.cpRecepcionCCA.periodo%+' AND id_compromiso='+%nlRecepcionCCA.cpRecepcionCCA.id_compromiso%+'','result','decimal','MAGNITUS')&lt;%importe%" validacionMensaje="El importe no puede ser mayor al Comprometido No Devengado" visible="true" columna-visible="true" columnas="3"  width="200" formatoMoneda="true" muestraAcumulado="true" calc="0" margen-izquierdo="1"/>
+                        <campo name="total" text="Total" calcCliente="%importe%" visible="false" columna-visible="false"/>
+                        <campo name="adjunta" text="Adjuntar Soporte Documental" width="200" type="file" update="true" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Adjuntar Soporte Documental'" grupo="%nlRecepcionCCA.cpRecepcionCCA.id_compromiso%" expediente="Expediente Consumo de Compromiso Calendarizado"  columnas="6" />
+                        <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" habilitado="false" visible="false" columna-visible="false"/>
+                      </tabla>
+                      <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                      </acciones>
+                </detalles>
+            </componente>
+        </nivel>
+        
+        <nivel id="sumasSP" nombre="Sumas Para Encabezado del DUEP" interactivo="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==2">
+            <componente id="sumasSP" nombre="Sumas Para Encabezado del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo"  filtroOperador="=" filtroValor="%nlRecepcionCCA.cpRecepcionCCA.periodo%"/> 
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%nlRecepcionCCA.cpRecepcionCCA.folio_duep%"/>
+                    <campo name="total" calc="@consultaDirec('SELECT (SUM((SELECT COALESCE(SUM(total),0) FROM operation.duep_detalle WHERE ur='+$inParam.ur$+' AND periodo='+%nlRecepcionCCA.cpRecepcionCCA.periodo%+' AND folio_duep='+%nlRecepcionCCA.cpRecepcionCCA.folio_duep%+' AND tipo_detalle=1) - (SELECT COALESCE(SUM(total),0) FROM operation.duep_detalle  WHERE ur='+$inParam.ur$+' AND periodo='+%nlRecepcionCCA.cpRecepcionCCA.periodo%+' AND folio_duep='+%nlRecepcionCCA.cpRecepcionCCA.folio_duep%+' AND tipo_detalle=2))) AS total;','total','decimal','MAGNITUS')"/>
+                    <campo name="total_importe" calc="@consultaDirec('SELECT (SUM((SELECT COALESCE(SUM(importe),0) FROM operation.duep_detalle WHERE ur='+$inParam.ur$+' AND periodo='+%nlRecepcionCCA.cpRecepcionCCA.periodo%+' AND folio_duep='+%nlRecepcionCCA.cpRecepcionCCA.folio_duep%+' AND tipo_detalle=1) - (SELECT COALESCE(SUM(importe),0) FROM operation.duep_detalle  WHERE ur='+$inParam.ur$+' AND periodo='+%nlRecepcionCCA.cpRecepcionCCA.periodo%+' AND folio_duep='+%nlRecepcionCCA.cpRecepcionCCA.folio_duep%+' AND tipo_detalle=2))) AS importe;','importe','decimal','MAGNITUS')"/>
+                    <campo name="total_descuento" calc="@consultaDirec('SELECT COALESCE(SUM(descuento),0) AS descuento FROM operation.duep_detalle  WHERE ur='+$config.ur$+' AND periodo='+%nlRecepcionCCA.cpRecepcionCCA.periodo%+' AND folio_duep='+%nlRecepcionCCA.cpRecepcionCCA.folio_duep%+' AND tipo_detalle=2;','descuento','decimal','MAGNITUS')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="sumasSPLetra" nombre="Sumas Para Encabezado del DUEP" interactivo="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==2">
+            <componente id="sumasSPLetra" nombre="Sumas Para Encabezado del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo"  filtroOperador="=" filtroValor="%nlRecepcionCCA.cpRecepcionCCA.periodo%"/> 
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%nlRecepcionCCA.cpRecepcionCCA.folio_duep%"/>
+                    <campo name="total_letra" text="Total Letra" calc="@numeroAletra(%sumasSP.sumasSP.total%,' pesos M.N.')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!--
+        <nivel id="BarreDuepSumaSP" nombre="BarreDuepSumaSP" interactivo="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==2">
+            <componente id="BarreDuepSumaSP" nombre="BarreDuepSumaSP" tipo="cursor">        
+                    <tabla schema="operation" nombre="duep_detalle">
+                        <campo name="ur" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                        <campo name="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> 
+                        <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                        <campo name="importe"/>
+                        <campo name="total"/>
+                        <campo name="acumula" local="true" type="double" calc="$sumatoria.importe$"/>
+                        <campo name="acumula_total" local="true" type="double" calc="$sumatoria.total$"/>
+                    </tabla>
+                    <nivel id="BarreDuepSumaE" nombre="BarreDuepSumaE" interactivo="false">
+                       <componente tipo="cursor" id="BarreDuepSumaE" nombre="BarreDuepSumaE">        
+                       <tabla schema="operation" nombre="duep">
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                        <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/> 
+                        <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                        <campo name="total_importe" text="Total Importe" calc="%BarreDuepSumaSP.BarreDuepSumaSP.acumula%"/>
+                        <campo name="total" text="Total" calc="%BarreDuepSumaSP.BarreDuepSumaSP.acumula_total%"/>
+                        <campo name="total_letra" text="Total Letra" calc="@numeroAletra(%BarreDuepSumaSP.BarreDuepSumaSP.acumula_total%,' pesos M.N.')"/>
+                       </tabla>
+                      </componente>
+                    </nivel>
+            </componente>
+        </nivel>
+        -->
+        <!--
+        <nivel id="nlRecepcionCCASP" nombre="Gestión de Consumo de Compromisos Anuales Servicios Personales" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==2">
+            <componente id="cpRecepcionCCASP" nombre="Gestión de Consumo de Compromisos Anuales Servicios Personales" tipo="maestroDetalle" colapsado="NO">
+                <encabezado accionDefault="editar">
+                    <tabla id="tablaEncabezadoDUEP" schema="operation" nombre="duep">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$inParam.ur$"/>
+                        <campo name="periodo" text="Periodo" visible="false" calc="$inParam.periodo$" llaveForanea="false"/>
+                        <campo name="id_compromiso" text="Folio Asociado" habilitado="false" visible="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="folio_duep_a" text="Folio Asociado" habilitado="false" visible="true" columnas="3" margen-izquierdo="2"/>
+                        <campo name="fecha_solicitud" text="Fecha" habilitado="false" visible="true" columnas="3" margen-derecho="2"/>
+                        <campo name="folio_duep" text="Folio" visible="false" calc="$inParam.duep$" columnas="3" margen-izquierdo="2"/>
+                         <campo name="id_duep" text="Folio" visible="true" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" habilitado="false" columnas="3" visible="false" margen-derecho="2"/>
+                        <campo name="id_tipo_compromiso" text="Tipo de Compromiso" descripcionForanea="tipo_compromiso" habilitado="false" columnas="3"  margen-derecho="2"/> 
+                        <campo name="id_fuente_financiamiento" text="ID Fuente de Financiamiento" llaveForanea="false" visible="false"/>
+                        <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento" habilitado="false" visible="false" columnas="3" margen-derecho="2"/>
+                        <campo name="tramite" text="Trámite" habilitado="false" marcador="Trámite" descripcionForanea="siglas,nombre" calc="6" columnas="3" margen-izquierdo="2"/>
+                        <campo name="periodicidad" text="Periodicidad" habilitado="false" columnas="3"  margen-derecho="2"/> 
+                        <campo name="beneficiario" text="Beneficiario" habilitado="false" llavesFijas="id_estatus_beneficiario=1" descripcionForanea="razon_social" marcador="Seleccionar un Beneficiario" validacion="%beneficiario%==null" validacionMensaje="Favor de seleccionar un Beneficiario" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" calc="2" llaveForanea="false"/>
+                        <campo name="id_unidad_ejecutora_gasto" habilitado="false" text="Centro de Registro" visible="false" columnas="3" margen-derecho="2"/>
+                        <campo name="concepto" text="Concepto" height="100" marcador="Ingresa un Concepto" columnas="6" margen-izquierdo="2"/>
+                        <campo name="total" text="Total" visible="false"/>
+                        <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                        <campo name="estatus_duep" text="Estatus" calc="1" visible="false" llaveForanea="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="duep_detalle" tituloDetalle="Bloques" mostrarEditar="true" mostrarAgregar="true" mostrarEliminar="true">
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="folio_duep" text="Folio DUEP" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="folio_duep_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" width="100" visible="false"/>
+                        <campo name="tipo_detalle" text="Tipo Renglón" validacion="%tipo_detalle%==null" validacionMensaje="Debe de Capturar el Tipo de Bloque" width="100" columnas="3" margen-izquierdo="2"/>
+                        <campo name="tipo_comprobante" text="Tipo de Comprobante" visible="true" columna-visible="false" interaccion="%tipo_detalle%==1" validacion="%tipo_comprobante%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturarse Tipo de Comprobante" width="100" columnas="3" margen-derecho="2"/>
+                        <campo name="folio_comprobante" text="Folio Comprobante" visible="true" columna-visible="false" interaccion="%tipo_detalle%==1" validacion="%folio_comprobante%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturarse Folio de Comprobante" width="100" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" habilitado="false" columnas="3"  margen-derecho="2" />
+                        <campo name="id_cat_objeto_gasto" text="Cat Objeto del Gasto" visible="false" calc="4" columna-visible="false" llaveForanea="false"/>                        
+                        <campo name="c_objeto_gasto" text="Objeto del Gasto" visible="true" width="150" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="descripcion_especifica" text="Descripción Específica" validacion="%descripcion_especifica%==null" validacionMensaje="Debe Capturar Descripción Específica" mascara="C" columnas="3" margen-derecho="2" marcador="Descripción Específica"/>
+                        <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" validacion="%programa_presupuestal%==null AND %tipo_detalle%==1" validacionMensaje="Debe de Capturar Programa Presupuestal" marcador="Programa Presupuestal" width="150" interaccion="%tipo_detalle%==1" columnas="3" margen-izquierdo="2"/>
+                        <campo name="indicador" text="Indicador" calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')" habilitado="false" columna-visible="true" interaccion="%tipo_detalle%==1" columnas="3" margen-derecho="2"/>
+                        <campo name="clave_presupuestal" text="clave presupuestal" columna-visible="false" habilitado="false" interaccion="%tipo_detalle%==1" visible="false" llaveForanea="false" calcCliente="@ifThenElse(%tipo_detalle%==1,@concatenar(@ifThenElse(%nlRecepcionCCA.cpRecepcionCCA.id_unidad_ejecutora_gasto%==null,'',%nlRecepcionCCA.cpRecepcionCCA.id_unidad_ejecutora_gasto%)+' '+@ifThenElse(%id_fondo_contable%==null,'',%id_fondo_contable%)+' '+@ifThenElse(%c_objeto_gasto%==null,'',%c_objeto_gasto%)+' '+@ifThenElse(%nlRecepcionCCA.cpRecepcionCCA.id_cat_fuente_financiamiento%==null,'',%nlRecepcionCCA.cpRecepcionCCA.id_cat_fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestal%==null,'',%programa_presupuestal%)),null)"/>
+                        <campo name="genero_contable" text="Género" columna-visible="false" interaccion="%tipo_detalle%==2" columnas="3" margen-izquierdo="2"/>
+                        <campo name="tipo_afectacion" text="Tipo de Afectación" columna-visible="false" interaccion="%tipo_detalle%==2" columnas="3" margen-derecho="2"/>
+                        <campo name="tipo_operacion" text="Operacion" columna-visible="false" interaccion="%tipo_detalle%==2" columnas="3" margen-izquierdo="2"/>
+                        <campo name="total" text="Importe Total" formatoMoneda="true" width="100" columnas="3" margen-derecho="2" habilitado="true"/> 
+                        <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" habilitado="false" visible="false" columna-visible="false"/>
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </detalles>
+            </componente>
+        </nivel>
+        
+        -->
+         <nivel id="reporteRBSSP2" nombre="Consumo de Compromiso Calendarizado de Servicios Personales" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==2">
+            <componente id="reporteSEDSSP2" nombre="Documento de Consumo de Compromiso Calendarizado de Servicios Personales" tipo="reporte" colapsado="NO">
+                <reporte nombre="cCan_sp2" nombreDocumento="'Consumo de Compromiso Calendarizado Servicios Personales'" expediente="Expediente Compromiso Candelarizado/Consumo de Compromiso Calendarizado" grupo="$inParam.expediente_compromiso$" url="$config.repository_upload_file$"  update="true"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.duep$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+
+        <!-- SERVICIOS BÁSICOS -->
+        <nivel id="nlRecepcionCCASB" nombre="Gestión de Consumo de Compromisos Anuales Servicios Básicos" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==1 OR %ValorDummy.ValorDummy.tcompromiso%==3">
+            <componente id="cpRecepcionCCASB" nombre="Gestión de Consumo de Compromisos Anuales Servicios Básicos" tipo="maestroDetalle" colapsado="NO">
+                <encabezado accionDefault="editar">
+                    <tabla id="tablaEncabezadoDUEP" schema="operation" nombre="duep">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$inParam.ur$"/>
+                        <campo name="periodo" text="Periodo" visible="false" calc="$inParam.periodo$" llaveForanea="false"/>
+                        <campo name="id_compromiso" text="Folio Asociado" habilitado="false" visible="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="folio_duep_a" text="Folio Asociado" habilitado="false" visible="true" columnas="3" margen-izquierdo="2"/>
+                        <campo name="fecha_solicitud" text="Fecha" habilitado="false" visible="true" columnas="3" margen-derecho="2"/>
+                        <campo name="folio_duep" text="Folio" visible="false" calc="$inParam.duep$" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_duep" text="Folio" visible="true" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" calc="3" llaveForanea="false" visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" habilitado="false" marcador="Seleccione un Fondo Contable" validacion="%id_fondo_contable%==null" validacionMensaje="Favor de seleccionar un fondo contable para continuar" descripcionForanea="id_cat,descripcion" llavesFijas="afectable=true" columnas="3" margen-derecho="2"/>
+                        <campo name="id_tipo_compromiso" text="Tipo de Compromiso" descripcionForanea="tipo_compromiso" habilitado="false" columnas="3"  margen-izquierdo="2"/> 
+                        <campo name="id_fuente_financiamiento" text="ID Fuente de Financiamiento" llaveForanea="false" visible="false"/>
+                        <campo name="id_cat_fuente_financiamiento" text="Fuente de Financiamiento" descripcionForanea="id_cat,descripcion" habilitado="false" visible="true" columnas="3" margen-derecho="2" llavesFijas="afectable=true"/>
+                        <campo name="tramite" text="Trámite" habilitado="false" marcador="Trámite" descripcionForanea="siglas,nombre" calc="6" columnas="3" margen-izquierdo="2"/>
+                        <campo name="periodicidad" text="Periodicidad" habilitado="false" columnas="3"  margen-derecho="2"/> 
+                        <campo name="beneficiario" text="Beneficiario" habilitado="false" llavesFijas="id_estatus_beneficiario=1" descripcionForanea="folio_beneficiario,razon_social" marcador="Seleccionar un Beneficiario" validacion="%beneficiario%==null" validacionMensaje="Favor de seleccionar un Beneficiario" columnas="3" margen-izquierdo="2"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" calc="2" llaveForanea="false"/>
+                        <campo name="id_unidad_ejecutora_gasto" habilitado="false" text="Centro de Registro" marcador="Selecciona un Centro de Registro" descripcionForanea="id_cat,descripcion" visible="true" columnas="3" margen-derecho="2"/>
+                        <campo name="concepto" text="Concepto" height="100" mascara="C" marcador="Ingresa un Concepto" columnas="6" margen-izquierdo="2"/>
+                        <campo name="total" text="Total" visible="false"/>
+                        <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+                </encabezado>
+                <detalles accionDefault="editar">
+                    <tabla id="detalle_bloques" schema="operation" nombre="duep_detalle" tituloDetalle="Bloques" mostrarEditar="true" mostrarAgregar="true" mostrarEliminar="true">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="folio_duep" text="Folio" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="folio_duep_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" columnas="3" margen-izquierdo="2" width="75"/>
+                        <campo name="tipo_detalle" text="Tipo Renglón" validacion="%tipo_detalle%==null" validacionMensaje="Debe de Capturar el Tipo de Bloque" columnas="3" margen-derecho="2" calcCliente="@ifThenElse(%folio_duep_detalle%==null OR %tipo_detalle%==2,2,1)" habilitado="false" width="120" llavesFijas="id_detalle_duep=1 OR id_detalle_duep=2"/>                        
+                        <campo name="articulo" text="Artículo" interaccion-visible="%tipo_detalle%==1" interaccion="%tipo_detalle%==0" validacion="%articulo%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturar 'Artículo'" descripcionForanea="clave_articulo,descripcion_articulo" descripcionForaneaTabla="clave_articulo,descripcion_articulo" marcador="Artículo" width="150" columnas="3" margen-izquierdo="2" maxlenght="50" habilitado="false"/> 
+                        <campo name="id_cat_objeto_gasto" text="Cat Objeto del Gasto" visible="false" calc="4" columna-visible="false" llaveForanea="false"/>
+                        <campo name="c_objeto_gasto" text="COG" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" interaccion-visible="%tipo_detalle%==1" visible="true" width="200" validacion="%c_objeto_gasto%==null AND %tipo_detalle%==1" marcador="Clasificador por Objeto del Gasto" columnas="3" margen-derecho="2" calcCliente="@consultaDirec('SELECT id_cat_clasificacion_objeto_gasto AS result FROM catalog.articulos WHERE ur='+%ur%+' AND'+' periodo='+'\\''+%periodo%+'\\''+' AND'+' clave_articulo='+'\\''+%articulo%+'\\'','result','string','MAGNITUS')" habilitado="false"/>
+                        <campo name="descripcion_especifica" text="Descripción Específica" validacion="%descripcion_especifica%==null" validacionMensaje="Debe Capturar 'Descripción Específica'" mascara="C" columnas="3" margen-izquierdo="2" marcador="Descripción Específica" width="200"/>
+                        <campo name="tipo_comprobante" text="Tipo de Comprobante" marcador="Tipo de Comprobante" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-derecho="2" columna-visible="false" descripcionForanea="descripcion"/>
+                        <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" interaccion="%tipo_detalle%==0" interaccion-visible="%tipo_detalle%==1" validacion="%programa_presupuestal%==null AND %tipo_detalle%==1" validacionMensaje="Debe de Capturar 'Programa Presupuestal'" marcador="Programa Presupuestal" descripcionForanea="id_cat,descripcion" width="200" columnas="3" margen-derecho="2" habilitado="false" descripcionForaneaTabla="id_cat,descripcion"/>
+                        <campo name="id_cat_eje_pide" text="ID Programa Presupuestal" calc="13" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="eje_pide" text="Eje" interaccion="%tipo_detalle%==0" interaccion-visible="%tipo_detalle%==1" validacion="%eje_pide%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturarse el 'Eje'" visible="true" columna-visible="false" columnas="3" margen-izquierdo="2" descripcionForanea="id_cat,descripcion" llavesFijas="afectable=true" habilitado="false"/>
+                        <campo name="id_cat_proceso_proyecto" text="ID Proceso Proyecto" calc="14" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="proceso_proyecto" text="Proceso Proyecto" interaccion="%tipo_detalle%==0" interaccion-visible="%tipo_detalle%==1" descripcionForanea="id_cat,descripcion" validacion="%proceso_proyecto%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturarse el Eje" visible="true" columna-visible="false" columnas="3" margen-derecho="2" habilitado="false" llavesFijas="afectable=true"/>
+                        <campo name="id_cat_proceso_proyecto_detalle" text="ID Proceso Proyecto Detalle" calc="15" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="detalle_proceso_proyecto" text="Detalle Proceso Proyecto" interaccion="%tipo_detalle%==0" interaccion-visible="%tipo_detalle%==1"  descripcionForanea="id_cat,descripcion" validacion="%detalle_proceso_proyecto%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturarse el Detalle Proceso Proyecto" visible="true" llavesFijas="afectable=true" columna-visible="false" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                        <campo name="indicador" text="Indicador" calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="3" margen-derecho="2"/>
+                        <campo name="clave_presupuestal" text="Clave presupuestal" columna-visible="true" habilitado="false" interaccion-visible="%tipo_detalle%==1" validacion="%tipo_detalle%==1 AND %clave_presupuestal%==null" validacionMensaje="No generó 'Clave Presupuestal'" columnas="3" margen-izquierdo="2" margen-derecho="5" llaveForanea="false" width="200" calcCliente="@ifThenElse(%tipo_detalle%==1,@concatenar(@ifThenElse(%nlRecepcionCCASB.cpRecepcionCCASB.id_unidad_ejecutora_gasto%==null,'',%nlRecepcionCCASB.cpRecepcionCCASB.id_unidad_ejecutora_gasto%)+' '+@ifThenElse(%nlRecepcionCCASB.cpRecepcionCCASB.id_fondo_contable%==null,'',%nlRecepcionCCASB.cpRecepcionCCASB.id_fondo_contable%)+' '+@ifThenElse(%c_objeto_gasto%==null,'',%c_objeto_gasto%)+' '+@ifThenElse(%nlRecepcionCCASB.cpRecepcionCCASB.id_cat_fuente_financiamiento%==null,'',%nlRecepcionCCASB.cpRecepcionCCASB.id_cat_fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestal%==null,'',%programa_presupuestal%)+' '+@ifThenElse(%eje_pide%==null,'',%eje_pide%)+' '+@ifThenElse(%proceso_proyecto%==null,'',%proceso_proyecto%)+' '+@ifThenElse(%detalle_proceso_proyecto%==null,'',%detalle_proceso_proyecto%)),null)"/>
+                        <!-- RETENCION -->
+                        <campo name="genero_contable" text="Género" marcador="Género Contable" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-izquierdo="2" llavesFijas="id_genero_contable=1 OR id_genero_contable=2" validacion="%tipo_detalle%==2 AND  %genero_contable%==null" validacionMensaje="Debe Capturar 'Género'"/>
+                        <campo name="tipo_afectacion" text="Tipo de Afectación" marcador="Tipo de Afectación" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-derecho="2" calcCliente="@ifThenElse(%tipo_detalle%==2,@ifThenElse(%genero_contable%==1,1,@ifThenElse(%genero_contable%==2,2,null)),null)" habilitado="false" validacion="%tipo_detalle%==2 AND %tipo_afectacion%==null" validacionMensaje="Debe Capturarse 'Tipo de Afectación'"/>
+                        <campo name="tipo_operacion" text="Operación" marcador="Tipo de Operación" columna-visible="true" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-izquierdo="2" margen-derecho="5" width="150" validacion="%tipo_detalle%==2 AND %tipo_operacion%==null" validacionMensaje="Debe Capturarse 'Tipo de Operación'"/>
+                        <!-- /RETENCION-->
+                        <campo name="folio_comprobante" text="Folio Comprobante" marcador="Folio de Comprobante" interaccion-visible="%tipo_detalle%==1" visible="true" columna-visible="true" validacion="%tipo_detalle%==1 AND %folio_comprobante%==null" validacionMensaje="Debe Capturarse 'Folio de Comprobante'" width="200" columnas="3" margen-izquierdo="2"/>
+                        <campo name="cantidad" text="Cantidad" interaccion-visible="%tipo_detalle%==1" validacion="%tipo_detalle%==1 AND (%cantidad%==null OR %cantidad%==0)" validacionMensaje="Favor de Capturar la Cantidad" marcador="Cantidad" width="100" interaccion="%tipo_detalle%==1" columnas="3" margen-derecho="2" columna-visible="true" calcCliente="@ifThenElse(%tipo_detalle%==2,1,%cantidad%)" calc="1"/>
+                        <campo name="u_medida" text="Unidad de Medida" validacion="%u_medida%==null AND %tipo_detalle%==1" validacionMensaje="Debe Capturar la Unidad de Medida" marcador="Unidad de Medida" interaccion-visible="%tipo_detalle%==1" width="150" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                        <campo name="id_tasa_iva" text="% IVA" marcador="Seleccione Tasa" interaccion-visible="%tipo_detalle%==1" descripcionForanea="descripcion" validacion="%tipo_detalle%==1 AND %id_tasa_iva%==null" validacionMensaje="Debe Capturarse Tasa IVA" visible="true" columna-visible="false" columnas="3" margen-derecho="2"/>
+                        <campo name="tasa_iva" text="Tasa" calcCliente="@ifThenElse(%tipo_detalle%==1,@consultaDirec('SELECT tasa_iva AS result FROM catalog.tasa_iva WHERE id_tasa_iva='+%id_tasa_iva%,'result','decimal','MAGNITUS'),null)" habilitado="false" visible="false" columna-visible="false"/>
+                        <campo name="precio_unitario" text="Precio Unitario" interaccion-visible="%tipo_detalle%==1" validacion="%tipo_detalle%==1 AND %precio_unitario%==null" validacionMensaje="Debe de Capturar el 'Precio Unitario'" formatoMoneda="true" width="150" columnas="3" margen-izquierdo="2" calc="0"/>
+                        <campo name="iva" text="Impuesto al Valor Agregado" interaccion-visible="%tipo_detalle%==1" calcCliente="@ifThenElse(%precio_unitario%!=null AND (%id_tasa_iva%==4 OR %id_tasa_iva%==3),%precio_unitario%*%tasa_iva%,0)" habilitado="true" visible="true" columna-visible="false" columnas="3" margen-derecho="2" formatoMoneda="true"/>
+                        <campo name="descuento" text="Descuento" width="100" interaccion-visible="%tipo_detalle%==1" columna-visible="false" columnas="3" margen-izquierdo="2" formatoMoneda="true" calc="0"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos" interaccion-visible="%tipo_detalle%==1" muestraAcumulado="true" width="100" columna-visible="false" columnas="3" margen-derecho="2" formatoMoneda="true" calc="0"/>
+                        <campo name="importe_unitario" text="Importe Unitario" calcCliente="@ifThenElse(%tipo_detalle%==1,@ifThenElse(%iva%!=null,%precio_unitario%-%descuento%+%iva%+%otros_impuestos%,%precio_unitario%),%importe_unitario%)" interaccion-visible="%tipo_detalle%==1 OR %tipo_detalle%==2" width="150" columnas="3" interaccion="%tipo_detalle%==2" margen-izquierdo="2" formatoMoneda="true" muestraAcumulado="true" columna-visible="true" calc="0"/>
+                        <campo name="importe" text="Importe Total" calcCliente="@ifThenElse(%tipo_detalle%==1,%cantidad% * %importe_unitario%,@ifThenElse(%tipo_detalle%==2,%importe_unitario%,'0.00'))" validacion="%importe%&gt;@consultaDirec('SELECT comprometido_no_devengado AS cnd FROM operation.compromisos_anual WHERE id_compromiso='+$inParam.duep_asociado$+' AND id_periodo='+%$inParam.periodo$,'cnd','decimal','MAGNITUS')" validacionMensaje="El importe no puede ser mayor al Presupuesto No Devengado del Compromiso" visible="true" columna-visible="true" columnas="3" margen-derecho="2" habilitado="true" width="200" formatoMoneda="true" muestraAcumulado="true"/>
+                        <campo name="total" text="Total" calcCliente="%importe%" visible="false" columna-visible="false"/>
+                         <campo name="adjunta" text="Adjuntar Soporte Documental" width="200" type="file" update="false" local="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Adjuntar Soporte Documental'" grupo="%nlRecepcionCCASB.cpRecepcionCCASB.id_compromiso%" expediente="Expediente Consumo Compromisos Anuales"  columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                        <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" habilitado="false" visible="false" columna-visible="false"/>
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </detalles>
+            </componente>
+        </nivel>
+        
+        <nivel id="BarreDuepSuma" nombre="BarreDuepSuma" interactivo="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==1 OR %ValorDummy.ValorDummy.tcompromiso%==3">
+            <componente tipo="cursor" id="BarreDuepSuma" nombre="BarreDuepSuma">        
+                    <tabla schema="operation" nombre="duep_detalle">
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/> 
+                        <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                        <campo name="importe"/>
+                        <campo name="total"/>
+                        <campo name="acumula" local="true" type="double" calc="$sumatoria.importe$"/>
+                        <campo name="acumula_total" local="true" type="double" calc="$sumatoria.total$"/>
+                    </tabla>
+                    <nivel id="BarreDuepSumaD" nombre="BarreDuepSumaD" interactivo="false">
+                       <componente tipo="cursor" id="BarreDuepSumaD" nombre="BarreDuepSumaD">        
+                       <tabla schema="operation" nombre="duep">
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+                        <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$" llaveForanea="false"/> 
+                        <campo name="folio_duep" text="Folio" filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.duep$"/>
+                        <campo name="total_importe" text="Total Importe" calc="%BarreDuepSuma.BarreDuepSuma.acumula%"/>
+                        <campo name="total" text="Total" calc="%BarreDuepSuma.BarreDuepSuma.acumula_total%"/>
+                        <campo name="total_letra" text="Total Letra" calc="@numeroAletra(%BarreDuepSuma.BarreDuepSuma.acumula_total%,' pesos M.N.')"/>
+                       </tabla>
+                      </componente>
+                    </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="reporteRBS" nombre="Consulta Consumo de Compromisos Anuales Servicios Básicos" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%ValorDummy.ValorDummy.tcompromiso%==1 OR %ValorDummy.ValorDummy.tcompromiso%==3">
+            <componente id="reporteSEDS" nombre="Consulta Consumo de Compromisos Anuales Servicios Básicos" tipo="reporte" colapsado="NO">
+                <reporte nombre="Ccan" nombreDocumento="'Consumo Compromisos Calendarizado Servicios Básicos'" expediente="Expediente Compromiso Candelarizado/Consumo de Compromiso Calendarizado"  grupo="$inParam.expediente_compromiso$" url="$config.repository_upload_file$" update="true" > 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="%nlRecepcionCCASB.cpRecepcionCCASB.ur%"/>
+                    <campo name="id_periodo" type="long" calc="%nlRecepcionCCASB.cpRecepcionCCASB.periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_duep" type="long" calc="%nlRecepcionCCASB.cpRecepcionCCASB.folio_duep%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
