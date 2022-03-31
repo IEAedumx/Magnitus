@@ -1,0 +1,269 @@
+<tarea nombre="Autoriza  Requisición de Almacén " version="1.0.0" autor="Marisela" requisitosInstalacion="" ffechaModificacion="2019-04-25" modificacionEfectuada="" numero="101">
+    <pagina id="1" nombre="Autoriza  Requisición de Almacén">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="permisos_especiales"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+					<campo name="id_periodo"/>
+					<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+					<campo name="id_separador"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="obSeparador" nombre="obSeparador" interactivo="false">
+			<componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+				<tabla schema="catalog" nombre="separador">
+					<campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_separador%"/>
+					<campo name="caracter"/>
+				</tabla>
+			</componente>
+		</nivel>
+            
+        <nivel nombre="Autoriza Requisición de Almacén" id="rar"  mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Autoriza  Requisición de Almacén" id="rar">
+                <reporte nombre="Requisic_Almacen">
+                    <campo name="ur"  text="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" text="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_solicitud_almacen" text="id_solicitud_almacen" type="string" calc="$inParam.id_solicitud_almacen$"/>
+                </reporte>
+            </componente> 
+        </nivel>
+        <nivel nombre="Almacen" id="sa" interactivo="false" mostrarNivelAnterior="false">
+            <componente tipo="cursor" nombre="Almacen" id="sa">
+                <tabla schema="operation" nombre="solicitud_almacen">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_solicitud_almacen" filtroCampo="id_solicitud_almacen" filtroOperador="=" filtroValor="$inParam.id_solicitud_almacen$"/>
+                    <campo name="tipo_moviemiento"/>
+                    <campo name="transaccion"/>
+                </tabla>
+            </componente> 
+        </nivel>
+        <nivel nombre="Autoriza Requisición de Almacén" id="ra" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" id="ra" nombre="Autoriza Requisición de Almacén" accionDefault="editar">
+                <tabla schema="operation" nombre="solicitud_almacen">
+                    <campo name="ur" text="ur" calc="$config.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="periodo" text="periodo" calc="$inParam.periodo$" visible="false" llaveForanea="false"/>
+                    <campo name="id_solicitud_almacen" text="Folio Solicitud" calc="$inParam.id_solicitud_almacen$" columnas="2" margen-izquierdo="3" visible="false"/>
+                    <campo name="comentarios_autorizador" text="Observaciones*" columnas="4" margen-izquierdo="3" margen-derecho="3" width="100" height="100" interaccion="%autoriza%==false" validacion="%autoriza%==false AND %comentarios_autorizador%==null" validacionMensaje="Descripción del Registro solo permite mayusculas y números"/>
+                    <campo name="usuario_autorizador" text="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                    <campo name="autoriza" text="Autoriza" columnas="4" margen-izquierdo="3" margen-derecho="3" width="100" height="100" calc="$inParam.concepto$" habilitado="true"/>
+                    <campo name="concepto" text="concepto" visible="false"/>
+                    <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" hacer="saltar siguiente nivel" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente> 
+        </nivel>
+        <!--CAMBIA ESTATUS A NO AUTORIZADO-->
+        <nivel id="AFno" nombre="AFno" interactivo="false" ejecutar="%ra.ra.autoriza%==false">
+            <componente id="AFno" nombre="AFno" tipo="cursor">
+                <tabla schema="operation" nombre="solicitud_almacen">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_solicitud_almacen" filtroCampo="id_solicitud_almacen" filtroOperador="=" filtroValor="$inParam.id_solicitud_almacen$"/>
+                    <campo name="estatus" calc="'No autorizado'"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--CAMBIA ESTATUS A AUTORIZADO-->
+        <nivel id="AFsi" nombre="AFsi" interactivo="false" ejecutar="%ra.ra.autoriza%==true">
+            <componente id="AFsi" nombre="AFsi" tipo="cursor">
+                <tabla schema="operation" nombre="solicitud_almacen">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_solicitud_almacen" filtroCampo="id_solicitud_almacen" filtroOperador="=" filtroValor="$inParam.id_solicitud_almacen$"/>
+                    <campo name="estatus" calc="'Autorizado'"/>
+                    <campo name="fecha_autorizacion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--<nivel id="AF" nombre="AF" interactivo="false" ejecutar="%ra.ra.autoriza%==true">
+            <componente id="AF" nombre="AF" tipo="cursor">
+                <tabla schema="operation" nombre="solicitud_almacen">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_solicitud_almacen" filtroCampo="id_solicitud_almacen" filtroOperador="=" filtroValor="$inParam.id_solicitud_almacen$"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+        
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%ra.ra.autoriza%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%ra.ra.autoriza%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%ra.ra.comentarios_autorizador%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+
+       <!--Inicio Poliza -->
+        <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%ra.ra.autoriza%==true">
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="$config.ur$"/> 
+                   <campo name="periodo" calc="$inParam.periodo$" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <!--<campo name="id_catalogo" calc="%md_auto_orden_compra.md_auto_orden_compra.id_cat_fondo%"/>-->
+                   <!--<campo name="fondo_contable" calc="%md_auto_orden_compra.md_auto_orden_compra.id_fondo_contable%"/>-->
+                   <!--<campo name="duep_origen" calc="%md_auto_orden_compra.md_auto_orden_compra.duep%" />-->
+                   <campo name="momento_contable"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <!--<campo name="folio_reporte" calc="%barreUsuarios.barreUsuarios.letras%+%barreUsuarios.barreUsuarios.numeros%"/>
+                   '+%barreUsuarios.barreUsuarios.letras%+%barreUsuarios.barreUsuarios.numeros%+' -->
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                   <campo name="concepto_general" calc="@concatenar('Póliza de Salida de Materiales  de Almacén'+' '+$inParam.id_solicitud_almacen$)"/>
+                </tabla>
+            </componente>
+        </nivel>
+       
+        <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%ra.ra.autoriza%==true">
+            <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="solicitud_almacen_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="id_solicitud_almacen" filtroCampo="id_solicitud_almacen" filtroOperador="=" filtroValor="%ra.ra.id_solicitud_almacen%"/>
+                    <campo name="total_salida" />
+                    <campo name="clave_articulo"/>
+                    <campo name="descripcion" local="true" type="string" referenciaForanea="clave_articulo" celdaForanea="des_articulo"/>
+                    <!-- <campo name="clave_presup" /> -->
+                    <campo name="fecha_elaboracion" local="true" type="string" calc="@fechaSistema()" />
+                </tabla>
+                <!--Cargo -->
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('5'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '0'+%obSeparador.obSeparador.caracter%+
+                                    '211'+%obSeparador.obSeparador.caracter%+
+                                    '01'+%obSeparador.obSeparador.caracter%+
+                                    '001')" />
+                            <!--
+                            <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT (c_contable_cargo) as resultado FROM  operation.tipo_movimientos 
+                                WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND tipo_movimiento='+$inParam.tipo_moviemiento$+' AND transaccion=' +'\\''+ %sa.sa.transaccion%+'\\'','resultado','string','MAGNITUS')"/>
+                            -->
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.total_salida%"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.descripcion%"/>
+                            <campo name="referencia" calc="@concatenar('5'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '2'+%obSeparador.obSeparador.caracter%+
+                                    '1'+%obSeparador.obSeparador.caracter%+
+                                    '0')"/>
+                                    <!--
+                            <campo name="referencia" calc="@consultaDirec('SELECT (descripcion) as resultado FROM  catalog.cuentas_contables 
+                            WHERE ur='+$config.ur$+' AND periodo='+$inParam.periodo$+' AND clave_cuenta=' +'\\''+ %altaDetalleDirecAbonoCom.altaDetalleDirecAbono.clave_cuenta_contable%+'\\'','resultado','string','MAGNITUS')"/>
+                            -->
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!--abono -->
+                 <nivel id="altaDetalleDirecAbonoComa" nombre="altaDetalleDirecAbonoComa" interactivo="false">
+                    <componente id="altaDetalleDirecAbonoComa" nombre="altaDetalleDirecAbonoComa" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                           <campo name="ur" calc="$config.ur$"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '5'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+'001')"/>
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.total_salida%"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.descripcion%"/>
+                            <campo name="referencia"  calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '5'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+'001')"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+<!--Fin Poliza -->
+
+
+        <nivel nombre="Vale de Salida" id="vs" mostrarNivelAnterior="false" ejecutar="%ra.ra.autoriza%==true">
+            <componente tipo="reporte" nombre="Vale de Salida" id="vs" colapsado="SI">
+                <reporte nombre="Vale_Salida">
+                    <campo name="ur"  text="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" text="periodo" type="long" calc="%ra.ra.periodo%"/>
+                    <campo name="id_solicitud_almacen" text="id_solicitud_almacen" type="string" calc="%ra.ra.id_solicitud_almacen%"/>
+                </reporte>
+            </componente> 
+            <componente tipo="reporte" nombre="Póliza Salida Almacén" id="psa" colapsado="SI">
+                <reporte nombre="poliza_contable" id="PMCDCC"> <!-- poliza_devengado_IJ-->
+                    <campo name="ur" calc="$config.ur$" type="long"/>
+                    <campo name="periodo" calc="$inParam.periodo$" type="long"/>
+                    <campo name="folio_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" type="long"/>
+                </reporte>
+            </componente> 
+        </nivel>
+        
+        
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false"  ejecutar="%ra.ra.autoriza%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+            
+        </pagina>
+    </tarea>
