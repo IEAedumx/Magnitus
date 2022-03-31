@@ -1,0 +1,342 @@
+<tarea id="RegistraRequisicionBienesServicios" nombre="Registra Requisición de Bienes y Servicios">
+    <pagina id="1">
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="NivelAf" nombre="NivelAf" interactivo="false">
+            <componente id="NivelAf" nombre="NivelAf" tipo="cursor">
+                <tabla schema="entity" nombre="mascara_articulo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="id_mascara_catalogo"/>
+                    <campo name="nivel" />
+                    <campo name="afectable" filtroCampo="afectable" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+
+        <!-- Busca Estructura del Expediente Sistema de Gestión Documental y Archivo -->
+        
+        <nivel id="buscaFondo" nombre="buscaFondo" interactivo="false">
+            <componente id="buscaFondo" nombre="buscaFondo" tipo="cursor">
+                <tabla schema="catalog" nombre="fondo_dependencia">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_dependencia"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSeccion" nombre="buscaSeccion" interactivo="false">
+            <componente id="buscaSeccion" nombre="buscaSeccion" tipo="cursor">
+                <tabla schema="catalog" nombre="seccion">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_seccion"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSerie" nombre="buscaSerie" interactivo="false">
+            <componente id="buscaSerie" nombre="buscaSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="serie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_serie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaSubSerie" nombre="buscaSubSerie" interactivo="false">
+            <componente id="buscaSubSerie" nombre="buscaSubSerie" tipo="cursor">
+                <tabla schema="catalog" nombre="subserie">
+                    <campo name="id_fondo" filtroCampo="id_fondo" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_seccion" filtroCampo="id_seccion" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_serie" filtroCampo="id_serie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="id_subserie" filtroCampo="id_subserie" filtroOperador="=" filtroValor="1"/>
+                    <campo name="nombre_subserie"/>
+                    <campo name="abreviatura"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="concatenaExpediente" nombre="concatenaExpediente" interactivo="false">
+            <componente id="concatenaExpediente" nombre="concatenaExpediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente" calc="@concatenar(%buscaFondo.buscaFondo.abreviatura%+'/'+%buscaSeccion.buscaSeccion.abreviatura%+'/'+%buscaSerie.buscaSerie.abreviatura%+'/'+%buscaSubSerie.buscaSubSerie.abreviatura%)" local="true" type="string"/>
+                </tabla>
+            </componente>
+        </nivel>
+            
+        <!-- Fin  Busca Estructura del Expediente Sistema de Gestión Documental y Archivo-->
+
+        <nivel id="nlRequisicionBS" nombre="Requisición de Bienes o Servicios" mostrarProximoNivel="false" mostrarNivelAnterior="false"> 
+            <componente id="cpRequisicionBS" nombre="Requisición de Bienes o Servicios" tipo="formulario" colapsado="NO"> 
+                    <tabla schema="operation" nombre="requisicion">
+                        <campo name="ur" text="Unidad Responsable" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" visible="false" llaveForanea="false"/>
+                        <campo name="periodo" text="Ejercicio Fiscal" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="true" llaveForanea="false" habiltado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="tipo_tramite" text="Trámite" local="true" type="string" calc="'REQUISICIÓN'" visible="true" habilitado="false" columnas="2"/>
+                        <campo name="folio_req" text="Requisición" generacion="@prox()+1" autogenerado="true" visible="true" habiltado="false" columnas="2"/>
+                        <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot; YYYY/MM/dd HH:MM:ss&quot;)" visible="true" habilitado="false" columnas="2" margen-derecho="1"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="ID Centro de Registro" calc="2" llaveForanea="false" visible="false"/>
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" descripcionForanea="id_cat,descripcion" validacion="%id_unidad_ejecutora_gasto%==null" validacionMensaje="Debe Capturarse Centro de Registro" visible="true" marcador="Centro de Registro" llavesFijas="afectable=true" columnas="4" margen-izquierdo="3" margen-derecho="3" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion"/>
+                        <campo name="concepto" text="Justificación" visible="true" marcador="Descripción de Requisición 'Solo Mayúsculas Sin Acentos y Números'" columnas="4" margen-izquierdo="3" margen-derecho="3" height="100"/>
+                        <campo name="ultimo_usuario_modificador" text="Usuario Modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                        <campo name="id_tipo_duep" text="Tipo Duep" calc="1" visible="false" columna-visible="false"/>
+                        <campo name="estatus_duep" text="Estatus" calc="2" visible="false" columna-visible="false"/>
+                        <campo name="acumula_pres" calc="true" visible="false" columna-visible="false"/>
+                        <campo name="mes" text="Mes" calc="@fechaSistema(&quot;MM&quot;)" local="true" type="string" visible="false"/>
+                      <!--  <campo name="local" text="local Facture YA" local="true" type="string"/>
+                        <campo name="local_dos" text="local Facture YA DOS" local="true" type="string"/>-->
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </componente>
+            </nivel>
+                
+                <nivel id="detalle" nombre="Detalle de Requisiciones" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                  <componente id="detalle" nombre="Detalle de Requisiciones" tipo="tabla">
+                
+                    <tabla id="detRequisicionBS" schema="operation" nombre="requisicion_detalle" tituloDetalle="Renglones" mostrarAgregar="true">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" columna-visible="false" calc="%nlRequisicionBS.cpRequisicionBS.ur%"/>
+                        <campo name="periodo" text="Periodo Contable" visible="false" llaveForanea="false" columna-visible="false" calc="%nlRequisicionBS.cpRequisicionBS.periodo%"/>
+                        <campo name="folio_req" text="Requisición" visible="false" columna-visible="false" calc="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                        <campo name="folio_req_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="true"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="ID CAT Centro Registro" calc="2" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro Registro" visible="false" columna-visible="false" calc="%nlRequisicionBS.cpRequisicionBS.id_unidad_ejecutora_gasto%"/>
+                        <campo name="articulo" text="Artículo" descripcionForanea="clave_articulo,descripcion_articulo" descripcionForaneaTabla="clave_articulo,descripcion_articulo" llavesFijas="afectable=true" llavesDinamicas="'nivel='+'\\''+%NivelAf.NivelAf.nivel%+'\\''" validacion="%articulo%==null" validacionMensaje="Debe Capturarse Articulo" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1" autoFiltrado="true" autoFiltradoDescripcion="clave_articulo,descripcion_articulo"/>
+                        <campo name="articulo_descripcion" text="Articulo" local="true" type="string" calcCliente="@consultaDirec('SELECT descripcion AS result FROM catalog.articulos WHERE ur='+%ur%+' AND'+' periodo='+'\\''+%periodo%+'\\''+' AND'+' clave_articulo='+'\\''+%articulo%+'\\'','result','string','MAGNITUS')" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_cog" text="ID COG" calc="4" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_cog" text="COG" calcCliente="@consultaDirec('SELECT id_cat_clasificacion_objeto_gasto AS result FROM catalog.articulos WHERE ur='+%ur%+' AND'+' periodo='+'\\''+%periodo%+'\\''+' AND'+' clave_articulo='+'\\''+%articulo%+'\\'','result','string','MAGNITUS')" visible="true" columna-visible="true" columnas="3" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" llavesFijas="afectable=true" habilitado="false"/>
+                        <campo name="descripcion_especifica" text="Concepto del Articulo" visible="true" columna-visible="false" columnas="3"  height="90"/>
+                        <campo name="id_cat_fondo_contable" text="ID Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" validacion="%id_fondo_contable%==null" validacionMensaje="Debe Capturarse Fondo Contable" visible="true" columna-visible="false" columnas="3" margen-izquierdo="1" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                        
+                        <campo name="id_catalogo_foraneo" text="ID CATALOGO FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_catalogo_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_foraneo" text="ID CAT FF" local="true" type="string" referenciaForanea="id_fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" visible="false" columna-visible="false"/>
+                        
+                        <campo name="id_cat_fuente_financiamiento" text="ID Fuente de Financiamiento" calcCliente="%id_catalogo_foraneo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" validacion="%id_fuente_financiamiento%==null" validacionMensaje="Debe Capturarse Fuente de Fianciamiento" visible="true" columna-visible="false" columnas="3"   calcCliente="%id_cat_foraneo%" habilitado="false" />
+                        <campo name="id_cat_programa_presupuestal" text="ID Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat,descripcion" validacion="%programa_presupuestal%==null" validacionMensaje="Debe Capturarse Programa Presupuestal" visible="true" columna-visible="false" columnas="3"  autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" llavesFijas="afectable=true"/>
+                     <campo name="id_cat_eje_pide" text="ID Programa Presupuestal" calc="13" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="eje_pide" text="Objetivo Estratégico" validacion="%eje_pide%==null" validacionMensaje="Debe Capturarse el Eje" visible="true" columna-visible="false" columnas="3"  margen-izquierdo="1" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion"/>
+                        <campo name="id_cat_proceso_proyecto" text="ID Proceso Proyecto" calc="14" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="proceso_proyecto" text="Estrategia" validacion="%proceso_proyecto%==null" validacionMensaje="Debe Capturarse el Eje" visible="true" columna-visible="false" columnas="3"  autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion"/>
+                        <campo name="id_cat_proceso_proyecto_detalle" text="ID Proceso Proyecto Detalle" calc="15" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="detalle_proceso_proyecto" text="Actividad Acción" validacion="%detalle_proceso_proyecto%==null" validacionMensaje="Debe Capturarse el Detalle Proceso Proyecto" visible="true" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columna-visible="false" columnas="3"  />
+                        <campo name="mes" text="mes" columna-visible="false" visible="false" llaveForanea="false" calc="@fechaSistema(&quot;MM&quot;)"/>
+                        
+                        <campo name="clave_presupuestal" text="Clave Presupuestal" visible="true" columna-visible="true" calcCliente="@concatenar(@ifThenElse(%nlRequisicionBS.cpRequisicionBS.id_unidad_ejecutora_gasto%==null,'',%nlRequisicionBS.cpRequisicionBS.id_unidad_ejecutora_gasto%)+' '+@ifThenElse(%id_fondo_contable%==null,'',%id_fondo_contable%)+' '+@ifThenElse(%id_cog%==null,'',%id_cog%)+' '+@ifThenElse(%id_fuente_financiamiento%==null,'',%id_fuente_financiamiento%)+' '+@ifThenElse(%programa_presupuestal%==null,'',%programa_presupuestal%)+' '+@ifThenElse(%eje_pide%==null,'',%eje_pide%)+' '+@ifThenElse(%proceso_proyecto%==null,'',%proceso_proyecto%)+' '+@ifThenElse(%detalle_proceso_proyecto%==null,'',%detalle_proceso_proyecto%))" columnas="3" margen-izquierdo="1"/>
+                        <campo name="indicador" text="Indicador" local="true" type="string" calcCliente="@consultaDirec('SELECT nombre AS indicador FROM catalog.ficha_indicador WHERE ur='+%ur%+' AND periodo='+%periodo%+' AND id_cat=\\''+%programa_presupuestal%+'\\'','indicador','string','MAGNITUS')" visible="true" columna-visible="false" columnas="3"  habilitado="false"/>
+                        <campo name="cantidad" text="Cantidad" validacion="%cantidad%==null" validacionMensaje="Debe Capturarse Cantidad" visible="true" columna-visible="true" columnas="3" />
+                        <campo name="precio_unitario" text="Precio Unitario" validacion="%precio_unitario%==null" validacionMensaje="Debe Capturarse Precio Unitario" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1" formatoMoneda="true"/>
+                        <campo name="descuento" text="Descuento" visible="true" columna-visible="false" columnas="3"  formatoMoneda="true"/>
+                        <campo name="id_tasa_iva" text="% IVA" descripcionForanea="descripcion" validacion="%id_tasa_iva%==null" validacionMensaje="Debe Capturarse Tasa IVA" visible="true" columna-visible="false" columnas="3"/>
+                        <campo name="tasa_iva" text="Tasa" calcCliente="@consultaDirec('SELECT tasa_iva AS result FROM catalog.tasa_iva WHERE id_tasa_iva='+%id_tasa_iva%,'result','decimal','MAGNITUS')" habilitado="false" visible="false" columna-visible="false"/>
+                        <campo name="iva" text="Impuesto al Valor Agregado" calcCliente="%precio_unitario% * %tasa_iva%" habilitado="false" visible="true" columna-visible="false" columnas="3" margen-izquierdo="1" formatoMoneda="true"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos" visible="true" columna-visible="false" columnas="3"  formatoMoneda="true"/>
+                        <campo name="importe" text="Importe Unitario" calcCliente="%precio_unitario% - %descuento% + %iva% + %otros_impuestos%" visible="true" columna-visible="true" columnas="3" formatoMoneda="true"/>
+                        <campo name="importe_total" text="Importe Total" calcCliente="%cantidad% * %importe%" muestraAcumulado="true" habilitado="false" visible="true" columna-visible="true" columnas="3" margen-izquierdo="1" formatoMoneda="true"/>
+                        <!--<campo name="adjunta" text="Adjuntar" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Adjunto Requisición'" grupo="%nlRequisicionBS.cpRequisicionBS.folio_req%" expediente="%concatenaExpediente.concatenaExpediente.expediente%" columnas="6"  archivosAceptados="application/pdf"/>-->
+                        <campo name="fecha_registro" text="Fecha de Registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                        <!--
+                        <campo name="val_clave" text="Val Clave" local="true" type="long" calcCliente="@consultaDirec('SELECT COUNT(*)
+ AS result FROM operation.presupuesto_egresos_mes_det WHERE id_unidad_responsable='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND clave_presupuestal=\\''+%clave_presupuestal%+'\\'' AND mes='+%mes%+'','result','int','MAGNITUS')" validacion="%val_clave%!=1" validacionMensaje="'No existe la clave presupuestal'" visible="false" columna-visible="false"/>
+ -->
+                        <validaciones>
+                            <validacion tipo="avanzar"  validacion="@consultaDirec('SELECT * FROM reportes.autoriza_req_proc2('+'\\''+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+'\\''+','+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\''+','+'\\''+%nlRequisicionBS.cpRequisicionBS.folio_req%+'\\''+','+'\\''+'CONSULTA'+'\\''+') AS result','result','string','MAGNITUS')=='ERROR'" validacionMensaje="'Sin Disponibilidad'"/>
+                        </validaciones>
+                        <!--<ejecutarMD> 
+                            <alAgregarRegistro>
+                                <nivel id="acumula_req" interactivo="false" nombre="Acumular">
+                                    <componente id="acumula_req" tipo="cursor" nombre="Acumular">
+                                        <tabla schema="operation" nombre="requisicion">
+                                            <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                                            <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                                            <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                                            <campo name="total_descuento" calc="@consultaDirec('SELECT SUM(descuento) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                            <campo name="total_importe" calc="@consultaDirec('SELECT SUM(importe) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                            <campo name="total" calc="@consultaDirec('SELECT SUM(importe_total) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                        </tabla>
+                                        <nivel id="letra_req" interactivo="false" nombre="Letra">
+                                            <componente id="letra_req" tipo="cursor" nombre="Letra">
+                                              <tabla schema="operation" nombre="requisicion">
+                                                 <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                                                 <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                                                 <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                                                 <campo name="total_letra" calc="@numeroAletra(@castTo(%acumula_req.acumula_req.total%,'float'),'Pesos M.N.')"/>
+                                              </tabla>
+                                            </componente>
+                                        </nivel>
+                                    </componente>
+                               </nivel>
+                            </alAgregarRegistro>
+                            <alEditarRegistro>
+                                <nivel id="edita_req" interactivo="false" nombre="EditaReq">
+                                    <componente id="edita_req" tipo="cursor" nombre="EditaReq">
+                                        <tabla schema="operation" nombre="requisicion">
+                                            <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                                            <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                                            <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                                            <campo name="total_descuento" calc="@consultaDirec('SELECT SUM(descuento) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                            <campo name="total_importe" calc="@consultaDirec('SELECT SUM(importe) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                            <campo name="total" calc="@consultaDirec('SELECT SUM(importe_total) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                        </tabla>
+                                        <nivel id="letra_req1" interactivo="false" nombre="Letra">
+                                            <componente id="letra_req1" tipo="cursor" nombre="Letra">
+                                              <tabla schema="operation" nombre="requisicion">
+                                                 <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                                                 <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                                                 <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                                                 <campo name="total_letra" calc="@numeroAletra(@castTo(%edita_req.edita_req.total%,'float'),'Pesos M.N.')"/>
+                                              </tabla>
+                                            </componente>
+                                        </nivel>
+                                    </componente>
+                               </nivel>
+                            </alEditarRegistro>
+                            <alEliminarRegistro>
+                                <nivel id="resta_req" interactivo="false" nombre="Restar">
+                                    <componente id="resta_req" tipo="cursor" nombre="Restar">
+                                        <tabla schema="operation" nombre="requisicion">
+                                            <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                                            <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                                            <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                                            <campo name="total_descuento" calc="@consultaDirec('SELECT SUM(descuento) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                            <campo name="total_importe" calc="@consultaDirec('SELECT SUM(importe) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                            <campo name="total" calc="@consultaDirec('SELECT SUM(importe_total) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                                        </tabla>
+                                        <nivel id="letra_req2" interactivo="false" nombre="Letra">
+                                            <componente id="letra_req2" tipo="cursor" nombre="Letra">
+                                              <tabla schema="operation" nombre="requisicion">
+                                                 <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                                                 <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                                                 <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                                                 <campo name="total_letra" calc="@numeroAletra(@castTo(%resta_req.resta_req.total%,'float'),'Pesos M.N.')"/>
+                                              </tabla>
+                                            </componente>
+                                        </nivel>
+                                    </componente>
+                               </nivel>
+                            </alEliminarRegistro>
+                        </ejecutarMD>-->
+                    </tabla>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                    </componente>
+                     
+        </nivel>
+                    <!--<estilos>
+                        <boton nombre="formulario" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                        <boton nombre="grabar" visible="true" texto="Avanzar" posicion="derecha"/>
+                    </estilos>-->
+                
+                
+                
+                
+                <!--<pie>
+                    <tabla schema="operation" nombre="requisicion" tituloPie="Totales">
+                        <campo name="total_importe" text="Importe Total"/>
+                    </tabla>
+                </pie>-->
+            
+        <!--<nivel id="nlacumularequiporclavepres" nombre="cumularequiporclavepres" mostrarProximoNivel="false" interactivo="false">
+            <componente id="acumularequiporclavepres" nombre="acumularequiporclavepres" tipo="cursor">
+                <tabla schema="operation" nombre="requisicion">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+                    <campo name="folio_req" filtroCampo="folio_req" filtroOperador="=" filtroValor="$inParam.requisicion$"/>
+                    <campo name="acumula_pres" calc="true"/> 
+                </tabla>
+           </componente>
+        </nivel>-->
+        <nivel id="acumula_req" interactivo="false" nombre="Acumular">
+            <componente id="acumula_req" tipo="cursor" nombre="Acumular">
+                <tabla schema="operation" nombre="requisicion">
+                    <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                    <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                    <campo name="total_descuento" calc="@consultaDirec('SELECT SUM(descuento) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                    <campo name="total_importe" calc="@consultaDirec('SELECT SUM(importe) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                    <campo name="total" calc="@consultaDirec('SELECT SUM(importe_total) AS result FROM operation.requisicion_detalle WHERE ur='+%buscaPeriodo.buscaPeriodo.id_unidad_responsable%+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND folio_req='+%nlRequisicionBS.cpRequisicionBS.folio_req%,'result','long','MAGNITUS')"/>
+                    <campo name="estatus_duep" calc="1"/>
+                </tabla>
+                <nivel id="letra_req" interactivo="false" nombre="Letra">
+                    <componente id="letra_req" tipo="cursor" nombre="Letra">
+                        <tabla schema="operation" nombre="requisicion">
+                            <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" llaveForanea="false"/>
+                            <campo name="periodo" text="Periodo Contable" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false"/>
+                            <campo name="folio_req" text="Requisición" filtroCampo="folio_req" filtroOperador="=" filtroValor="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                            <campo name="total_letra" calc="@numeroAletra(@castTo(%acumula_req.acumula_req.total%,'float'),'Pesos M.N.')"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!--<nivel id="nlCreaCP" nombre="CreaClave" interactivo="false">
+            <componente id="cpCreaCP" nombre="CreaClave" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="clave_presupuestal" local="true" type="string" calc="@consultaDirec('update operation.requisicion_detalle a set clave_presupuestal = b.id_unidad_ejecutora_gasto ||\\-\\||id_fondo_contable||\\-\\|| substring(articulo,1,5) || \\-\\||id_fuente_financiamiento|| \\-\\||programa_presupuestal from operation.requisicion b where a.ur= b.ur and a.periodo = b.periodo and a.folio_req = b.folio_req,'resultado','string','MAGNITUS')"/>
+                </tabla>
+            </componente>    
+        </nivel>-->
+
+        
+        <nivel nombre="Agregar Instancia Req" id="nlAgrInsReq" interactivo="false">
+            <componente tipo="solicitud" nombre="Agregar Instancia" id="nlAgrInsReq">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'f1007b4a-da48-4010-910c-4cf42cd73e17'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_requisicion" calc="%nlRequisicionBS.cpRequisicionBS.folio_req%" mostrarEsc="true"/>
+                    <parametro name="out_centro_registro" calc="%nlRequisicionBS.cpRequisicionBS.id_unidad_ejecutora_gasto%" mostrarEsc="true"/>
+                    <parametro name="out_concepto" calc="%nlRequisicionBS.cpRequisicionBS.concepto%" mostrarEsc="true"/>
+                    <parametro name="out_expediente" calc="%concatenaExpediente.concatenaExpediente.expediente%" mostrarEsc="true"/>
+                    <parametro name="out_total" calc="%acumula_req.acumula_req.total%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="reporteRequisicion" nombre="Reporte de Requisición" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpConsReq" nombre="Reporte Consulta Requisición de Bienes o Servicios" tipo="reporte">
+                <reporte nombre="Requisicion" expediente="%concatenaExpediente.concatenaExpediente.expediente%" nombreDocumento="'Requisición'" 
+                         grupo="%nlRequisicionBS.cpRequisicionBS.folio_req%" url="$config.repository_upload_file$" update="true"> 
+                    <campo name="id_unidad_responsable" text="ur" type="long" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="$protocolarios.user$"/>
+                    <campo name="folio_req" type="long" calc="%nlRequisicionBS.cpRequisicionBS.folio_req%"/>
+                </reporte>
+            </componente>
+        </nivel>
+
+    </pagina>
+</tarea>
