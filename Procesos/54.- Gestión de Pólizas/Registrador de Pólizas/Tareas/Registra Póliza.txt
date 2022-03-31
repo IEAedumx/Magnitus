@@ -1,0 +1,403 @@
+<tarea id="gestionPolizaTarea" nombre="Gestión de Pólizas" version="1">
+    <pagina id="gestionPolizaPagina"> 
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel id="gestionPolizaNivel" nombre="Gestión de Pólizas" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="gestionPolizaComp" nombre="Gestión de Pólizas" tipo="formulario" accionDefault ="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1" visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" local="true" type="string" visible="false"/>
+                    <campo name="selecOpcion" text="Selecciona una opción:" local="true" type="long" validacion="%selecOpcion%==null" validacionMensaje="Favor de seleccionar una  opción" columnas="2" margen-izquierdo="4" margen-derecho="4">
+                        <opciones>
+                            <opcion texto="AGREGAR" valor="1"/>
+                            <opcion texto="CANCELAR" valor="2"/>
+                        </opciones>
+                    </campo>
+                    <campo name="fecha" text="Fecha de la Póliza" local="true" type="date" interaccion-visible="%selecOpcion%==1" visible="false" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="%gestionPolizaNivel.gestionPolizaComp.fecha%==null AND %gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1" validacionMensaje="'FECHA VACÍA'"/>
+            </validaciones>
+        </nivel> 
+        <!--EMPIEZA A GENERAR UNA NUEVA -->
+        <nivel id="generaFolioOficioGCAlta" nombre="generaFolioOficioGCAlta" interactivo="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1">
+            <componente id="generaFolioOficioGCAlta" nombre="generaFolioOficioGCAlta" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="$config.ur$" />
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" visible="false" autogenerado="true"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel id="actualizaFolioPoliza" nombre="actualizaFolioPoliza" interactivo="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1">
+            <componente id="actualizaFolioPoliza" nombre="actualizaFolioPoliza" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares"> 
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%buscaPeriodo.buscaPeriodo.id_periodo%+'-T'+@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt;10,'00000',@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt; 100,'0000',@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt; 1000,'000',@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt; 10000,'00',@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel id="AP" nombre="Agregar Poliza" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1">
+            <componente id="agregarPoliza" nombre="Agregar Poliza" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="movimientos_auxiliares">
+                        <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$config.ur$"/>
+                        <campo name="periodo" text="Periodo" visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                        <campo name="folio_movimiento_auxiliar" text="folio_movimiento_auxiliar" calc="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%" visible="false"/>
+
+                        <campo name="folio_reporte" text="Folio" calc="%actualizaFolioPoliza.actualizaFolioPoliza.folio_reporte%" columnas="2" margen-izquierdo="1" columnaImportacion="Folio Reporte" validacionImportacion="@ifThenElse(%folio_reporte%==0, true, false)" importacion="true"/>
+                        <campo name="fecha_poliza" text="Fecha" calc="%gestionPolizaNivel.gestionPolizaComp.fecha%+' 00:00:00'" columnas="4"/><!--calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"--> 
+                        <campo name="tipo_poliza" text="Tipo Poliza" validacion="%tipo_poliza%==null" validacionMensaje="Favor de Seleccionar un Tipo de Póliza" columnas="2" llavesFijas="id_tipo_poliza=1 OR id_tipo_poliza=2 OR id_tipo_poliza=3 OR id_tipo_poliza=6 OR id_tipo_poliza=7"/>
+                        
+                        <campo name="id_catalogo" text="Id Catálogo" visible="false" llaveForanea="false" calc="3"/>
+                        <campo name="fondo_contable" text="Fondo" validacion="%fondo_contable%==null" validacionMensaje="Favor de Seleccionar Fondo Contable." descripcionForanea="id_cat, descripcion" columnas="2" margen-izquierdo="1" llavesFijas="afectable=true"/>
+                        <campo name="periodo_mensual" text="Mes" visible="false" columnas="3" margen-izquierdo="2" calc="@subCadena(%gestionPolizaNivel.gestionPolizaComp.fecha%,5,7)" habilitado="false"/>
+                        <campo name="momento_contable" text="Momento Contable" visible="true" habilitado="false" columnas="4" />
+                        <campo name="str_estatus_poliza" text="Estatus Poliza" calc="'GENERADA'" type="string" local="true" columnas="2" habilitado="false" />
+
+                        <campo name="estatus_poliza" text="Estatus Poliza" calc="1" habilitado="false" visible="false"/>
+                        <campo name="duep_origen" text="Folio Origen" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="origen_poliza" text="Origen Poliza" validacion="%origen_poliza%==null" validacionMensaje="Favor de Seleccionar un Origen Poliza" calc="3" columnas="4" /> 
+                        <!--<campo name="encabezado" text="Adjunta Documento" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Soporte'" grupo="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%" expediente="Expediente Poliza Contable/Soporte" columnas="2" />-->
+
+                        <campo name="concepto_general" text="Concepto General" height="200" columnas="8" margen-izquierdo="1"/> 
+                        <campo name="ultimo_usuario_modificador" text="Usuario Modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                    </acciones>
+                </encabezado>
+                <detalles mostrarImportar="false">
+                    <tabla id="identificador_detalle_1" schema="operation" nombre="detalle_movimientos_auxiliares" tituloDetalle="Renglones de las Cuentas">
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_periodo" text="Identificador de Periodo" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="id_movimiento_auxiliar" text="Identificador de Movimiento Auxiliar" llaveForanea="false" columna-visible="false" visible="false"/>
+                        
+                        <campo name="fecha_registro" text="Fecha Registro" calc="%gestionPolizaNivel.gestionPolizaComp.fecha%+' 00:00:00'" visible="false" columna-visible="false" />
+                        <campo name="id_detalle_movimiento_auxiliar" text="Renglón" generacion="@prox()+1" autogenerado="true" visible="false" width="65" /> 
+                        <campo name="id_beneficiario_ganador" text="Beneficiario" descripcionForaneaTabla="razon_social" columnas="5" autoFiltrado="true" autoFiltradoDescripcion="folio_beneficiario,razon_social" width="100" validacion="%id_beneficiario_ganador%==null" validacionMensaje="Debe Capturar al Beneficiario"/> 
+                        <campo name="clave_cuenta_contable" text="Cuenta Contable" descripcionForaneaTabla="clave_cuenta,descripcion" descripcionForanea="clave_cuenta,descripcion" validacion="%clave_cuenta_contable%==null" validacionMensaje="Debe Capturar la Cuenta Contable" columnas="5" autoFiltrado="true" autoFiltradoDescripcion="clave_cuenta,descripcion" llavesFijas="tipo_cuenta=2" filtradoInteractivo="'cast(substring(clave_cuenta,1,1) as int)&lt;4'" width="195"/>
+                        
+                        <!--<campo name="clave_presupuestal" text="Clave Presupuestal" habilitado="false" columnas="3" margen-izquierdo="1"/>-->
+                        <campo name="referencia" text="Referencia" columnas="4" width="90" validacion="%referencia%==null" validacionMensaje="Debe Asignar una Referencia"/>
+                        <campo name="importe_cargo" text="Importe de Cargo" columnas="3" calcCliente="@ifThenElse(%importes_negativos%==true,%importe_cargo%*-1,%importe_cargo%)"  formatoMoneda="true" muestraAcumulado="true" width="145" cellsalign="right" />
+                        <campo name="importe_abono" text="Importe Abono" columnas="3" calcCliente="@ifThenElse(%importes_negativos%==true,%importe_abono%*-1,%importe_abono%)" formatoMoneda="true" muestraAcumulado="true" width="145" cellsalign="right"/>
+                        <campo name="importes_negativos" text="Importes Negativos" local="true" type="bool" columnas="4" margen-izquierdo="3" margen-derecho="3" columna-visible="false" />
+
+                        <campo name="concepto_bloque" text="Concepto de Renglon" height="200" marcador="Concepto Renglón" validacion="%concepto_bloque%==null" validacionMensaje="Favor de agregar concepto de Renglón" columnas="10"/>
+                        <campo name="ultimo_usuario_modificador" text="Ultimo usuario modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" llaveForanea="false" columna-visible="false" visible="false"/>
+                        <campo name="tipo_detalle" calc="2" visible="false" columna-visible="false"/> 
+                    </tabla> 
+                </detalles>
+                <!--<pie>
+                    <tabla schema="operation" nombre="movimientos_auxiliares" tituloPie="Titulo de Detalle de moviemientos Pie">
+                        <campo name="importe_total_cargo" text="Importe Total de Cargo"/>
+                        <campo name="importe_total_abono" text="Importe Total de Abono"/>
+                    </tabla>
+                </pie>-->
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="(%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1 
+                                                        AND (
+                                                        @consultaDirec('select sum(importe_cargo) as resultado_uno from operation.detalle_movimientos_auxiliares where ur='+'\\''+%generaFolioOficioGCAlta.generaFolioOficioGCAlta.ur%+'\\''+' AND id_periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\''+ ' AND id_movimiento_auxiliar='+'\\''+%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%+'\\'','resultado_uno','float','MAGNITUS') != @consultaDirec('select sum(importe_abono) as resultado_dos from operation.detalle_movimientos_auxiliares where ur='+'\\''+%generaFolioOficioGCAlta.generaFolioOficioGCAlta.ur%+'\\''+' AND id_periodo='+'\\''+%buscaPeriodo.buscaPeriodo.id_periodo%+'\\''+ ' AND id_movimiento_auxiliar='+'\\''+%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%+'\\'','resultado_dos','float','MAGNITUS')
+                                                        )
+                                                        )" validacionMensaje="'Las sumas del Cargo y del Abono no son Iguales'"/>
+            </validaciones>
+        </nivel>
+        <!--TERMINA LA OPCION DE AGREGAR-->
+
+        <!-- EMPIEZA LA OPCION DE CANCELAR -->
+        <nivel id="CP" nombre="Cancelar Poliza" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==2">
+            <componente id="cancelarPoliza" nombre="Cancelar Poliza" tipo="tabla" filtro="true" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false" ejecutarComponente="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==2">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" columna-visible="false" visible="true" habilitado="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="Periodo" descripcionForanea="id_periodo" visible="true" habilitado="false" columna-visible="false" interaccion="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" text="Folio" habilitado="false"/>
+                    <campo name="fecha_poliza" text="Fecha Poliza" habilitado="false"/>
+                    <campo name="periodo_mensual" text="Periodo Mensual" habilitado="false" columna-visible="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" habilitado="false" columna-visible="false"/>
+                    <campo name="momento_contable" text="Momento Contable" habilitado="false" columna-visible="false"/>
+                    <campo name="duep_origen" text="Folio" habilitado="false" columna-visible="false"/>
+                    <campo name="origen_poliza" text="Origen Poliza" filtroCampo="origen_poliza" habilitado="false" filtroOperador="=" filtroValor="3" columna-visible="false"/>
+                    <campo name="tipo_poliza" text="Tipo Poliza" habilitado="false"/>
+                    <campo name="concepto_general" text="Concepto General" habilitado="false"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario Modificador" visible="false" habilitado="false"/>
+                    <campo name="estatus_poliza" text="Estatus Poliza" filtroCampo="estatus_poliza" filtroOperador="=" filtroValor="2"/>
+                    <campo name="cancela" text="Cancela" editable="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="nl_Consulta_Agregar" nombre="Consulta De Poliza para Autorización" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1" interactivo="false">
+            <componente tipo="reporte" id="cp_Consulta_Agregar" nombre="Consulta De Poliza para Autorización">
+                <reporte nombre="polizacontable" url="$config.repository_upload_file$" update="true" nombreDocumento="'Póliza Contable'" grupo="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%" expediente="Expediente Póliza Contable">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="$config.ur$" />
+                    <campo name="periodo" type="long" calc="%AP.agregarPoliza.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <!--TERMINA LA OPCION DE CANCELAR-->
+
+        <!--EMPIEZA LA OPCION DE AGREGAR POLIZA OPCION 1
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1" interactivo="false">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'f341d53d-ac4a-4356-9ada-30bcd646754b'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%AP.agregarPoliza.ur%"/>
+                    <parametro name="out_periodo" calc="%AP.agregarPoliza.periodo%" mostrarEsc="true"/>
+                    <parametro name="out_folio" calc="%AP.agregarPoliza.folio_movimiento_auxiliar%"/>
+                    <parametro name="out_folio_reporte" calc="%AP.agregarPoliza.folio_reporte%" mostrarEsc="true"/>
+                    <parametro name="out_fecha" calc="%AP.agregarPoliza.fecha_poliza%" mostrarEsc="true"/>
+                    <parametro name="out_tipo_poliza" calc="%AP.agregarPoliza.tipo_poliza%" mostrarEsc="true"/>
+                    <parametro name="out_origen_poliza" calc="%AP.agregarPoliza.origen_poliza%" mostrarEsc="true"/>
+                    <parametro name="out_importe_cargo" calc="%AP.identificador_detalle_1.importe_cargo%" mostrarEsc="true"/>
+                    <parametro name="out_importe_abono" calc="%AP.identificador_detalle_1.importe_abono%" mostrarEsc="true"/>
+                    <parametro name="out_estatus_poliza" calc="%AP.agregarPoliza.estatus_poliza%" mostrarEsc="true"/>
+                    <parametro name="out_operacion" calc="1" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        MODIFICACION-->
+
+        <!-- OPCION 1 -->
+        <nivel id="barreDetallePoliza1" nombre="barreDetallePoliza1" interactivo="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1">
+            <componente id="barreDetallePoliza1" nombre="barreDetallePoliza1" tipo="cursor">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%AP.agregarPoliza.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%AP.agregarPoliza.periodo%"/>
+                    <campo name="id_movimiento_auxiliar" filtroCampo="id_movimiento_auxiliar" filtroOperador="=" filtroValor="%AP.agregarPoliza.folio_movimiento_auxiliar%"/>
+                    <campo name="id_detalle_movimiento_auxiliar"/>
+                    <campo name="clave_cuenta_contable"/>
+                    <campo name="referencia"/>
+                    <campo name="fecha_registro"/>
+                    <campo name="importe_cargo"/>
+                    <campo name="importe_abono"/>
+                    <campo name="total_importe_cargo" local="true" type="decimal" calc="@consultaDirec('select sum(importe_cargo) as resultado from operation.detalle_movimientos_auxiliares where ur='+'\\''+%AP.agregarPoliza.ur%+'\\''+' AND id_periodo='+'\\''+%AP.agregarPoliza.periodo%+'\\''+ ' AND id_movimiento_auxiliar='+'\\''+%AP.agregarPoliza.folio_movimiento_auxiliar%+'\\'','resultado','long','MAGNITUS')"/>
+                    <campo name="total_importe_abono" local="true" type="decimal" calc="@consultaDirec('select sum(importe_abono) as resultados from operation.detalle_movimientos_auxiliares where ur='+'\\''+%AP.agregarPoliza.ur%+'\\''+' AND id_periodo='+'\\''+%AP.agregarPoliza.periodo%+'\\''+ ' AND id_movimiento_auxiliar='+'\\''+%AP.agregarPoliza.folio_movimiento_auxiliar%+'\\'','resultados','long','MAGNITUS')"/>
+                    <campo name="id_beneficiario_ganador"/>
+
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="sumaPoliza1" nombre="sumaPoliza1" interactivo="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1">
+            <componente id="barrePoliza1" nombre="barrePoliza1" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" columna-visible="false" visible="true" habilitado="false" filtroCampo="ur" filtroOperador="=" filtroValor="%AP.agregarPoliza.ur%"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%AP.agregarPoliza.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" text="Folio" habilitado="false" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%AP.agregarPoliza.folio_movimiento_auxiliar%"/>
+                    <campo name="importe_total_cargo" calc="%barreDetallePoliza1.barreDetallePoliza1.total_importe_cargo%"/>
+                    <campo name="importe_total_abono" calc="%barreDetallePoliza1.barreDetallePoliza1.total_importe_abono%"/>
+                    <campo name="id_beneficiario_ganador" calc="%barreDetallePoliza1.barreDetallePoliza1.id_beneficiario_ganador%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="PContable" nombre="Póliza Contable" mostrarNivelAnterior="false" mostrarProximoNivel="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1">
+            <componente id="cpAutorizaPoliza" nombre="Póliza Contable" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="Expediente Poliza Contable/Poliza Original" nombreDocumento="'Poliza Original'" grupo="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo($config.ur$,'long')" />
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+            <componente id="cpAutorizaPoliza2" nombre="Autoriza Póliza" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" calc="%AP.agregarPoliza.ur%" visible="false" />
+                    <campo name="periodo" calc="%AP.agregarPoliza.periodo%" visible="false" />
+                    <campo name="folio_movimiento_auxiliar" calc="%AP.agregarPoliza.folio_movimiento_auxiliar%" visible="false" />
+                    <campo name="estatus" local="true" type="bool" text="Autorizar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                    <campo name="observaciones" text="Observaciones *" height="100" interaccion-visible="%estatus%==false" validacion="%observaciones%==null AND %estatus%==false" validacionMensaje="Favor de insertar una descripción para continuar." columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" columnas="2" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente> 
+        </nivel>
+        <nivel id="nlActualizaEstatusAgrega" nombre="Actualiza Estatus Agrega Póliza" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1 AND %PContable.cpAutorizaPoliza2.estatus%==true" interactivo="false">
+            <componente id="cpActualizaEstatusAgrega" nombre="Actualiza Estatus Agrega Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%AP.agregarPoliza.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%AP.agregarPoliza.periodo%" />
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%AP.agregarPoliza.folio_movimiento_auxiliar%" />
+                    <campo name="estatus_poliza" calc="2" />
+                    <campo name="usuario_autorizador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--FIN DEL OPCION 1-->
+        <!--OPCION 2  -->
+        <nivel id="barrePoliza" nombre="barrePoliza" interactivo="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==2">
+            <componente id="barrePoliza" nombre="barrePoliza" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" columna-visible="false" visible="true" habilitado="false" filtroCampo="ur" filtroOperador="=" filtroValor="%CP.cancelarPoliza.ur%"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%CP.cancelarPoliza.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" text="Folio" habilitado="false"/>
+                    <campo name="fecha_poliza"/>
+                    <campo name="periodo_mensual"/>
+                    <campo name="fondo_contable"/>
+                    <campo name="momento_contable"/>
+                    <campo name="estatus_poliza" filtroCampo="estatus_poliza" filtroOperador="=" filtroValor="2"/>
+                    <campo name="duep_origen"/>
+                    <campo name="origen_poliza" filtroCampo="origen_poliza" habilitado="false" filtroOperador="=" filtroValor="3"/>
+                    <campo name="tipo_poliza"/>
+                    <campo name="concepto_general"/>
+                    <campo name="ultimo_usuario_modificador"/>
+                    <campo name="folio_reporte"/>
+                    <campo name="importe_total_cargo" />
+                    <campo name="importe_total_abono" />
+                    <campo name="id_catalogo"/>
+                    <campo name="observaciones"/>
+                    <campo name="id_transaccion_extrapresupuestal"/>
+                    <campo name="duep_solicitud_viaticos"/>
+                    <campo name="folio_duri_devengado_ingreso"/>
+                    <campo name="cancela" filtroCampo="cancela" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="cancelaPoliza" nombre="cancela Poliza" interactivo="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==2">
+            <componente id="cancelaPoliza" nombre="cancela Poliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="%barrePoliza.barrePoliza.ur%"/>
+                    <campo name="periodo" text="Periodo" calc="%barrePoliza.barrePoliza.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="fecha_poliza" calc="%barrePoliza.barrePoliza.fecha_poliza%"/>
+                    <campo name="periodo_mensual" calc="%barrePoliza.barrePoliza.periodo_mensual%"/>
+                    <campo name="fondo_contable" calc="%barrePoliza.barrePoliza.fondo_contable%"/>
+                    <campo name="momento_contable" calc="%barrePoliza.barrePoliza.momento_contable%"/>
+                    <campo name="estatus_poliza" calc="3"/>
+                    <campo name="duep_origen" calc="%barrePoliza.barrePoliza.duep_origen%"/>
+                    <campo name="origen_poliza" calc="%barrePoliza.barrePoliza.origen_poliza%"/>
+                    <campo name="tipo_poliza" calc="%barrePoliza.barrePoliza.tipo_poliza%"/>
+                    <campo name="concepto_general" calc="%barrePoliza.barrePoliza.concepto_general%"/>
+                    <campo name="ultimo_usuario_modificador" calc="%barrePoliza.barrePoliza.ultimo_usuario_modificador%"/>
+                    <campo name="folio_reporte" calc="%barrePoliza.barrePoliza.folio_reporte%"/>
+
+                    <campo name="id_catalogo" calc="%barrePoliza.barrePoliza.id_catalogo%"/>
+                    <campo name="cancela" calc="%barrePoliza.barrePoliza.cancela%"/>
+                    <campo name="observaciones" calc="%barrePoliza.barrePoliza.observaciones%"/>
+                    <campo name="id_transaccion_extrapresupuestal" calc="%barrePoliza.barrePoliza.id_transaccion_extrapresupuestal%"/>
+                    <campo name="duep_solicitud_viaticos" calc="%barrePoliza.barrePoliza.duep_solicitud_viaticos%"/>
+                    <campo name="folio_duri_devengado_ingreso" calc="%barrePoliza.barrePoliza.folio_duri_devengado_ingreso%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barreDetallePoliza" nombre="barreDetallePoliza" interactivo="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==2">
+            <componente id="barreDetallePoliza" nombre="barreDetallePoliza" tipo="cursor">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barrePoliza.barrePoliza.periodo%"/>
+                    <campo name="id_movimiento_auxiliar" filtroCampo="id_movimiento_auxiliar" filtroOperador="=" filtroValor="%barrePoliza.barrePoliza.folio_movimiento_auxiliar%"/>
+                    <campo name="id_detalle_movimiento_auxiliar"/>
+                    <campo name="clave_cuenta_contable"/>
+                    <campo name="clave_presupuestal"/>
+                    <campo name="referencia"/>
+                    <campo name="importe_cargo"/>
+                    <campo name="importe_abono"/>
+                    <campo name="concepto_bloque"/>
+                    <campo name="fecha_registro"/>
+                    <campo name="ultimo_usuario_modificador"/>
+                    <campo name="tipo_detalle"/>
+                </tabla>
+                <nivel id="barreDetalleAltaPolizaCargo" nombre="barreDetalleAltaPolizaCargo" ejecutar="%barreDetallePoliza.barreDetallePoliza.id_detalle_movimiento_auxiliar%!=null">
+                    <componente id="barreDetalleAltaPolizaCargo" nombre="barreDetalleAltaPolizaCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%barreDetallePoliza.barreDetallePoliza.ur%"/>
+                            <campo name="id_periodo" calc="%barreDetallePoliza.barreDetallePoliza.id_periodo%"/>
+                            <campo name="id_movimiento_auxiliar" calc="%cancelaPoliza.cancelaPoliza.folio_movimiento_auxiliar%"/>
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_cuenta_contable" calc="%barreDetallePoliza.barreDetallePoliza.clave_cuenta_contable%"/>
+                            <campo name="clave_presupuestal" calc="%barreDetallePoliza.barreDetallePoliza.clave_presupuestal%"/>
+                            <campo name="referencia" calc="%barreDetallePoliza.barreDetallePoliza.referencia%"/>
+                            <campo name="importe_cargo" calc="(%barreDetallePoliza.barreDetallePoliza.importe_cargo%*(-1))"/>
+                            <campo name="importe_abono" calc="(%barreDetallePoliza.barreDetallePoliza.importe_abono%*(-1))"/>
+                            <campo name="concepto_bloque" calc="%barreDetallePoliza.barreDetallePoliza.concepto_bloque%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreDetallePoliza.barreDetallePoliza.ultimo_usuario_modificador%"/>
+                            <campo name="tipo_detalle" calc="%barreDetallePoliza.barreDetallePoliza.tipo_detalle%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel id="lanzaInstanciaCancelar" nombre="lanzaInstanciaCancelar" interactivo="false" ejecutar="%cancelaPoliza.cancelaPoliza.ur%!=null">
+                    <componente id="lanzaInstanciaCancelar" nombre="lanzaInstanciaCancelar" tipo="solicitud">
+                        <parametros url="$config.request$" metodo="POST" tipo="json" accion="crearNuevaInstancia">
+                            <parametro name="enterprise" calc="'MAGNITUS'"/>
+                            <parametro name="process" calc="'f341d53d-ac4a-4356-9ada-30bcd646754b'"/>
+                            <parametro name="user" calc="$protocolarios.user$"/>
+                            <parametro name="out_ur" calc="%cancelaPoliza.cancelaPoliza.ur%"/>
+                            <parametro name="out_periodo" calc="%cancelaPoliza.cancelaPoliza.periodo%" mostrarEsc="true"/>
+                            <parametro name="out_folio" calc="%cancelaPoliza.cancelaPoliza.folio_movimiento_auxiliar%"/>
+                            <parametro name="out_folio_reporte" calc="" mostrarEsc="true"/>
+                            <parametro name="out_fecha" calc="%cancelaPoliza.cancelaPoliza.fecha_poliza%"/>
+                            <parametro name="out_tipo_poliza" calc="%cancelaPoliza.cancelaPoliza.tipo_poliza%" mostrarEsc="true"/>
+                            <parametro name="out_origen_poliza" calc="%cancelaPoliza.cancelaPoliza.origen_poliza%" mostrarEsc="true"/>
+                            <parametro name="out_importe_cargo" calc="%cancelaPoliza.cancelaPoliza.importe_total_cargo%" mostrarEsc="true"/>
+                            <parametro name="out_importe_abono" calc="%cancelaPoliza.cancelaPoliza.importe_total_abono%" mostrarEsc="true"/>
+                            <parametro name="out_estatus_poliza" calc="%cancelaPoliza.cancelaPoliza.estatus_poliza%" mostrarEsc="true"/>
+                            <parametro name="out_concepto" calc="%cancelaPoliza.cancelaPoliza.concepto_general%" mostrarEsc="true"/>
+                            <parametro name="out_operacion" calc="2" mostrarEsc="true"/>
+                        </parametros>
+                    </componente>
+                </nivel> -->
+            </componente>
+        </nivel>
+        <!--FIN MODIFICACION-->
+        <nivel id="nlAutorizaPolizaCancela1" nombre="Autorización de la Gestión de Pólizas" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1 AND %PContable.cpAutorizaPoliza2.estatus%==true">
+            <componente id="cpAutorizaPoliza1" nombre="Póliza Original" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="Expediente Poliza Contable/Poliza Original" nombreDocumento="'Poliza Original'" grupo="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo($config.ur$,'long')" />
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <nivel id="nlAutorizaPolizaCancela" nombre="Autorización de la Gestión de Pólizas" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==2">
+            <componente id="cpAutorizaPoliza" nombre="Póliza Original" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="Expediente Poliza Contable/Poliza Original" nombreDocumento="'Poliza Original'" grupo="%cancelaPoliza.cancelaPoliza.folio_movimiento_auxiliar%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="$config.ur$" />
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%barrePoliza.barrePoliza.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+            <componente id="cpAutorizaPoliza" nombre="Póliza Cancelada" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="Expediente Poliza Contable/Poliza Cancelada" nombreDocumento="'Poliza Cancelada'" grupo="%cancelaPoliza.cancelaPoliza.folio_movimiento_auxiliar%" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo($config.ur$,'long')" />
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%cancelaPoliza.cancelaPoliza.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
