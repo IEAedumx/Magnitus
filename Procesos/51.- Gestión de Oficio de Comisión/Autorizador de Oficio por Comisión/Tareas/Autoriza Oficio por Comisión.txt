@@ -1,0 +1,384 @@
+<tarea nombre="Consulta Oficio de Comisión" id="consultacomision">
+    <pagina id="1">
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+      
+        
+        <!--<nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+        
+        
+    <!-- INICIO DEL NIVEL DUMMY -->
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="folio_oficio" local="true" type="string" calc="$inParam.folio_oficio$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN DEL NIVEL DUMMY -->
+        
+         <nivel id="barreOficioComision" nombre="barreOficioComision" interactivo="false">
+            <componente tipo="cursor" id="barreOficioComision" nombre="barreOficioComision">
+                <tabla schema="catalog" nombre="oficio_comision">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_oficio" filtroCampo="id_oficio" filtroOperador="=" filtroValor="%inParam.inParam.folio_oficio%"/> 
+                    <campo name="comisionado_titular"/>
+                    <campo name="puesto"/>
+                    <campo name="pais_destino"/>
+                    <campo name="estado_destino"/>
+                    <campo name="municipio_destino"/>
+                    <campo name="folio_comision"/>
+                    <campo name="fecha_registro"/>
+                    <campo name="id_estatus"/>
+                    <campo name="tipo_comision"/>
+                    <campo name="fecha_salida"/>
+                    <campo name="fecha_regreso"/>
+                    <campo name="nombre_comision"/>
+                    <campo name="objetivo"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="barrePuesto" nombre="barrePuesto" interactivo="false">
+            <componente tipo="cursor" id="barrePuesto" nombre="barrePuesto">
+                <tabla schema="catalog" nombre="puesto">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_puesto" filtroCampo="id_puesto" filtroOperador="=" filtroValor="%barreOficioComision.barreOficioComision.puesto%"/>
+                    <campo name="nombre"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barreCatalogo" nombre="barreCatalogo" interactivo="false">
+            <componente tipo="cursor" id="barreCatalogo" nombre="barreCatalogo">
+                <tabla schema="catalog" nombre="catalogos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barreOficioComision.barreOficioComision.periodo%"/>
+                    <campo name="id_catalogo" filtroCampo="id_catalogo" filtroOperador="=" filtroValor="%barreOficioComision.barreOficioComision.id_cat_centro_registro%"/>
+                    <campo name="id_cat" filtroCampo="id_cat" filtroOperador="=" filtroValor="%barreOficioComision.barreOficioComision.id_centro_registro%"/>
+                    <campo name="descripcion"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Consulta Oficio de Comisión" id="registraOficio" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente tipo="formulario" nombre="Consulta Datos Generales de la Comisión" id="registraOficio" accionDefault="seleccionar"> <!-- -->
+                <tabla schema="catalog" nombre="oficio_comision">
+                    <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" visible="false" columna-visible="false" llaveForanea="false" calc="%inParam.inParam.periodo%" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_oficio" text="No." visible="false" calc="%barreOficioComision.barreOficioComision.id_oficio%" columnas="3" margen-izquierdo="2"/> 
+                    <campo name="comisionado_titular" text="Comisionado Titular" calc="%barreOficioComision.barreOficioComision.comisionado_titular%" columnas="3" margen-izquierdo="2" descripcionForanea="nombre,primer_apellido,segundo_apellido" habilitado="false"/>
+                    <campo name="puesto" text="Puesto num" referenciaForanea="comisionado_titular" celdaForanea="puesto" autocompletar="true" visible="false" llaveForanea="false" habilitado="false"/>
+                    <campo name="puesto_descr" text="Puesto" local="true" type="string" 
+                    columnas="3" margen-derecho="2" habilitado="false" calc="%barrePuesto.barrePuesto.nombre%"/>
+                    <campo name="centrouno" text="Centro uno" referenciaForanea="comisionado_titular" celdaForanea="id_cat_centro_registro" autocompletar="true" visible="false" llaveForanea="false" local="true" type="string"/>
+                    <campo name="centrodos" text="Centro dos" referenciaForanea="comisionado_titular" celdaForanea="id_centro_registro" autocompletar="true" visible="false" llaveForanea="false" local="true" type="string"/>
+                   
+                    <campo name="centro_descr" text="Centro de Registro" local="true" type="string" 
+                    columnas="3" margen-izquierdo="2" habilitado="false" calc="%barreCatalogo.barreCatalogo.descripcion%"/>
+
+                    <!--<etiqueta nombre="destino_comision" texto="Destino de Comisión" color="black" bold="normal" tamaño="18px" alineacion="left" interlineado="25px" width="500px"/>-->
+                    <campo name="pais_destino" text="País" calc="%barreOficioComision.barreOficioComision.pais_destino%" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="estado_destino" text="Estado" calc="%barreOficioComision.barreOficioComision.estado_destino%" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                    <campo name="municipio_destino" text="Municipio/Estado" calc="%barreOficioComision.barreOficioComision.municipio_destino%" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="folio_comision" text="Folio de Comisión" visible="true" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                    <campo name="fecha_registro" text="Fecha de elaboración" calc="%barreOficioComision.barreOficioComision.fecha_registro%" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="id_estatus" text="Estatus" calc="%barreOficioComision.barreOficioComision.id_estatus%"  columnas="3" margen-izquierdo="2" habilitado="false"/>
+                    <campo name="tipo_comision" text="Tipo de Comisión" calc="%barreOficioComision.barreOficioComision.tipo_comision%" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="fecha_salida" text="Fecha de salida" calc="%barreOficioComision.barreOficioComision.fecha_salida%" columnas="3" margen-izquierdo="2" habilitado="false"/>
+                    <campo name="fecha_regreso" text="Fecha de regreso" calc="%barreOficioComision.barreOficioComision.fecha_regreso%" columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="nombre_comision" text="Nombre de la Comisión" calc="%barreOficioComision.barreOficioComision.nombre_comision%" columnas="6" margen-izquierdo="2" margen-derecho="2" habilitado="false"/>
+                    <campo name="objetivo" text="Objetivo" calc="%barreOficioComision.barreOficioComision.objetivo%" columnas="6" margen-izquierdo="2" margen-derecho="2" height="200" habilitado="false"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="CONTINUAR" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="Consulta Integrantes de la Comisión" id="registraIntegrante" ejecutarComponente="%registraOficio.registraOficio.ur%!=null" mostrarEliminar="false"  mostrarEditar="false" mostrarAgregar="false">
+                <tabla schema="catalog" nombre="oficio_comision_integrantes">
+                     <campo name="ur" text="UR" visible="false" columna-visible="false" calc="%registraOficio.registraOficio.ur%" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" visible="false" columna-visible="false" descripcionForanea="id_periodo" calc="%registraOficio.registraOficio.periodo%" habilitado="false" llaveForanea="false"/>
+                    <campo name="oficio_comision" text="Oficio Comisión" calc="%registraOficio.registraOficio.id_oficio%" columna-visible="false" visible="false" llaveForanea="false"/>
+                    <campo name="folio_integrante" text="No." generacion="@prox()+1" autogenerado="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="usuario" text="Nombre" columnas="3" margen-derecho="2" descripcionForanea="nombre,primer_apellido,segundo_apellido" descripcionForaneaTabla="nombre,primer_apellido,segundo_apellido"/> <!-- -->
+                    
+                    <campo name="puesto_uno" text="Puesto" local="true" type="string" referenciaForanea="usuario" celdaForanea="puesto" autocompletar="true" visible="true" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                    <!--<campo name="puesto_descr_uno" text="Puesto" local="true" type="string" calcCliente="@ifThenElse(%puesto_uno%!=null,@consultaDirec('select nombre as resultado from catalog.puesto where id_unidad_responsable=1 AND id_puesto='+'\\''+%puesto_uno%+'\\'','resultado','string','MódulodeViaticos'),null)"
+                    columnas="3" margen-izquierdo="2" habilitado="false" columna-visible="false"/>-->
+                    <campo name="centrouno" text="Centro uno" local="true" type="string" referenciaForanea="usuario" celdaForanea="id_cat_centro_registro" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="centrodos" text="Centro dos" local="true" type="string" referenciaForanea="usuario" celdaForanea="id_centro_registro" autocompletar="true" visible="false" columna-visible="false"/>
+                   
+                    <campo name="folio_empleado" text="Clave de Empleado" columnas="3" margen-derecho="2" local="true" type="string" habilitado="false" columna-visible="true" referenciaForanea="usuario" celdaForanea="folio_usuario" autocompletar="true"/>
+                    <campo name="centro_descr" text="Centro de Registro" local="true" type="string" calcCliente="@consultaDirec('select descripcion as resultado_uno from catalog.catalogos where ur='+$config.ur$+' and id_periodo='+%inParam.inParam.id_periodo%+' and id_catalogo=2 and id_cat='+'\\''+ %centrodos% +'\\'','resultado_uno','string','MódulodeViaticos')"
+                   columnas="3" margen-izquierdo="2" habilitado="false" columna-visible="false"/>
+                    
+                </tabla>
+            </componente>
+            <componente tipo="tabla" nombre="Consulta Viaticos Requeridos" id="registraViaticos" ejecutarComponente="%registraOficio.registraOficio.ur%!=null" mostrarEliminar="false"  mostrarEditar="false" mostrarAgregar="false">
+                <tabla schema="catalog" nombre="oficio_comision_viaticos_requeridos">
+                    <campo name="ur" text="UR" visible="false" columna-visible="false" calc="%registraOficio.registraOficio.ur%" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" visible="false" columna-visible="false" descripcionForanea="id_periodo" calc="%registraOficio.registraOficio.periodo%" habilitado="false" llaveForanea="false"/>
+                    <campo name="oficio_comision" text="Oficio Comisión" calc="%registraOficio.registraOficio.id_oficio%" columna-visible="false" visible="false" llaveForanea="false"/>
+                    <campo name="folio_viatico" text="No." columnas="3" margen-izquierdo="2"/>
+                    <campo name="concepto_viatico" text="Concepto Viáticos" validacion="%concepto_viatico%!=null" validacionMensaje="Seleccione Concepto de Viático" columnas="3" margen-derecho="2" descripcionForanea="concepto_viatico" descripcionForaneaTabla="concepto_viatico"/> <!-- -->
+                    <campo name="descripcion" text="Descripción" validacion="%descripcion%=null=" validacionMensaje="Capture Descripción" columnas="3" margen-izquierdo="2"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" validacion="%unidad_medida%=null=" validacionMensaje="Capture Unidad de Medida" columnas="3" margen-derecho="2"/>
+                    <campo name="cantidad" text="Cantidad" validacion="%cantidad%=null=" validacionMensaje="Capture Cantidad" columnas="3" margen-izquierdo="2"/>
+                    <campo name="tarifa_persona" text="Tarifa por persona" validacion="%tarifa_persona%=null=" validacionMensaje="Capture Tarifa por Persona" columnas="3" margen-derecho="2"/>
+                    <campo name="costo_unitario" text="Costo Unitario" validacion="%costo_unitario%=null=" validacionMensaje="Capture Costo Unitario" columnas="3" margen-izquierdo="2"/>
+                    <campo name="total_estimado" text="Total Estimado" calcCliente="(@ifThenElse(%costo_unitario%==null,0,%costo_unitario%) * @ifThenElse(%cantidad%==null,0,%cantidad%))" columnas="3" margen-derecho="2" muestraAcumulado="true"/>
+                    <campo name="total" text="Total" columnas="3" margen-izquierdo="2" visible="false" columna-visible="false"/>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="CONTINUAR" />
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel nombre="Autoriza Oficio de Comisión" id="autorizaOficio" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente tipo="formulario" nombre="Autoriza Oficio de Comisión" id="autorizaOficio" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="oficio_comision">  
+                 <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" visible="false" columna-visible="false" llaveForanea="false" calc="%inParam.inParam.periodo%" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_oficio" text="No." visible="false" calc="%barreOficioComision.barreOficioComision.id_oficio%" columnas="3" margen-izquierdo="2"/> 
+                    <campo name="observaciones" text="Observaciones" interaccion="%autoriza%==false" validacion="%observaciones%==null AND %autoriza%==false" validacionMensaje="Favor de insertar una observación para continuar." 
+                    height="200" columnas="6" margen-derecho="2" margen-izquierdo="2"/> <!--mascara="C"-->
+                    <campo name="autoriza" text="Autoriza" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <componente tipo="reporte" nombre="Consulta Reporte Oficio de Comisión" id="registraReporte">
+                <reporte nombre="comision" expediente="Expediente de Viáticos/Oficio de Comisión" grupo="$inParam.folio_viaticos_gxc$" nombreDocumento="'Oficio de Comisión'" url="$config.repository_upload_file$" update="true">
+                    <campo name="id_unidad_responsable" type="long" calc="%barreOficioComision.barreOficioComision.ur%"/> 
+                    <campo name="id_periodo" type="long" calc="%barreOficioComision.barreOficioComision.periodo%"/> 
+                    <campo name="folio_comision" type="long" calc="%barreOficioComision.barreOficioComision.id_oficio%"/> 
+                    <campo name="nombre_usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/> 
+                </reporte>
+                 <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!--XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-->
+        
+      <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%autorizaOficio.autorizaOficio.autoriza%==false"> 
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado"> 
+                 <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                     <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                     <parametro name="process" calc="$protocolarios.process$"/>    
+                     <parametro name="version" calc="$protocolarios.version$"/> 
+                     <parametro name="user" calc="$protocolarios.user$"/>  
+                     <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                     <parametro name="message" calc="%autorizaOficio.autorizaOficio.observaciones%"/>
+                     <parametro name="type" calc="'1'"/> 
+                 </parametros> 
+             </componente>
+         </nivel>
+          <nivel nombre="Instancia Rechazo" id="RechazoInstancia" interactivo="false" ejecutar="%autorizaOficio.autorizaOficio.autoriza%==false">
+           <componente tipo="solicitud" nombre="Enlace con dynamo" id="RechazoInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                    <parametro name="out_observaciones" calc="%autorizaOficio.autorizaOficio.observaciones%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="barreOficio" nombre="barreOficio" interactivo="false" ejecutar="%autorizaOficio.autorizaOficio.autoriza%==true">
+            <componente id="barreOficio" nombre="barreOficio" tipo="cursor">
+                <tabla schema="catalog" nombre="oficio_comision">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_oficio" filtroCampo="id_oficio" filtroOperador="=" filtroValor="%inParam.inParam.folio_oficio%"/> 
+                    <campo name="comisionado_titular"/>
+                    <campo name="nombre_comisionado_titular" local="true" type="string" referenciaForanea="comisionado_titular" celdaForanea="nombre"/>
+                    <campo name="primer_apellido_comisionado_titular" local="true" type="string" referenciaForanea="comisionado_titular" celdaForanea="primer_apellido"/>
+                    <campo name="segundo_apellido_comisionado_titular" local="true" type="string" referenciaForanea="comisionado_titular" celdaForanea="segundo_apellido"/>
+                    <campo name="puesto"/>
+                    <campo name="pais_destino"/>
+                    <campo name="estado_destino"/>
+                    <campo name="municipio_destino"/>
+                    <campo name="folio_comision"/>
+                    <campo name="fecha_registro"/>
+                    <campo name="id_estatus"/>
+                    <campo name="tipo_comision"/>
+                    <campo name="fecha_salida"/>
+                    <campo name="fecha_regreso"/>
+                    <campo name="objetivo"/>
+                    <campo name="id_cat_centro_registro"/>
+                    <campo name="id_centro_registro"/>
+                    <campo name="total"/>
+                    <campo name="folio_comision"/>
+                </tabla>
+                <nivel id="grabaDUEP" nombre="grabaDUEP" interactivo="false" ejecutar="%barreOficio.barreOficio.ur%!=null">
+                    <componente id="grabaDUEP" nombre="grabaDUEP" tipo="altaDirect">
+                        <tabla schema="operation" nombre="duep_solicitud_viaticos">
+                            <campo name="ur" calc="%barreOficio.barreOficio.ur%"/>
+                            <campo name="periodo" calc="%barreOficio.barreOficio.periodo%"/>
+                            <campo name="folio_duep" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="tipo_comprobante" calc="4"/>
+                            <campo name="folio_comprobante"/>
+                            <campo name="folio_solicitud"/>
+                            <campo name="folio_duep_a"/>
+                            <campo name="fecha_solicitud" calc="@fechaSistema()"/>
+                            <campo name="fecha_autorizacion"/>
+                            <campo name="beneficiario"/>
+                            <campo name="tramite" calc="2"/>
+                            <campo name="id_cat_unidad_ejecutora_gasto" calc="%barreOficio.barreOficio.id_cat_centro_registro%"/>
+                            <campo name="id_unidad_ejecutora_gasto" calc="%barreOficio.barreOficio.id_centro_registro%"/>
+                            <campo name="concepto" calc="@concatenar(%barreOficio.barreOficio.folio_comision%+'-'+%barreOficio.barreOficio.objetivo%)"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="estatus_duep" calc="1"/>
+                            <campo name="folio_comision" calc="%barreOficio.barreOficio.id_oficio%"/>   
+                            <campo name="seleccion_comprobacion" calc="false"/>
+                            <campo name="total" calc="%barreOficio.barreOficio.total%"/>
+                            <!--<campo name="total_letra" calc="@numeroAletra(%barreOficio.barreOficio.total%,'M.N.')"/>-->
+                            <campo name="total_comprometido" calc="%barreOficio.barreOficio.total%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="generaFolioDUEP" nombre="generaFolioDUEP" interactivo="false" ejecutar="%autorizaOficio.autorizaOficio.autoriza%==true">
+            <componente id="generaFolioDUEP" nombre="generaFolioDUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_solicitud_viaticos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%grabaDUEP.grabaDUEP.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo"  filtroOperador="=" filtroValor="%grabaDUEP.grabaDUEP.periodo%"/> 
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%grabaDUEP.grabaDUEP.folio_duep%"/>
+                    <campo name="folio_duep_a" calc="@concatenar('VIAT-'+@ifThenElse(%generaFolioDUEP.generaFolioDUEP.folio_duep% &lt;10,'00000',@ifThenElse(%generaFolioDUEP.generaFolioDUEP.folio_duep% &lt; 100,'0000',@ifThenElse(%generaFolioDUEP.generaFolioDUEP.folio_duep% &lt; 1000,'000',@ifThenElse(%generaFolioDUEP.generaFolioDUEP.folio_duep% &lt; 10000,'00',@ifThenElse(%generaFolioDUEP.generaFolioDUEP.folio_duep% &lt; 100000,'0',null)))))+%generaFolioDUEP.generaFolioDUEP.folio_duep%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="barreDetalleOficio" nombre="barreDetalleOficio" interactivo="false" ejecutar="%autorizaOficio.autorizaOficio.autoriza%==true">
+            <componente id="barreDetalleOficio" nombre="barreDetalleOficio" tipo="cursor">
+                <tabla schema="catalog" nombre="oficio_comision_viaticos_requeridos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barreOficio.barreOficio.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barreOficio.barreOficio.periodo%"/>
+                    <campo name="oficio_comision" filtroCampo="oficio_comision" filtroOperador="=" filtroValor="%barreOficio.barreOficio.id_oficio%"/>
+                    <campo name="folio_viatico"/>
+                    <campo name="concepto_viatico"/>
+                    <campo name="descripcion"/>
+                    <campo name="unidad_medida"/>
+                    <campo name="cantidad"/>
+                    <campo name="tarifa_persona"/>
+                    <campo name="costo_unitario"/>
+                    <campo name="total_estimado"/>
+                    <campo name="total"/>
+                    <campo name="fecha_registro"/>
+                </tabla>
+                <nivel id="grabaDetalleDUEP" nombre="grabaDetalleDUEP" interactivo="false" ejecutar="%barreDetalleOficio.barreDetalleOficio.ur%!=null">
+                    <componente id="grabaDetalleDUEP" nombre="grabaDetalleDUEP" tipo="altaDirect">
+                        <tabla schema="operation" nombre="duep_detalle_solicitud_viaticos">
+                            <campo name="ur" calc="%barreDetalleOficio.barreDetalleOficio.ur%"/>
+                            <campo name="periodo" calc="%barreDetalleOficio.barreDetalleOficio.periodo%"/>
+                            <campo name="folio_duep" calc="%generaFolioDUEP.generaFolioDUEP.folio_duep%"/>
+                            <campo name="folio_duep_detalle" calc="%barreDetalleOficio.barreDetalleOficio.folio_viatico%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                            <campo name="id_cat_objeto_gasto" calc="4"/>
+                            <campo name="mes_cve_presupuestal" calc="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="id_cat_programa_presupuestal" calc="10"/>
+                            <campo name="id_cat_eje_pide" calc="13"/>
+                            <campo name="id_cat_proceso_proyecto" calc="14"/>
+                            <campo name="id_cat_proceso_proyecto_detalle" calc="15"/>
+                            <campo name="descripcion_especifica" calc="%barreDetalleOficio.barreDetalleOficio.descripcion%"/>
+                            <campo name="cantidad" calc="%barreDetalleOficio.barreDetalleOficio.cantidad%"/>
+                            <campo name="u_medida" calc="%barreDetalleOficio.barreDetalleOficio.unidad_medida%"/>
+                            <campo name="precio_unitario" calc="%barreDetalleOficio.barreDetalleOficio.costo_unitario%"/>
+                            <campo name="importe" calc="%barreDetalleOficio.barreDetalleOficio.total_estimado%"/>
+                            <campo name="folio_oficio_comision" calc="%barreDetalleOficio.barreDetalleOficio.oficio_comision%"/>
+                            <campo name="folio_detalle_oficio_comision" calc="%barreDetalleOficio.barreDetalleOficio.folio_viatico%"/>
+                            <campo name="concepto_viatico" calc="%barreDetalleOficio.barreDetalleOficio.concepto_viatico%"/>
+                            <campo name="saldo" calc="%barreDetalleOficio.barreDetalleOficio.total_estimado%"/>
+                            <campo name="porcentaje_iva" calc="16"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        
+        
+        
+        <!-- Instancia Proceso-->
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false" ejecutar="%autorizaOficio.autorizaOficio.autoriza%==true">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'12cb8e8c-4b35-4dd9-a040-a7f05f9e4b40'"/>
+                    <parametro name="out_ur" calc="%barreOficioComision.barreOficioComision.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%barreOficioComision.barreOficioComision.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_folio_duep" calc="%grabaDUEP.grabaDUEP.folio_duep%"/>
+                    <parametro name="out_folio_duep_caracter" calc="%generaFolioDUEP.generaFolioDUEP.folio_duep_a%"/>
+                    <parametro name="out_folio_oficio" calc="%barreOficioComision.barreOficioComision.id_oficio%" mostrarEsc="false"/>
+                    <parametro name="out_folio_oficio_comision" calc="%barreOficio.barreOficio.folio_comision%" mostrarEsc="false"/>
+                    <parametro name="out_comisionado_titular" calc="@concatenar(%barreOficio.barreOficio.nombre_comisionado_titular%+' '+%barreOficio.barreOficio.primer_apellido_comisionado_titular%+' '+%barreOficio.barreOficio.segundo_apellido_comisionado_titular%)" mostrarEsc="true"/>
+                    <parametro name="out_nombre_comision" calc="%barreOficio.barreOficio.objetivo%" mostrarEsc="true"/>
+                    <parametro name="out_importe_total" calc="%barreOficio.barreOficio.total%" mostrarEsc="true"/>
+                    <parametro name="out_folio_viaticos_gxc" calc="$inParam.folio_viaticos_gxc$"/>
+                    <parametro name="out_tipo_expediente" calc="$inParam.tipo_expediente$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!-- Fin Instancia Proceso-->
+        
+         
+         <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%autorizaOficio.autorizaOficio.autoriza%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
