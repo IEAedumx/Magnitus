@@ -1,0 +1,107 @@
+<tarea id="Consulta_Orden_Pago" nombre="Consulta Orden de Pago" version="1">
+    <pagina id="1">
+        
+        <nivel id="parametroOrdenPago" nombre="parametroOrdenPago" mostrarProximoNivel="false" interactivo="false">
+            <componente id="parametroOrdenPago" nombre="parametroOrdenPago" tipo="cursor" >
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="string" text="Funcionalidad" calc="$inParam.ur$"/>
+                   <campo name="periodo" text="Periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="orden_pago" text="Folio del Movimiento" local="true"  type="string" calc="$inParam.orden_pago$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+ <nivel id="modificaOrdenPagoNiv2" nombre="Gestión Ordén de Pago" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="modificaOrdenPagoComp2" nombre="Modifica Orden de Pago" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="orden_pago">
+                        <campo name="ur" text="Unidad Responsable" calc="%parametroOrdenPago.parametroOrdenPago.ur%" visible="false" />
+                        <campo name="id_periodo" text="Periodo" calc="%parametroOrdenPago.parametroOrdenPago.periodo%" visible="false"/>
+                        <campo name="orden_pago" text="Folio Orden de Pago" calc="%parametroOrdenPago.parametroOrdenPago.orden_pago%" visible="false" />
+                        <campo name="folio_orden_pago" text="Folio Orden de Pago" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="beneficiario" text="Beneficiario" descripcionForanea="nombre,primer_apellido,segundo_apellido,razon_social" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        
+                        <campo name="id_cat_fondo_contable" text="Llave Fondo Contable" visible="false" llaveForanea="false" />
+                        <campo name="id_fondo_contable" text="Fondo Contable" visible="true" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        
+                        <campo name="fecha_registro" text="Fecha de Emisión" calc="@fechaSistema()" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="fecha_programacion_pago" text="Fecha de Programación de Pago" calc="@sumaFecha(%modificaOrdenPagoNiv2.modificaOrdenPagoComp2.fecha_registro%,5,'d')"
+                        marcador="Seleccione Fecha" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        
+                        <campo name="cuenta_bancaria_beneficiario" text="Para depósito en:" 
+                        calcCliente="@ifThenElse(%beneficiario%!=null,@consultaDirec('select cuenta_bancaria as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','MAGNITUS'),null)" 
+                        descripcionForanea="cuenta_bancaria"  columnas="2" margen-izquierdo="1" visible="false" llaveForanea="false"/>
+                        <campo name="cuenta_bancaria_beneficiario_local" local="true" type="string" text="Para depósito en:" 
+                        calcCliente="@ifThenElse(%beneficiario%!=null,@concatenar(@consultaDirec('select cuenta_bancaria as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','MAGNITUS')+'-'+@consultaDirec('select clabe as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','MAGNITUS')),null)" 
+                        descripcionForanea="cuenta_bancaria"  columnas="2" margen-izquierdo="1" margen-derecho="7" visible="true" habilitado="false"/>
+                        
+                        <campo name="concepto" text="Concepto" columnas="6" llaveForanea="false" habilitado="false" margen-izquierdo="2" width="750" height="150"/>
+                        <campo name="poliza" text="Poliza" visible="false"/>
+                        <campo name="estatus_orden_pago" text="estatus_orde_pago" visible="false"/>
+                        <campo name="ultimo_usuario_modificador" visible="false"/>
+                        <campo name="forma_pago" text="Forma de Pago" visible="false"/>
+                        <campo name="observaciones" text="Observaciones" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="false" texto="Continuar" />
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles> <!--  -->
+                    <tabla id="identificador_detalle" schema="operation" nombre="orden_pago_detalle" tituloDetalle="No. Renglón" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="orden_pago" llaveForanea="false" text="Orden de Pago" columna-visible="false"/>
+                        <campo name="id_detalle_orden_pago" text="No. Renglón" generacion="@prox()+1" autogenerado="true" width="200"/>
+                        <campo name="folio_duep" text="Folio" llaveForanea="false" width="200"/>
+                        <campo name="concepto" text="Concepto"  llaveForanea="false" width="200" />
+                        <campo name="id_cat_fuente_financiamiento" visible="false" llaveForanea="false" columna-visible="false" text="cat_fuente" width="150"/>
+                        <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" width="200"/>
+                        <!--<campo name="id_catalogo" text="Fuente de Financiamiento" local="true" type="string" 
+                        calc="@consultaDirec('SELECT cat.descripcion FROM operation.orden_pago_detalle opd 
+                        INNER JOIN operation.duep d ON opd.folio_duep = d.folio_duep
+                        INNER JOIN catalog.catalogos cat ON d.id_cat_fuente_financiamiento = cat.id_cat 
+                        AND d.id_fuente_financiamiento = cat.id_catalogo
+                        WHERE opd.folio_duep ='+'\\''+%barreDUEPSeleccionable.barreDUEPSeleccionable.folio_duep%+'\\'','descripcion','string','MAGNITUS')" />-->
+                        <campo name="fecha_registro" text="Fecha de Registro"  llaveForanea="false" width="200"/>
+                         <campo name="total" text="Importe" muestraAcumulado="true" llaveForanea="false" width="200" columna-visible="true"/>
+                        <campo name="importe" text="Importe" muestraAcumulado="true" columna-visible="false"/>
+                        <campo name="ultimo_usuario_modificador" text="Usuario" columna-visible="false"/>
+                    </tabla>
+                        <acciones>
+                                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                        </acciones>
+                        <estilos>
+                                <boton nombre="grabar" posicion="derecha" visible="true" texto="Guardar" />
+                        </estilos>
+                </detalles>
+                </componente>
+        </nivel>
+        
+        <nivel id="nlFormato_Orden_Pago" nombre="Formato de Orden de Pago">
+            <componente tipo="reporte" id="cp_Orden_Pago" nombre="Orden de Pago">
+                <reporte nombre="repor_orden_pago_jsus">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo($config.ur$,'long')" />
+                    <campo name="id_periodo" type="long" calc="%parametroOrdenPago.parametroOrdenPago.periodo%"/>
+                    <campo name="orden_pago" type="long" calc="%parametroOrdenPago.parametroOrdenPago.orden_pago%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+            <!--<componente tipo="reporte" id="cp_poliza_momento_contable_ejercicio" nombre="Póliza del Momento Contable del Ejercicio">
+                <reporte nombre="poliza_contable">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%parametrosOrdenPago.parametrosOrdenPago.ur%" />
+                    <campo name="periodo" type="long" calc="%parametrosOrdenPago.parametrosOrdenPago.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%parametrosOrdenPago.parametrosOrdenPago.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>-->
+        </nivel>
+    </pagina>
+</tarea>
+
+
+        
+

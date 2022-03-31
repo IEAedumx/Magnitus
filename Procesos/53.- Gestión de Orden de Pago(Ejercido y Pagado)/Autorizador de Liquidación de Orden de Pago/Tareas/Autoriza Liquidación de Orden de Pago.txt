@@ -1,0 +1,1007 @@
+<tarea id="autorizaLiquidacionOrdenPago" nombre="Autoriza Liquidación de Orden de Pago" version="1" autor="Luis Eduardo Castañeda Delgadillo">
+    <pagina id="uno">
+        
+      
+        
+        
+        <!-- CURSOR DUMMY PARA EL PASO DE PARÁMETROS A LA TAREA -->
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" />
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$" />
+                    <campo name="id_periodo" local="true" type="long" calc="$inParam.periodo$" />
+                    <campo name="orden_pago" local="true" type="long" calc="$inParam.orden_pago$" />
+                    <campo name="tramite" local="true" type="long" calc="$inParam.tramite$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="DE" nombre="Determinar Expediente"  interactivo="false">
+            <componente id="DE" nombre="Determinar Expediente" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="expediente_tramite" local="true" type="string" 
+                    calc="@ifThenElse(%inParam.inParam.tramite%==2 OR %inParam.inParam.tramite%==3,'Expediente de Compras Menores/Orden de Pago',
+                          @ifThenElse(%inParam.inParam.tramite%==8 OR %inParam.inParam.tramite%==9,'Expediente Adquisiciones/Orden de Pago',
+                          @ifThenElse(%inParam.inParam.tramite%==11,'Expediente Compromiso Candelarizado/Orden de Pago',
+                          'Expediente Adquisiciones/Orden de Pago')))"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- INICIO DEL CURSOR PARA OBTENER EL BENEFICIARIO-->
+        <nivel id="obtenerDatos" nombre="Actualizar Estatus" interactivo="false">
+            <componente id="obtenerDatos" nombre="Actualizar Estatus" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%"/>
+                    <campo name="beneficiario" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlObtenerOrdenPago" nombre="Obtener Datos de Orden de Pago" interactivo="false">
+            <componente id="cpObtenerOrdenPago" nombre="Obtener Datos de Orden de Pago" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%" />
+                    <campo name="id_cat_fondo_contable" />
+                    <campo name="id_fondo_contable" />
+                    <campo name="cuenta_bancaria_beneficiario" />
+                    <campo name="id_tipo_cuenta"/>
+                    <campo name="cuenta_pagadora"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="guardaPoliza" nombre="guardaPoliza" interactivo="false">
+            <componente id="guardaPoliza" nombre="guardaPoliza" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%"/>
+                    <campo name="poliza"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- REPORTE PARA LA CONSULTA DE LA ORDEN DE PAGO -->
+        <nivel id="nlConsultaOrdenPago" nombre="Consulta Orden de Pago" mostrarNivelAnterior="false"> 
+            <componente tipo="reporte" id="cp_Orden_Pago_Compromisos_Calendarizados" nombre="Orden de Pago" ejecutarComponente="%inParam.inParam.tramite%==11">
+                <reporte nombre="r_ordenpago">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo($config.ur$,'long')" />
+                    <campo name="id_periodo" type="long" calc="%inParam.inParam.id_periodo%"/>
+                    <campo name="orden_pago" type="long" calc="%inParam.inParam.orden_pago%"/>
+                    <campo name="usuario" typw="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                </reporte>
+            </componente>
+            <componente tipo="reporte" id="cp_Orden_Pago" nombre="Orden de Pago" ejecutarComponente="%inParam.inParam.tramite%!=11">
+                <reporte nombre="repor_orden_pago_jsus">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo($config.ur$,'long')" />
+                    <campo name="id_periodo" type="long" calc="%inParam.inParam.id_periodo%"/>
+                    <campo name="orden_pago" type="long" calc="%inParam.inParam.orden_pago%"/>
+                    <campo name="usuario" typw="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                </reporte>
+            </componente>
+            <componente tipo="reporte" id="cp_poliza_momento_contable_ejercicio" nombre="Póliza del Momento Contable del Ejercicio" ejecutarComponente="%inParam.inParam.tramite%!=9">
+                <reporte nombre="polizacontable">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%guardaPoliza.guardaPoliza.poliza%"/>
+                    <campo name="usuario" type="string" calc="%barreUsuarios.barreUsuarios.nombre_usuario%"/>
+                </reporte>
+            </componente>
+            <componente id="cpConsultaRegLiquidOrdenPago" nombre="Consulta Registro de Liquidación de Orden de Pago" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="orden_pago" >
+                    <campo name="ur" text="Unidad Responsable" calc="%inParam.inParam.ur%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="%inParam.inParam.id_periodo%" llaveForanea="false" visible="false" />
+                    <campo name="orden_pago" text="Folio Orden de Pago" calc="%inParam.inParam.orden_pago%" llaveForanea="false" visible="false" />
+                    <campo name="folio_orden_pago" text="Folio Orden de Pago" habilitado="false" columnas="2" margen-izquierdo="1" />
+                    <campo name="id_cat_fondo_contable" text="id_cat_fondo_contable" visible="false" llaveForanea="false" />
+                    <campo name="id_fondo_contable" text="Fondo Contable" habilitado="false" visible="false" /> 
+                    <campo name="fondo_contable" text="Fondo Contable" local="true" type="string" columnas="2" margen-izquierdo="1" 
+                        calc="@consultaDirec('SELECT descripcion FROM catalog.catalogos
+                        WHERE id_catalogo='+'\\''+%nlObtenerOrdenPago.cpObtenerOrdenPago.id_cat_fondo_contable%+'\\' AND id_cat='+'\\''+%nlObtenerOrdenPago.cpObtenerOrdenPago.id_fondo_contable%+'\\'','descripcion','string','MAGNITUS');"/>
+                    <campo name="beneficiario" text="Beneficiario" descripcionForanea="razon_social" habilitado="false" columnas="2" margen-izquierdo="1" />
+                    <campo name="cuenta_bancaria_beneficiario" text="Para depósito en:" calcCliente="@consultaDirec('select cuenta_bancaria as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','MAGNITUS')" descripcionForanea="cuenta_bancaria, clabe"  columnas="2" margen-izquierdo="1"  habilitado="false" visible="true" />
+                    <!--<campo name="cuenta_bancaria_beneficiario" text="Para depósito en:" habilitado="false" llavesDinamicas="'id_beneficiario='+'\\''+%obtenerDatos.obtenerDatos.beneficiario%+'\\''" descripcionForanea="cuenta_bancaria"  columnas="3" />-->
+                    <campo name="forma_pago" text="Forma de pago" marcador="Seleccione una forma de pago" habilitado="false" validacion="%forma_pago%==null" validacionMensaje="Favor de seleccionar una forma de pago para continuar." columnas="2" margen-izquierdo="1" />
+                    <campo name="fecha_registro" text="Fecha de Pago" columnas="2" margen-izquierdo="1" />
+                    <campo name="cuenta_pagadoraa" local="true" type="text" text="Cuenta Pagadora" columnas="6" margen-izquierdo="2" margen-derecho="2"
+                        calc="@consultaDirec('SELECT CONCAT(cb.cuenta_bancaria,\\' \\', cb.clabe,\\' \\', b.nombre,\\' \\', cb.cuenta_contable,\\' \\', cb.descripcion) detalle FROM entity.cuenta_bancaria cb
+                        INNER JOIN catalog.banco b ON cb.id_banco = b.id_banco 
+                        AND cb.id_unidad_responsable = b.id_unidad_responsable
+                        WHERE cb.id_tipo_cuenta='+'\\''+%nlObtenerOrdenPago.cpObtenerOrdenPago.id_tipo_cuenta%+'\\'
+                        AND cb.cuenta_bancaria='+'\\''+ %nlObtenerOrdenPago.cpObtenerOrdenPago.cuenta_pagadora%+'\\'','detalle','string','MAGNITUS');"/>
+                    <campo name="observaciones" text="Observaciones" height="200" columnas="6" habilitado="false" margen-izquierdo="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="false" texto="GUARDAR" />
+                </estilos>
+            </componente>
+        </nivel>
+        
+
+        
+        <!-- FORMULARIO PARA LA AUTORIZACIÓN DE LA ÓRDEN DE PAGO -->
+        <nivel id="nlAutorizaLiquidOrdenPago" nombre="Autoriza Liquidación de Orden de Pago" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpAutorizaLiquidOrdenPago" nombre="Autoriza Liquidación de Orden de Pago" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy" >
+                    <campo name="id" text="id" calc="1" visible="false"/>
+                    <campo name="comentarios" text="Motivo de Rechazo" local="true" type="text" interaccion="%autoriza%==false" margen-izquierdo="2" columnas="6" height="250" validacion="%comentarios%==false AND %comentarios%==null" validacionMensaje="Favor de ingresar el motivo de rechazo para continuar"/>
+                    <campo name="autoriza" text="Autoriza" local="true" type="bool" margen-izquierdo="3" margen-derecho="3" columnas="4"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" texto="GUARDAR" margen-izquierdo="3" margen-derecho="3" columnas="4"/>
+                </estilos>
+            </componente>
+        </nivel>
+        
+        <!-- CURSOR PARA ACTUALIZAR ESTATUS (SÓLO SI SE AUTORIZÓ)-->
+        <nivel id="actualizaEstatus" nombre="Actualizar Estatus" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true">
+            <componente id="actualizaEstatus" nombre="Actualizar Estatus" tipo="cursor" >
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%"/>
+                    <campo name="estatus_orden_pago" calc="4"/>
+                    <campo name="ultimo_usuario_modificador" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!-- SOLICITUD DE NEGOCIACIÓN (SÓLO SI NO SE AUTORIZÓ)-->
+        <nivel id="negociarInstancia" nombre="negociarInstancia" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==false">
+            <componente id="negociarInstancia" nombre="negociarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        <!-- SOLICITUD DE RETORNAR MENSAJE DE OBSERVACIONES (SÓLO SI NO SE AUTORIZÓ)-->
+        <nivel id="retornarMensaje" nombre="retornarMensaje" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==false">
+            <componente id="retornarMensaje" nombre="retornarMensaje" tipo="solicitud">
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.comentarios%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+            </componente>
+        </nivel>
+
+        <nivel id="obIdSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false">
+            <componente id="obIdSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%"/>
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--SEPARADOR PARA REALIZAR EL SUBSTRING -->
+        <nivel id="obSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false">
+            <componente id="obSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%obIdSeparador.obIdSeparador.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="duepHijo1" nombre="barrer hijos duep 1" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true">
+            <componente id="duepHijo1" nombre="Barrido de los Detalles del Folio" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%" />
+                    <campo name="id_detalle_orden_pago" />
+                    <campo name="folio_duep" />
+                    <campo name="concepto" />
+                    <campo name="total_estimado"/> 
+                    <campo name="importe"/> 
+                    <campo name="total"/> 
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        
+        <nivel id="ordenPago" nombre="barrer la orden de pago" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true">
+            <componente id="ordenPago" nombre="barrer la order de pago" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%" />
+                    <campo name="folio_orden_pago"/>
+                    <campo name="beneficiario"/>
+                    <campo name="cuenta_pagadora"/>
+                    <campo name="importe_total"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="cuentaContableCuentaBancaria" nombre="barrer cuenta contable cuenta bancaria" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true">
+            <componente id="cuentaContableCuentaBancaria" nombre="barrer cuenta contable cuenta bancaria" tipo="cursor">
+                <tabla schema="entity" nombre="cuenta_bancaria">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                    <campo name="cuenta_bancaria" filtroCampo="cuenta_bancaria" filtroOperador="=" filtroValor="%ordenPago.ordenPago.cuenta_pagadora%"/>
+                    <campo name="cuenta_contable"/>
+                    <campo name="descripcion" />
+                </tabla>
+            </componente>
+        </nivel>
+
+        <!-- POLIZA DEL EJERCIDO-PAGADO PARA COMPRAS MENORES -->
+        <nivel id="encabezadoPol" nombre="Encabezado Póliza" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%!=9">
+            <componente id="encabezadoPol" nombre="Encabezado Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="fecha_poliza" calc="@fechaSistema()" />
+                    <campo name="id_catalogo" calc="%nlObtenerOrdenPago.cpObtenerOrdenPago.id_cat_fondo_contable%" />
+                    <campo name="fondo_contable" calc="%nlObtenerOrdenPago.cpObtenerOrdenPago.id_fondo_contable%" />
+                    <campo name="momento_contable" calc="7" />
+                    <campo name="estatus_poliza" calc="2" />
+                    <campo name="origen_poliza" calc="1" />
+                    <campo name="tipo_poliza" calc="3" />
+                    <campo name="ultimo_usuario_modificador" calc="%actualizaEstatus.actualizaEstatus.ultimo_usuario_modificador%" />
+                    <campo name="usuario_autorizador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="duep_origen" calc="%duepHijo1.duepHijo1.folio_duep%" />
+                    <campo name="concepto_general" calc="@concatenar('Póliza del Presupuesto de Egresos Ejercido de la Orden de Pago '+%ordenPago.ordenPago.folio_orden_pago%)" />
+                    <campo name="id_beneficiario_ganador" calc="%ordenPago.ordenPago.beneficiario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Actualizar Folio" id="actualizar_folio" interactivo="false">
+            <componente tipo="cursor" nombre="Actualizar Folio" id="actualizar_folio">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%inParam.inParam.id_periodo%+'-T'+
+                   @ifThenElse(%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!-- FILTRA DUEP DETALLE DONDE ORDEN DE PAGO IGUAL A ORDEN DE PAGO -->
+        <nivel id="FDD" nombre="Filtra Duep Detalle" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%!=9">
+            <componente id="FDD" nombre="Filtra Duep Detalle" tipo="cursor">
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" llaveForanea="false" filtroCampo="ur"  filtroOperador="=" filtroValor="%inParam.inParam.ur%" /><!-- -->
+                    <campo name="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                    <campo name="folio_duep" llaveForanea="false" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%duepHijo1.duepHijo1.folio_duep%" />
+                    <campo name="folio_duep_detalle" />
+                    <campo name="tipo_detalle" filtroCampo="tipo_detalle" filtroOperador="=" filtroValor="1"/>
+                    <campo name="folio_orden_pago" llaveForanea="false" filtroCampo="folio_orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%"/>
+                    <campo name="importe"/>
+                    <campo name="articulo"/>
+                    <campo name="total"/> 
+                    <campo name="clave_presupuestal" />
+                    <campo name="mes_cve_presupuestal"/>
+                </tabla>
+                
+                 <nivel id="ACP" nombre="Afectación Clave Presupuestal" interactivo="false" ejecutar="%FDD.FDD.clave_presupuestal%!=null"> 
+                    <componente id="ACP" nombre="Afectación Clave Presupuestal" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%FDD.FDD.clave_presupuestal%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_pagado" calc="@consultaDirec('SELECT '+%ACP.ACP.presupuesto_pagado%+'+'+%FDD.FDD.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                            <!-- <campo name="presupuesto_pagado" calc="%ACP.ACP.presupuesto_pagado% + %FDD.FDD.total%"/> -->
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="ordenPagoHijo" nombre="barrer hijos orden pago" interactivo="false">
+                    <componente id="ordenPagoHijo" nombre="barrer orden pago" tipo="cursor">
+                        <tabla schema="operation" nombre="orden_pago_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                            <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%" />
+                            <campo name="id_detalle_orden_pago" filtroCampo="id_detalle_orden_pago" filtroOperador="=" filtroValor="%FDD.FDD.folio_duep_detalle%" />
+                            <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FDD.FDD.folio_duep%"/>
+                            <campo name="concepto" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="FA" nombre="Filtra Articulo" interactivo="false"> 
+                    <componente id="FA" nombre="Filtra Articulo" tipo="cursor">
+                        <tabla schema="catalog" nombre="articulos">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/> 
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/> 
+                            <campo name="clave_articulo" filtroCampo="clave_articulo" filtroOperador="=" filtroValor="%FDD.FDD.articulo%"/>
+                            <campo name="cuenta_contable"/>
+                            <campo name="descripcion_cuenta_contable"/>
+                            <campo name="descripcion_articulo"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                 <!--MODIFICACIONES A CUENTA CONTABLE FONE GO -->
+                  <!--MODIFICACIONES A CUENTA CONTABLE FONE GO -->
+                <nivel id="cargoPol" nombre="Cargo Poliza" interactivo="false">
+                    <componente id="cargoPol" nombre="Cargo Poliza" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                            <campo name="clave_presupuestal" calc="%FDD.FDD.clave_presupuestal%" />
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '7'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')"/> 
+                            <campo name="importe_cargo" calc="%FDD.FDD.total%" />
+                            <campo name="concepto_bloque" calc="%ordenPagoHijo.ordenPagoHijo.concepto%" />
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                            WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '7'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')+'\\'','descripcion','string','MAGNITUS')" />
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="abonoPol" nombre="Abono Poliza" interactivo="false">
+                    <componente id="abonoPol" nombre="Abono Poliza" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                            <campo name="clave_presupuestal" calc="%FDD.FDD.clave_presupuestal%" />
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '6'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')" />
+                            <campo name="importe_abono" calc="%FDD.FDD.total%" />
+                            <campo name="concepto_bloque" calc="%ordenPagoHijo.ordenPagoHijo.concepto%" />
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                            WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '6'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01') +'\\'','descripcion','string','MAGNITUS')" />
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                            <campo name="tipo_detalle" calc="1" />
+                        </tabla>
+                    </componente>
+                </nivel>
+               
+               
+                
+                <!-- 
+                <nivel id="abonoPolPat" nombre="Abono Poliza Patrimonial" interactivo="false" ejecutar="%inParam.inParam.tramite%!=11">
+                    <componente id="abonoPol" nombre="Abono Poliza Patrimonial" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                            <campo name="clave_presupuestal" calc="%FDD.FDD.clave_presupuestal%" />
+                            <campo name="clave_cuenta_contable" calc="%cuentaContableCuentaBancaria.cuentaContableCuentaBancaria.cuenta_contable%" />
+                            <campo name="importe_abono" calc="%FDD.FDD.total%" />
+                            <campo name="concepto_bloque" calc="%ordenPagoHijo.ordenPagoHijo.concepto%" />
+                            <campo name="referencia" calc="@concatenar(@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                            WHERE clave_cuenta ='+'\\''+ %cuentaContableCuentaBancaria.cuentaContableCuentaBancaria.cuenta_contable% +'\\'','descripcion','string','MAGNITUS')+' '+%cuentaContableCuentaBancaria.cuentaContableCuentaBancaria.descripcion%)" />
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                            <campo name="tipo_detalle" calc="2" />
+                        </tabla>
+                    </componente>
+                 </nivel>
+                 -->
+            </componente>
+        </nivel>
+        
+         <nivel id="FDCM" nombre="Filtra Duep"  interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND (%inParam.inParam.tramite%==2 OR %inParam.inParam.tramite%==3)">
+            <componente id="FDCM" tipo="cursor" nombre="Filtra Duep" >
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FDD.FDD.folio_duep%"/>
+                    <campo name="total"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="CPPCM" nombre="Cargo Poliza Patrimonial Compras Menores" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND (%inParam.inParam.tramite%==2 OR %inParam.inParam.tramite%==3)">
+            <componente id="CPPCM" nombre="Cargo Poliza Patrimonial" tipo="altaDirect">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="id_movimiento_auxiliar" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%" />
+                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="clave_presupuestal" calc="" />
+                    <campo name="clave_cuenta_contable" calc="@ifThenElse(@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion = (SELECT razon_social FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')) 
+AND clave_cuenta like (SELECT Concat('+'\\''+'[37]3[37]'+'\\''+',id_fondo_contable) FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS')==null,@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion LIKE (SELECT concat(primer_apellido,'+'\\''+' '+'\\''+',segundo_apellido,'+'\\''+' '+'\\''+',nombre,'+'\\''+'[37]'+'\\''+') FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+'))
+AND clave_cuenta like (SELECT Concat('+'\\''+'[37]3[37]'+'\\''+',id_fondo_contable) FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS'),@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion = (SELECT razon_social FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')) 
+AND clave_cuenta like (SELECT Concat('+'\\''+'[37]3[37]'+'\\''+',id_fondo_contable) FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS'))" />
+                    <!---->
+                    <campo name="importe_cargo" calc="%FDCM.FDCM.total%" />
+                    <campo name="concepto_bloque" calc="" />
+                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                    WHERE clave_cuenta ='+'\\''+%CPPCM.CPPCM.clave_cuenta_contable%+'\\'','descripcion','string','MAGNITUS')" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="tipo_detalle" calc="2" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="APPCM" nombre="Abono Poliza Patrimonial Compras Menores" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND (%inParam.inParam.tramite%==2 OR %inParam.inParam.tramite%==3)">
+            <componente id="APPCM" nombre="Abono Poliza Patrimonial" tipo="altaDirect">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="id_movimiento_auxiliar" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%" />
+                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="clave_presupuestal" calc="" />
+                    <campo name="clave_cuenta_contable" calc="%cuentaContableCuentaBancaria.cuentaContableCuentaBancaria.cuenta_contable%" />
+                    <campo name="importe_abono" calc="%FDCM.FDCM.total%" />
+                    <campo name="concepto_bloque" calc="" />
+                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                    WHERE clave_cuenta ='+'\\''+ %cuentaContableCuentaBancaria.cuentaContableCuentaBancaria.cuenta_contable% +'\\'','descripcion','string','MAGNITUS')" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="tipo_detalle" calc="2" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--    POLIZA RECEPCION DE BIENES Y SERVICIOS -->
+        <nivel id="encabezadoPolRB" nombre="Encabezado Póliza" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==8">
+            <componente id="encabezadoPolRB" nombre="Encabezado Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="fecha_poliza" calc="@fechaSistema()" />
+                    <campo name="id_catalogo" calc="@ifThenElse(%nlObtenerOrdenPago.cpObtenerOrdenPago.id_cat_fondo_contable%==0,null,%nlObtenerOrdenPago.cpObtenerOrdenPago.id_cat_fondo_contable%)" />
+                    <campo name="fondo_contable" calc="@ifThenElse(%nlObtenerOrdenPago.cpObtenerOrdenPago.id_fondo_contable%==0,null,%nlObtenerOrdenPago.cpObtenerOrdenPago.id_fondo_contable%)" />
+                    <campo name="momento_contable" calc="7" />
+                    <campo name="estatus_poliza" calc="2" />
+                    <campo name="origen_poliza" calc="1" />
+                    <campo name="tipo_poliza" calc="3" />
+                    <campo name="ultimo_usuario_modificador" calc="%actualizaEstatus.actualizaEstatus.ultimo_usuario_modificador%" />
+                    <campo name="usuario_autorizador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="duep_origen" calc="%duepHijo1.duepHijo1.folio_duep%" />
+                    <campo name="concepto_general" calc="@concatenar('Póliza del Presupuesto de Egresos Ejercido de la Orden de Pago '+%ordenPago.ordenPago.folio_orden_pago%)" />
+                    <campo name="id_beneficiario_ganador" calc="%ordenPago.ordenPago.beneficiario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Actualizar Folio" id="actualizar_folio_RB" interactivo="false">
+            <componente tipo="cursor" nombre="Actualizar Folio" id="actualizar_folio_RB">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%inParam.inParam.id_periodo%+'-T'+
+                   @ifThenElse(%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- FILTRA DUEP DETALLE DONDE ORDEN DE PAGO IGUAL A ORDEN DE PAGO -->
+        <nivel id="FDDRB" nombre="Filtra Duep Detalle" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==8">
+            <componente id="FDDRB" nombre="Filtra Duep Detalle" tipo="cursor">
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" llaveForanea="false" filtroCampo="ur"  filtroOperador="=" filtroValor="%inParam.inParam.ur%" /><!-- -->
+                    <campo name="periodo" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                    <campo name="folio_duep" llaveForanea="false" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%duepHijo1.duepHijo1.folio_duep%" />
+                    <campo name="folio_duep_detalle" />
+                    <campo name="tipo_detalle" filtroCampo="tipo_detalle" filtroOperador="=" filtroValor="1"/>
+                    <campo name="folio_orden_pago" llaveForanea="false" filtroCampo="folio_orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%"/>
+                    <campo name="importe"/>
+                    <campo name="articulo"/>
+                    <campo name="total"/> 
+                    <campo name="clave_presupuestal" />
+                    <campo name="mes_cve_presupuestal"/>
+                </tabla>
+                
+                 <nivel id="ACPRB" nombre="Afectación Clave Presupuestal" interactivo="false" ejecutar="%FDDRB.FDDRB.clave_presupuestal%!=null"> 
+                    <componente id="ACPRB" nombre="Afectación Clave Presupuestal" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" /> 
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%FDDRB.FDDRB.clave_presupuestal%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_pagado" calc="@consultaDirec('SELECT '+%ACPRB.ACPRB.presupuesto_pagado%+'+'+%FDDRB.FDDRB.total%+' AS suma','suma','numeric','MAGNITUS')"/>
+                            <!-- <campo name="presupuesto_pagado" calc="%ACPRB.ACPRB.presupuesto_pagado% + %FDDRB.FDDRB.total%"/> -->
+                        </tabla>
+                    </componente>
+                    
+                </nivel>
+                
+                
+                <nivel id="ordenPagoHijoRB" nombre="barrer hijos orden pago" interactivo="false">
+                    <componente id="ordenPagoHijoRB" nombre="barrer orden pago" tipo="cursor">
+                        <tabla schema="operation" nombre="orden_pago_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%" />
+                            <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%" />
+                            <campo name="id_detalle_orden_pago" filtroCampo="id_detalle_orden_pago" filtroOperador="=" filtroValor="%FDDRB.FDDRB.folio_duep_detalle%" />
+                            <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%FDDRB.FDDRB.folio_duep%"/>
+                            <campo name="concepto" />
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="FARB" nombre="Filtra Articulo" interactivo="false"> 
+                    <componente id="FARB" nombre="Filtra Articulo" tipo="cursor">
+                        <tabla schema="catalog" nombre="articulos">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/> 
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/> 
+                            <campo name="clave_articulo" filtroCampo="clave_articulo" filtroOperador="=" filtroValor="%FDDRB.FDDRB.articulo%"/>
+                            <campo name="cuenta_contable"/>
+                            <campo name="descripcion_cuenta_contable"/>
+                            <campo name="descripcion_articulo"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                <nivel id="cargoPolRB" nombre="Cargo Poliza" interactivo="false">
+                    <componente id="cargoPolRB" nombre="Cargo Poliza" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                            <campo name="clave_presupuestal" calc="%FDDRB.FDDRB.clave_presupuestal%" />
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '7'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')"/> 
+                            <campo name="importe_cargo" calc="%FDDRB.FDDRB.total%" />
+                            <campo name="concepto_bloque" calc="%ordenPagoHijoRB.ordenPagoHijoRB.concepto%" />
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                            WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '7'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')+'\\'','descripcion','string','MAGNITUS')" />
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                
+                 <nivel id="abonoPolRB" nombre="Abono Poliza" interactivo="false">
+                    <componente id="abonoPolRB" nombre="Abono Poliza" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%" />
+                            <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                            <campo name="clave_presupuestal" calc="%FDDRB.FDDRB.clave_presupuestal%" />
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '6'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')"/> 
+                            <campo name="importe_abono" calc="%FDDRB.FDDRB.total%" />
+                            <campo name="concepto_bloque" calc="%ordenPagoHijoRB.ordenPagoHijoRB.concepto%" />
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                            WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '6'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01')+'\\'','descripcion','string','MAGNITUS')" />
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Filtra Orden de Pago RB" id="FOPRB" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==8">
+            <componente tipo="cursor" nombre="Filtra Orden de Pago RB" id="FOPRB">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo"  filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%"/>
+                    <campo name="orden_pago"  filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%"/>
+                    <campo name="importe_total"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="CargoPolRB" nombre="Cargo Poliza" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==8">
+            <componente id="CargoPolRB" nombre="Cargo Poliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="id_movimiento_auxiliar" calc="%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar%" />
+                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="clave_presupuestal" calc="" />
+                    <campo name="clave_cuenta_contable" calc="@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00097'+%obSeparador.obSeparador.caracter%+
+                            '115')" />
+                    <campo name="importe_cargo" calc="%FOPRB.FOPRB.importe_total%" />
+                    <campo name="concepto_bloque" calc="%ordenPago.ordenPago.folio_orden_pago%" />
+                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                            WHERE clave_cuenta ='+'\\''+ @concatenar('2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00097'+%obSeparador.obSeparador.caracter%+
+                            '115')+'\\'','descripcion','string','MAGNITUS')" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="tipo_detalle" calc="2" />
+                </tabla>
+            </componente>
+        </nivel>
+                
+        <nivel id="AbonoPolRB" nombre="Abono Poliza" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==8">
+            <componente id="AbonoPolRB" nombre="Abono Poliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="id_movimiento_auxiliar" calc="%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar%" />
+                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="clave_presupuestal" calc="" />
+                    <campo name="clave_cuenta_contable" calc="%cuentaContableCuentaBancaria.cuentaContableCuentaBancaria.cuenta_contable%" />
+                    <campo name="importe_abono" calc="%FOPRB.FOPRB.importe_total%" />
+                    <campo name="concepto_bloque" calc="%ordenPago.ordenPago.folio_orden_pago%" />
+                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                    WHERE clave_cuenta ='+'\\''+ %cuentaContableCuentaBancaria.cuentaContableCuentaBancaria.cuenta_contable% +'\\'','descripcion','string','MAGNITUS')" />
+                    
+                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="tipo_detalle" calc="2" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!-- POLIZA ANTICIPO -->
+        <nivel id="encabezadoPolAN" nombre="Encabezado Póliza" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==9">
+            <componente id="encabezadoPolAN" nombre="Encabezado Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="fecha_poliza" calc="@fechaSistema()" />
+                    <campo name="id_catalogo" calc="%nlObtenerOrdenPago.cpObtenerOrdenPago.id_cat_fondo_contable%" />
+                    <campo name="fondo_contable" calc="%nlObtenerOrdenPago.cpObtenerOrdenPago.id_fondo_contable%" />
+                    <campo name="momento_contable" calc="7" />
+                    <campo name="estatus_poliza" calc="2" />
+                    <campo name="origen_poliza" calc="1" />
+                    <campo name="tipo_poliza" calc="3" />
+                    <campo name="ultimo_usuario_modificador" calc="%actualizaEstatus.actualizaEstatus.ultimo_usuario_modificador%" />
+                    <campo name="usuario_autorizador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="duep_origen" calc="%duepHijo1.duepHijo1.folio_duep%" />
+                    <campo name="concepto_general" calc="@concatenar('Póliza del Presupuesto de Egresos Ejercido de la Orden de Pago '+%ordenPago.ordenPago.folio_orden_pago%)" />
+                    <campo name="id_beneficiario_ganador" calc="%ordenPago.ordenPago.beneficiario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Actualizar Folio" id="actualizar_folio_ANT" interactivo="false">
+            <componente tipo="cursor" nombre="Actualizar Folio" id="actualizar_folio_ANT">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar%"/>
+                    <campo name="folio_reporte" calc="@concatenar(%inParam.inParam.id_periodo%+'-T'+
+                   @ifThenElse(%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="cargoPolPATAN2" nombre="Cargo Poliza PATRIMONIAL" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==9">
+            <componente id="cargoPolAN2" nombre="Cargo Poliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="id_movimiento_auxiliar" calc="%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar%" />
+                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="clave_presupuestal" calc="" />
+                    <campo name="clave_cuenta_contable" calc="@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00097'+%obSeparador.obSeparador.caracter%+
+                            '115')"/> 
+                    <campo name="importe_cargo" calc="%ordenPago.ordenPago.importe_total%" />
+                    <campo name="concepto_bloque" calc="'ANTICIPO A PROVEEDOR'" />
+                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                    WHERE clave_cuenta ='+'\\''+ @concatenar('2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00097'+%obSeparador.obSeparador.caracter%+
+                            '115')+'\\'','descripcion','string','MAGNITUS')" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="tipo_detalle" calc="2"/>
+                </tabla>
+            </componente>
+        </nivel>
+                
+         <nivel id="abonoPolPatAN" nombre="Abono Patrimonial Poliza" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==9">
+            <componente id="abonoPolPatAN2" nombre="Abono Patrimonial Poliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="id_movimiento_auxiliar" calc="%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar%" />
+                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="clave_presupuestal" calc="" />
+                    <campo name="clave_cuenta_contable" calc="@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00097'+%obSeparador.obSeparador.caracter%+
+                            '115')"/> 
+                    <campo name="importe_abono" calc="%ordenPago.ordenPago.importe_total%" />
+                    <campo name="concepto_bloque" calc="'ANTICIPO A PROVEEDOR'" />
+                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                    WHERE clave_cuenta ='+'\\''+ @concatenar('2'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00097'+%obSeparador.obSeparador.caracter%+
+                            '115')+'\\'','descripcion','string','MAGNITUS')" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="tipo_detalle" calc="2"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--<nivel id="APPCM" nombre="Abono Poliza Patrimonial Compromisos Calendarizados" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==2 OR %inParam.inParam.tramite%==3">-->
+        <!--    <componente id="APPCM" nombre="Abono Poliza Patrimonial" tipo="altaDirect">-->
+        <!--        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">-->
+        <!--            <campo name="ur" calc="%inParam.inParam.ur%" />-->
+        <!--            <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />-->
+        <!--            <campo name="id_movimiento_auxiliar" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%" />-->
+        <!--            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />-->
+        <!--            <campo name="clave_presupuestal" calc="" />-->
+        <!--            <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '1'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '1'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '2'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '0'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '002'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '01'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '001')" />-->
+        <!--            <campo name="importe_abono" calc="%FDCM.FDCM.total%" />-->
+        <!--            <campo name="concepto_bloque" calc="" />-->
+        <!--            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables-->
+        <!--            WHERE clave_cuenta ='+'\\''+ @concatenar('1'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '1'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '1'+%obSeparador.obSeparador.caracter%+-->
+        <!--            '2'+%obSeparador.obSeparador.caracter%+'0')+'\\'','descripcion','string','MAGNITUS')" />-->
+        <!--            <campo name="fecha_registro" calc="@fechaSistema()" />-->
+        <!--            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />-->
+        <!--            <campo name="tipo_detalle" calc="2" />-->
+        <!--        </tabla>-->
+        <!--    </componente>-->
+        <!-- </nivel>-->
+        
+        <nivel id="CPPCC" nombre="Cargo Poliza Patrimonial Compromisos Calendarizados" interactivo="false" ejecutar="%inParam.inParam.tramite%==11">
+            <componente id="CPPCC" nombre="Cargo Poliza Patrimonial" tipo="altaDirect">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="id_movimiento_auxiliar" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%" />
+                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="clave_presupuestal" calc="" />
+                    <campo name="clave_cuenta_contable" calc="
+                    @ifThenElse(@consultaDirec('SELECT id_tipo_compromiso tpc FROM operation.duep WHERE folio_duep=(SELECT folio_duep::integer FROM operation.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')','tpc','long','MAGNITUS')==1,@ifThenElse(@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion = (SELECT razon_social FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')) 
+AND clave_cuenta like (SELECT Concat('+'\\''+@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '2'+'[37]')+'\\''+',id_fondo_contable) from OPERATION.orden_pago where orden_pago ='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS')==null,@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion like (SELECT concat(primer_apellido,'+'\\''+' '+'\\''+',segundo_apellido,'+'\\''+' '+'\\''+',nombre,'+'\\''+'[37]'+'\\''+') FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')) 
+AND clave_cuenta like (SELECT Concat('+'\\''+@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '2'+'[37]')+'\\''+',id_fondo_contable) from OPERATION.orden_pago where orden_pago ='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS'),@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion = (SELECT razon_social FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')) 
+AND clave_cuenta like (SELECT Concat('+'\\''+@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '2'+'[37]')+'\\''+',id_fondo_contable) from OPERATION.orden_pago where orden_pago ='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS')),
+                                                     @ifThenElse(@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion = (SELECT razon_social FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')) 
+AND clave_cuenta like (SELECT Concat('+'\\''+@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '5'+'[37]')+'\\''+',id_fondo_contable) from OPERATION.orden_pago where orden_pago ='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS')==null,@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion like (SELECT concat(primer_apellido,'+'\\''+' '+'\\''+',segundo_apellido,'+'\\''+' '+'\\''+',nombre,'+'\\''+'[37]'+'\\''+') FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')) 
+AND clave_cuenta like (SELECT Concat('+'\\''+@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '5'+'[37]')+'\\''+',id_fondo_contable) from OPERATION.orden_pago where orden_pago ='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS'),@consultaDirec('SELECT clave_cuenta cc FROM CATALOG.CUENTAS_CONTABLES 
+WHERE  descripcion = (SELECT razon_social FROM entity.beneficiario where id_beneficiario=(SELECT beneficiario FROM OPERATION.orden_pago WHERE orden_pago='+%inParam.inParam.orden_pago%+')) 
+AND clave_cuenta like (SELECT Concat('+'\\''+@concatenar('2'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '1'+%obSeparador.obSeparador.caracter%+
+                                                     '5'+'[37]')+'\\''+',id_fondo_contable) from OPERATION.orden_pago where orden_pago ='+%inParam.inParam.orden_pago%+')','cc','string','MAGNITUS')))" />
+                    <campo name="importe_cargo" calc="%FDD.FDD.total%" />
+                    <campo name="concepto_bloque" calc="%ordenPago.ordenPago.folio_orden_pago%" />
+                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                    WHERE clave_cuenta ='+'\\''+%CPPCC.CPPCC.clave_cuenta_contable%+'\\'','descripcion','string','MAGNITUS')" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="tipo_detalle" calc="2" />
+                </tabla>
+            </componente>
+        </nivel>
+                
+        <nivel id="APPCC" nombre="Abono Poliza Patrimonial Compromisos Calendarizados" interactivo="false" ejecutar="%inParam.inParam.tramite%==11">
+            <componente id="APPCC" nombre="Abono Poliza Patrimonial" tipo="altaDirect">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" calc="%inParam.inParam.id_periodo%" />
+                    <campo name="id_movimiento_auxiliar" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%" />
+                    <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="clave_presupuestal" calc="" />
+                    <campo name="clave_cuenta_contable" calc="%cuentaContableCuentaBancaria.cuentaContableCuentaBancaria.cuenta_contable%" />
+                    <campo name="importe_abono" calc="%FDD.FDD.total%" />
+                    <campo name="concepto_bloque" calc="%ordenPago.ordenPago.folio_orden_pago%" />
+                    <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                    WHERE clave_cuenta ='+'\\''+ %APPCC.APPCC.clave_cuenta_contable%+'\\'','descripcion','string','MAGNITUS')" />
+                    <campo name="fecha_registro" calc="@fechaSistema()" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" />
+                    <campo name="tipo_detalle" calc="2" />
+                </tabla>
+            </componente>
+         </nivel>
+         
+        <!-- REPORTE PÓLIZA DE ORDEN DE COMPRA
+        <nivel id="nlConsultaPolizaOrdenCompra" nombre="Consulta Póliza de Orden de Compra" mostrarNivelAnterior="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true">
+            <componente id="cpConsultaPolizaOrdenCompra" nombre="Consulta Póliza de Orden de Compra" tipo="reporte">
+                <reporte nombre="repor_orden_pago_jsus">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" type="long" calc="%inParam.inParam.id_periodo%"/>
+                    <campo name="orden_pago" type="long" calc="%inParam.inParam.orden_pago%"/>
+                </reporte>
+            </componente>
+        </nivel>
+         -->
+         
+          <!-- ACCIONES DE TURNADO Y NEGOCIAR -->
+       <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true">
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                        <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                        <parametro name="process" calc="$protocolarios.process$"/>
+                        <parametro name="version" calc="$protocolarios.version$"/>
+                        <parametro name="instance" calc="$protocolarios.instance$"/>
+                        <parametro name="user" calc="$protocolarios.user$"/>
+                        <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+         
+        <nivel id="nlConsultaPolizaOrdenPago" nombre="Consulta Póliza de Orden de Pago" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%!=9 ">
+            <componente id="cpConsultaPolizaOrdenPago" nombre="Consulta Póliza de Orden de Pago" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="%DE.DE.expediente_tramite%" nombreDocumento="'Póliza Ejercido-Pagado'"
+                         grupo="$inParam.expediente$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%encabezadoPol.encabezadoPol.folio_movimiento_auxiliar%"/>
+                    
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlConsultaPolizaOrdenPagoRB" nombre="Consulta Póliza de Orden de Pago" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==8">
+            <componente id="cpConsultaPolizaOrdenPagoRB" nombre="Consulta Póliza de Orden de Pago" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="%DE.DE.expediente_tramite%" nombreDocumento="'Póliza Ejercido-Pagado'"
+                         grupo="$inParam.expediente$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%encabezadoPolRB.encabezadoPolRB.folio_movimiento_auxiliar%"/>
+                    
+                </reporte>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlConsultaPolizaOrdenPagoAN" nombre="Consulta Póliza de Orden de Pago" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlAutorizaLiquidOrdenPago.cpAutorizaLiquidOrdenPago.autoriza%==true AND %inParam.inParam.tramite%==9">
+            <componente id="cpConsultaPolizaOrdenPagoAN" nombre="Consulta Póliza de Orden de Pago" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="%DE.DE.expediente_tramite%" nombreDocumento="'Póliza Ejercido-Pagado'"
+                         grupo="$inParam.expediente$" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%encabezadoPolAN.encabezadoPolAN.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+       
+        
+    </pagina>
+</tarea>

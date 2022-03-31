@@ -1,0 +1,389 @@
+<tarea id="modificaOrdenPago" nombre="Modifica Orden de Pago" autor="Froylán Alanís" version="2.0">
+    <pagina id="1">
+        
+         
+     
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="long" calc="$inParam.ur$"/> <!-- calc="$inParam.ur$"-->
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/> <!-- calc="$inParam.periodo$"-->
+                    <campo name="orden_pago" local="true" type="long" calc="$inParam.orden_pago$"/> <!-- calc="$inParam.orden_pago$"-->
+                    <campo name="folio_operacion" local="true" type="long" calc="$inParam.folio_operacion$" />
+                    <campo name="tramite" local="true" type="long" calc="$inParam.tramite$"/>
+                    <campo name="expediente" text="EX" local="true" type="long" calc="$inParam.expediente$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="DE" nombre="Determinar Expediente"  interactivo="false">
+		    <componente id="DE" nombre="Determinar Expediente" tipo="cursor">
+		        <tabla schema="catalog" nombre="dummy">
+		            <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+		            <campo name="expediente_tramite" local="true" type="string" 
+		            calc="@ifThenElse(%inParam.inParam.tramite%==2 OR %inParam.inParam.tramite%==3,'Expediente de Compras Menores/Orden de Pago',
+		                  @ifThenElse(%inParam.inParam.tramite%==8 OR %inParam.inParam.tramite%==9,'Expediente Adquisiciones/Orden de Pago',
+		                  @ifThenElse(%inParam.inParam.tramite%==11,'Expediente Compromiso Candelarizado/Orden de Pago',
+		                  'Expediente Adquisiciones/Orden de Pago')))"/>
+		        </tabla>
+		    </componente>
+		</nivel>
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- PERIODO -->
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- BENEFICIARIO -->
+        <nivel id="obtenerDatos" nombre="Actualizar Estatus" interactivo="false">
+            <componente id="obtenerDatos" nombre="Actualizar Estatus" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="orden_pago"/>
+                    <campo name="beneficiario" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- ACTUALIZA DUEP -->
+        <nivel id="cambiaAFalso" nombre="cambiaAFalso" interactivo="false">
+            <componente id="cambiaAFalso" nombre="cambiaAFalso" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/> 
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="null"/>
+                    <campo name="foio_orden_pago" filtroCampo="foio_orden_pago" filtroOperador="=" filtroValor="null"/>
+                    <campo name="seleccion_orden_pago" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- BENEFICIARIO OTRA VEZ -->
+        <nivel id="beneficiario" nombre="beneficiario" interactivo="false">
+            <componente id="beneficiario" nombre="beneficiario" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario">
+                    <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%obtenerDatos.obtenerDatos.beneficiario%"/> 
+                   <campo name="nombre"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- CUENTA BANCARIA -->
+        <nivel id="cuentabeneficiario" nombre="Cuentabeneficiario" interactivo="false">
+            <componente id="cuentabeneficiario" nombre="Cuentabeneficiario" tipo="cursor">
+                <tabla schema="entity" nombre="beneficiario_cuenta_bancaria">
+                    <campo name="cuenta_bancaria"/>
+                    <campo name="id_banco"/> 
+                   <campo name="clabe"/>
+                   <campo name="id_beneficiario" filtroCampo="id_beneficiario" filtroOperador="=" filtroValor="%beneficiario.beneficiario.id_beneficiario%"/>
+                   <campo name="estatus"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- BANCO -->
+        <nivel id="bancobeneficiario" nombre="bancobeneficiario" interactivo="false">
+            <componente id="bancobeneficiario" nombre="bancobeneficiario" tipo="cursor">
+                <tabla schema="catalog" nombre="banco">
+                    <campo name="id_banco" filtroCampo="id_banco" filtroOperador="=" filtroValor="%cuentabeneficiario.cuentabeneficiario.id_banco%"/> 
+                   <campo name="id_unidad_responsable"/>
+                   <campo name="nombre"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- ORDEN DE PAGO DETALLE -->
+        <nivel id="barreOrdenPagoDetalle" nombre="barreOrdenPagoDetalle" interactivo="false">
+            <componente id="barreOrdenPagoDetalle" nombre="barreOrdenPagoDetalle" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo"/> 
+                    <campo name="orden_pago"/>
+                    <campo name="id_detalle_orden_pago"/>
+                    <campo name="importe"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--Cursor para sumar los detalles-->
+         <nivel id="barreImporteDetalle" nombre="barreImportesDetalle" interactivo="false">
+            <componente id="barreImporteDetalle" nombre="barreImporteDetalle" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barreOrdenPagoDetalle.barreOrdenPagoDetalle.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo"  filtroOperador="=" filtroValor="%barreOrdenPagoDetalle.barreOrdenPagoDetalle.id_periodo%"/> 
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%barreOrdenPagoDetalle.barreOrdenPagoDetalle.orden_pago%"/>
+                    <campo name="id_detalle_orden_pago" filtroCampo="id_detalle_orden_pago" filtroOperador="=" filtroValor="1"/>
+                    <campo name="importe"/>
+                    <campo name="acumulado" local="true" type="decimal" calc="$sumatoria.importe$"/>    
+                </tabla>
+            </componente>
+        </nivel>
+    <!--COMPONENTE TIPO TABLA ORDEN DE REGISTRA-->
+        <nivel id="registraOrdenPago" nombre="Gestión Ordén de Pago" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="registraOrdenPago" nombre="Documentos Únicos del Ejercicio del Presupuesto" tipo="tabla" mostrarAgregar="false" mostrarEditar="false" mostrarEliminar="false" filtro="true">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" text="ur" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" text="periodo" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_duep" text="Folio" width="150" visible="false" columna-visible="false" />
+                    <campo name="folio_duep_a" text="Folio" columna-visible="true" filtroCampo="folio_duep_a" filtroOperador="!=" filtroValor="null"/>
+                    <campo name="beneficiario" text="Beneficiario" descripcionForaneaTabla="nombre,primer_apellido,segundo_apellido,razon_social"/>
+                    <campo name="fecha_solicitud" text="Fecha"/>
+                    <campo name="concepto" text="Concepto"/>
+                    <campo name="total" text="Importe"/> <!-- filtroCampo="total" filtroOperador="!=" filtroValor="null" -->
+                    <campo name="id_cat_fondo_contable" text="Fondo" columna-visible="false"/>
+                    <campo name="id_fondo_contable" text="Fondo"/>
+                    <campo name="foio_orden_pago" text="folio" filtroCampo="foio_orden_pago" filtroOperador="=" filtroValor="null" visible="false" columna-visible="false"/>
+     
+                    <campo name="seleccion_orden_pago" text="Selección" editable="true" filtroCampo="seleccion_orden_pago" filtroOperador="=" filtroValor="false" /> <!-- filtroCampo="seleccion_orden_pago" filtroOperado="!=" filtroValor="true"-->
+                    <!--<campo name="folio_operacion_instancia" text="Folio Operacion" calcCliente="@ifThenElse(%seleccion_orden_pago%==true,%folioIns.folioIns.folio_operacion%,null)"/>-->
+                    <campo name="listo_para_pago" text="Listo para Pago" columna-visible="false" filtroCampo="listo_para_pago" filtroOperador="=" filtroValor="true"/>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar" />
+                </estilos>
+            </componente>
+            
+           <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('select  count(distinct(beneficiario)) &gt; 1 as resultado from operation.duep where seleccion_orden_pago=true and foio_orden_pago is null','resultado','bool','MAGNITUS')" validacionMensaje="'Los registros Deben de Ser del Mismo Beneficiario'"/>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('select  count(distinct(id_fondo_contable)) &gt; 1 as resultado_uno from operation.duep where seleccion_orden_pago=true and foio_orden_pago is null','resultado_uno','bool','MAGNITUS')" validacionMensaje="'Los registros deben de ser del mismo Fondo Contable'"/>
+            </validaciones>
+        </nivel>
+        <!-- INSERTA EL FOLIO DE OPERACIÓN DE LA INSTANCIA DE LOS DUEPS SELECCIONADOS -->
+        <nivel id="actualizaFolioInstancia" nombre="barreDUEPSeleccionable_DUEP" interactivo="false">
+            <componente id="actualizaFolioInstancia" nombre="barreDUEPSeleccionable_DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_duep"/>
+                    <campo name="seleccion_orden_pago" filtroCampo="seleccion_orden_pago" filtroOperador="=" filtroValor="true"/>
+                    <campo name="folio_operacion_instancia" calc="%inParam.inParam.folio_operacion%"/>
+                </tabla>
+                <nivel id="duepDetalle" nombre="duepDetalle" interactivo="false">
+                    <componente id="duepDetalle" nombre="duepDetalle" tipo="cursor">
+                        <tabla schema="operation" nombre="duep_detalle">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                            <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                            <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%actualizaFolioInstancia.actualizaFolioInstancia.folio_duep%" />
+                            <campo name="folio_duep_detalle"/>
+                            <campo name="folio_orden_pago" calc="%inParam.inParam.orden_pago%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <!-- ELIMINA LOS DETALLES DE LA ORDEN DE PAGO (EVITA DUPLICIDAD)--> 
+      <!--  <nivel id="eliminaDetalles" nombre="Elimina Detalles de la Orden de Pago" interactivo="false">
+            <componente id="eliminaDetalles" nombre="Elimina Detalles de la Orden de Pago" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%"/>
+                    <campo name="id_detalle_orden_pago" />
+                </tabla>
+                    <nivel id="eliminaDetallesBaja" nombre="Elimina Detalles de la Orden de Pago" interactivo="false" ejecutar="%eliminaDetalles.eliminaDetalles.ur%!=null">
+                        <componente id="eliminaDetallesBaja" nombre="Elimina Detalles de la Orden de Pago" tipo="bajaDirect">
+                            <tabla schema="operation" nombre="orden_pago_detalle">
+                                <campo name="ur" calc="%eliminaDetalles.eliminaDetalles.ur%"/>
+                                <campo name="id_periodo" calc="%eliminaDetalles.eliminaDetalles.id_periodo%"/>
+                                <campo name="orden_pago" calc="%eliminaDetalles.eliminaDetalles.orden_pago%"/>
+                                <campo name="id_detalle_orden_pago" calc="%eliminaDetalles.eliminaDetalles.id_detalle_orden_pago%"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+            </componente>
+        </nivel>-->
+<!--BARRE DUEP PARA LA TABLA ORDEN DE PAGO
+        <nivel id="barreDUEPSeleccionable_DUEP" nombre="barreDUEPSeleccionable_DUEP" interactivo="false">
+            <componente id="barreDUEPSeleccionable_DUEP" nombre="barreDUEPSeleccionable_DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="folio_duep"/>
+                    <campo name="folio_duep_a"/>
+                    <campo name="beneficiario"/>
+                    <campo name="fecha_solicitud"/>
+                    <campo name="concepto"/>
+                    <campo name="total"/>
+                    <campo name="id_cat_fondo_contable"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="seleccion_orden_pago" filtroCampo="seleccion_orden_pago" filtroOperador="=" filtroValor="true"/>
+                    <campo name="folio_operacion_instancia" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="%folioIns.folioIns.folio_operacion%"/>
+                    <campo name="muchos_dueps" local="true" type="string" text="Otra" cellsalign="left" width="200" calc="
+                    @ifThenElse(%barreDUEPSeleccionable_DUEP.barreDUEPSeleccionable_DUEP.concepto% == null, ' ', @concatenar('MCE-'+%barreDUEPSeleccionable_DUEP.barreDUEPSeleccionable_DUEP.folio_duep_a%) + ',' + ' ')"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="altaOrdenPago" nombre="altaOrdenPago" interactivo="false">
+            <componente id="altaOrdenPago" nombre="altaOrdenPago" tipo="altaDirect">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" calc="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="id_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="orden_pago" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="fecha_registro" calc="@fechaSistema()"/> 
+                    <campo name="id_cat_fondo_contable" calc="%barreDUEPSeleccionable_DUEP.barreDUEPSeleccionable_DUEP.id_cat_fondo_contable%"/>
+                    <campo name="fecha_programacion_pago"/>
+                    <campo name="beneficiario" calc="%barreDUEPSeleccionable_DUEP.barreDUEPSeleccionable_DUEP.beneficiario%"/>
+                    <campo name="concepto" calc="%barreDUEPSeleccionable_DUEP.barreDUEPSeleccionable_DUEP.muchos_dueps%"/>
+                    <campo name="poliza"/>
+                    <campo name="estatus_orden_pago" calc="1"/>
+                    <campo name="id_fondo_contable" calc="%barreDUEPSeleccionable_DUEP.barreDUEPSeleccionable_DUEP.id_fondo_contable%"/>
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="forma_pago"/>
+                    <campo name="observaciones"/>
+                    <campo/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="altaOrdenPagoFolio" nombre="altaOrdenPagoFolio" interactivo="false">
+            <componente id="altaOrdenPagoFolio" nombre="altaOrdenPagoFolio" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%altaOrdenPago.altaOrdenPago.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%altaOrdenPago.altaOrdenPago.id_periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%altaOrdenPago.altaOrdenPago.orden_pago%"/>
+                    <campo name="folio_orden_pago" 
+                    calc="@concatenar('CLC-'+@ifThenElse(%altaOrdenPago.altaOrdenPago.orden_pago% &lt;
+                    10,'00000',@ifThenElse(%altaOrdenPago.altaOrdenPago.orden_pago% &lt; 
+                    100,'0000',@ifThenElse(%altaOrdenPago.altaOrdenPago.orden_pago% &lt; 
+                    1000,'000',@ifThenElse(%altaOrdenPago.altaOrdenPago.orden_pago% &lt; 
+                    10000,'00',@ifThenElse(%altaOrdenPago.altaOrdenPago.orden_pago% &lt; 
+                    100000,'0',null)))))+%altaOrdenPago.altaOrdenPago.orden_pago%)"/>
+                </tabla>
+            </componente>
+        </nivel>    -->
+<!--BARRE DUEP PARA LA TABLA ORDEN DE PAGO-->   
+<!-- SE ESTA HACIENDO EL BARRIDO PARA SABER CUAL DE LOS DUEP AUTORIZADOS PERO QUE NO ESTAN EN LA ORDEN DE PAGO-->
+      <!--  <nivel id="barreDUEPSeleccionable" nombre="barreDUEPSeleccionable" interactivo="false">
+            <componente id="barreDUEPSeleccionable" nombre="barreDUEPSeleccionable" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_duep"/>
+                    <campo name="folio_duep_a"/>
+                    <campo name="beneficiario"/>
+                    <campo name="fecha_solicitud"/>
+                    <campo name="concepto"/>
+                    <campo name="total"/>
+                    <campo name="id_cat_fondo_contable"/>
+                    <campo name="id_fondo_contable"/>
+                    <campo name="seleccion_orden_pago" filtroCampo="seleccion_orden_pago" filtroOperador="=" filtroValor="true"/>
+                    <campo name="folio_operacion_instancia" filtroCampo="folio_operacion_instancia" filtroOperador="=" filtroValor="%inParam.inParam.folio_operacion%"/>
+                    <campo name="id_cat_fuente_financiamiento"/>
+                    <campo name="id_fuente_financiamiento"/>
+                    <campo name="foio_orden_pago" calc="%inParam.inParam.orden_pago%"/>
+                </tabla>
+                 <nivel id="altaDetalleDUEP" nombre="altaDetalleDUEP" interactivo="false">
+                    <componente id="altaDetalleDUEP" nombre="altaDetalleDUEP" tipo="altaDirect">
+                        <tabla schema="operation" nombre="orden_pago_detalle">
+                            <campo name="ur" calc="%inParam.inParam.ur%"/>
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%"/>
+                            <campo name="orden_pago" calc="%inParam.inParam.orden_pago%"/>
+                            <campo name="id_detalle_orden_pago" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="folio_duep" calc="%barreDUEPSeleccionable.barreDUEPSeleccionable.folio_duep%"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()"/>
+                            <campo name="importe" calc="%barreDUEPSeleccionable.barreDUEPSeleccionable.total%"/>
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="id_cat_fuente_financiamiento" calc="%barreDUEPSeleccionable.barreDUEPSeleccionable.id_fuente_financiamiento%"/>
+                            <campo name="id_fuente_financiamiento" calc="%barreDUEPSeleccionable.barreDUEPSeleccionable.id_cat_fuente_financiamiento%"/>
+                            <campo name="concepto" calc="%barreDUEPSeleccionable.barreDUEPSeleccionable.concepto%"/>
+                            <campo name="folio_duep_a" calc="%barreDUEPSeleccionable.barreDUEPSeleccionable.folio_duep_a%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>-->
+        <!--INICIO DEL COMPONENTE TIPO MAESTRO DETALLE -->
+        <nivel id="modificaOrdenPagoNiv2" nombre="Gestión Ordén de Pago" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="modificaOrdenPagoComp2" nombre="Modifica Orden de Pago" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla schema="operation" nombre="orden_pago">
+                        <campo name="ur" text="Unidad Responsable" calc="%inParam.inParam.ur%" visible="false" />
+                        <campo name="id_periodo" text="Periodo" calc="%inParam.inParam.periodo%" visible="false"/>
+                        <campo name="orden_pago" text="Folio Orden de Pago" calc="%inParam.inParam.orden_pago%" visible="false" llaveForanea="false"/>
+                        <campo name="folio_orden_pago" text="Folio Orden de Pago" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="beneficiario" text="Beneficiario" descripcionForanea="nombre,primer_apellido,segundo_apellido,razon_social" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        
+                        <campo name="id_cat_fondo_contable" text="Llave Fondo Contable" visible="false" llaveForanea="false" />
+                        <campo name="id_fondo_contable" text="Fondo Contable" visible="true" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        
+                        <campo name="fecha_registro" text="Fecha de Emisión" calc="@fechaSistema()" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="fecha_programacion_pago" text="Fecha de Programación de Pago" llaveForanea="false" calc="@sumaFecha(%modificaOrdenPagoNiv2.modificaOrdenPagoComp2.fecha_registro%,5,'d')"
+                        marcador="Seleccione Fecha" columnas="2" margen-izquierdo="1" habilitado="true"/> <!---->
+                        
+                       <campo name="para_deposito" text="para deposito" visible="false" calc="%cuenta_bancaria_beneficiario_lo%"/>
+                        <campo name="cuenta_bancaria_beneficiario_local" local="true" type="string" text="Para depósito en:" 
+                        calcCliente="@ifThenElse(%beneficiario%!=null,@concatenar(@consultaDirec('select cuenta_bancaria as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','MAGNITUS')+'-'+@consultaDirec('select clabe as resultado from entity.beneficiario_cuenta_bancaria where id_beneficiario='+'\\''+%beneficiario%+'\\'','resultado','string','MAGNITUS')),null)" 
+                        descripcionForanea="cuenta_bancaria"  columnas="2" margen-izquierdo="1" margen-derecho="1" visible="true" habilitado="false"/>
+                        
+                        <campo name="concepto" text="Concepto" columnas="6" llaveForanea="false" habilitado="false" margen-izquierdo="2" width="750" height="150"/>
+                        <campo name="poliza" text="Poliza" visible="false"/>
+                        <campo name="estatus_orden_pago" text="estatus_orde_pago" visible="false"/>
+                        <campo name="ultimo_usuario_modificador" visible="false"/>
+                        <campo name="forma_pago" text="Forma de Pago" visible="false"/>
+                        <campo name="observaciones" text="Observaciones" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" />
+                    </estilos>
+                    <acciones>
+                       <accion nombre="grabar" hacer="saltar siguiente componente" />
+                    </acciones>
+                </encabezado>
+                <detalles> <!--  -->
+                    <tabla id="identificador_detalle" schema="operation" nombre="orden_pago_detalle" tituloDetalle="No. Renglón" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="ur" llaveForanea="false" columna-visible="false"/>
+                        <campo name="id_periodo" text="periodo" llaveForanea="false" columna-visible="false"/>
+                        <campo name="orden_pago" llaveForanea="false" text="Orden de Pago" columna-visible="false"/>
+                        <campo name="id_detalle_orden_pago" text="No. Renglón" generacion="@prox()+1" autogenerado="true" width="200"/>
+                        <campo name="folio_duep" text="Folio" width="200" visible="false" columna-visible="true"/>
+                        <!-- calc="%barreDUEPSeleccionable.barreDUEPSeleccionable.folio_duep_a%"-->
+                        <campo name="concepto" text="Concepto"  llaveForanea="false" width="200" visible="false"/>
+                        <campo name="id_cat_fuente_financiamiento" visible="false" llaveForanea="false" columna-visible="false" text="cat_fuente" width="150"/>
+                        <campo name="id_fuente_financiamiento" text="Fuente de Financiamiento" width="200"/>
+                        <!--<campo name="id_catalogo" text="Fuente de Financiamiento" local="true" type="string" 
+                        calc="@consultaDirec('SELECT cat.descripcion FROM operation.orden_pago_detalle opd 
+                        INNER JOIN operation.duep d ON opd.folio_duep = d.folio_duep
+                        INNER JOIN catalog.catalogos cat ON d.id_cat_fuente_financiamiento = cat.id_cat 
+                        AND d.id_fuente_financiamiento = cat.id_catalogo
+                        WHERE opd.folio_duep ='+'\\''+%barreDUEPSeleccionable.barreDUEPSeleccionable.folio_duep%+'\\'','descripcion','string','SIPAAP')" />-->
+                        <campo name="fecha_registro" text="Fecha de Registro"  llaveForanea="false" width="200"/>
+                        <campo name="importe" text="Importe Total" muestraAcumulado="true"  llaveForanea="false" width="200"/>
+                        <campo name="ultimo_usuario_modificador" text="Usuario" columna-visible="false"/>
+                    </tabla>
+                        <acciones>
+                                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                        </acciones>
+                        <estilos>
+                                <boton nombre="grabar" posicion="derecha" visible="true" texto="Guardar" />
+                        </estilos>
+                </detalles>
+            </componente>
+        </nivel>
+        <nivel id="reporteOrdenPago" nombre="Formato de Orden de Pago">
+            <componente tipo="reporte" id="reporteOrdenPago" nombre="Formato de Ordén de Pago" >
+                <reporte nombre="repor_orden_pago_jsus" expediente="%DE.DE.expediente_tramite%" nombreDocumento="'Orden de Pago'" url="$config.repository_upload_file$" grupo="$inParam.expediente$" update="true">
+                    <campo name="ur" type="long" text="Unidad Responsable"  calc="@castTo($config.ur$,'long')"/> <!-- -->
+                    <campo name="id_periodo" type="long" text="Periodo"  calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/> <!-- -->
+                    <campo name="orden_pago" type="long" text="Orden de Pago"  calc="%inParam.inParam.orden_pago%"/> <!---->
+                    <campo name="usuario" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
+
+
