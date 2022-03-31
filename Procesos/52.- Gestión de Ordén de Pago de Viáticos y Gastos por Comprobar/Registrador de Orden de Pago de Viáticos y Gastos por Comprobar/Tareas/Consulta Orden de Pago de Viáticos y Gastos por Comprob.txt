@@ -1,0 +1,101 @@
+<tarea id="CSCPC" nombre="Consulta Solicitud de Cancelación de Proyecto de Compra">
+<pagina id="APCP" >
+		<!--CURSORES-->
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+        		<tabla schema="catalog" nombre="periodo">
+    				<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+    				<campo name="id_periodo"/>
+        			<campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+        			<campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+        			<campo name="id_separador"/>
+        		</tabla>
+        	</componente>
+	    </nivel>
+	    
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+       
+
+     <!--  MAESTRO DETALLE  -->  
+            <nivel id="RMOPN" nombre="Registra/Modifica Orden de Pago de Viáticos y Gastos por Comprobar" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                <componente id="OP" nombre="Orden de Pago" tipo="maestroDetalle" mostrarEditar="false">
+                     <encabezado accionDefault="editar"> 
+                        <tabla schema="operation" nombre="orden_pago" id="mdrm">
+                            <campo name="ur" habilitado="false" calc="$inParam.ur$" llaveForanea="false" visible="false"/>                            
+                            <campo name="id_periodo" habilitado="false" calc="$inParam.periodo$" visible="false"/>
+                            <campo name="orden_pago"  visible="false" llaveForanea="false" calc="$inParam.orden_pago$" /> 
+                            <campo name="folio_orden_pago" text="Folio Orden Pago" habilitado="false" columnas="3" margen-izquierdo="2"/> 
+                            <campo name="fecha_programacion_pago" text="Fecha de Programación de Pago"  habilitado="false" columnas="3" margen-derecho="2"/>
+                            <campo name="folio_duep" text="Folio" calc="$inParam.folio_duep$" margen-izquierdo="2" columnas="3"/> 
+                            <campo name="funcionario_solicitante" text="Beneficiario"  descripcionForanea="nombre,primer_apellido,segundo_apellido"  columnas="3" margen-derecho="2" habilitado="false"/>
+                            <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" llaveForanea="false" visible="false"/>
+                            <campo name="id_fondo_contable" text="Fondo Contable" descripcionForanea="id_cat,descripcion" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                            <campo name="forma_pago" text="Para deposito en"  habilitado="false" columnas="3" margen-derecho="2"/>
+                            <campo name="fecha_registro" text="Fecha de Emisión" calc="@fechaSistema()"  habilitado="false" columnas="3" margen-izquierdo="2"/>
+                            <campo name="concepto" text="Concepto" habilitado="false" width="720" mascara="C" height="250" columnas="6" margen-izquierdo="2"  validacion="%concepto%==null" validacionMensaje="Capture Concepto"/>
+                            <campo name="ultimo_usuario_modificador" visible="false"/>
+                        </tabla>
+                            <estilos>
+                                <boton nombre="grabar"  texto="CONTINUAR" columnas="3" margen-izquierdo="2"/>
+                            </estilos>
+                    </encabezado>
+                    <detalles id="regdet">
+                        <tabla schema="operation" nombre="orden_pago_detalle" id="detab1" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false"> 
+                            <campo name="ur" habilitado="false" calc="$inParam.ur$" llaveForanea="false" visible="false" text="Unidad Responsable" columna-visible="false"/>
+                            <campo name="id_periodo" habilitado="false" calc="$inParam.periodo$" llaveForanea="false" visible="false" text="Periodo" columna-visible="false"/>
+                            <campo name="folio_duep" text="Folio" calc="$inParam.folio_duep$" columna-visible="false" margen-izquierdo="2" columnas="3"/> 
+                            <campo name="orden_pago" text="No. Renglones" visible="false" habilitado="false"/> 
+                            <!--<campo name="concepto" text="Concepto" calc="%altaDuep.altaDuep.concepto%"/>-->
+                            <campo name="descripcion_especifica" text="Descripción" />
+                            <campo name="u_medida" text="Unidad de Medidad"/>     
+                            <campo name="cantidad" text="Cantidad"/>
+                            <campo name="tarifaxpersona" text="Tarifa por Persona" /> 
+                            <campo name="precio_unitario" text="Costo Unitario"/>
+                            <campo name="total_estimado" text="Total Estimado" /> 
+                            <campo name="total" text="Total" muestraAcumulado="true"/>
+                        </tabla>
+                            <estilos>
+                                <boton nombre="grabar" visible="true" texto="Continuar"/>
+                            </estilos>
+                            <acciones>
+                                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                            </acciones>
+                    </detalles>
+                </componente>
+            </nivel> 
+        <!-- FIN MAESTRO DETALLE  -->
+        
+        
+        <nivel id="ROP" nombre="Reporte de Orden de Pago" mostrarNivelAnterior="false" mostrarProximoNivel="false">          
+            <componente tipo="reporte" nombre="Reporte de Orden de Pago" id="ROP1" >
+                <reporte nombre="repor_orden_pago_via" id="ROP2" expediente="Expediente de Viáticos/Orden de Pago" grupo="$inParam.folio_oficio_comision$" nombreDocumento="'Orden de Pago'" url="$config.repository_upload_file$" update="true"> 
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="orden_pago" type="long" calc="$inParam.orden_pago$"/> 
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        
+        <!--
+      	  <nivel id="ROP" nombre="Reporte de Orden de Pago" mostrarNivelAnterior="false" mostrarProximoNivel="false">          
+            <componente tipo="reporte" nombre="Reporte de Orden de Pago" id="ROP1"  expediente="Expediente de Viáticos/Orden de Pago" grupo="$inParam.folio_oficio_comision$" nombreDocumento="'Orden de Pago'" url="$config.repository_upload_file$" update="true">
+                <reporte nombre="Orden_pago" id="ROP2"> 
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%inParam.periodo%"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.folio_duep$"/> 
+                </reporte>
+            </componente>
+        </nivel>
+            -->
+    </pagina>
+</tarea>

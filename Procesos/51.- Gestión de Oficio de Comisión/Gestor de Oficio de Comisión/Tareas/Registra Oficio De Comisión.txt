@@ -1,0 +1,183 @@
+<tarea nombre="Registra Oficio de Comisión" id="registraoficio">
+    <pagina id="1">
+         <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="nombre"/>
+                    <campo name="primer_apellido"/>
+                    <campo name="segundo_apellido"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN LEGO TIPO CURSOR -->
+        
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="GFE" nombre="Genera Folio Expediente" interactivo="false">
+            <componente id="GFE" nombre="Genera Folio Expediente" tipo="altaDirect">
+                <tabla schema="entity" nombre="viaticos_gxc">
+                    <campo name="folio_viaticos_gxc" generacion="@prox()+1" autogenerado="true"/>
+                    <campo name="tipo_expediente" calc="1"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel nombre="Registra Oficio de Comisión" id="registraOficio" mostrarNivelAnterior="false" mostrarProximoNivel="true"> <!--mostrarProximoNivel="false"-->
+            <componente tipo="formulario" nombre="Registra Datos Generales de la Comisión" id="registraOficio">
+                <tabla schema="catalog" nombre="oficio_comision">
+                    <campo name="ur" text="UR" visible="false" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_oficio" text="No." visible="false" generacion="@prox()+1" autogenerado="true" columnas="3" margen-izquierdo="2"/> 
+                    <campo name="comisionado_titular" text="Comisionado Titular" validacion="%comisionado_titular%==null" validacionMensaje="Debe capturar Comisionado Titular" columnas="3" margen-izquierdo="2" autoFiltrado="true" maxlenght="50" autoFiltradoDescripcion="nombre,primer_apellido,segundo_apellido"/> <!-- descripcionForanea="nombre,primer_apellido,segundo_apellido" -->
+                    <campo name="puesto" text="Puesto num" referenciaForanea="comisionado_titular" celdaForanea="puesto" autocompletar="true" visible="false" llaveForanea="false"/>
+                    <campo name="puesto_descr" text="Puesto" local="true" type="string" calcCliente="@ifThenElse(%puesto%!=null,@consultaDirec('select nombre as resultado from catalog.puesto where id_unidad_responsable=1 AND id_puesto='+'\\''+%puesto%+'\\'','resultado','string','MAGNITUS'),null)"
+                    columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="id_cat_centro_registro" text="Centro uno" llaveForanea="false" visible="false" calc="2"/>
+                    <campo name="id_centro_registro" text="Centro de Registro" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" columnas="3" margen-izquierdo="2" habilitado="true"/>
+                 
+                    <campo name="pais_destino" text="País" validacion="%pais_destino%==null" validacionMensaje="Seleccione País" columnas="3" margen-derecho="2" llavesFijas="id_pais=1"/>
+                    <campo name="estado_destino" text="Estado" validacion="%estado_destino%==null" validacionMensaje="Seleccione Estado" columnas="3" margen-izquierdo="2"/>
+                    <campo name="municipio_destino" text="Municipio/Ciudad" validacion="%municipio_destino%==null" validacionMensaje="Seleccione Municipio/Ciudad" columnas="3" margen-derecho="2"/>
+                    <campo name="fecha_registro" text="Fecha de elaboración" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columnas="3" margen-izquierdo="2"/>
+                    <campo name="id_estatus" text="Estatus" validacion="%id_estatus%==null" validacionMensaje="Debe capturar Estatus" calc="1" columnas="3" margen-derecho="2"/>
+                    <campo name="tipo_comision" text="Tipo de Comisión" validacion="%tipo_comision%==null" validacionMensaje="Seleccione Tipo de Comisión" columnas="3" margen-izquierdo="2"/>
+                    <campo name="fecha_salida" text="Fecha de salida" validacion="%fecha_salida%==null" validacionMensaje="Seleccione Fecha de Salida" columnas="3" margen-derecho="2"/>
+                    <campo name="fecha_regreso" text="Fecha de regreso" validacion="%fecha_regreso%==null or @before(%fecha_regreso%,%fecha_salida%)" 
+                    validacionMensaje="Seleccione Fecha de Regreso o la Fecha Regreso es menor a la Fecha Salida" columnas="3" margen-izquierdo="2" margen-derecho="5"/>
+                    <campo name="nombre_comision" text="Nombre Comisión" validacion="%objetivo%==null" validacionMensaje="Capture Nombre Comisión" mascara="C" columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="objetivo" text="Objetivo" validacion="%objetivo%==null" validacionMensaje="Capture Obejtivo" columnas="6" margen-izquierdo="2" height="200"/>
+                </tabla>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                 </acciones>
+                 <estilos>
+                    <boton nombre="grabar" margen-derecho="4" margen-izquierdo="4" columnas="2" visible="true" texto="CONTINUAR"/>
+                 </estilos>
+            </componente>
+            <componente tipo="tabla" nombre="Registra Integrantes de la Comisión" id="registraIntegrante" ejecutarComponente="%registraOficio.registraOficio.ur%!=null">
+                <tabla schema="catalog" nombre="oficio_comision_integrantes">
+                    <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" descripcionForanea="id_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="oficio_comision" text="Oficio Comisión" calc="%registraOficio.registraOficio.id_oficio%" columna-visible="false" visible="false" llaveForanea="false"/>
+                    <campo name="folio_integrante" text="No." generacion="@prox()+1" autogenerado="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="usuario" text="Nombre" columnas="3" margen-derecho="2" 
+                    descripcionForaneaTabla="nombre,primer_apellido,segundo_apellido" 
+                    validacion="@consultaDirec('SELECT COUNT (usuario) >= 1 encontrado 
+                                FROM catalog.oficio_comision_integrantes 
+                                WHERE ur ='+'\\''+%ur%+'\\' 
+                                AND periodo ='+'\\''+%periodo%+'\\' 
+                                AND oficio_comision ='+'\\''+%oficio_comision%+'\\'
+                                AND usuario ='+'\\''+%usuario%+'\\'','encontrado','bool','MAGNITUS')==true" 
+                                validacionMensaje="El usuario seleccionado ya esta registrado, Favor de registrar un nuevo usuario" autoFiltrado="true" maxlenght="50" autoFiltradoDescripcion="nombre,primer_apellido,segundo_apellido"/> <!-- Requerimiento Desarrollo  descripcionForanea="nombre,primer_apellido,segundo_apellido"-->
+
+                    <campo name="puesto" text="Puesto" local="true" type="string" referenciaForanea="usuario" celdaForanea="puesto"  autocompletar="true" visible="false" columna-visible="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="puesto_descr" text="Puesto Descripcion" local="true" type="string" calcCliente="@consultaDirec('select nombre as resultado_tres from catalog.puesto where id_unidad_responsable=1 AND id_puesto='+%puesto%,'resultado_tres','string','MAGNITUS')"
+                    columnas="3" margen-izquierdo="2" habilitado="false" columna-visible="false"/> <!-- Requerimiento Tabla Desarrollo-->
+                    
+                    <campo name="id_cat_centro_registro" text="Centro uno" local="true" type="string" referenciaForanea="usuario" celdaForanea="id_cat_centro_registro" autocompletar="true" visible="false" columna-visible="false"/>
+                    <campo name="id_centro_registro" text="Centro dos" local="true" type="string" referenciaForanea="usuario" celdaForanea="id_centro_registro" autocompletar="true" visible="false" columna-visible="false"/>
+                   
+                    <campo name="folio_empleado" text="Clave Empleado" columnas="3" margen-derecho="2" local="true" type="string" habilitado="false" columna-visible="false" referenciaForanea="usuario" celdaForanea="folio_usuario" autocompletar="true" visible="false"/>
+                    <campo name="centro_descr" text="Centro de Registro" local="true" type="string" calcCliente="@consultaDirec('select descripcion as resultado_uno from catalog.catalogos where ur='+$config.ur$+' and id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' and id_catalogo=2 and id_cat='+'\\''+ %id_centro_registro% +'\\'','resultado_uno','string','MAGNITUS')"
+                   columnas="3" margen-izquierdo="2" habilitado="false" columna-visible="false" visible="false"/>
+                </tabla>
+
+               
+            </componente>
+            <componente tipo="tabla" nombre="Registra Viaticos Requeridos" id="registraViaticos" ejecutarComponente="%registraOficio.registraOficio.ur%!=null" > 
+                <tabla schema="catalog" nombre="oficio_comision_viaticos_requeridos">
+                    <campo name="ur" text="UR" visible="false" columna-visible="false" calc="$config.ur$" llaveForanea="false"/>
+                    <campo name="periodo" text="Periodo" visible="false" columna-visible="false" descripcionForanea="id_periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false" llaveForanea="false"/>
+                    <campo name="oficio_comision" text="Oficio Comisión" calc="%registraOficio.registraOficio.id_oficio%" columna-visible="false" visible="false" llaveForanea="false"/>
+                    <campo name="folio_viatico" text="No." generacion="@prox()+1" autogenerado="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="concepto_viatico" text="Concepto Viático" validacion="%concepto_viatico%==null" validacionMensaje="Seleccione Concepto de Viático" columnas="3" margen-derecho="2" descripcionForanea="concepto_viatico" descripcionForaneaTabla="concepto_viatico"/> <!--  -->
+                    <campo name="descripcion" text="Descripción" validacion="%descripcion%==null" validacionMensaje="Capture Descripción" mascara="C" columnas="3" margen-izquierdo="2"/>
+                    <campo name="unidad_medida" text="Unidad de Medida" validacion="%unidad_medida%==null" validacionMensaje="Capture Unidad de Medida" columnas="3" margen-derecho="2"/>
+                    <campo name="cantidad" text="Días de Comisión" validacion="%cantidad%==null" validacionMensaje="Capture Cantidad" columnas="3" margen-izquierdo="2"/> <!-- maxlenght="3" mascara="###"-->
+                    <campo name="tarifa_persona" text="Tarifa por persona" validacion="%tarifa_persona%==0" validacionMensaje="Capture Tarifa por Persona" columnas="3" margen-derecho="2" formatoMoneda="true"/> <!--mascara="###########" -->
+                    <campo name="costo_unitario" text="Costo Unitario" validacion="%costo_unitario%==0" validacionMensaje="Capture Costo Unitario" columnas="3" margen-izquierdo="2" formatoMoneda="true"/>
+                    <campo name="total_estimado" text="Total Estimado" calcCliente="(@ifThenElse(%costo_unitario%==null,0,%costo_unitario%) * @ifThenElse(%cantidad%==null,0,%cantidad%))" columnas="3" margen-derecho="2" muestraAcumulado="true" formatoMoneda="true"/>
+                    <campo name="total" text="Total" columnas="3" margen-izquierdo="2" visible="false" columna-visible="false"/>
+                </tabla>                
+                 <!--<acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                 </acciones>
+                 <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Continuar"/>
+                 </estilos>-->
+            </componente>
+        </nivel>
+       
+        <nivel id="barreViaticos" nombre="barreViaticos" interactivo="false">
+            <componente id="barreViaticos" nombre="barreViaticos" tipo="cursor">
+                <tabla schema="catalog" nombre="oficio_comision_viaticos_requeridos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%registraOficio.registraOficio.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%registraOficio.registraOficio.periodo%"/>
+                    <campo name="oficio_comision" filtroCampo="oficio_comision" filtroOperador="=" filtroValor="%registraOficio.registraOficio.id_oficio%"/>
+                    <campo name="total_estimado"/>
+                    <campo name="acumulado" local="true" type="double" calc="$sumatoria.total_estimado$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="generaFolioComision" nombre="generaFolioComision" interactivo="false">
+            <componente id="generaFolioComision" nombre="generaFolioComision" tipo="cursor">
+                <tabla schema="catalog" nombre="oficio_comision">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%registraOficio.registraOficio.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo"  filtroOperador="=" filtroValor="%registraOficio.registraOficio.periodo%"/> 
+                    <campo name="id_oficio" filtroCampo="id_oficio" filtroOperador="=" filtroValor="%registraOficio.registraOficio.id_oficio%"/>
+                    <campo name="folio_comision" calc="@concatenar('OFICIO-'+@ifThenElse(%generaFolioComision.generaFolioComision.id_oficio% &lt;10,'00000',@ifThenElse(%generaFolioComision.generaFolioComision.id_oficio% &lt; 100,'0000',@ifThenElse(%generaFolioComision.generaFolioComision.id_oficio% &lt; 1000,'000',@ifThenElse(%generaFolioComision.generaFolioComision.id_oficio% &lt; 10000,'00',@ifThenElse(%generaFolioComision.generaFolioComision.id_oficio% &lt; 100000,'0',null)))))+%generaFolioComision.generaFolioComision.id_oficio%)"/>
+                    <campo name="total" calc="%barreViaticos.barreViaticos.acumulado%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!-- Instancia Proceso-->
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'502fcdf2-dba3-4966-903d-b8efd3ad8e43'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%registraOficio.registraOficio.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%registraOficio.registraOficio.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_folio_oficio" calc="%registraOficio.registraOficio.id_oficio%" mostrarEsc="false"/>
+                    <parametro name="out_folio_oficio_comision" calc="%generaFolioComision.generaFolioComision.folio_comision%" mostrarEsc="false"/>
+                    <!-- PARAMETROS EXPEDIENTE -->
+                    <parametro name="out_folio_viaticos_gxc" calc="%GFE.GFE.folio_viaticos_gxc%"/>
+                    <parametro name="out_tipo_expediente" calc="%GFE.GFE.tipo_expediente%"/>
+                    <!-- /PARAMETROS EXPEDIENTE -->
+                    <parametro name="out_objetivo" calc="%registraOficio.registraOficio.objetivo%" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+        <!-- Fin Instancia Proceso-->
+
+        <nivel nombre="Registra Reporte Oficio de Comisión" id="registraReporte">
+            <componente tipo="reporte" nombre="Consulta Reporte Oficio de Comisión" id="registraReporte">
+                <reporte nombre="comision" expediente="Expediente de Viáticos/Oficio de Comisión" grupo="%GFE.GFE.folio_viaticos_gxc%" nombreDocumento="'Oficio de Comisión'" url="$config.repository_upload_file$" update="false">
+                    <campo name="id_unidad_responsable" type="long" calc="%registraOficio.registraOficio.ur%"/> 
+                    <campo name="id_periodo" type="long" calc="%registraOficio.registraOficio.periodo%"/> 
+                    <campo name="folio_comision" type="long" calc="%registraOficio.registraOficio.id_oficio%"/> 
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

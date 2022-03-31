@@ -1,0 +1,319 @@
+<tarea id="Autoriza_Liquidación_de_Orden_de_Pago_de_Viaticos_y_Gastos_por_Comprobar" nombre="'Autoriza Liquidación de Orden de Pago de Viáticos y Gastos por Comprobar">
+    <pagina id="1">
+        
+        <nivel id="inParam" nombre="Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" text="UR" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" text="Periodo" local="true" type="long" calc="$inParam.periodo$"/>
+                    <campo name="orden_pago" text="Orden de Pago" local="true" type="long" calc="$inParam.orden_pago$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="DE" nombre="Determina Expediente"  interactivo="false">
+      	    <componente id="DE" tipo="cursor" nombre="Determina Expediente">
+      	        <tabla schema="catalog" nombre="dummy">
+      	            <campo name="id" text="ID" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+      	            <campo name="expediente" text="Nombre Expediente" local="true" type="string" calc="@ifThenElse($inParam.tipo_expediente$==2,'Expediente de Solicitud de Gastos por Comprobar/Orden de Pago', 'Expediente de Viáticos/Orden de Pago')"/>
+      	        </tabla>
+      	    </componente>
+	     </nivel>
+        
+        
+        <nivel id="FU" nombre="Filtra Usuario" interactivo="false">
+            <componente id="FU" nombre="Filtra Usuario" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+
+          <!--REPORTE ORDEN DE PAGO-->
+          <nivel id="ROP" nombre="Reporte de Orden de Pago" mostrarNivelAnterior="false" mostrarProximoNivel="true">          
+            <componente tipo="reporte" nombre="Reporte de Orden de Pago" id="ROP1" >
+                <reporte nombre="repor_orden_pago_via" id="ROP2" > 
+                    <campo name="ur" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="orden_pago" type="long" calc="$inParam.orden_pago$"/> 
+                    <campo name="usuario" type="string" calc="$protocolarios.user$"/>
+                </reporte>
+            </componente>
+        </nivel>
+         <!--FIN REPORTE ORDEN DE PAGO-->
+
+    
+        <!--  MAESTRO DETALLE  --> 
+        <nivel id="RMOPN" nombre="Registra/Modifica Orden de Pago de Viáticos y Gastos por Comprobar" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="OP" nombre="Orden de Pago" tipo="formulario" mostrarEditar="false" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="orden_pago" id="mdrm">
+                    <campo name="ur" habilitado="false" calc="$inParam.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" habilitado="false" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="orden_pago"  visible="false" llaveForanea="false" calc="$inParam.orden_pago$" /> 
+                    <campo name="folio_orden_pago" text="Folio Orden Pago" habilitado="false" columnas="3" margen-izquierdo="2"/> 
+                    <campo name="fecha_programacion_pago" text="Fecha de Programación de Pago" habilitado="false" columnas="3" margen-derecho="2"/>
+                    <campo name="folio_duep" text="Folio" calc="$inParam.folio_duep$" margen-izquierdo="2" columnas="3"/> 
+                    <campo name="funcionario_solicitante" text="Beneficiario"  descripcionForanea="nombre,primer_apellido,segundo_apellido"  columnas="3" margen-derecho="2" habilitado="false"/>
+                    <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" llaveForanea="false" visible="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" descripcionForanea="id_cat,descripcion" columnas="3"  margen-izquierdo="2" habilitado="false"/>
+                    <campo name="forma_pago" text="Para deposito en"  habilitado="false" columnas="3" margen-derecho="2"/>
+                    <campo name="fecha_registro" text="Fecha de Emisión" calc="@fechaSistema()"  habilitado="false" columnas="3" margen-izquierdo="2"/>
+                    <campo name="concepto" text="Concepto" habilitado="false" width="720" mascara="C" height="250" columnas="6" margen-izquierdo="2"  validacion="%concepto%==null" validacionMensaje="Capture Concepto"/>
+                    <campo name="ultimo_usuario_modificador" visible="false" calc="%FU.FU.id_usuario%"/>
+                    <campo name="beneficiario" text="id_beneficiario_ganador" visible="false" llaveForanea="false"/> 
+                </tabla>
+                            <estilos>
+                                <boton nombre="grabar" visible="true" texto="Continuar"/>
+                            </estilos>
+                            <acciones>
+                                <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                            </acciones>
+                </componente>
+        </nivel> 
+      
+        
+
+        <!-- FORMULARIO DE AUTORIZACIÓN DE LIQUIDACIÓN DE ORDEN DE PAGO DE VIATICOS Y GASTOS POR COMPROBAR -->
+        <nivel id="ALOPVGXC" nombre="Autoriza Liquidación de Orden de Pago de Viáticos y Gastos por Comprobar"   mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="ALOPVGXC"  nombre="Autoriza Liquidación de Orden de Pago de Viáticos y Gastos por Comprobar" tipo="formulario" accionDefault="editar">
+                 <tabla schema="operation" nombre="orden_pago">
+                    <campo name="ur" habilitado="false" calc="%inParam.inParam.ur%" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" habilitado="false" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="orden_pago" visible="false" llaveForanea="false" calc="%inParam.inParam.orden_pago%" />
+                    <campo name="autorizacion_liqop" text="Autoriza" calc="false" columnas="3" margen-izquierdo="4" margen-derecho="4"/>
+                    <campo name="observacion_liqop" text="Motivo Rechazo" interaccion="%autorizacion_liqop%==false" validacion="%observacion_liqop%==null AND %autorizacion_liqop%==false" validacionMensaje="Comentarios es Requerido"  columnas="5" width="150" height="150"  margen-izquierdo="3"/> 
+                    <campo name="estatus_orden_pago" calc="2" visible="false"/> 
+                 </tabla>
+                 <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" margen-izquierdo="8"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        <nivel nombre="Guarda Expediente" id="GE" interactivo="false">
+            <componente tipo="cursor" nombre="Guarda Expediente" id="GE">
+                <tabla schema="operation" nombre="duep_solicitud_viaticos">
+                    <campo name="ur"  filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo"  filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="folio_duep"  filtroCampo="folio_duep" filtroOperador="=" filtroValor="$inParam.folio_duep$"/>
+                    <campo name="folio_expediente" calc="$inParam.folio_expediente$"/>
+                    <campo name="tipo_expediente" calc="$inParam.tipo_expediente$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- FILTRA PERIODO -->
+        <nivel id="FP" nombre="Filtra Periodo" interactivo="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==true">
+            <componente id="FP" nombre="Filtra Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_separador" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER SEPARADOR -->
+        <nivel id="obSeparador" nombre="obSeparador" interactivo="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==true">
+            <componente tipo="cursor" id="obSeparador" nombre="obSeparador">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%FP.FP.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+          <!--ENCABEZADO POLIZA -->
+        <nivel id="EP" nombre="Generación del Encabezado de la Póliza"  interactivo="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==true">
+            <componente id="EP"  nombre="Reporte Poliza de Recaudacion de Ingresos de Aportaciones por Ministrar" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                  <campo name="ur" calc="%inParam.inParam.ur%"/>
+                  <campo name="periodo" calc="%inParam.inParam.periodo%"/>
+                  <campo name="fecha_poliza" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                  <campo name="tipo_poliza" calc="3"/>
+                  <campo name="id_catalogo" calc="%RMOPN.OP.id_cat_fondo_contable%"/>
+                  <campo name="fondo_contable"  calc="%RMOPN.OP.id_fondo_contable%"/>
+                  <campo name="duep_origen" calc="%RMOPN.OP.folio_duep%"/>
+                  <campo name="concepto_general" calc="%RMOPN.OP.concepto%"/> 
+                  <campo name="id_beneficiario_ganador" calc="%RMOPN.OP.id_beneficiario_ganador%"/> 
+                  <campo name="momento_contable" calc="7"/> 
+                  <campo name="estatus_poliza" calc="2"/>
+                  <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                  <campo name="origen_poliza" calc="1"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="AFP" nombre="Actualiza Folio de Póliza" interactivo="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==true">
+            <componente id="AFP" nombre="Actualiza Folio de Póliza" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/> 
+                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                   <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%EP.EP.folio_movimiento_auxiliar%"/>
+                   <campo name="folio_reporte" calc="@concatenar(%inParam.inParam.periodo%+'-'+
+                   @ifThenElse(%EP.EP.folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%EP.EP.folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%EP.EP.folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%EP.EP.folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%EP.EP.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%EP.EP.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="FODD" nombre="Filtra Orden De Pago Detalles" interactivo="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==true">
+            <componente id="FODD" nombre="Filtra Orden De Pago Detalles" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="orden_pago" filtroCampo="orden_pago" filtroOperador="=" filtroValor="%inParam.inParam.orden_pago%"/>
+                    <campo name="id_detalle_orden_pago"/>
+                    <campo name="folio_duep"/>
+                    <campo name="fecha_registro"/>
+                    <campo name="importe"/>
+                    <campo name="ultimo_usuario_modificador"/>
+                    <campo name="concepto"/>
+                    <campo name="importe_letra"/>
+                    <campo name="id_cat_fuente_financiamiento"/>
+                    <campo name="id_fuente_financiamiento"/>
+                    <campo name="folio_duep_detalle"/>
+                    <campo name="descripcion_especifica"/>
+                    <campo name="u_medida"/>
+                    <campo name="cantidad"/>
+                    <campo name="precio_unitario"/>
+                    <campo name="total_estimado"/>
+                    <campo name="tarifaxpersona"/>
+                    <campo name="total"/>
+                    <campo name="clave_presupuestal"/>
+                </tabla>
+      
+                 <!-- CARGO PATRIMONIAL A PROVEEDORES -->
+                <nivel id="CPatProv" nombre="Cargo Patrimonial a Proveedores" interactivo="false">
+                    <componente id="CPatProv" nombre="Cargo Patrimonial a Proveedores" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%"/>
+                            <campo name="id_periodo" calc="%inParam.inParam.periodo%"/>
+                            <campo name="id_movimiento_auxiliar" calc="%EP.EP.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%FODD.FODD.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '3'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00000'+%obSeparador.obSeparador.caracter%+'000')"  /> <!-- calc="'1-1-2-3-0-001-01-001'" -->
+                            <campo name="importe_cargo" calc="%FODD.FODD.total_estimado%"/> 
+                            <campo name="concepto_bloque" calc="'BANAMEX 3246'"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '3'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00000'+%obSeparador.obSeparador.caracter%+'000') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                            <campo name="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/> 
+                        </tabla>
+                    </componente>
+                </nivel> 
+         
+                <!-- ABONO PATRIMONIAL A BANCOS  -->
+                <nivel id="APatBan" nombre="Abono Patrimonial a Bancos" interactivo="false">
+                    <componente id="APatBan" nombre="Abono Patrimonial a Bancos" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%inParam.inParam.ur%"/>
+                            <campo name="id_periodo" calc="$inParam.periodo$"/>
+                            <campo name="id_movimiento_auxiliar" calc="%EP.EP.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%FODD.FODD.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '1'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00000'+%obSeparador.obSeparador.caracter%+'000')" /> 
+                            <campo name="importe_abono" calc="%FODD.FODD.total_estimado%"/>
+                            <campo name="concepto_bloque" calc="'PROVEEDORES POR PAGAR'"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '1'+%obSeparador.obSeparador.caracter%+
+                                '2'+%obSeparador.obSeparador.caracter%+
+                                '0'+%obSeparador.obSeparador.caracter%+
+                                '01'+%obSeparador.obSeparador.caracter%+
+                                '00000'+%obSeparador.obSeparador.caracter%+'000') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"  />
+                            <campo name="ultimo_usuario_modificador" calc="%FU.FU.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="2" llaveForanea="false"/> 
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!--REPORTE POLIZA-->
+        <nivel id="RPRIAM" nombre="Reporte Poliza de Liquidación de Orden de Pago de Viáticos y Gastos por Comprobar" mostrarNivelAnterior="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==true">
+            <componente id="RPRIAM" nombre="Reporte Poliza de Liquidación de Orden de Pago de Viáticos y Gastos por Comprobar" tipo="reporte">
+                 <reporte nombre="polizacontable_GGPC" expediente="$DE.DE.expediente$" grupo="$inParam.folio_expediente$" nombreDocumento="'Póliza Liquidación de Orden de Pago'" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo"  type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%EP.EP.folio_movimiento_auxiliar%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        <!--FIN Reporte-->
+        
+        <!--INSTANCIAS-->
+        <nivel nombre="Finaliza Instancia" id="finalizaInstancia" interactivo="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+    
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%ALOPVGXC.ALOPVGXC.autorizacion_liqop%==false"> 
+           <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+               <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                   <parametro name="process" calc="$protocolarios.process$"/>    
+                   <parametro name="version" calc="$protocolarios.version$"/> 
+                   <parametro name="user" calc="$protocolarios.user$"/>  
+                   <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                   <parametro name="message" calc="%ALOPVGXC.ALOPVGXC.observacion_liqop%"/>
+                   <parametro name="type" calc="'1'"/> 
+               </parametros> 
+           </componente>
+       </nivel>
+    </pagina>
+</tarea> 
+
+
+
