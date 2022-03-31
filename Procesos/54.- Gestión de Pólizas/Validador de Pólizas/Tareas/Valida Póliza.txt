@@ -1,0 +1,164 @@
+<tarea id="ValidaPoliza" nombre="Valida Póliza" version="1">
+    <pagina id="uno"> 
+        <nivel id="nlPasoParam" nombre="Valida Póliza" interactivo="false">
+            <componente id="cpPasoParam" nombre="Valida Póliza" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="operacion" local="true" type="long" calc="$inParam.operacion$" />
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$" />
+                    <campo name="folio" local="true" type="long" calc="$inParam.folio$" />
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel id="FE" nombre="Filtra Estatus" interactivo="false">
+            <componente id="FE" nombre="Filtra Estatus" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.periodo%" />
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlPasoParam.cpPasoParam.folio%" />
+                    <campo name="estatus_poliza"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <!-- <nivel nombre="Negocia Instancia" id="EstatusNoAut" interactivo="false" ejecutar="%FE.FE.estatus_poliza%==6">-->
+        <!--    <componente tipo="solicitud" nombre="Enlace con dynamo" id="EstatusNoAut">-->
+        <!--        <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">-->
+        <!--            <parametro name="enterprise" calc="$protocolarios.enterprise$"/>-->
+        <!--            <parametro name="process" calc="$protocolarios.process$"/>-->
+        <!--            <parametro name="version" calc="$protocolarios.version$"/>-->
+        <!--            <parametro name="instance" calc="$protocolarios.instance$"/>-->
+        <!--            <parametro name="user" calc="$protocolarios.user$"/>-->
+        <!--            <parametro name="url" calc="$protocolarios.url$"/>-->
+        <!--            <parametro name="reiniciarInstancia" calc="'true'" />-->
+        <!--        </parametros>-->
+        <!--    </componente>-->
+        <!--</nivel> -->
+        <!-- REPORTE INSTANCIADO CON LA OPCIÓN DE AGREGA PÓLIZA -->
+        <nivel id="PContable" nombre="Póliza Contable" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente id="cpValidaPoliza" nombre="Póliza Contable" tipo="reporte">
+                <reporte nombre="polizacontable">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo(%nlPasoParam.cpPasoParam.ur%,'long')" />
+                    <campo name="periodo" type="long" calc="%nlPasoParam.cpPasoParam.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlPasoParam.cpPasoParam.folio%"/>
+                </reporte>
+            </componente> 
+        </nivel> 
+        <!--VALIDA PÓLIZA-->
+        <nivel nombre="Valida Póliza" id="nlValidaPolizaAgrega" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlPasoParam.cpPasoParam.operacion%==1">
+            <componente id="cpValidaPoliza" nombre="Valida Póliza" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" calc="%nlPasoParam.cpPasoParam.ur%" visible="false"/>
+                    <campo name="periodo" calc="%nlPasoParam.cpPasoParam.periodo%" visible="false"/>
+                    <campo name="folio_movimiento_auxiliar" calc="%nlPasoParam.cpPasoParam.folio%" visible="false"/>
+                    <campo name="estatus" local="true" type="bool" text="Validar" margen-izquierdo="4"/>
+                    <campo name="observaciones" text="Observaciones *" height="250" interaccion="%estatus%==false" validacion="%observaciones%==null AND %estatus%==false" validacionMensaje="Favor de insertar una descripción para continuar." columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    <campo name="estatus_poliza" text="Estatus Póliza" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="CONTINUAR" columnas="2" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+      
+        <nivel id="nlValidaPolizaCancela" nombre="Validación de la Gestión de Pólizas" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%nlPasoParam.cpPasoParam.operacion%==2">
+            <componente id="cpValidaPoliza" nombre="Validación de la Gestión de Pólizas: Cancela Póliza" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" calc="%nlPasoParam.cpPasoParam.ur%" visible="false"/>
+                    <campo name="periodo" calc="%nlPasoParam.cpPasoParam.periodo%" visible="false"/>
+                    <campo name="folio_movimiento_auxiliar" calc="%nlPasoParam.cpPasoParam.folio%" visible="false"/>
+                    <campo name="estatus" local="true" type="bool" text="Validar" margen-izquierdo="4"/>
+                    <campo name="observaciones" text="Observaciones*" height="250" interaccion="%estatus%==false" validacion="%observaciones%==null AND %estatus%==false" validacionMensaje="Favor de insertar una descripción para continuar." columnas="6" margen-izquierdo="2" margen-derecho="2"/>
+                    
+                    <campo name="estatus_poliza" text="Estatus Póliza" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="VALIDAR CANCELA PÓLIZA" columnas="2" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel> 
+        <nivel nombre="Turnar Instancia" id="TurnarInstanciaAgregar" interactivo="false" ejecutar="%nlPasoParam.cpPasoParam.operacion%==1 AND %nlValidaPolizaAgrega.cpValidaPoliza.estatus%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="TurnarInstanciaAgregar">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel> 
+        <nivel nombre="Negocia Instancia" id="NegociaInstanciaAgregar" interactivo="false" ejecutar="%nlPasoParam.cpPasoParam.operacion%==1 AND %nlValidaPolizaAgrega.cpValidaPoliza.estatus%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="NegociaInstanciaAgregar">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel> 
+        <nivel nombre="Instancia Validdor" id="InstanciaVal" interactivo="false" ejecutar="%nlPasoParam.cpPasoParam.operacion%==1 AND %nlValidaPolizaAgrega.cpValidaPoliza.estatus%==false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal">
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/>
+                    <parametro name="message" calc="%nlValidaPolizaAgrega.cpValidaPoliza.observaciones%"/>
+                    <parametro name="type" calc="'1'"/>
+                </parametros>
+            </componente>
+        </nivel> 
+
+        <nivel nombre="Turnar Instancia" id="TurnarInstanciaCancelar" interactivo="false" ejecutar="%nlPasoParam.cpPasoParam.operacion%==2 AND %nlValidaPolizaCancela.cpValidaPoliza.estatus%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="TurnarInstanciaCancelar">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel> 
+        <nivel nombre="Negocia Instancia" id="NegociaInstanciaCancelar" interactivo="false" ejecutar="%nlPasoParam.cpPasoParam.operacion%==2 AND %nlValidaPolizaCancela.cpValidaPoliza.estatus%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="NegociaInstanciaCancelar">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel> 
+        <nivel nombre="Instancia Validdor" id="InstanciaValCancelar" interactivo="false" ejecutar="%nlPasoParam.cpPasoParam.operacion%==2 AND %nlValidaPolizaCancela.cpValidaPoliza.estatus%==false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaValCancelar">
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/>
+                    <parametro name="message" calc="%nlValidaPolizaCancela.cpValidaPoliza.observaciones%"/>
+                    <parametro name="type" calc="'1'"/>
+                </parametros>
+            </componente>
+        </nivel> 
+    </pagina>
+</tarea>

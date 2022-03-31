@@ -1,0 +1,113 @@
+<tarea id="IDPT" nombre="Importa Detalle de Póliza">
+    <pagina id="IDPP" nombre="Importa Detalle de Póliza">
+        <!--CURSORES-->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--FIN DE CURSORES--> 
+        <!--INICIO ALTA DIRECT-->
+        <nivel id="generaFolioOficioGCAlta" nombre="generaFolioOficioGCAlta" interactivo="false">
+            <componente id="generaFolioOficioGCAlta" nombre="generaFolioOficioGCAlta" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="$config.ur$" />
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" visible="false" autogenerado="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="actualizaFolioPoliza" nombre="actualizaFolioPoliza" interactivo="false">
+            <componente id="actualizaFolioPoliza" nombre="actualizaFolioPoliza" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%"/>
+
+                    <campo name="folio_reporte" calc="@concatenar(%buscaPeriodo.buscaPeriodo.id_periodo%+'-T'+@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt;10,'00000',@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt; 100,'0000',@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt; 1000,'000',@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt; 10000,'00',@ifThenElse(%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--FIN ALTA DIRECT--> 
+        <nivel id="IDPN" nombre="IMPORTE DETALLE DE POLIZA" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="IDPC" nombre="IMPORTE DETALLE DE POLIZA" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$config.ur$"/>
+                    <campo name="periodo" text="Periodo" visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" text="folio_movimiento_auxiliar" calc="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%" visible="false"/>
+                    <campo name="folio_reporte" text="Folio" calc="%actualizaFolioPoliza.actualizaFolioPoliza.folio_reporte%" columnas="3" margen-izquierdo="1"/>
+                    <campo name="fecha_poliza" text="Fecha" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" visible="true" habilitado="false" columnas="3"  />
+                    <campo name="tipo_poliza" text="Tipo Poliza" validacion="%tipo_poliza%==null" validacionMensaje="Favor de Seleccionar un Tipo de Póliza" columnas="3" llavesFijas="id_tipo_poliza=1 OR id_tipo_poliza=2 OR id_tipo_poliza=3 OR id_tipo_poliza=6 OR id_tipo_poliza=7"/>
+                     <campo name="periodo_mensual" text="Mes" visible="true" columnas="3" 
+                        calcCliente="@ifThenElse(%tipo_poliza%==6,12,@ifThenElse(%tipo_poliza%==7,01,@fechaSistema('MM')))" habilitado="false" margen-izquierdo="1"/>
+                    <campo name="origen_poliza" text="Origen Poliza" validacion="%origen_poliza%==null" validacionMensaje="Favor de Seleccionar un Origen Poliza" calc="3" columnas="3" />
+                    <campo name="id_catalogo" text="Id Catálogo" visible="false" llaveForanea="false" calcCliente="@ifThenElse(%tipo_poliza%==6 OR %tipo_poliza%==7, null, 3)"/>
+                    <campo name="fondo_contable" text="Fondo Contable" interaccion-visible="%tipo_poliza%==1 OR %tipo_poliza%==2 OR %tipo_poliza%==3" descripcionForanea="id_cat, descripcion" visible="false" columnas="3"  llavesFijas="afectable=true"/> <!-- validacion="%tipo_poliza%!=7 AND %fondo_contable%==null" validacionMensaje="Favor de Seleccionar Fondo Contable." -->
+                    <campo name="str_estatus_poliza" text="Estatus Poliza" calc="'GENERADA'" type="string" local="true" columnas="3" margen-izquierdo="4"  margen-derecho="5" habilitado="false" />
+                    <campo name="estatus_poliza" text="Estatus Poliza" calc="1" habilitado="false" visible="false"/>
+                    <campo name="concepto_general" text="Concepto General" height="200" columnas="9" margen-izquierdo="1"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario Modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel> 
+        <nivel nombre="TABLA DE IMPORTE" id="TIN" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente tipo="tabla" nombre="TABLA IMPORTE" id="TIC" mostrarImportacion="true">
+                <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                    <campo name="ur" text="UR" llaveForanea="false" columna-visible="false" visible="false" columnaImportacion="UR"  columnaImportacionVisible="true" importacion="true"/>
+                    <!-- validacionImportacion="@ifThenElse(%UR%!=1,true,false)" -->
+                    <campo name="id_periodo" text="Identificador de Periodo" llaveForanea="false" columna-visible="false" visible="false" columnaImportacion="PERIODO" columnaImportacionVisible="true" importacion="true"/>
+                    <!-- validacionImportacion="@ifThenElse(%id_periodo%!=%buscaPeriodo.buscaPeriodo.id_periodo% ,true,false)" -->
+                    <campo name="id_movimiento_auxiliar" text="Identificador de Movimiento Auxiliar" llaveForanea="false" columna-visible="true" visible="false" calc="%generaFolioOficioGCAlta.generaFolioOficioGCAlta.folio_movimiento_auxiliar%" importacion="true"/>
+                    <campo name="id_detalle_movimiento_auxiliar" text="Renglón" columna-visible="false" columnas="3" margen-izquierdo="1" generacion="@prox()+1" autogenerado="true" importacion="true"/>
+                    <campo name="clave_cuenta_contable" text="Cuenta Contable" columnas="3"  columnaImportacion="CUENTA CONTABLE" importacion="true" descripcionForaneaTabla="clave_cuenta,descripcion"/>
+                    <campo name="clave_presupuestal" text="Clave Presupuestal" habilitado="false" columnas="3" margen-izquierdo="1" columnaImportacion="CLAVE PRESUPUESTAL" importacion="true"/>
+                    <campo name="referencia" text="Referencia" columnas="3" columnaImportacion="REFERENCIA" validacionImportacion="@ifThenElse(%referencia%=='', true, false)" importacion="true"/>
+                    <campo name="importe_cargo" text="Importe de Cargo" muestraAcumulado="true" height="100" columnas="3" columnaImportacion="IMPORTE DE CARGO" importacion="true"/>
+                    <campo name="importe_abono" text="Importe Abono" muestraAcumulado="true" height="100" columnas="3" margen-izquierdo="4" columnaImportacion="IMPORTE ABONO" importacion="true" />
+                    <campo name="concepto_bloque" text="Concepto de Renglón" height="200" marcador="Concepto Renglón" validacion="%concepto_bloque%==null" validacionMensaje="Favor de agregar concepto el Renglón" columnas="9" margen-izquierdo="1" columnaImportacion="CONCEPTO DE BLOQUE" importacion="true"/>
+                    <campo name="tipo_detalle" text="Tipo Detalle" llaveForanea="false" columnaImportacion="TIPO DETALLE" visible="false" columna-visible="false" importacion="true"/> 
+                    <campo name="fecha_registro" text="Fecha de Registro" importacion="true" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" columnas="3" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'f341d53d-ac4a-4356-9ada-30bcd646754b'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%IDPN.IDPC.ur%"/>
+                    <parametro name="out_periodo" calc="%IDPN.IDPC.periodo%" mostrarEsc="true"/>
+                    <parametro name="out_folio" calc="%IDPN.IDPC.folio_movimiento_auxiliar%"/>
+                    <parametro name="out_folio_reporte" calc="%actualizaFolioPoliza.actualizaFolioPoliza.folio_reporte%" mostrarEsc="true"/>
+                    <parametro name="out_fecha" calc="%IDPN.IDPC.fecha_poliza%" mostrarEsc="true"/>
+                    <parametro name="out_tipo_poliza" calc="%IDPN.IDPC.tipo_poliza%" mostrarEsc="true"/>
+                    <parametro name="out_origen_poliza" calc="%IDPN.IDPC.origen_poliza%" mostrarEsc="true"/>
+                    <parametro name="out_estatus_poliza" calc="%IDPN.IDPC.estatus_poliza%" mostrarEsc="true"/>
+                    <parametro name="out_operacion" calc="1" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea> 

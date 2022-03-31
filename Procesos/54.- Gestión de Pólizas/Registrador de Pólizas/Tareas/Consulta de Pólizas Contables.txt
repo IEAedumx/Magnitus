@@ -1,0 +1,119 @@
+<tarea id="clickDecPolz" nombre="Click Derecho Póliza" autor="Cecilia Mata">
+    <pagina id="1"> 
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN LEGO TIPO CURSOR --> 
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel> 
+        <nivel id="gestionPolizaNivel" nombre="Consulta de Pólizas" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="gestionPolizaComp" nombre="Consulta de Pólizas" tipo="formulario" accionDefault ="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1" visible="false"/>
+                    <campo name="periodo" text="Periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" local="true" type="string" visible="false"/>
+                    <campo name="selecOpcion" text="Seleccione una opción:" local="true" type="long" validacion="%selecOpcion%==null" validacionMensaje="Favor de seleccionar una  opción" columnas="2" margen-izquierdo="4" margen-derecho="5">
+                        <opciones>
+                            <opcion texto="REPORTE" valor="1"/>
+                            <opcion texto="EXPEDIENTE" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel> 
+        <nivel id="EXP" nombre="Consulta Epediente de Pólizas" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==2">
+            <componente id="etiquetaCD" nombre="Instrucciones" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" visible="false" text="ID" calc="1" />
+                    <etiqueta nombre="accionCD1" texto="ACCIÓN DE CLIC DERECHO PRESENTE EN LA TABLA" color="black" bold="normal" tamaño="28px" alineacion="center" interlineado="25px" width="500px" margen-izquierdo="2" columnas="6" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="false" />
+                </estilos>
+            </componente>
+            <componente id="EXP" nombre="Consulta Expediente de Pólizas (incluye acción de Click Derecho)" tipo="tabla" filtro="true" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" columna-visible="false" visible="true" habilitado="false" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="Periodo" descripcionForanea="id_periodo" visible="true" habilitado="false" columna-visible="false" interaccion="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" text="Folio Poliza" habilitado="false" width="90"/>
+                    <campo name="fecha_poliza" text="Fecha Poliza" habilitado="false" width="170"/>
+                    <campo name="periodo_mensual" text="Periodo Mensual" habilitado="false" columna-visible="false"/>
+                    <campo name="fondo_contable" text="Fondo Contable" habilitado="false" columna-visible="false"/>
+                    <campo name="momento_contable" text="Momento Contable" habilitado="false" columna-visible="false"/>
+                    <campo name="duep_origen" text="Folio" habilitado="false" columna-visible="false"/>
+                    <campo name="origen_poliza" text="Origen Poliza" width="105"/>
+                    <!---->
+                    <campo name="tipo_poliza" text="Tipo Poliza" habilitado="false" width="95"/>
+                    <campo name="concepto_general" text="Concepto General" habilitado="false" width="340"/>
+                    <campo name="importe_total_cargo" text="Importe Cargo" formatoMoneda="true" muestraAcumulado="true" width="130" cellsalign="right"/>
+                    <campo name="importe_total_abono" text="Importe Abono" formatoMoneda="true" muestraAcumulado="true" width="135" cellsalign="right"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario Modificador" visible="false" habilitado="false" columna-visible="false"/>
+                    <campo name="id_beneficiario_ganador" text="Beneficiario" columna-visible="true" descripcionForaneaTabla="razon_social" autoFiltrado="true" autoFiltradoDescripcion="folio_beneficiario,razon_social" width="365"/>
+                    <campo name="estatus_poliza" text="Estatus Poliza" filtroCampo="estatus_poliza" filtroOperador="=" filtroValor="1 OR 2" width="110"/>
+                    <campo name="consulta" text="" local="true" type="long" visible="false" columna-visible="false" calc="2"/>
+                    <!---->
+                    <tareas>
+                        <tarea nombre="Consultar Expediente" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="folio_movimiento_auxiliar,consulta" ref="task=17110530-d3c3-4b0c-ae36-49714c2c8844" />
+                    </tareas>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="TPN" nombre="Consulta Reporte de Pólizas" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%gestionPolizaNivel.gestionPolizaComp.selecOpcion%==1">
+            <componente id="etiquetaCD" nombre="Instrucciones" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" visible="false" text="ID" calc="1" />
+                    <etiqueta nombre="accionCD1" texto="ACCIÓN DE CLIC DERECHO PRESENTE EN LA TABLA" color="black" bold="normal" tamaño="28px" alineacion="center" interlineado="25px" width="500px" margen-izquierdo="2" columnas="6" margen-derecho="2"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" visible="false" />
+                </estilos>
+            </componente>
+            <componente id="TPC" nombre="Consulta Reporte de Pólizas (incluye acción de Click Derecho)" tipo="tabla" filtro="true" mostrarEliminar="false" mostrarAgregar="false" mostrarEditar="false">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" text="Unidad Responsable" columna-visible="false" filtroCampo="ur" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                    <campo name="periodo" text="Periodo" columna-visible="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" text="Folio Poliza" width="90"/>
+                    <campo name="fecha_poliza" text="Fecha Poliza" width="170"/>
+                    <campo name="periodo_mensual" text="Periodo Mensual" columna-visible="false" />
+                    <campo name="fondo_contable" text="Fondo Contable" columna-visible="false"/>
+                    <campo name="momento_contable" text="Momento Contable" columna-visible="false"/>
+                    <campo name="duep_origen" text="Folio" columna-visible="false"/>
+                    <campo name="origen_poliza" text="Origen Poliza" width="105"/>
+                    <!--llavesFijas="origen_poliza=2 AND origen_poliza=3"-->
+                    <campo name="tipo_poliza" text="Tipo Poliza" width="95"/>
+                    <campo name="concepto_general" text="Concepto General" width="340"/>
+                    <campo name="importe_total_cargo" text="Importe Cargo" formatoMoneda="true" muestraAcumulado="true" width="130" cellsalign="right"/>
+                    <campo name="importe_total_abono" text="Importe Abono" formatoMoneda="true" muestraAcumulado="true" width="135" cellsalign="right"/>
+                    <campo name="ultimo_usuario_modificador" text="Usuario Modificador" columna-visible="false"/>
+                    <campo name="id_beneficiario_ganador" text="Beneficiario" descripcionForaneaTabla="razon_social" width="365"/>
+                    <campo name="estatus_poliza" text="Estatus Poliza" filtroCampo="estatus_poliza" filtroOperador="=" filtroValor="1 OR 2" width="110"/>
+                    <campo name="consulta" local="true" type="long" columna-visible="false" calc="1"/>
+                    <!---->
+                    <tareas>
+                        <tarea nombre="Consultar Reporte" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="ur,periodo,folio_movimiento_auxiliar,consulta" ref="task=17110530-d3c3-4b0c-ae36-49714c2c8844" />
+                    </tareas>
+                </tabla>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
