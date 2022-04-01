@@ -1,0 +1,147 @@
+ <tarea nombre="Registra Requisición de Almacén" version="1.0.0" autor="Marisela" requisitosInstalacion="" fechaModificacion="2019-04-25" modificacionEfectuada="" numero="101">
+        <pagina id="1" nombre="Registra Requisición de Almacén">
+            <nivel id="per" nombre="per" interactivo="false">
+                <componente tipo="cursor" id="per" nombre="per">
+                    <tabla schema="catalog" nombre="periodo">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_periodo"/>
+                        <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                        <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                        <campo name="folio" local="true" type="string" calc="@concatenar('ALM-'+@ifThenElse(
+                        @consultaDirec('
+                        SELECT (id_solicitud_almacen) AS resultado
+                        FROM operation.solicitud_almacen
+                        WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                        ,
+                        '000001'
+                        ,
+                        @consultaDirec('
+                        SELECT to_char((((substring(id_solicitud_almacen from char_length(id_solicitud_almacen)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                        FROM operation.solicitud_almacen
+                        WHERE ur='+$config.ur$+' AND periodo='+%per.per.id_periodo%+' ORDER BY id_solicitud_almacen DESC limit 1','resultado','string','MAGNITUS')
+                        ))"/>
+                        <!--<campo name="letras" local="true" type="string" text="Contrato" calc="@subCadena(%per.per.folio%,0,4)"/>-->
+                        <!--<campo name="numeros" local="true" type="string" text="Contrato" calc="@subCadena(%per.per.folio%,5,9)"/>-->
+                    </tabla>
+                </componente>
+            </nivel>
+            <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="permisos_especiales"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                        
+                        <campo name="letras" local="true" type="string" text="Contrato" calc="@subCadena(%per.per.folio%,0,4)"/>
+                        <campo name="numeros" local="true" type="string" text="Contrato" calc="@subCadena(%per.per.folio%,5,10)"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            <nivel nombre="Registra Requisición de Almacén" id="ra"  mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                <componente tipo="formulario" id="ra" nombre="Datos Generales de la Requisición de Almacén">
+                    <tabla schema="operation" nombre="solicitud_almacen">
+                        <campo name="ur" text="ur" calc="$config.ur$" llaveForanea="false" visible="false"/>
+                        <campo name="periodo" text="periodo" calc="%per.per.id_periodo%" visible="false" llaveForanea="false"/>
+                        <campo name="id_solicitud_almacen" text="Folio Solicitud" calc="@concatenar(%barreUsuarios.barreUsuarios.letras%+%barreUsuarios.barreUsuarios.numeros%)" columnas="2" margen-izquierdo="3"/>
+                        <campo name="fecha_solicitud" text="Fecha Solicitud" columnas="2" margen-derecho="3" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true"/>
+                        <!--falta catalogo -->
+                        <campo name="tipo_moviemiento" text="Tipo de Movimiento" columnas="2" margen-izquierdo="3" descripcionForanea="descripcion" llavesFijas="id_tipo_movimiento=1 OR id_tipo_movimiento=2" calc="2"/>
+                                
+                        <campo name="transaccion" text="Transacción" columnas="2" margen-derecho="3" descripcionForanea="transaccion"/>
+                        <campo name="concepto" text="Concepto" columnas="4" margen-izquierdo="3" width="100" height="100"/>
+                        <campo name="estatus" text="Estatus" columnas="2" margen-izquierdo="3" calc="'En Proceso'"/>
+                        <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" hacer="saltar siguiente nivel" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </componente> 
+            </nivel>
+            <nivel nombre="Registra Detalle de Requisición de Almacén" id="rdra"  mostrarNivelAnterior="false" mostrarProximoNivel="false">
+                <componente tipo="tabla" id="rdra" nombre="Registra Detalle de Requisición de Almacén" filtro="true" >
+                    <tabla schema="operation" nombre="solicitud_almacen_detalle">
+                        <campo name="ur" text="ur" FiltrarConCalc="true" calc="$config.ur$" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="periodo" text="periodo" FiltrarConCalc="true" calc="%ra.ra.periodo%" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="id_solicitud_almacen" text="Folio Solicitud" FiltrarConCalc="true" calc="%ra.ra.id_solicitud_almacen%" visible="false" columna-visible="false" />
+                        <campo name="fecha_solicitud" text="Fecha Solicitud" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_fondo_contable" text="Fondo Contable" calc="3" visible="false" columna-visible="false"/>
+                        <campo name="id_cat_area_requiriente" text="Centro de Registro" calc="2" visible="false" columna-visible="false"/>
+                        <campo name="id_solicitud_almacen_detalle" text="Consecutivo" autogenerado="true" generacion="@prox()+1" columnas="2" margen-izquierdo="3" width="100"/>
+                       
+                        <campo name="clave_articulo" text="Clave Artículo" autoFiltradoDescripcion="articulo,des_articulo" autoFiltrado="true" descripcionForanea="articulo,des_articulo"  descripcionForaneaTabla="articulo,des_articulo" columnas="2" margen-derecho="3" width="100"/>
+                        <campo name="area_requiriente" text="Centro de Registro*" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" columnas="2" margen-izquierdo="3" validacion="%area_requiriente%==null" validacionMensaje="Debe de Capturar Centro de Registro" width="200"/>
+                        <campo name="fondo_contable" text="Fondo Contable*" autoFiltradoDescripcion="id_cat,descripcion" autoFiltrado="true" columnas="2" margen-derecho="3" validacion="%fondo_contable%==null" validacionMensaje="Debe de Capturar Fondo Contable" width="100"/>
+                        <campo name="descripcion_especifica" text="Descripción Específicas" width="100" height="100" columnas="4" margen-izquierdo="3" referenciaForanea="clave_articulo" celdaForanea="des_articulo" autocompletar="true" habilitado="false"/>
+                        <campo name="cantidad_solicitada" text="Cantidad Solicitada *" columnas="2" margen-izquierdo="3" validacion="%cantidad_solicitada%==null" validacionMensaje="Registra la Cantidad Solicitada"/>
+                        <campo name="validacion" text="validacion" local="true" type="string" validacion="%existencia%&lt;%cantidad_solicitada%" validacionMensaje="No puedes agregar mas cantidad de la existente" visible="false" columna-visible="false"/>
+                        <campo name="unidad_medida" text="Unidad de Medida" columnas="2" margen-derecho="3" descripcionForaneaTabla="descripcion" referenciaForanea="clave_articulo" celdaForanea="id_unidad_medida" autocompletar="true"/>
+                        <campo name="costo_unitario" text="Costo Unitario" referenciaForanea="clave_articulo" celdaForanea="costo_unitario" autocompletar="true" columnas="2" margen-izquierdo="3" columna-visible="true" habilitado="false" formatoMoneda="true"/>
+                        <!--calcCliente="@consultaDirec('-->
+                        <!--SELECT (precio_unitario) AS resultado-->
+                        <!--FROM operation.detalle_materiales_almacen-->
+                        <!--WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND clave_articulo='+'\\''+@ifThenElse(%clave_articulo%==null,'0',%clave_articulo%)+'\\' ORDER BY resultado DESC limit 1','resultado','numeric','SIPAAP')" -->
+                        <!--pendiente de barrido de proceso Actualizaciones de Almacen-->
+                       
+                        <campo name="almacen" text="Almacén*" descripcionForanea="clave_alamcen,nombre" columnas="2" margen-derecho="3" validacion="%almacen%==null" validacionMensaje="Debe de Capturar almacen"/>
+                        <campo name="total_salida" text="Total Salida" columnas="2" margen-izquierdo="3" calcCliente="@ifThenElse(%cantidad_solicitada%==null,0,%cantidad_solicitada%)*@ifThenElse(%costo_unitario%==null,0,%costo_unitario%)" habilitado="false"/>
+                        <campo name="existencia" text="Existencias" referenciaForanea="clave_articulo" celdaForanea="existencia" autocompletar="true" columnas="2" margen-derecho="3" habilitado="false"/> 
+                        <!--calcCliente="@ifThenElse(@consultaDirec('-->
+                        <!--SELECT (cantidad_entrada) AS resultado-->
+                        <!--FROM operation.tarjeta_almacen-->
+                        <!--WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND articulo='+'\\''+@ifThenElse(%clave_articulo%==null,'0',%clave_articulo%)+'\\' ORDER BY resultado DESC limit 1','resultado','numeric','SIPAAP')==null,0,@consultaDirec('-->
+                        <!--SELECT (cantidad_entrada) AS resultado-->
+                        <!--FROM operation.tarjeta_almacen-->
+                        <!--WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND articulo='+'\\''+@ifThenElse(%clave_articulo%==null,'0',%clave_articulo%)+'\\' ORDER BY resultado DESC limit 1','resultado','numeric','SIPAAP'))-->
+                        <!--- -->
+                        <!--@ifThenElse(@consultaDirec('-->
+                        <!--SELECT (cantidad_salida) AS resultado-->
+                        <!--FROM operation.tarjeta_almacen-->
+                        <!--WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND articulo='+'\\''+@ifThenElse(%clave_articulo%==null,'0',%clave_articulo%)+'\\' ORDER BY resultado DESC limit 1','resultado','numeric','SIPAAP')==null,0,@consultaDirec('-->
+                        <!--SELECT (cantidad_salida) AS resultado-->
+                        <!--FROM operation.tarjeta_almacen-->
+                        <!--WHERE ur='+$config.ur$+' AND id_periodo='+$inParam.periodo$+' AND articulo='+'\\''+@ifThenElse(%clave_articulo%==null,'0',%clave_articulo%)+'\\' ORDER BY resultado DESC limit 1','resultado','numeric','SIPAAP'))"  -->
+                      
+                         <campo name="ultimo_usuario_modificador" text="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false"/>
+                        
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" visible="true" texto="Continuar" hacer="saltar siguiente nivel" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                        <boton nombre="formulario" visible="true" texto="Continuar" hacer="saltar siguiente nivel" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </componente> 
+            </nivel>
+            <nivel nombre="" id="pi" interactivo="false">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="pi">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'52004656-6177-42a6-836d-8fb1fb71e732'"/>
+                    <parametro name="out_ur" calc="$config.ur$" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%ra.ra.periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_solicitud_almacen" calc="%ra.ra.id_solicitud_almacen%" mostrarEsc="true"/>
+                    <parametro name="out_fecha_solicitud" calc="%ra.ra.fecha_solicitud%" mostrarEsc="false"/>
+                    <parametro name="out_tipo_moviemiento" calc="%ra.ra.tipo_moviemiento%" mostrarEsc="false"/>
+                    <parametro name="out_transaccion" calc="%ra.ra.transaccion%" mostrarEsc="false"/>
+                    <parametro name="out_concepto" calc="%ra.ra.concepto%" mostrarEsc="false"/>
+                    <parametro name="out_estatus" calc="%ra.ra.estatus%" mostrarEsc="false"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                </parametros>
+            </componente>
+        </nivel>
+            <nivel nombre="REPORTE REQUISICIÓN DE ALMACENES" id="rar">
+                <componente tipo="reporte" nombre="REPORTE REQUISICIÓN DE ALMACENES" id="rar">
+                    <reporte nombre="Requisic_Almacen" expediente="Expediente de Requisición de Almacén" nombreDocumento="'Requisición de Almacén'" grupo="%ra.ra.id_solicitud_almacen%" url="$config.repository_upload_file$" update="true">
+                        <campo name="ur"  text="ur" type="long" calc="$config.ur$"/>
+                        <campo name="periodo" text="periodo" type="long" calc="%ra.ra.periodo%"/>
+                        <campo name="id_solicitud_almacen" text="id_solicitud_almacen" type="string" calc="%ra.ra.id_solicitud_almacen%"/>
+                    </reporte>
+                </componente> 
+            </nivel>
+        </pagina>
+    </tarea>
