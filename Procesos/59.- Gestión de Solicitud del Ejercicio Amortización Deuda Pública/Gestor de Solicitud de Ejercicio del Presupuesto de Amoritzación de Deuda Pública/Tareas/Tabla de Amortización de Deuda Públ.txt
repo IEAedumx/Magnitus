@@ -1,0 +1,168 @@
+<tarea id="tabAmor" nombre="Tabla de Amortización de Deuda Pública" autor="Froylán Alanís">
+    <pagina id="1">
+        <nivel id="barrido" nombre="barrido" interactivo="false">
+            <componente id="barrido" nombre="barrido" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" />
+                    <campo name="id_periodo" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="barrerTrueDet" nombre="barrerID" interactivo="false">
+            <componente id="barrerTrueDet" nombre="barrerID" tipo="cursor">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%" />
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%" />
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_fudep" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="camSelDet" nombre="cambiar seleccion" interactivo="false">
+            <componente id="camSelDet" nombre="cambiar seleccion" tipo="cursor">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%" />
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%" />
+                    <campo name="id_fudep" filtroCampo="id_fudep" filtroOperador="=" filtroValor="%barrerTrueDet.barrerTrueDet.id_fudep%" />
+                    <campo name="seleccion" calc="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="tbFud" nombre="Consulta Contrato de Deuda Pública (Financiamiento/Refinanciamiento)" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="tabFudep" nombre="Consulta Contrato de Deuda Pública (Financiamiento/Refinanciamiento)" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="ur" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%" />
+                    <campo name="periodo" columna-visible="false" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%" />
+                    <campo name="id_fudep" columna-visible="false" />
+                    <campo name="folio_fudep" text="Folio" width="120"/>
+                    <campo name="num_inscripcion_shcp" text="No. de Inscripcion SHCP" />
+                    <campo name="fecha_contratacion" text="Fecha de Contratacion" />
+                    <campo name="institucion_acreedora" text="Institución Acreedora" />
+                    <campo name="saldo_recaudar" text="Importe Recaudado" />
+                    <campo name="estatus" text="Estatus" descripcionForaneaTabla="descripcion" />
+                    <campo name="seleccion" text="Seleccion" editable="true" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) AS res FROM operation.fudep WHERE ur='+%barrido.barrido.id_unidad_responsable%+' AND periodo='+%barrido.barrido.id_periodo%+' AND seleccion=true','res','int','MAGNITUS')==0 OR @consultaDirec('SELECT COUNT(*) AS res FROM operation.fudep WHERE ur='+%barrido.barrido.id_unidad_responsable%+' AND periodo='+%barrido.barrido.id_periodo%+' AND seleccion=true','res','int','MAGNITUS')&gt;1" validacionMensaje="'Se debe seleccionar un reigstro.'" />
+            </validaciones>
+        </nivel>
+        <nivel id="selTrue" nombre="seleccionar true" interactivo="false">
+            <componente id="selTrue" nombre="seleccionar true" tipo="cursor">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%" />
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_fudep" />
+                    <campo name="tipo_tasa_amortizacion" />
+                    <campo name="monto_original_contratado" />
+                    <campo name="saldo_recaudar" />
+                    <campo name="tasa_amortizacion" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="datosG" nombre="Datos Generales de Amortización" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="datosG" nombre="Datos Generales de Amortización" tipo="formulario">
+                <tabla schema="operation" nombre="amortizaciones_dp">
+                    <campo name="ur" calc="%barrido.barrido.id_unidad_responsable%" llaveForanea="false" visible="false" />
+                    <campo name="periodo" calc="%barrido.barrido.id_periodo%" llaveForanea="false" visible="false" />
+                    <campo name="id_amortizaciones_dp" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="id_fudep" calc="%selTrue.selTrue.id_fudep%" llaveForanea="false" visible="false" />
+                    <campo name="monto_original" text="Monto Original" calc="%selTrue.selTrue.monto_original_contratado%" columnas="6" margen-izquierdo="2" margen-derecho="2" habilitado="false" />
+                    <campo name="num_amortizaciones" text="Número de Amortizaciones" columnas="6" margen-derecho="2" margen-izquierdo="2" validacion="%num_amortizaciones%==null" validacionMensaje="Indique el número de amortizaciones" />
+                    <campo name="id_tasa" text="Tipo de Tasa de Interes" calc="%selTrue.selTrue.tipo_tasa_amortizacion%" descripcionForanea="descripcion" habilitado="false" columnas="6" margen-izquierdo="2" margen-derecho="2" />
+                    <campo name="id_interes" text="Tipo de Interes" descripcionForanea="descripcion" columnas="6" margen-izquierdo="2" margen-derecho="2" validacion="%id_interes%==null" validacionMensaje="Campo requerido" />
+                    <campo name="periodo_amortizaciones" text="Periodo de Amortizacion" validacion="%periodo_amortizaciones%==null" validacionMensaje="Campo requerido" columnas="6" margen-izquierdo="2" margen-derecho="2" />
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar" columas="6" margen-derecho="2" margen-izquierdo="2"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+        
+       
+        
+        <nivel id="vueltitas" nombre="vueltitas" interactivo="false">
+            <componente id="vueltitas" nombre="vueltitas" tipo="cursor">
+                <tabla schema="public" nombre="numeros">
+                    <campo name="numero" filtroCampo="numero" filtroOperador="&lt;" filtroValor="%datosG.datosG.num_amortizaciones%+1" />
+                </tabla>
+                <nivel id="altasvueltitas" nombre="altasvueltitas" interactivo="false">
+                    <componente id="altasvueltitas" nombre="altasvueltitas" tipo="altaDirect">
+                        <tabla schema="operation" nombre="amortizaciones_dp_det">
+                            <campo name="ur" calc="%barrido.barrido.id_unidad_responsable%" />
+                            <campo name="periodo" calc="%barrido.barrido.id_periodo%" />
+                            <campo name="id_amortizaciones_dp_det" autogenerado="true" generacion="@prox()+1" />
+                            <campo name="id_amortizaciones_dp" calc="%datosG.datosG.id_amortizaciones_dp%" />
+                            
+                            <campo name="interes_compuesto" calc="@ifThenElse(%datosG.datosG.id_interes%==1,@ifThenElse(%selTrue.selTrue.monto_original_contratado%==null,0,@castTo(%selTrue.selTrue.monto_original_contratado%,'float'))*@ifThenElse(%selTrue.selTrue.tasa_amortizacion%==null,0,@castTo(%selTrue.selTrue.tasa_amortizacion%,'float')/100),'')"/>
+                            
+                            <campo name="interes_saldo_insolutos" calc="@ifThenElse(%datosG.datosG.id_interes%==2,@ifThenElse(%selTrue.selTrue.saldo_recaudar%==null,0,@castTo(%selTrue.selTrue.saldo_recaudar%,'float'))*@ifThenElse(%selTrue.selTrue.tasa_amortizacion%==null,0,@castTo(%selTrue.selTrue.tasa_amortizacion%,'float')/100),'')"/>
+                            
+                            <campo name="id_fudep" calc="%selTrue.selTrue.id_fudep%" />
+                            
+                            <campo name="numero_amortizacion" calc="%vueltitas.vueltitas.numero%" />
+                            
+                            <campo name="abono_capital" calc="@ifThenElse(%selTrue.selTrue.monto_original_contratado%==null,0,@castTo(%selTrue.selTrue.monto_original_contratado%,'float'))/%datosG.datosG.num_amortizaciones%" />
+                            
+                            <campo name="importe_total" calc="@ifThenElse(%altasvueltitas.altasvueltitas.interes_compuesto%==null,0,%altasvueltitas.altasvueltitas.interes_compuesto%)+@ifThenElse(%altasvueltitas.altasvueltitas.interes_saldo_insolutos%==null,0,%altasvueltitas.altasvueltitas.interes_saldo_insolutos%)+@ifThenElse(%altasvueltitas.altasvueltitas.abono_capital%==null,0,%altasvueltitas.altasvueltitas.abono_capital%)" />
+                            
+                            <campo name="saldo" calc="@ifThenElse(%selTrue.selTrue.monto_original_contratado%==null,0,@castTo(%selTrue.selTrue.monto_original_contratado%,'float'))-(%altasvueltitas.altasvueltitas.importe_total%*%datosG.datosG.num_amortizaciones%)" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="Filtra Amortización" id="FA" interactivo="false">
+            <componente tipo="cursor" nombre="Filtra Amortización" id="FA">
+                <tabla schema="operation" nombre="amortizaciones_dp">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%"/>
+                    <campo name="id_amortizaciones_dp" filtroCampo="id_amortizaciones_dp" filtroOperador="=" filtroValor="%datosG.datosG.id_amortizaciones_dp%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="tabAmor" nombre="Tabla de Amorización" mostrarNivelAnterior="false">
+            <componente tipo="tabla" id="tabAmor" nombre="Tabla de Amorización" mostrarAgregar="false" mostrarEliminar="false">
+                <tabla schema="operation" nombre="amortizaciones_dp_det">
+                    <campo name="ur" text="ur" llaveForanea="false" calc="%barrido.barrido.id_unidad_responsable%" visible="false" columna-visible="false"/> 
+                    <campo name="periodo" text="periodo" llaveForanea="false" calc="%barrido.barrido.id_periodo%" visible="false" columna-visible="false" />
+                    <campo name="id_amortizaciones_dp" text="AMOR DP" FiltrarConCalc="true" calc="%FA.FA.id_amortizaciones_dp%" visible="false" columna-visible="false"/>
+                    <campo name="id_amortizaciones_dp_det" text="AMOR DP DET" visible="false" columna-visible="false"/>
+                    <campo name="id_fudep" text="FUDEP" filtroCampo="id_fudep" filtroOperador="=" filtroValor="%selTrue.selTrue.id_fudep%" llaveForanea="false" visible="false" columna-visible="false" />
+                    <campo name="numero_amortizacion" text="Número De Amortizaciones" habilitado="false" columnas="3" margen-izquierdo="2" />
+                    <campo name="fecha_amortizacion" text="Fecha de Amortización" validacion="%fecha_amortizacion%==null" validacionMensaje="Campo requerido" columnas="3" margen-derecho="2" />
+                    <campo name="interes_compuesto" text="Interes Compuesto" habilitado="false" columnas="3" margen-izquierdo="2" />
+                    <campo name="interes_saldo_insolutos" text="Interes Saldos Insolutos" habilitado="false" columnas="3" margen-derecho="2" />
+                    <campo name="abono_capital" text="Abono a Capital" habilitado="false" columnas="3" margen-izquierdo="2" />
+                    <campo name="importe_total" text="Importe Total" habilitado="false" columnas="3" margen-derecho="2" />
+                    <campo name="saldo" text="Saldo" habilitado="false" columnas="3" margen-izquierdo="2" />
+                    
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Reporte " id="repc">
+             <componente tipo="reporte" nombre="Reporte" id="rep">
+                 <reporte nombre="repor_TAmortiz_jsus">
+                    <campo name="ur" type="long" calc="%barrido.barrido.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" calc="%barrido.barrido.id_periodo%" /> 
+                    <campo name="id_amortizacion_dp" type="long" calc="%datosG.datosG.id_amortizaciones_dp%"/>
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                  </reporte>
+             </componente>
+        </nivel>
+    </pagina>
+</tarea>

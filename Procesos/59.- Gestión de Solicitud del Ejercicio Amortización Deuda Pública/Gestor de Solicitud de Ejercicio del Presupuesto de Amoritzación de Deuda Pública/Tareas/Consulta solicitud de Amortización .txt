@@ -1,0 +1,79 @@
+<tarea id="CSCPC" nombre="Consulta Solicitud de Amortizacion de Deuda Pública">
+<pagina id="APCP" >
+		<nivel id="barrido" nombre="barrido" interactivo="false">
+           <componente id="barrido" nombre="barrido" tipo="cursor">
+               <tabla schema="catalog" nombre="periodo">
+                   <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                   <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                   <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                   <campo name="id_periodo"/>
+               </tabla>
+           </componente>
+       </nivel>
+       <nivel id="barrerTrueDet" nombre="barrerID" interactivo="false">
+            <componente id="barrerTrueDet" nombre="barrerID" tipo="cursor">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%" /><!--%bPer.bPer.id_periodo%-->
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%"/>
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_fudep"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="camSelDet" nombre="cambiar seleccion" interactivo="false">
+            <componente id="camSelDet" nombre="cambiar seleccion" tipo="cursor">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%" /><!--%bPer.bPer.id_periodo%-->
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%"/>
+                    <campo name="id_fudep" filtroCampo="id_fudep" filtroOperador="=" filtroValor="%barrerTrueDet.barrerTrueDet.id_fudep%"/>
+                    <campo name="seleccion" calc="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="tbFud" nombre="Selecciona Contrato de Deuda Pública (Financiamiento/Refinanciamiento)" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="tabFudep" nombre="Selecciona Contrato de Deuda Pública (Financiamiento/Refinanciamiento)" tipo="tabla" mostrarEditar="false" mostrarAgregar="false" mostrarEliminar="false"> 
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="ur" columna-visible="false" llaveForanea="false" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%"/><!--%barrido.barrido.id_unidad_responsable%-->
+                    <campo name="periodo" columna-visible="false" llaveForanea="false" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%"/><!--%barrido.barrido.id_periodo%-->
+                    <campo name="id_fudep" columna-visible="false" />
+                    <campo name="folio_fudep" text="Folio"/>
+                    <campo name="num_inscripcion_shcp" text="No. de Inscripcion SHCP"/>
+                    <campo name="fecha_contratacion" text="Fecha de Contratacion"/>
+                    <campo name="institucion_acreedora" text="Institución Acreedora"/>
+                    <campo name="saldo_recaudar" text="Importe Recaudado"/>
+                    <campo name="estatus" text="Estatus" descripcionForaneaTabla="descripcion"/>
+                    <campo name="seleccion" text="Seleccion" editable="true"/>
+                </tabla>
+                 <estilos>
+                    <boton nombre="grabar" visible="true" texto="Continuar"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            <validaciones>
+                <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*) AS res FROM operation.fudep WHERE ur='+%barrido.barrido.id_unidad_responsable%+' AND periodo='+%barrido.barrido.id_periodo%+' AND seleccion=true','res','int','MAGNITUS')==0 OR @consultaDirec('SELECT COUNT(*) AS res FROM operation.fudep WHERE ur='+%barrido.barrido.id_unidad_responsable%+' AND periodo='+%barrido.barrido.id_periodo%+' AND seleccion=true','res','int','MAGNITUS')&gt;1" validacionMensaje="'Se debe seleccionar un reigstro.'"/>
+            </validaciones>
+        </nivel>
+        <nivel id="selTrue" nombre="seleccionar true" interactivo="false">
+            <componente id="selTrue" nombre="seleccionar true" tipo="cursor">
+                <tabla schema="operation" nombre="fudep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%barrido.barrido.id_unidad_responsable%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%barrido.barrido.id_periodo%"/>
+                    <campo name="seleccion" filtroCampo="seleccion" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_fudep"/>
+                    <campo name="folio_fudep"/>
+                </tabla>
+            </componente>
+        </nivel>
+      	 <nivel nombre="Reporte Solicitud de Ejercicio de Amortización de Deuda Pública" id="RSEADP" mostrarNivelAnterior="false">
+            <componente tipo="reporte" nombre="Reporte Solicitud de Ejercicio de Amortización de Deuda Pública" id="RSEADP">
+                <reporte nombre="repor_sol_deup_jsus">
+                    <campo name="ur" type="long" local="true" calc="%barrido.barrido.id_unidad_responsable%" />
+                    <campo name="periodo" type="long" local="true" calc="%barrido.barrido.id_periodo%" />
+                    <campo name="id_amortizacion_dp" type="long" local="true" calc="@consultaDirec('SELECT id_amortizacion_dp AS fudep from operation.amortizacion_dp WHERE ur='+'\\''+%barrido.barrido.id_unidad_responsable%+'\\''+' AND periodo='+'\\''+%barrido.barrido.id_periodo%+'\\''+' AND id_fudep='+'\\''+%selTrue.selTrue.id_fudep%+'\\'','fudep','long','MAGNITUS')"/>
+                </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
