@@ -1,0 +1,48 @@
+<tarea id="tar_Consulta_Gestion_Tran_Extra" nombre="Consulta de la Gestión de Transacciones Extrapresupuestarias" autor="Sergio Armando Guzmán Avila" version="1">
+    <pagina id="pag_Consulta_Gestion_Tran_Extra">
+        
+            <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    </tabla>
+                </componente>
+            </nivel>
+        
+        <!-- Inicio Opcion Agrega Parametros-->
+        <nivel id="nlPasoParam" nombre="Paso de parámetros" mostrarProximoNivel="false" interactivo="false">
+            <componente id="cpPasoParam" nombre="Paso de parámetros" tipo="cursor" accionDefault="seleccionar" >
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="periodo" text="Periodo" local="true" type="string" calc="$inParam.periodo$"/> 
+                    <campo name="id_trans_extrapresupuestal" text="ID Trans. Extrapresupuestal" local="true" type="long" calc="$inParam.id_trans_extrapresupuestal$"/>
+                    <campo name="id_poliza" text="ID Poliza" local="true" type="long" calc="$inParam.id_poliza$"/>
+                    <campo name="opcion" text="Folio del Movimiento" local="true" type="string" calc="$inParam.operacion$"/>
+                </tabla>
+            </componente>
+        </nivel>
+		
+        <nivel id="nl_Consulta_Gestion_Tran_Extra" nombre="Consulta de la Gestión de Transacciones Extrapresupuestarias" mostrarProximoNivel="false">
+            <componente id="cp_Consulta_Gestion_Tran_Extra" nombre="Consulta de la Gestión de Transacciones Extrapresupuestarias" tipo="reporte">
+                <reporte nombre="transacciones_presupuestales">
+                    <campo name="id_trans_extrapresupuestal" type="long" calc="%nlPasoParam.cpPasoParam.id_trans_extrapresupuestal%"/>
+                    <campo name="id_movimiento_auxiliar" type="long" calc="%nlPasoParam.cpPasoParam.id_poliza%"/>
+                    <campo name="id_unidad_responsable" type="long" calc="$config.ur$"/>
+                    <campo name="periodo" type="long" calc="%nlPasoParam.cpPasoParam.periodo%"/>
+                </reporte>
+            </componente>
+            <componente id="PolizaCp" nombre="Póliza Modificación de Transacción Extrapresupuestal" tipo="reporte">
+                    <reporte nombre="poliza_contable" expediente="Documentación Oficial" nombreDocumento="'Póliza'" grupo="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%" url="$config.repository_upload_file$">
+                        <campo name="ur" text="Unidad Responsable" type="long" calc="$inParam.ur$" />
+                        <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                        <campo name="folio_movimiento_auxiliar" type="long" calc="$inParam.id_poliza$"/>
+                        <campo name="elaboro" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                        <campo name="logueado" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                    </reporte>
+                </componente>
+        </nivel>
+        
+    </pagina>
+</tarea>

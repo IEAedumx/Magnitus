@@ -1,0 +1,361 @@
+<tarea id="autoriza_tra" nombre="Autoriza Transacción Extrapresupuestal" autor="Erick Maya" version="1">
+    <pagina id="autoriza_pag" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+        
+    
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+       
+       <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+			<componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+				<tabla schema="catalog" nombre="periodo">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+					<campo name="estatus"/>
+					<campo name="id_estatus"/>
+					<campo name="oper" local="true" type="string" calc="$inParam.operacion$"/>
+				</tabla>
+			</componente>
+		</nivel>
+		
+		 <nivel id="ultmusumod" nombre="ultmusumod" interactivo="false">
+			<componente tipo="cursor" id="ultmusumod" nombre="ultmusumod">
+				<tabla schema="operation" nombre="trans_extrapresupuestal">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+					<campo name="id_trans_extrapresupuestal" filtroCampo="id_trans_extrapresupuestal" filtroOperador="=" filtroValor="$inParam.id_trans_extrapresupuestal$"/>
+				    <campo name="ultimo_usuario_modificador"/> 
+				</tabla>
+			</componente>
+		</nivel>
+		
+        <nivel id="autoriza_niv" nombre="Autoriza Transacción Extrapresupuestal" mostrarProximoNivel="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='AGREGAR'">
+            <componente id="cp_Consulta_Gestion_Tran_Extra" nombre="Reporte Gestión de Transacciones Extrapresupuestarias" tipo="reporte">
+                <reporte nombre="transacciones_presupuestales_cd">
+                    <campo name="id_trans_extrapresupuestal" type="long" calc="$inParam.id_trans_extrapresupuestal$"/>
+                    <campo name="id_unidad_responsable" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_movimiento_auxiliar" type="long" calc="$inParam.id_poliza$"/>
+                    <campo name="usuario_logueado" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                </reporte>
+            </componente> 
+              <componente id="PolizaCp" nombre="Póliza Modificación de Transacción Extrapresupuestal" tipo="reporte">
+                    <reporte nombre="polizacontable" expediente="Documentación Oficial" nombreDocumento="'Póliza'" grupo="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%" url="$config.repository_upload_file$">
+                        <campo name="ur" text="Unidad Responsable" type="long" calc="$inParam.ur$" />
+                        <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                        <campo name="folio_movimiento_auxiliar" type="long" calc="$inParam.id_poliza$"/>
+                        <campo name="elaboro" type="long" calc="%ultmusumod.ultmusumod.ultimo_usuario_modificador%"/> 
+                        <campo name="logueado" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                        
+                    </reporte>
+                </componente>
+
+            <componente id="autoriza_comp" nombre="Autoriza Transacción Extrapresupuestal" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="trans_extrapresupuestal">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_trans_extrapresupuestal" calc="$inParam.id_trans_extrapresupuestal$" visible="false"/>
+                    <!--<campo name="estatus" text="Estatus" visible="false" calc="@ifThenElse(%autoriza_niv.autoriza_comp.autoriza%==true,2,1)"/>-->
+                    <campo name="observaciones" text="Observaciones" columnas="6" margen-izquierdo="2" height="250" habilitado="true" interaccion="%autoriza%!=true" 
+                    validacion="%observaciones%==null AND %autoriza%==false" 
+                    validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%autoriza%==true,'',%observaciones%)"/>
+                    <campo name="autoriza" text="Autorizar" columnas="3" margen-izquierdo="2"/>
+                    <campo name="usuario_autoriza" text="usuario" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false"/> 
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="actualizaEstatus" nombre="actualizaEstatus" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='AGREGAR' AND %autoriza_niv.autoriza_comp.autoriza%==true">
+			<componente tipo="cursor" id="actualizaEstatus" nombre="actualizaEstatus">
+				<tabla schema="operation" nombre="trans_extrapresupuestal">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+					<campo name="id_trans_extrapresupuestal" filtroCampo="id_trans_extrapresupuestal" filtroOperador="=" filtroValor="$inParam.id_trans_extrapresupuestal$"/>
+					<campo name="estatus" calc="2"/>
+					<campo name="folio"/>
+					<campo name="beneficiario"/> 
+				</tabla>
+			</componente>
+		</nivel>
+		
+		<nivel id="cambiaFolioYEstatusPoliza" nombre="Agrega folio Poliza" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='AGREGAR' AND %autoriza_niv.autoriza_comp.autoriza%==true">
+				<componente tipo="cursor" id="cambiaFolioYEstatusPoliza" nombre="Cambia folio Poliza" accionDefault="editar">
+					<tabla schema="operation" nombre="movimientos_auxiliares">
+						<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="$inParam.ur$"/>
+						<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+						<campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="$inParam.id_poliza$"/>
+						<campo name="folio_reporte" calc="@concatenar($inParam.periodo$+'-'+@ifThenElse(@castTo($inParam.id_poliza$,'long')&lt;10,'00000',@ifThenElse(@castTo($inParam.id_poliza$,'long')&lt;100,'0000',@ifThenElse(@castTo($inParam.id_poliza$,'long')&lt;1000,'000',@ifThenElse(@castTo($inParam.id_poliza$,'long')&lt;10000,'00',	@ifThenElse(@castTo($inParam.id_poliza$,'long')&lt;100000,'0','1')))))+$inParam.id_poliza$)"/>
+						<campo name="estatus_poliza" calc="2"/>
+					</tabla>
+				</componente>
+			</nivel>
+		
+		
+		<nivel id="polizaAutorizada" nombre="Consulta Póliza Autorizada" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='AGREGAR' AND %autoriza_niv.autoriza_comp.autoriza%==true" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+		    <componente id="polizaAutorizada" nombre="Reporte Gestión de Transacciones Extrapresupuestarias" tipo="reporte">
+                <reporte nombre="transacciones_presupuestales_cd" expediente="Expediente Transacción Extrapresupuestal" nombreDocumento="'Reporte Gestión de Transacciones Extrapresupuestarias'" grupo="$inParam.folio$" url="$config.repository_upload_file$">
+                    <campo name="id_trans_extrapresupuestal" type="long" calc="$inParam.id_trans_extrapresupuestal$"/>
+                    <campo name="id_unidad_responsable" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_movimiento_auxiliar" type="long" calc="$inParam.id_poliza$"/>
+                </reporte>
+            </componente> 
+		</nivel>
+		
+		<nivel  id="polizaAutorizada2" nombre="Consulta Póliza Autorizada" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='AGREGAR' AND %autoriza_niv.autoriza_comp.autoriza%==true" mostrarProximoNivel="true" mostrarNivelAnterior="false">
+            <componente id="reportCom1" nombre="Consulta de Pólizas Contables" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="Expediente Transacción Extrapresupuestal" nombreDocumento="'Póliza Contable'" grupo="$inParam.folio$" url="$config.repository_upload_file$">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="$inParam.ur$"       />
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"         />
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="$inParam.id_poliza$"/>
+                    <!--<campo name="usuario" local="true" type="string" calc="$protocolarios.user$" />-->
+                    <campo name="elaboro" type="long" calc="%ultmusumod.ultmusumod.ultimo_usuario_modificador%"/> 
+                        <campo name="logueado" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                        <campo name="autorizo" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                        
+                </reporte>
+            </componente>
+        </nivel>
+		
+        <nivel nombre="TurnarInstancia" id="turnar_instancia" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='AGREGAR' AND %autoriza_niv.autoriza_comp.autoriza%==true">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel> 
+        <nivel nombre="Instancia Validador" id="InstanciaVal" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='AGREGAR' AND %autoriza_niv.autoriza_comp.autoriza%==false"> 
+             <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                    <parametro name="process" calc="$protocolarios.process$"/>    
+                    <parametro name="version" calc="$protocolarios.version$"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>  
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                    <parametro name="message" calc="%autoriza_niv.autoriza_comp.observaciones%"/>
+                    <parametro name="type" calc="'1'"/> 
+                </parametros> 
+            </componente>
+        </nivel>
+        
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='AGREGAR' AND %autoriza_niv.autoriza_comp.autoriza%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <!-- OPCION CANCELAR -->
+        
+        <nivel id="autoriza_niv_can" nombre="Autoriza Transacción Extrapresupuestal" mostrarProximoNivel="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR'">
+            <componente id="Rep_niv_can" nombre="Reporte Gestión de Transacciones Extrapresupuestarias" tipo="reporte">
+                <reporte nombre="transacciones_presupuestales">
+                    <campo name="id_trans_extrapresupuestal" type="long" calc="$inParam.id_trans_extrapresupuestal$"/>
+                    <campo name="id_unidad_responsable" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="id_movimiento_auxiliar" type="long" calc="$inParam.id_poliza$"/>
+                </reporte>
+            </componente> 
+            <componente id="autoriza_comp_can" nombre="Autoriza Cancelación de Transacción Extrapresupuestal" tipo="formulario" accionDefault="editar">
+                <tabla schema="operation" nombre="trans_extrapresupuestal">
+                    <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$inParam.ur$" visible="false"/>
+                    <campo name="id_periodo" text="Periodo" calc="$inParam.periodo$" visible="false"/>
+                    <campo name="id_trans_extrapresupuestal" calc="$inParam.id_trans_extrapresupuestal$" visible="false"/>
+                    <campo name="autori" text="Autorizar Cancelación" local="true" type="bool"/>
+                    <!--<campo name="estatus" text="Estatus" visible="false" calc="@ifThenElse(%autoriza_niv.autoriza_comp.autori%==true,3,2)"/>-->
+                    <campo name="observaciones" text="Observaciones" height="250" habilitado="true" interaccion="%autori%!=true" 
+                    validacion="%observaciones%==null AND %autori%==false" 
+                    validacionMensaje="Favor de insertar una observación para continuar." calc="@ifThenElse(%autori%==true,'',%observaciones%)"/>
+                    <!--<campo name="fondo_contable" text="Fondo Contable" visible="false"/>-->
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <nivel id="actualizaEstatus_can" nombre="actualizaEstatus_can" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR' AND %autoriza_niv_can.autoriza_comp_can.autori%==true">
+			<componente tipo="cursor" id="actualizaEstatus_can" nombre="actualizaEstatus_can">
+				<tabla schema="operation" nombre="trans_extrapresupuestal">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$inParam.ur$"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$"/>
+					<campo name="id_trans_extrapresupuestal" filtroCampo="id_trans_extrapresupuestal" filtroOperador="=" filtroValor="$inParam.id_trans_extrapresupuestal$"/>
+					<campo name="estatus" calc="3"/>
+					<campo name="folio"/>
+					<campo name="beneficiario"/> 
+				</tabla>
+			</componente>
+		</nivel>
+        
+        <nivel id="altaMovimientoAuxiliar" nombre="altaMovimientoAuxiliar" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR' AND %autoriza_niv_can.autoriza_comp_can.autori%==true">
+            <componente tipo="altaDirect" id="altaMovimientoAuxiliar" nombre="altaMovimientoAuxiliar">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="$config.ur$"/>
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+					<campo name="folio_reporte" text="Folio Póliza"/> <!-- @consultaDirec('SELECT count(folio_reporte) AS result FROM operation.movimientos_auxiliares WHERE substring( folio_reporte from 5 for 6)=='T','result','long','MAGNITUS')-->
+                    <campo name="fecha_poliza" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                    <!--<campo name="periodo_mensual" calc="%agregarTransNivel.agregarTrans.id_periodo%"/> @concatenar('Folio '+%actualizaEstatus.actualizaEstatus.folio%)-->
+                    <campo name="fondo_contable" calc="%autoriza_niv_can.autoriza_comp_can.fondo_contable%"/>
+                    <campo name="id_transaccion_extrapresupuestal" calc="%autoriza_niv_can.autoriza_comp_can.id_trans_extrapresupuestal%"/>
+                    <campo name="estatus_poliza" calc="1"/>
+                    <campo name="tipo_poliza" calc="1"/>
+                    <campo name="concepto_general" calc="@concatenar('Folio '+%actualizaEstatus.actualizaEstatus.folio%" />
+                    <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="importe_total_cargo" />
+                    <campo name="importe_total_abono" />
+                    <campo name="id_catalogo" />
+                    <campo name="id_beneficiario_ganador" calc="%actualizaEstatus_can.actualizaEstatus_can.beneficiario%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="agregaFolioPoliza" nombre="Agrega folio Poliza" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR' AND %autoriza_niv_can.autoriza_comp_can.autori%==true">
+			<componente tipo="cursor" id="agregaFolioPoliza" nombre="Agrega folio Poliza">
+				<tabla schema="operation" nombre="movimientos_auxiliares">
+					<campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%autoriza_niv_can.autoriza_comp_can.id_unidad_responsable%"/>
+					<campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%autoriza_niv_can.autoriza_comp_can.periodo%"/>
+					<campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+					<campo name="folio_reporte" calc="@concatenar(%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%+'-'+@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar% &lt;10,'00000',@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%&lt;100,'0000',@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%&lt;1000,'000',@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%&lt;10000,'00',@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%&lt;100000,'0','1')))))+%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%)"/>
+				</tabla>
+			</componente>
+		</nivel>
+		<nivel id="bareDetallesTrans" nombre="Barre detalles transacción" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR' AND %autoriza_niv_can.autoriza_comp_can.autori%==true">
+			<componente tipo="cursor" id="bareDetallesTrans" nombre="Barre detalles transacción">
+				<tabla schema="operation" nombre="trans_extrapresupuestal_det">
+					<campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%autoriza_niv_can.autoriza_comp_can.id_unidad_responsable%"/>
+					<campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%autoriza_niv_can.autoriza_comp_can.id_periodo%"/>
+					<campo name="id_trans_extrapresupuestal" filtroCampo="id_trans_extrapresupuestal" filtroOperador="=" filtroValor="%autoriza_niv_can.autoriza_comp_can.id_trans_extrapresupuestal%"/>
+					<campo name="id_trans_extrapresupuestal_det"/>
+					<campo name="fecha_elaboracion"/>
+					<campo name="tipo_operacion"/>
+					<campo name="importe"/>
+					<campo name="concepto"/>
+					<campo name="referencia"/>
+				</tabla>
+			
+			<nivel id="bareDetallesOper" nombre="Barre detalles Operación" interactivo="false">
+				<componente tipo="cursor" id="bareDetallesOper" nombre="Barre detalles Operación">
+					<tabla schema="catalog" nombre="tipos_operacion">
+						<campo name="id_tipo_operacion" filtroCampo="id_tipo_operacion" filtroOperador="=" filtroValor="%bareDetallesTrans.bareDetallesTrans.tipo_operacion%"/> <!-- 1ACTIVO 2PASIVO 3PATRIMONIO-->
+						<campo name="tipo_afeccion"/> <!-- 1 incremento 2 disminucion-->
+						<campo name="clave_cuenta_cont"/>
+						<campo name="cuenta_pagar_programada"/>
+					</tabla>
+				</componente>
+			</nivel>
+			<nivel id="agregaDetallesPoliza" nombre="Agrega Detalles Poliza" interactivo="false">
+				<componente tipo="altaDirect" id="agregaDetallesPoliza" nombre="Agrega Detalles Poliza">
+					<tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+						<campo name="ur" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.ur%"/>
+						<campo name="id_periodo" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+						<campo name="id_movimiento_auxiliar" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+						<campo name="id_detalle_movimiento_auxiliar" calc="%bareDetallesTrans.bareDetallesTrans.id_trans_extrapresupuestal_det%"/>
+						<campo name="clave_cuenta_contable" calc="@ifThenElse(%bareDetallesOper.bareDetallesOper.id_tipo_operacion%==2 AND %bareDetallesOper.bareDetallesOper.tipo_afeccion%==2,%bareDetallesOper.bareDetallesOper.cuenta_pagar_programada%,%bareDetallesOper.bareDetallesOper.clave_cuenta_cont%)"/> <!-- -->
+						<!--<campo name="clave_presupuestal"/>-->
+						<campo name="referencia" calc="%bareDetallesTrans.bareDetallesTrans.referencia%"/>
+						<!--<campo name="importe_cargo" calc="%bareDetallesTrans.bareDetallesTrans.importe%"/>-->
+						<campo name="importe_cargo" calc="%bareDetallesTrans.bareDetallesTrans.importe%"/>
+						<campo name="fecha_registro" calc="%bareDetallesTrans.bareDetallesTrans.fecha_elaboracion%"/>
+						<campo name="concepto_bloque" calc="%bareDetallesTrans.bareDetallesTrans.concepto%" />
+					</tabla>
+				</componente>
+			</nivel>
+			<nivel id="agregaDetallesPolizaAbono" nombre="Agrega Detalles Poliza" interactivo="false">
+				<componente tipo="altaDirect" id="agregaDetallesPolizaAbono" nombre="Agrega Detalles Poliza">
+					<tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+						<campo name="ur" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.ur%"/>
+						<campo name="id_periodo" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+						<campo name="id_movimiento_auxiliar" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+						<campo name="id_detalle_movimiento_auxiliar" calc="%bareDetallesTrans.bareDetallesTrans.id_trans_extrapresupuestal_det%"/>
+						<campo name="clave_cuenta_contable" calc="@ifThenElse(%bareDetallesOper.bareDetallesOper.id_tipo_operacion%==2 AND %bareDetallesOper.bareDetallesOper.tipo_afeccion%==2,%bareDetallesOper.bareDetallesOper.clave_cuenta_cont%,%bareDetallesOper.bareDetallesOper.cuenta_pagar_programada%)"/>
+						<!--<campo name="clave_presupuestal"/>-->
+						<campo name="referencia" calc="%bareDetallesTrans.bareDetallesTrans.referencia%"/>
+						<campo name="importe_abono" calc="%bareDetallesTrans.bareDetallesTrans.importe%"/>
+						<!--<campo name="importe_abono" calc="%bareDetallesTrans.bareDetallesTrans.importe%"/>-->
+						<campo name="concepto_bloque" calc="%bareDetallesTrans.bareDetallesTrans.concepto%" />
+						<campo name="fecha_registro" calc="%bareDetallesTrans.bareDetallesTrans.fecha_elaboracion%"/>
+					</tabla>
+				</componente>
+			</nivel>
+			</componente>
+	    </nivel>
+	    
+	    <nivel id="nlAutorizaPolizaAgrega" nombre="Autorización de la Gestión de Pólizas" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR' AND %autoriza_niv_can.autoriza_comp_can.autori%==true">
+            <componente id="cpAutorizaPoliza" nombre="Póliza Cancelación de Transacción Extrapresupuestal" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="Expediente Transacción Extrapresupuestal" nombreDocumento="'Póliza Cancelación de Transacción Extrapresupuestal'" grupo="$inParam.folio$" url="$config.repository_upload_file$" >
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo(%altaMovimientoAuxiliar.altaMovimientoAuxiliar.ur%,'long')" />
+                    <campo name="periodo" type="long" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+                    <campo name="elaboro" type="long" calc="%ultmusumod.ultmusumod.ultimo_usuario_modificador%"/> 
+                    <campo name="autorizo" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                    
+                </reporte>
+            </componente>
+         </nivel>
+
+        <nivel nombre="TurnarInstancia" id="turnar_instancia_can" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR' AND %autoriza_niv_can.autoriza_comp_can.autori%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                </parametros>
+            </componente>
+        </nivel> 
+        <nivel nombre="Instancia Validador" id="InstanciaVal_can" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR' AND %autoriza_niv_can.autoriza_comp_can.autori%==false"> 
+             <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="InstanciaVal"> 
+                <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                    <parametro name="process" calc="$protocolarios.process$"/>    
+                    <parametro name="version" calc="$protocolarios.version$"/> 
+                    <parametro name="user" calc="$protocolarios.user$"/>  
+                    <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                    <parametro name="message" calc="%autoriza_niv_can.autoriza_comp_can.observaciones%"/>
+                    <parametro name="type" calc="'1'"/> 
+                </parametros> 
+            </componente>
+        </nivel>
+        
+        <nivel nombre="TurnarInstancia" id="EnlaceDynamo_can" interactivo="false" ejecutar="%buscaPeriodo.buscaPeriodo.oper%=='CANCELAR' AND %autoriza_niv_can.autoriza_comp_can.autori%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="EnlaceDynamo">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                </parametros>
+            </componente>
+        </nivel>
+
+    </pagina>
+</tarea>

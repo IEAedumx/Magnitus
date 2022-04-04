@@ -1,0 +1,419 @@
+<tarea nombre="Registro de Transacciones Extrapresupuestarias" version="1.0.0" fechaModificacion="2019-01-21" autor="Erick Maya"> 
+        <pagina id="1" nombre="Registra Transaccion"  mostrarNivelAnterior="false">
+            <nivel id="Menu" nombre="Gestión de Transacciones Extrapresupuestarias" mostrarProximoNivel="false">
+                <componente id="Menu" nombre="Gestión de Transacciones Extrapresupuestarias" tipo="formulario" accionDefault="seleccionar">
+                    <tabla schema="catalog" nombre="dummy">
+                        <campo name="id" text="Identificador" visible="false"/>
+                        <campo name="opciones" text="Seleccione una opción:" columnas="4" margen-izquierdo="3" margen-derecho="3" local="true" type="long" validacion="%id%==null" validacionMensaje="Favor de selecionar una opción.">
+                            <opciones>
+                                <opcion texto="Agregar" valor="1"/>
+                                <opcion texto="Cancelar" valor="2"/>
+                            </opciones>
+                        </campo>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="Aceptar" columnas="2" margen-derecho="4" margen-izquierdo="4"/>
+                    </estilos>
+                    <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                    </acciones>
+                </componente>
+            </nivel>
+            
+             <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+                <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                    <tabla schema="catalog" nombre="periodo">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_periodo"/>
+                        <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                        <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            
+            <!-- LEGO TIPO CURSOR -->
+            <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+                <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                    <tabla schema="entity" nombre="usuario">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                        <campo name="id_usuario"/>
+                        <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            <!-- FIN LEGO TIPO CURSOR -->
+                
+            <nivel id="agregarTransNivel" nombre="Registra transaccion extrapresupuestaria" ejecutar="%Menu.Menu.opciones%==1" mostrarProximoNivel="false"> 
+                <componente tipo="maestroDetalle" id="agregarTrans" nombre="Registra transaccion extrapresupuestaria"> 
+                <encabezado>
+                        <tabla schema="operation" nombre="trans_extrapresupuestal">
+                            <campo name="id_unidad_responsable" text="Unidad Responsable" visible="false" llaveForanea="false" calc="$config.ur$" habilitado="false" />
+                            <campo name="id_periodo" text="Periodo" visible="false" llaveForanea="false" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" habilitado="false"/>
+                            <campo name="id_trans_extrapresupuestal" text="Folio" visible="true" generacion="@prox()+1" autogenerado="true" columnas="3" margen-izquierdo="2"/>
+                            <campo name="folio" text="Folio" visible="false"/>
+                            <campo name="fecha_elaboracion" text="Fecha de Registro" columnas="3" margen-derecho="2" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" cellsalign="left" width="100" visible="true" columna-visible="false"/>
+                            
+                            <campo name="beneficiario" text="Beneficiario" cellsalign="left" columnas="3" margen-izquierdo="2" width="100" descripcionForanea="folio_beneficiario,razon_social" llavesFijas="id_estatus_beneficiario=1" visible="true" columna-visible="true" validacion="%beneficiario%==null" autoFiltrado="true" autoFiltradoDescripcion="folio_beneficiario,razon_social" validacionMensaje="Campo 'Beneficiario' es requerido" /> <!-- autoFiltrado="true"  maxlength="6" autoFiltradoDescripcion="folio_beneficiario,nombre,primer_apellido,segundo_apellido"-->
+                            <campo name="id_catalogo" text="id catalogo" cellsalign="left" width="100" llaveForanea="false" visible="false" columna-visible="false" calc="3"/>
+                            <campo name="fondo_contable" text="Fondo contable" cellsalign="left" columnas="3" margen-derecho="2" width="100"  llavesFijas="afectable=true" descripcionForanea="id_cat,descripcion" visible="true" columna-visible="true" validacion="%fondo_contable%==null" validacionMensaje="Campo 'Fondo Contable' es requerido"/> 
+                            <campo name="id_cat_foraneo" text="ID CAT FF" visible="false" local="true" type="string" referenciaForanea="fondo_contable" celdaForanea="id_cat_foraneo" autocompletar="true" />
+                            <campo name="fuente_financiamiento" text="Fuente de Financiamiento" visible="false" calcCliente="%id_cat_foraneo%" />
+                            <campo name="estatus" text="Estatus" cellsalign="left" columnas="3" margen-izquierdo="2" width="100" visible="true" habilitado="false" columna-visible="true" validacion="%estatus%==null" validacionMensaje="Campo 'Estatus' es requerido" calc="1"/>
+                            <campo name="cuenta" text="Cuenta Pagadora" validacion="%cuenta%== null" validacionMensaje=" Campo 'Cuenta' es requerido" descripcionForanea="descripcion" columnas="3"  margen-derecho="2"/>
+                            <campo name="cuenta_pagadora" text="cuenta_pagadora" calcCliente="@consultaDirec('SELECT descripcion as result from entity.cuenta_bancaria where cuenta_bancaria like'+'\\''+%cuenta%+'\\''+'AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','string','MAGNITUS')" visible="false" llaveForanea="false" />
+                            <campo name="tipo_cuenta" text="tipo" calc="1" visible="false" llaveForanea="false" />
+                            <campo name="transaccion" text="Adjunta Documento" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Documento Adjunto'" grupo="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%" expediente="Documentación Adjunta" columnas="3"  margen-izquierdo="2"/>
+                            <campo name="ultimo_usuario_modificador" text="Usuario Modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" llaveForanea="false" visible="false"/>
+                        </tabla>
+                        <estilos>
+                            <boton nombre="grabar" visible="true" texto="Continuar" margen-izquierdo="6" margen-derecho="2" columnas="2" />
+                         </estilos>
+                        <acciones>
+                            <accion nombre="grabar" hacer="saltar siguiente componente"/>
+                        </acciones>
+                    </encabezado>
+                    <detalles>
+                        <tabla schema="operation" nombre="trans_extrapresupuestal_det"  tituloDetalles="Renglones" id="detalle_uno" tipo="tabla">
+                            <campo name="id_unidad_responsable" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false"/>
+                            <campo name="id_periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false"/>
+                            <campo name="id_trans_extrapresupuestal" text="id_trans_extrapresupuestal" llaveForanea="false" visible="false" columna-visible="false"/>
+                            <campo name="id_trans_extrapresupuestal_det" text="Renglón" generacion="@prox()+1" autogenerado="true" visible="false" columna-visible="true"/>
+                            <campo name="tipo_operacion" text="Tipo Operación" columnas="3" margen-izquierdo="2" validacion="%tipo_operacion%==null" validacionMensaje="Campo 'Operación' es requerido" />
+                            <campo name="tipo_afeccion" text="Tipo de Afectación" columnas="3" margen-derecho="2" cellsalign="left" width="150" visible="true" columna-visible="false"  autocompletar="true" hablitado="false" referenciaForanea="tipo_operacion" descripcionForanea="descripcion" habilitado="false" celdaForanea="tipo_afeccion"/>
+                            <campo name="genero_cont" text="Genero Contable" cellsalign="left" width="150" visible="false" columna-visible="true" autocompletar="true" referenciaForanea="tipo_operacion" descripcionForanea="descripcion" celdaForanea="genero_contable" habilitado="false"/>
+                            <campo name="generoContStr" text="Genero Contable" local="true" type="string" columnas="3" margen-izquierdo="2" visible="true" columna-visible="false" autocompletar="true" referenciaForanea="genero_cont" celdaForanea="descripcion" habilitado="false"/>
+                            <campo name="referencia" text="Referencia" columnas="3" margen-derecho="2"  validacion="!@matchRegEx(%referencia%,'^[A-Z 0-9-]*$') OR %referencia%==null" validacionMensaje="Campo 'Referencia' es requerio, 'Solo mayúsculas y numeros'"/>
+                            <campo name="concepto" text="Concepto" columnas="6" margen-izquierdo="2" height="200" validacion="!@matchRegEx(%concepto%,'^[A-ZÑÁÉÍÓÚ 0-9-]*$') OR %concepto%==null" validacionMensaje="Campo 'Concepto' es requerido, 'Solo mayúsculas y numeros'"/>  
+                            <campo name="fecha_inicio" text="Fecha de Inicio" columnas="3" margen-izquierdo="2" columna-visible="false" validacion="%fecha_inicio%==null" validacionMensaje="Debe seleccionar la fecha de inicio"/>
+                            <campo name="fecha_inicio_val" text="fecha_inicio_val" local="true" type="long" visible="false" calcCliente="@consultaDirec('SELECT count(*) as c FROM operation.trans_extrapresupuestal_det tpd where '+'\\''+%fecha_inicio%+\\''+'&gt;=tpd.fecha_inicio AND '+'\\''+%fecha_inicio%+\\''+'&lt;=tpd.fecha_fin and tpd.id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' and tpd.tipo_operacion='+%tipo_operacion%+' AND (SELECT autoriza FROM operation.trans_extrapresupuestal WHERE id_trans_extrapresupuestal=tpd.id_trans_extrapresupuestal ) = true','c','long','MAGNITUS')" validacion="%fecha_inicio_val%&gt;0" validacionMensaje="Esta fecha se encuentra registrada en un periodo ya pagado" columna-visible="false" />
+                            <campo name="fecha_fin" text="Fecha de Fin" columnas="3" margen-derecho="2" columna-visible="false" validacion="%fecha_fin%==null" validacionMensaje="Debe seleccionar la fecha de fin"/>
+                            <campo name="fecha_fin_1" text="fecha_fin_1" local="true" type="bool" visible="false" calcCliente="@before(@ifThenElse(%fecha_fin%==null,@fechaSistema(),%fecha_fin%),@ifThenElse(%fecha_inicio%==null,@fechaSistema(),%fecha_inicio%))" validacion="%fecha_fin_1%==true" validacionMensaje="La fecha final no puede anteceder a la fecha inicio" columna-visible="false" />
+                            <campo name="fecha_fin_val" text="fecha_fin_val" local="true" type="long" visible="false" calcCliente="@consultaDirec('SELECT count(*) as c FROM operation.trans_extrapresupuestal_det tpd where '+'\\''+%fecha_fin%+\\''+'&gt;=tpd.fecha_inicio AND '+'\\''+%fecha_fin%+\\''+'&lt;=tpd.fecha_fin and tpd.id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' and tpd.tipo_operacion='+%tipo_operacion%+' AND (SELECT autoriza FROM operation.trans_extrapresupuestal WHERE id_trans_extrapresupuestal=tpd.id_trans_extrapresupuestal ) = true','c','long','MAGNITUS')" validacion="%fecha_fin_val%&gt;0" validacionMensaje="Esta fecha se encuentra registrada en un periodo ya pagado" columna-visible="false" />
+                            <campo name="importe" text="Importe" columnas="3" margen-izquierdo="2" muestraAcumulado="true" formatoMoneda="true" calcCliente="@consultaDirec('SELECT SUM(importe_operacion) AS it FROM operation.retencion_registro WHERE periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND tipo_operacion='+%tipo_operacion%+' AND fecha_registro BETWEEN '+'\\''+@ifThenElse(%fecha_inicio%==null,@fechaSistema(),%fecha_inicio%)+'\\''+' AND '+'\\''+@ifThenElse(%fecha_fin%==null,@fechaSistema(),%fecha_fin%)+'\\'','it','numeric','MAGNITUS')"/> 
+                             
+                            <campo name="ultimo_usuario_modificador" text="Usuario Modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%" visible="false" columna-visible="false"/> 
+                            <campo name="fecha_elaboracion" text="Fecha de Registro" columna-visible="false" visible="false" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                        </tabla>
+                        <!-- 
+                         <estilos>
+                            <boton nombre="grabar" visible="true" texto="GUARDAR" />
+                         </estilos>
+                         -->
+                        <acciones>
+                            <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                        </acciones>
+                   </detalles>
+                       <!--SUMATORIA-->
+                    <!--<pie>
+                        <tabla schema="operation" nombre="trans_extrapresupuestal" tituloPie="Titulo de Detalle de movimiento Pie">
+                            <campo name="importe" text="Importe Total"/>
+                            <campo name="importe_total_abono" text="Importe Total de Abono"/>
+                            <campo name="folio_movimiento_auxiliar" text="Folio de Póliza"/>
+                        </tabla>
+                    </pie>-->
+                </componente>
+            </nivel>
+            <nivel id="agregaFolio" nombre="Agrega folio" interactivo="false" ejecutar="%Menu.Menu.opciones%==1">
+                <componente tipo="cursor" id="agregaFolio" nombre="Agrega folio">
+                    <tabla schema="operation" nombre="trans_extrapresupuestal">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_unidad_responsable%"/>
+                        <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_periodo%"/>
+                        <campo name="id_trans_extrapresupuestal" filtroCampo="id_trans_extrapresupuestal" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%"/>
+                        <campo name="folio" calc="@concatenar(%agregarTransNivel.agregarTrans.id_periodo%+'-'+'X'+'-'+@ifThenElse(%agregaFolio.agregaFolio.id_trans_extrapresupuestal% &lt;10,'00000',@ifThenElse(%agregaFolio.agregaFolio.id_trans_extrapresupuestal%&lt;100,'0000',@ifThenElse(%agregaFolio.agregaFolio.id_trans_extrapresupuestal%&lt;1000,'000',@ifThenElse(%agregaFolio.agregaFolio.id_trans_extrapresupuestal%&lt;10000,'00',@ifThenElse(%agregaFolio.agregaFolio.id_trans_extrapresupuestal%&lt;100000,'0','1')))))+%agregaFolio.agregaFolio.id_trans_extrapresupuestal%)"/>
+                        
+                    </tabla>
+                </componente>
+            </nivel>
+            
+            <!-- ALTA POLIZA AGREGAR-->
+            <nivel id="altaMovimientoAuxiliar" nombre="altaMovimientoAuxiliar" interactivo="false" ejecutar="%Menu.Menu.opciones%==1">
+                <componente tipo="altaDirect" id="altaMovimientoAuxiliar" nombre="altaMovimientoAuxiliar">
+                    <tabla schema="operation" nombre="movimientos_auxiliares">
+                        <campo name="ur" calc="$config.ur$"/>
+                        <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                        <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                        <campo name="folio_reporte" text="Folio Póliza"/> <!-- @consultaDirec('SELECT count(folio_reporte) AS result FROM operation.movimientos_auxiliares WHERE substring( folio_reporte from 5 for 6)=='T','result','long','MAGNITUS')-->
+                        <campo name="fecha_poliza" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                        <!--<campo name="periodo_mensual" calc="%agregarTransNivel.agregarTrans.id_periodo%"/>-->
+                        <campo name="fondo_contable" calc="%agregarTransNivel.agregarTrans.fondo_contable%"/>
+                        <campo name="id_transaccion_extrapresupuestal" calc="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%"/>
+                        <campo name="origen_poliza" calc="1"/>
+                        <campo name="estatus_poliza" calc="1"/>
+                        <campo name="tipo_poliza" calc="1"/>
+                        <campo name="concepto_general" calc="@concatenar('Folio '+%agregaFolio.agregaFolio.folio%)"/>
+                        <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        <campo name="importe_total_cargo" />
+                        <campo name="importe_total_abono" />
+                        <campo name="id_catalogo" calc="%agregarTransNivel.agregarTrans.id_catalogo%"/>
+                        <campo name="id_beneficiario_ganador" calc="%agregarTransNivel.agregarTrans.beneficiario%"/> 
+                
+                    </tabla>
+                </componente>
+            </nivel>
+            
+            <nivel id="agregaFolioPoliza" nombre="Agrega folio Poliza" interactivo="false" ejecutar="%Menu.Menu.opciones%==1">
+                <componente tipo="cursor" id="agregaFolioPoliza" nombre="Agrega folio Poliza">
+                    <tabla schema="operation" nombre="movimientos_auxiliares">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.ur%"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+                        <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+                        <campo name="folio_reporte" calc="@concatenar(%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%+'-'+'T'+@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar% &lt;10,'00000',@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%&lt;100,'0000',@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%&lt;1000,'000',@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%&lt;10000,'00',@ifThenElse(%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%&lt;100000,'0','1')))))+%agregaFolioPoliza.agregaFolioPoliza.folio_movimiento_auxiliar%)"/>
+                    </tabla>
+                </componente>
+            </nivel>
+            
+            <!-- BARRE DETALLES TRANSACCIÓN Y LOS AGREGA A LA PÓLIZA-->
+            <nivel id="bareDetallesTrans" nombre="Barre detalles transacción" interactivo="false" ejecutar="%Menu.Menu.opciones%==1">
+                <componente tipo="cursor" id="bareDetallesTrans" nombre="Barre detalles transacción">
+                    <tabla schema="operation" nombre="trans_extrapresupuestal_det">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_unidad_responsable%"/>
+                        <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_periodo%"/>
+                        <campo name="id_trans_extrapresupuestal" filtroCampo="id_trans_extrapresupuestal" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%"/>
+                        <campo name="id_trans_extrapresupuestal_det"/>
+                        <campo name="fecha_elaboracion"/>
+                        <campo name="tipo_operacion"/>
+                        <campo name="importe"/>
+                        <campo name="concepto"/>
+                        <campo name="referencia"/>
+                    </tabla>
+                    <nivel id="bareDetallesOper" nombre="Barre detalles Operación" interactivo="false">
+                        <componente tipo="cursor" id="bareDetallesOper" nombre="Barre detalles Operación">
+                            <tabla schema="catalog" nombre="tipos_operacion">
+                                <campo name="id_tipo_operacion" filtroCampo="id_tipo_operacion" filtroOperador="=" filtroValor="%bareDetallesTrans.bareDetallesTrans.tipo_operacion%"/>
+                                <campo name="tipo_afeccion"/>
+                                <campo name="clave_cuenta_cont"/>
+                                <campo name="descripcion_clave_cuenta_cont" local="true" type="string" referenciaForanea="clave_cuenta_cont" celdaForanea="descripcion"/>
+                                <campo name="cuenta_pagar_programada"/>
+                                <campo name="descripcion_cuenta_pagar_programada" local="true" type="string" referenciaForanea="cuenta_pagar_programada" celdaForanea="descripcion"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+                    <nivel id="barreCuentasCont" nombre="Barre Cuenta Contable" interactivo="false">
+                        <componente tipo="cursor" id="barreCuentasCont" nombre="barreCuentasCont">
+                            <tabla schema="catalog" nombre="cuentas_contables">
+                                <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_unidad_responsable%"/>
+                                <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_periodo%"/>
+                                <campo name="clave_cuenta" filtroCampo="clave_cuenta" filtroOperador="=" filtroValor="%bareDetallesOper.bareDetallesOper.clave_cuenta_cont%"/>
+                                <campo name="descripcion"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+                    <nivel id="barreCuentasContPagar" nombre="Barre Cuenta Contable" interactivo="false">
+                        <componente tipo="cursor" id="barreCuentasContPagar" nombre="barreCuentasCont">
+                            <tabla schema="catalog" nombre="cuentas_contables">
+                                <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_unidad_responsable%"/>
+                                <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%agregarTransNivel.agregarTrans.id_periodo%"/>
+                                <campo name="clave_cuenta" filtroCampo="clave_cuenta" filtroOperador="=" filtroValor="%bareDetallesOper.bareDetallesOper.cuenta_pagar_programada%"/>
+                                <campo name="descripcion"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+                    <nivel id="agregaDetallesPoliza" nombre="Agrega Detalles Poliza" interactivo="false">
+                        <componente tipo="altaDirect" id="agregaDetallesPoliza" nombre="Agrega Detalles Poliza">
+                            <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                <campo name="ur" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.ur%"/>
+                                <campo name="id_periodo" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+                                <campo name="id_movimiento_auxiliar" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+                                <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                <campo name="clave_cuenta_contable" calc="@ifThenElse(%bareDetallesOper.bareDetallesOper.id_tipo_operacion%==2 AND %bareDetallesOper.bareDetallesOper.tipo_afeccion%==2,%bareDetallesOper.bareDetallesOper.cuenta_pagar_programada%,%bareDetallesOper.bareDetallesOper.clave_cuenta_cont%)"/>
+                                <campo name="concepto_bloque" calc="%bareDetallesTrans.bareDetallesTrans.concepto%"/>
+                                <campo name="referencia" calc="%bareDetallesTrans.bareDetallesTrans.referencia%"/>
+                                <campo name="importe_cargo" calc="%bareDetallesTrans.bareDetallesTrans.importe%"/>
+                                <!--<campo name="importe_abono" calc="%bareDetallesTrans.bareDetallesTrans.importe%"/>-->
+                                <campo name="fecha_registro" calc="%bareDetallesTrans.bareDetallesTrans.fecha_elaboracion%"/>
+                                
+                                <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                                
+                                <campo name="tipo_detalle" calc="2" llaveForanea="false"/>
+                                
+                            </tabla>
+                        </componente>
+                    </nivel>
+                    <nivel id="agregaDetallesPolizaABONO" nombre="Agrega Detalles Poliza" interactivo="false">
+                        <componente tipo="altaDirect" id="agregaDetallesPolizaABONO" nombre="Agrega Detalles Poliza">
+                            <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                                <campo name="ur" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.ur%"/>
+                                <campo name="id_periodo" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+                                <campo name="id_movimiento_auxiliar" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+                                <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT cuenta_contable AS cc FROM entity.cuenta_bancaria WHERE cuenta_bancaria='+'\\''+%agregarTransNivel.agregarTrans.cuenta%+'\\'','cc','string','MAGNITUS')"/> <!--@ifThenElse(%bareDetallesOper.bareDetallesOper.id_tipo_operacion%==2 AND %bareDetallesOper.bareDetallesOper.tipo_afeccion%==2,%bareDetallesOper.bareDetallesOper.clave_cuenta_cont%,%bareDetallesOper.bareDetallesOper.cuenta_pagar_programada%) cuenta_pagar_programada clave_cuenta_cont-->
+                                
+                                <campo name="concepto_bloque" calc="%bareDetallesTrans.bareDetallesTrans.concepto%"/>
+                                
+                                <!--
+                                <campo name="concepto_bloque" calc="@ifThenElse(%bareDetallesOper.bareDetallesOper.id_tipo_operacion%==2 AND %bareDetallesOper.bareDetallesOper.tipo_afeccion%==2,%bareDetallesOper.bareDetallesOper.descripcion_clave_cuenta_cont%,%bareDetallesOper.bareDetallesOper.descripcion_cuenta_pagar_programada%)"/>-->
+                                <campo name="referencia" calc="%bareDetallesTrans.bareDetallesTrans.referencia%"/>
+                                <!--<campo name="importe_cargo" calc="%bareDetallesTrans.bareDetallesTrans.importe%"/>-->
+                                <campo name="importe_abono" calc="%bareDetallesTrans.bareDetallesTrans.importe%"/>
+                                <campo name="fecha_registro" calc="%bareDetallesTrans.bareDetallesTrans.fecha_elaboracion%"/>
+                                
+                                <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                                
+                                <campo name="tipo_detalle" calc="2" llaveForanea="false"/>
+                                
+                            </tabla>
+                        </componente>
+                    </nivel>
+                </componente>
+            </nivel>
+            
+            <nivel id="agregaImportesPoliza" nombre="agregaImportesPoliza" interactivo="false">
+                <componente tipo="cursor" id="agregaImportesPoliza" nombre="Agrega folio Poliza">
+                    <tabla schema="operation" nombre="movimientos_auxiliares">
+                        <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.ur%"/>
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+                        <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+                        <campo name="importe_total_cargo" calc="@consultaDirec('SELECT SUM(importe_cargo) AS result FROM operation.detalle_movimientos_auxiliares WHERE id_movimiento_auxiliar='+%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%+'','result','decimal','MAGNITUS')" />
+                        <campo name="importe_total_abono" calc="@consultaDirec('SELECT SUM(importe_abono) AS result FROM operation.detalle_movimientos_auxiliares WHERE id_movimiento_auxiliar='+%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%+'','result','decimal','MAGNITUS')" />
+                    </tabla>
+                </componente>
+            </nivel>
+            
+            
+            <nivel id="PolizaNv" nombre="Pólizas Contable"  ejecutar="%Menu.Menu.opciones%==1">
+                <componente id="PolizaCp" nombre="Póliza Modificación de Transacción Extrapresupuestal" tipo="reporte">
+                    <reporte nombre="polizacontable" expediente="Documentación Oficial" nombreDocumento="'Póliza'" grupo="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%" url="$config.repository_upload_file$" update="true">
+                        <campo name="ur" text="Unidad Responsable" type="long" calc="@castTo(%altaMovimientoAuxiliar.altaMovimientoAuxiliar.ur%,'long')" />
+                        <campo name="periodo" type="long" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+                        <campo name="folio_movimiento_auxiliar" type="long" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+                        <campo name="elaboro" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/> 
+                        <campo name="logueado" type="long" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    </reporte>
+                </componente>
+            </nivel>
+
+            
+            <nivel id="nl_Consulta_Gestion_Tran_Extra" nombre="Consulta de la Gestión de Transacciones Extrapresupuestarias" mostrarProximoNivel="true" ejecutar="%Menu.Menu.opciones%==1">
+                <componente id="cp_Consulta_Gestion_Tran_Extra" nombre="Consulta de la Gestión de Transacciones Extrapresupuestarias" tipo="reporte">
+                    <reporte nombre="transacciones_presupuestales" expediente="Documentación Oficial" nombreDocumento="'Formato Transacciones Extrapresupuestarias'" grupo="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%" url="$config.repository_upload_file$" update="true">
+                        <campo name="id_trans_extrapresupuestal" type="long" calc="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%"/>
+                        <campo name="id_movimiento_auxiliar" type="long" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%"/>
+                        <campo name="id_unidad_responsable" type="long" calc="$config.ur$"/>
+                        <campo name="periodo" type="long" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.periodo%"/>
+                    </reporte>
+                </componente>
+            </nivel>
+            
+     
+            
+            
+            <!-- EJECUTA INSTANCIA--> 
+            <nivel id="lanzaInstancia" nombre="lanzaInstancia" ejecutar="%Menu.Menu.opciones%==1" interactivo="false">
+                <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                    <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                        <parametro name="enterprise" calc="'MAGNITUS'"/>
+                        <parametro name="process" calc="'43e1ad39-c5ab-4138-9654-9205475380d8'"/>
+                        <parametro name="user" calc="$protocolarios.user$"/>
+                        <parametro name="out_ur" calc="%agregarTransNivel.agregarTrans.id_unidad_responsable%" mostrarEsc="true"/>
+                        <parametro name="out_periodo" calc="%agregarTransNivel.agregarTrans.id_periodo%" mostrarEsc="true"/>
+                        <parametro name="out_id_trans_extrapresupuestal" calc="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%" mostrarEsc="false"/>
+                        <parametro name="out_folio" calc="%agregaFolio.agregaFolio.folio%" mostrarEsc="true"/>
+                        <parametro name="out_operacion" calc="'AGREGAR'" mostrarEsc="true"/>
+                        <parametro name="out_id_poliza" calc="%altaMovimientoAuxiliar.altaMovimientoAuxiliar.folio_movimiento_auxiliar%" mostrarEsc="false"/>
+                        <parametro name="out_folio_poliza" calc="%agregaFolioPoliza.agregaFolioPoliza.folio_reporte%" mostrarEsc="true"/>
+                    </parametros>
+                </componente>
+            </nivel>
+            
+            <!-- ******NIVELES OPCION CANCELAR******-->
+            <nivel nombre="Cancelar Transaccion extrapresupuestaria" id="canela_trans" mostrarProximoNivel="true" ejecutar="%Menu.Menu.opciones%==2">
+                <componente tipo="tabla" nombre="Registra Transaccion extrapresupuestaria (incluye acción de Click Derecho)" filtro="true" id="canela_trans" mostrarEliminar="false" mostrarAgregar="false">
+                    <tabla schema="operation" nombre="trans_extrapresupuestal">
+                        <campo name="id_unidad_responsable" text="Unidad Responsable" calc="$config.ur$" cellsalign="left"  width="100" visible="false" columna-visible="false" habilitado="false"/>
+                        <campo name="id_periodo" text="Periodo" cellsalign="left" width="100" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" columna-visible="false" habilitado="false"/>
+                        <campo name="id_trans_extrapresupuestal" text="id_trans_extrapresupuestal" cellsalign="left" width="100" visible="false" columna-visible="false" habilitado="false"/>
+                        <!--<campo name="folio_tmp" text="Folio" cellsalign="left" width="100" visible="true" columna-visible="true" habilitado="false"/>-->
+                        <campo name="folio" text="Folio" cellsalign="left" width="150" visible="true" columna-visible="true" habilitado="false"/>
+                        <campo name="beneficiario" text="Beneficiario" cellsalign="left" width="100" visible="true" columna-visible="true" habilitado="false" descripcionForaneaTabla="id_beneficiario"/>
+                        <campo name="fecha_elaboracion" text="Fecha de Registro" cellsalign="left" width="170" habilitado="false" visible="true" columna-visible="true" /> <!-- filtroCampo="fecha_elaboracion" filtroOperador="entre" filtroValor="@fechaSistema(&quot;YYYY/MM/01 00:00:00&quot;)+' 00:00:00', @fechaSistema(&quot;YYYY/MM/31 23:59:59&quot;)' 23:59:59'"-->
+                        <!--<campo name="fondo_contable" text="Fondo contable" cellsalign="left" width="100" visible="true" columna-visible="true" validacion="%fondo_contable%==null" validacionMensaje="Campo 'Fondo contable' es requerido" />-->
+                        <campo name="estatus" text="Estatus" visible="true" columna-visible="true" habilitado="false" filtroCampo="estatus" filtroOperador="=" filtroValor="2"/>
+                        <campo name="ultimo_usuario_modificador" text="Usuario Modificador" visible="false" columna-visible="false" habilitado="false"/>
+                        <campo name="cancela" text="Cancela" editable="true"/>
+                    <!--<tareas>
+                        <tarea nombre="Cancelar" imagen="resources/img/button-default.png" imagen-sobre="resources/img/button-default-rollover.png" params="id_unidad_responsable,id_periodo,id_trans_extrapresupuestal" ref="task=ece4b20c-e435-4fb6-b129-7c03f80c77ae"/>
+                    </tareas>-->
+                    </tabla>
+                </componente>
+            </nivel>
+            
+            <nivel id="enviaInstanciasCancela" nombre="Envia Instancias Cancela" interactivo="false" ejecutar="%Menu.Menu.opciones%==2">
+                <componente tipo="cursor" id="enviaInstanciasCancela" nombre="Envia Instancias Cancela">
+                    <tabla schema="operation" nombre="trans_extrapresupuestal">
+                        <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_unidad_responsable%"/>
+                        <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                        <campo name="id_trans_extrapresupuestal"/>
+                        <campo name="fondo_contable"/>
+                        <campo name="folio"/>
+                        <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="2"/>
+                        <campo name="cancela" filtroCampo="cancela" filtroOperador="=" filtroValor="true"/>
+                    </tabla>
+                    <!-- ALTA POLIZA CANCELAR-->
+                    <nivel id="altaMovimientoAuxiliarCancela" nombre="altaMovimientoAuxiliar" interactivo="false" ejecutar="%Menu.Menu.opciones%==2">
+                        <componente tipo="altaDirect" id="altaMovimientoAuxiliarCancela" nombre="altaMovimientoAuxiliar">
+                            <tabla schema="operation" nombre="movimientos_auxiliares">
+                                <campo name="ur" calc="$config.ur$"/>
+                                <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                                <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                                <campo name="folio_reporte" text="Folio Póliza"/> <!-- @consultaDirec('SELECT count(folio_reporte) AS result FROM operation.movimientos_auxiliares WHERE substring( folio_reporte from 5 for 6)=='T','result','long','MAGNITUS')-->
+                                <campo name="fecha_poliza" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)"/>
+                                <campo name="id_transaccion_extrapresupuestal" calc="%enviaInstanciasCancela.enviaInstanciasCancela.id_trans_extrapresupuestal%"/>
+                                <!--<campo name="periodo_mensual" calc="%agregarTransNivel.agregarTrans.id_periodo%"/>-->
+                                <campo name="fondo_contable" calc="%enviaInstanciasCancela.enviaInstanciasCancela.fondo_contable%"/>
+                                <campo name="estatus_poliza" Calc="1"/>
+                                <campo name="tipo_poliza" calc="1"/>
+                                <campo name="ultimo_usuario_modificador" />
+                                <campo name="importe_total_cargo" />
+                                <campo name="importe_total_abono" />
+                                <campo name="id_catalogo" />
+                            </tabla>
+                        </componente>
+                    </nivel>
+                    
+                    <nivel id="agregaFolioPolizaC" nombre="Agrega folio Poliza" interactivo="false" ejecutar="%Menu.Menu.opciones%==2">
+                        <componente tipo="cursor" id="agregaFolioPolizaC" nombre="Agrega folio Poliza">
+                            <tabla schema="operation" nombre="movimientos_auxiliares">
+                                <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%altaMovimientoAuxiliarCancela.altaMovimientoAuxiliarCancela.ur%"/>
+                                <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%altaMovimientoAuxiliarCancela.altaMovimientoAuxiliarCancela.periodo%"/>
+                                <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%altaMovimientoAuxiliarCancela.altaMovimientoAuxiliarCancela.folio_movimiento_auxiliar%"/>
+                                <campo name="folio_reporte" calc="@concatenar(%altaMovimientoAuxiliarCancela.altaMovimientoAuxiliarCancela.periodo%+'-'+'T'+@ifThenElse(%agregaFolioPolizaC.agregaFolioPolizaC.folio_movimiento_auxiliar% &lt;10,'00000',@ifThenElse(%agregaFolioPolizaC.agregaFolioPolizaC.folio_movimiento_auxiliar%&lt;100,'0000',@ifThenElse(%agregaFolioPolizaC.agregaFolioPolizaC.folio_movimiento_auxiliar%&lt;1000,'000',@ifThenElse(%agregaFolioPolizaC.agregaFolioPolizaC.folio_movimiento_auxiliar%&lt;10000,'00',@ifThenElse(%agregaFolioPolizaC.agregaFolioPolizaC.folio_movimiento_auxiliar%&lt;100000,'0','1')))))+%agregaFolioPolizaC.agregaFolioPolizaC.folio_movimiento_auxiliar%)"/>
+                            </tabla>
+                        </componente>
+                    </nivel>
+                    
+                    <nivel id="lanzaInstanciaCancela" nombre="lanzaInstanciaCancela" interactivo="false" ejecutar="%Menu.Menu.opciones%==2">
+                        <componente id="lanzaInstanciaCancela" nombre="lanzaInstanciaCancela" tipo="solicitud">
+                            <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                                <parametro name="enterprise" calc="'MAGNITUS'"/>
+                                <parametro name="process" calc="'43e1ad39-c5ab-4138-9654-9205475380d8'"/>
+                                <parametro name="user" calc="$protocolarios.user$"/>
+                                <parametro name="out_ur" calc="%enviaInstanciasCancela.enviaInstanciasCancela.id_unidad_responsable%" mostrarEsc="true"/>
+                                <parametro name="out_periodo" calc="%enviaInstanciasCancela.enviaInstanciasCancela.id_periodo%" mostrarEsc="true"/>
+                                <parametro name="out_id_trans_extrapresupuestal" calc="%enviaInstanciasCancela.enviaInstanciasCancela.id_trans_extrapresupuestal%" mostrarEsc="false"/>
+                                <parametro name="out_folio" calc="%enviaInstanciasCancela.enviaInstanciasCancela.folio%" mostrarEsc="true"/>
+                                <parametro name="out_operacion" calc="'CANCELAR'" mostrarEsc="true"/>
+                                <parametro name="out_id_poliza" calc="%altaMovimientoAuxiliarCancela.altaMovimientoAuxiliarCancela.folio_movimiento_auxiliar%" mostrarEsc="false"/>
+                                <parametro name="out_folio_poliza" calc="%agregaFolioPolizaC.agregaFolioPolizaC.folio_reporte%" mostrarEsc="true"/>
+                            </parametros>
+                        </componente>
+                    </nivel>
+                </componente>
+            </nivel>
+             
+            
+            <!--<nivel id="lanzaInstanciaCancela" nombre="lanzaInstancia" ejecutar="%Menu.Menu.opciones%==2" interactivo="false">
+                <componente id="lanzaInstanciaCancela" nombre="lanzaInstancia" tipo="solicitud">
+                    <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                        <parametro name="enterprise" calc="'MAGNITUS'"/>
+                        <parametro name="process" calc="'43e1ad39-c5ab-4138-9654-9205475380d8'"/>
+                        <parametro name="user" calc="$protocolarios.user$"/>
+                        <parametro name="out_ur" calc="%agregarTransNivel.agregarTrans.id_unidad_responsable%" mostrarEsc="true"/>
+                        <parametro name="out_periodo" calc="%agregarTransNivel.agregarTrans.id_periodo%" mostrarEsc="true"/>
+                        <parametro name="out_id_trans_extrapresupuestal" calc="%agregarTransNivel.agregarTrans.id_trans_extrapresupuestal%" mostrarEsc="false"/>
+                        <parametro name="out_folio" calc="%agregarTransNivel.agregarTrans.folio%" mostrarEsc="true"/>
+                        <parametro name="out_operacion" calc="'CANCELAR'" mostrarEsc="true"/>
+                    </parametros>
+                </componente>
+            </nivel> -->
+        </pagina>   
+    </tarea>

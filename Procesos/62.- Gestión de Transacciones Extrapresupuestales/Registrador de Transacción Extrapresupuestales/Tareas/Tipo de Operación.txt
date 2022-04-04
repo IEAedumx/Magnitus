@@ -1,0 +1,246 @@
+<tarea id="Cap_Tip_Oper_Ex" nombre="Captura de Tipo de Operación Extrapresupuestaria" version="1" autor="Sergio Armando Guzman Avila">
+    <pagina id="Cap_Tip_Oper_Ex">
+        
+        
+         <!--NIVEL PARA OBTENER EL PERIODO-->
+        <nivel id="FP" nombre="Filtra Periodo" interactivo="false">
+            <componente id="FP" nombre="Filtra Periodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="Menu" nombre="Captura De Tipo de Operación Extrapresupestaria" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="Menu" nombre="Captura De Tipo de Operación Extrapresupestaria" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1" visible="false"/>
+                    <campo name="opciones" text="Seleccione una opción:" columnas="4" margen-izquierdo="3" local="true" type="long" validacion="%opciones%==null" validacionMensaje="Favor de seleccionar una opción.">
+                        <opciones>
+                            <opcion texto="Agregar" valor="1"/>
+                            <opcion texto="Eliminar" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" columnas="4" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="TC" nombre="Tipo de Captura" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%Menu.Menu.opciones%==1">
+            <componente id="TC" nombre="Tipo de Captura Tipo de Operación Extrapresupestaria" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" calc="1" visible="false"/>
+                    <campo name="seleccion" text="Seleccione Tipo de Captura:" columnas="4" margen-izquierdo="3" local="true" type="long" validacion="%seleccion%==null" validacionMensaje="Favor de seleccionar una opción.">
+                        <opciones>
+                            <opcion texto="Manual" valor="1"/>
+                            <opcion texto="Importar" valor="2"/>
+                        </opciones>
+                    </campo>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" columnas="4" margen-izquierdo="3"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="nlImportar" nombre="Importar" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%Menu.Menu.opciones%==1 AND %TC.TC.seleccion%==2">
+            <componente id="cpImportar" tipo="tabla" nombre="Importar" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false" mostrarImportacion="true">
+                <tabla schema="catalog" nombre="tipos_operacion">
+                    <campo name="unidad_responsable" text="UR" calc="%FP.FP.id_unidad_responsable%" llaveForanea="false" columna-visible="false" visible="false" importacion="true"/>
+                    <campo name="periodo" text="Periodo"  calc="%FP.FP.id_periodo%" llaveForanea="false" columna-visible="false" visible="false" importacion="true"/>
+                    <campo name="id_tipo_operacion" text="ID Tipo Operacion" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true"  importacion="true"/>
+                    <campo name="tipo_operacion" text="Tipo Operación"  height="70" columnaImportacion="Tipo Operación"  importacion="true"/>
+                    <campo name="genero_contable" text="Género Contable"  columnaImportacion="Género Contable" importacion="true"/>
+                    <campo name="tipo_afeccion" text="Tipo de Afectación"  columnaImportacion="Tipo de Afectación"  importacion="true"/>
+                    <campo name="clave_cuenta_cont" text="Cuenta Contable"  descripcionForaneaTabla="clave_cuenta,descripcion" columnaImportacion="Cuenta Contable" importacion="true"/>
+                    <!--
+                    <campo name="cuenta_pagar_programada" text="Cuenta por Pagar Programada" descripcionForaneaTabla="clave_cuenta,descripcion" columnaImportacion="Cuenta por Pagar Programada" importacion="true"/>
+                    -->
+                    <campo name="id_cat_fondo_contable" text="CAT FC" calc="3" visible="false" columna-visible="false" importacion="true"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" columnaImportacion="Fondo Contable" importacion="true"/>
+                    <campo name="estatus" text="Estatus" marcador ="Estatus" columnaImportacion="Estatus" importacion="true"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="AFI" nombre="Agrega Folio a Importación"  interactivo="false" ejecutar="%Menu.Menu.opciones%==1 AND %TC.TC.seleccion%==2">
+            <componente id="AFI" nombre="Agrega Folio a Importación" tipo="cursor">
+                <tabla schema="catalog" nombre="tipos_operacion">
+                    <campo name="id_tipo_operacion"/>
+                    <campo name="estatus"/>
+                </tabla>
+                <nivel id="AFO" nombre="Actualiza Folio"  interactivo="false">
+                    <componente id="AFO" nombre="Actualiza Folio" tipo="cursor">
+                        <tabla schema="catalog" nombre="tipos_operacion">
+                            <campo name="id_tipo_operacion" filtroCampo="id_tipo_operacion" filtroOperador="=" filtroValor="%AFI.AFI.id_tipo_operacion%"/>
+                            <campo name="folio" calc="@consultaDirec('SELECT CONCAT(\\'OP-EXT\\','+%FP.FP.id_periodo%+',\\'-\\',LPAD(\\''+%AFI.AFI.id_tipo_operacion%+'\\',3,\\'0\\')) AS result','result','string',$protocolarios.enterprise$)"/>
+                            <campo name="descripcion_estatus" calc="@ifThenElse(%AFI.AFI.estatus%==true,'ACTIVO','INACTIVO')"/>
+                            
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        
+        
+       
+        
+        <!--NIVEL PARA IMPORTAR-->
+        <!-- <nivel id="nlImportar" nombre="Importar" mostrarProximoNivel="true" mostrarNivelAnterior="false" ejecutar="%Menu.Menu.opciones%==1">
+            <componente id="cpImportar" tipo="tabla" nombre="Importar" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false" mostrarImportacion="true">
+                <tabla schema="catalog" nombre="tipos_operacion">
+                    <campo name="ft" text="folio temporal" local="true" type="long" visible="false" columna-visible="false" calc="@ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')==null,1,@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS'))"/>
+                    <campo name="id_tipo_operacion" text="ID CLAVE DE OPERACION" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true" habilitado="false" columnaImportacion="id_tipo_operacion" columnaImportacionVisible="true" importacion="true"/>
+                   <campo name="folio" text="ID CLAVE DE OPERACION" marcador="Descripción Cuenta Contable" 
+                    calc="@concatenar('OP-EXT'+%buscaPeriodo.buscaPeriodo.id_periodo% +'-'+ @ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')==null,001,
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')&lt;10,'00',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')&lt;100,'0',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')&lt;100,'',''))))) +@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')" habilitado="false"/>
+                    <campo name="folio" text="ID CLAVE DE OPERACION" calc="@concatenar('OP-EXT'+'-'+'0'+%id_tipo_operacion%)"/>
+                    <campo name="tipo_operacion" text="DESCRIPCION TIPO DE OPERACION"  height="70" columnaImportacion="tipo_operacion" validacionImportacion="@ifThenElse(%tipo_operacion%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="genero_contable" text="GENERO CONTABLE"  columnaImportacion="genero_contable" validacionImportacion="@ifThenElse(%genero_contable%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="tipo_afeccion" text="TIPO AFECTACION"  columnaImportacion="tipo_afeccion" validacionImportacion="@ifThenElse(%tipo_afeccion%=='', true, false)" columnaImportacionVisible="true"  importacion="true"/>
+                    <campo name="unidad_responsable" text="UNIDAD RESPONSABLE" calc="$config.ur$" llaveForanea="false" marcador="UNIDAD RESPONSABLE" columna-visible="false" visible="false" columnaImportacion="unidad_responsable" validacionImportacion="@ifThenElse(%unidad_responsable%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="periodo" text="PERIODO"  marcador="PERIODO" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" columna-visible="false" visible="false" columnaImportacion="periodo" validacionImportacion="@ifThenElse(%periodo%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="clave_cuenta_cont" text="CLAVE Y DESCRIPCION DE LA CUENTA CONTABLE" habilitarEdicionImportacion="false" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" marcador="CLAVE DE CUENTA CONTABLE" columnaImportacion="clave_cuenta_cont" validacionImportacion="@ifThenElse(%clave_cuenta_cont%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="estatus" text="ESTATUS" marcador ="ESTATUS" columnaImportacion="estatus" validacionImportacion="@ifThenElse(%estatus%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+       
+   <!--   <nivel id="asignarFolio" nombre="Asignar folio" interactivo="false" ejecutar="%Menu.Menu.opciones%==1">
+            <componente tipo="cursor" id="asignarFolio" nombre="Asignar folio">
+                <tabla schema="catalog" nombre="tipos_operacion">
+                    <campo name="id_tipo_operacion"/>
+                    <campo name="folio" filtroCampo="folio" filtroOperador="=" filtroValor="null" calc="@concatenar('OP-EXT'+%buscaPeriodo.buscaPeriodo.id_periodo% +'-'+@ifThenElse(%asignarFolio.asignarFolio.id_tipo_operacion%==null,001,
+                    @ifThenElse(%asignarFolio.asignarFolio.id_tipo_operacion%&lt;10,'00',
+                    @ifThenElse(%asignarFolio.asignarFolio.id_tipo_operacion%&lt;100,'0',
+                    @ifThenElse(%asignarFolio.asignarFolio.id_tipo_operacion%&lt;100,'',''))))) + %asignarFolio.asignarFolio.id_tipo_operacion%"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+    <!--    <nivel id="nlImportar2" nombre="Importar" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%Menu.Menu.opciones%==1">
+            <componente id="cpImportar2" tipo="tabla" nombre="Importar" mostrarAgregar="false" mostrarEliminar="false" mostrarEditar="false" mostrarImportacion="false">
+                <tabla schema="catalog" nombre="tipos_operacion">
+                    <campo name="ft" text="folio temporal" local="true" type="long" visible="false" columna-visible="false" calc="@ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')==null,1,@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS'))"/>
+                    <campo name="id_tipo_operacion" text="ID CLAVE DE OPERACION" visible="false" columna-visible="false" generacion="@prox()+1" autogenerado="true" habilitado="false" columnaImportacion="id_tipo_operacion" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="folio" text="ID CLAVE DE OPERACION" marcador="Descripción Cuenta Contable" 
+                    calc="@concatenar('OP-EXT'+%buscaPeriodo.buscaPeriodo.id_periodo% +'-'+ @ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')==null,001,
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')&lt;10,'00',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')&lt;100,'0',
+                    @ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')&lt;100,'',''))))) +@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%,'result','long','MAGNITUS')" habilitado="false"/>
+                    <campo name="tipo_operacion" text="DESCRIPCION TIPO DE OPERACION"  height="70" columnaImportacion="tipo_operacion" validacionImportacion="@ifThenElse(%tipo_operacion%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="genero_contable" text="GENERO CONTABLE"  columnaImportacion="genero_contable" validacionImportacion="@ifThenElse(%genero_contable%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="tipo_afeccion" text="TIPO AFECTACION"  columnaImportacion="tipo_afeccion" validacionImportacion="@ifThenElse(%tipo_afeccion%=='', true, false)" columnaImportacionVisible="true"  importacion="true"/>
+                    <campo name="unidad_responsable" text="UNIDAD RESPONSABLE" calc="$config.ur$" llaveForanea="false" marcador="UNIDAD RESPONSABLE" columna-visible="false" visible="false" columnaImportacion="unidad_responsable" validacionImportacion="@ifThenElse(%unidad_responsable%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="periodo" text="PERIODO"  marcador="PERIODO" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" columna-visible="false" visible="false" columnaImportacion="periodo" validacionImportacion="@ifThenElse(%periodo%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="clave_cuenta_cont" text="CLAVE Y DESCRIPCION DE LA CUENTA CONTABLE" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" marcador="CLAVE DE CUENTA CONTABLE" columnaImportacion="clave_cuenta_cont" validacionImportacion="@ifThenElse(%clave_cuenta_cont%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="cuenta_pagar_programada" text="CLAVE Y DESCRIPCION DE LA CUENTA POR PAGAR PROGRAMADA"  descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" marcador="CUENTA POR PAGAR PROGRAMADA" columnaImportacion="cuenta_pagar_programada" validacionImportacion="@ifThenElse(%cuenta_pagar_programada%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                    <campo name="estatus" text="ESTATUS" marcador ="ESTATUS" columnaImportacion="estatus" validacionImportacion="@ifThenElse(%estatus%=='', true, false)" columnaImportacionVisible="true" importacion="true"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+        <!--NIVEL PARA AGREGAR-->
+        <nivel id="nAgregar" nombre="Agregar" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%Menu.Menu.opciones%==1 AND %TC.TC.seleccion%==1">
+            <componente id="cpAgregar" tipo="tabla" nombre="Agregar" mostrarEliminar="true" mostrarEditar="true" filtro="true">
+                <tabla schema="catalog" nombre="tipos_operacion">
+                     <campo name="unidad_responsable" text="UNIDAD RESPONSABLE" calc="%FP.FP.id_unidad_responsable%" columna-visible="false" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" text="PERIODO"  marcador="PERIODO" calc="%FP.FP.id_periodo%" filtroCampo="periodo" filtroOperador="=" filtroValor="%FP.FP.id_periodo%"  columna-visible="false" visible="false" llaveForanea="false"/>
+                    <campo name="ft" text="folio temporal" local="true" type="long" visible="false" columna-visible="false" calc="@ifThenElse(@consultaDirec('SELECT COALESCE(MAX(id_tipo_operacion),0)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS')==null,1,@consultaDirec('SELECT COALESCE(MAX(id_tipo_operacion),0)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS'))"/>
+                    <campo name="id_tipo_operacion" text="Clave de Operación" generacion="@prox()+1" autogenerado="true" habilitado="false" visible="false" columna-visible="false"/>
+                    <campo name="folio" text="Clave de Operación" columnas="3" margen-izquierdo="2" marcador="Descripción Cuenta Contable" width="145" 
+                    calc="@concatenar('OP-EXT'+%FP.FP.id_periodo% +'-'+ @ifThenElse(@consultaDirec('SELECT COALESCE(MAX(id_tipo_operacion),0)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS')==null,001,
+                    @ifThenElse(@consultaDirec('SELECT COALESCE(MAX(id_tipo_operacion),0)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS')&lt;10,'00',
+                    @ifThenElse(@consultaDirec('SELECT COALESCE(MAX(id_tipo_operacion),0)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS')&lt;100,'0',
+                    @ifThenElse(@consultaDirec('SELECT COALESCE(MAX(id_tipo_operacion),0)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS')&lt;100,'',''))))) +@consultaDirec('SELECT COALESCE(MAX(id_tipo_operacion),0)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS')"/>
+                    <campo name="tipo_operacion" text="Descripción Tipo de Operación" columnas="3" margen-derecho="2" marcador="Descripción Tipo de Operación" width="445" height="70" validacion="%tipo_operacion%==null" validacionMensaje="Favor de capturar Descripción Tipo de Operación."/>
+                    <campo name="genero_contable" text="Género Contable" columnas="3" margen-izquierdo="2" width="125" validacion="%genero_contable%==null" validacionMensaje="Favor de Capturar Género Contable"/> 
+                    <campo name="tipo_afeccion" text="Tipo de Afectación" columnas="3" margen-derecho="2" width="140" validacion="%tipo_afeccion%==null" validacionMensaje="Favor de Capturar Tipo Afectación"/> 
+                    
+                    <campo name="clave_cuenta_cont" text="Cuenta Contable y Descripción" columnas="3" margen-izquierdo="2" autoFiltrado="true" descripcionForanea="clave_cuenta,descripcion"  
+                    descripcionForaneaTabla="clave_cuenta,descripcion" 
+                        llavesFijas="tipo_cuenta=2"
+                        filtradoInteractivo="@ifThenElse(%genero_contable%==1, 'clave_cuenta LIKE \\'1[37]\\'',@ifThenElse(%genero_contable%==2, 'clave_cuenta LIKE \\'2[37]\\'', 'clave_cuenta LIKE \\'3[37]\\''))"
+                        validacion="%clave_cuenta_cont%==null" validacionMensaje="La CLAVE DE CUENTA CONTABLE no ha sido seleccionado." /> <!-- marcador="CLAVE DE CUENTA CONTABLE"-->
+                    
+                    <!--filtroInteractivo="@ifThenElse(%genero_contable%==1, 'clave_cuenta LIKE \\'1[37]\\'',@ifThenElse(%genero_contable%==2, 'clave_cuenta LIKE \\'2[37]\\'', 'clave_cuenta LIKE \\'3[37]\\''))"-->
+                    <!--
+                    <campo name="desc_clave_cuenta_cont" local="true" type="string" text="Descripción Cuenta Contable" columnas="3" margen-derecho="2" referenciaForanea="clave_cuenta_cont" celdaForanea="descripcion" autocompletar="true"/>
+                    -->
+                      <campo name="cuenta_pagar_programada" text="Cuenta por Pagar Programada y Descripción" columnas="3" margen-derecho="2" columna-visible="false" filtroInteractivo="@ifThenElse(%genero_contable%!=null,'clave_cuenta LIKE \\'2[37]\\'','clave_cuenta LIKE  \\'2[37]\\'')" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion"  validacion="%cuenta_pagar_programada%==null" validacionMensaje="La CUENTA POR PAGAR PROGRAMADA no ha sido seleccionado." autoFiltrado="true" /> <!--llavesFijas="tipo_cuenta=2"-->
+                    <!--
+                    <campo name="desc_cuenta_pagar_programada" local="true" type="string" text="Descripción Cuenta por Pagar Programada" referenciaForanea="cuenta_pagar_programada" celdaForanea="descripcion" autocompletar="true" columnas="3" margen-derecho="2"/>
+                    -->
+                    
+                    <campo name="estatus" text="ESTATUS" calc="true" columna-visible="false" visible="false"/>
+                    <campo name="descripcion_estatus" text="Estatus" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2" width="65" calc="'ACTIVO'"/>
+                    <campo name="id_cat_fondo_contable" text="ID Fondo Contable" calc="3" llaveForanea="false" visible="false" columna-visible="false"/>
+                    <campo name="id_fondo_contable" text="Fondo Contable" columnas="3" descripcionForanea="id_cat,descripcion" width="125"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar"  margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                
+            </componente>
+        </nivel>
+        
+        <!--NIVEL PARA ELIMINAR-->
+        <nivel id="nEliminar" nombre="Eliminar" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%Menu.Menu.opciones%==2">
+            <componente id="cpEliminar" tipo="tabla" nombre="Eliminar" mostrarEliminar="true" mostrarEditar="false" mostrarAgregar="false" filtro="true">
+                <tabla schema="catalog" nombre="tipos_operacion">
+                    <campo name="ft" text="folio temporal" local="true" type="long" visible="false" columna-visible="false" calc="@ifThenElse(@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS')==null,1,@consultaDirec('SELECT MAX(id_tipo_operacion)+1 AS result FROM catalog.tipos_operacion WHERE unidad_responsable='+%FP.FP.id_unidad_responsable%+' AND periodo='+%FP.FP.id_periodo%,'result','long','MAGNITUS'))"/>
+                    <campo name="id_tipo_operacion" text="ID CLAVE DE OPERACION" visible="false" habilitado="false" columna-visible="false"/>
+                    <campo name="folio" text="ID CLAVE DE OPERACION" habilitado="false"/>
+                    <campo name="tipo_operacion" text="DESCRIPCION TIPO DE OPERACION" marcador="DESCRIPCION TIPO DE OPERACION" height="70"/>
+                    <campo name="genero_contable" text="GENERO CONTABLE" marcador="GENERO CONTABLE" descripcionForanea="descripcion"/>
+                    <campo name="tipo_afeccion" text="TIPO AFECTACION" descripcionForanea="descripcion"/>
+                    <campo name="unidad_responsable" text="UNIDAD RESPONSABLE" calc="%FP.FP.id_unidad_responsable%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="periodo" text="PERIODO" calc="%FP.FP.id_periodo%" llaveForanea="false" columna-visible="false" visible="false"/>
+                    <campo name="clave_cuenta_cont" text="CLAVE Y DESCRIPCION DE LA CUENTA CONTABLE" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion"/>
+                    <campo name="cuenta_pagar_programada" text="CLAVE Y DESCRIPCION DE LA CUENTA POR PAGAR PROGRAMADA" descripcionForanea="clave_cuenta,descripcion" descripcionForaneaTabla="clave_cuenta,descripcion" marcador="CUENTA POR PAGAR PROGRAMADA"/>
+                    <campo name="estatus" text="ESTATUS" columna-visible="false" visible="false"/>
+                     <campo name="descripcion_estatus" text="Estatus" visible="true" columna-visible="true" columnas="3" margen-izquierdo="2"/>
+                </tabla>
+                <!--<validaciones>
+                    <validacion tipo="borrar" validacion="%estatus%==true" validacionMensaje="'mensaje de validacion'"/>
+                </validaciones>-->
+            </componente>
+        </nivel>
+        
+        <!--NIVEL PARA CONSULTA-->
+      <!--  <nivel id="nConsulta" nombre="Consulta" mostrarProximoNive="false" mostrarNivelAnterior="false" ejecutar="%Menu.Menu.opciones%==4">
+            <componente id="reporte_trans" nombre="Reporte" tipo="reporte">
+                <reporte nombre="tipo_operaciones_ext">
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%"/>
+                </reporte>
+            </componente>
+        </nivel>-->
+        
+        
+        <nivel id="nCerrarTarea" nombre="Cerrar Tarea" interactivo="false">
+            <componente id="cpCerrarTarea" nombre="Cerrar Tarea" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false"/>
+                </tabla>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
