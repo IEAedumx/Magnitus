@@ -1,0 +1,137 @@
+<tarea id="ModificaComprobacionViaticosGC" nombre="Modifica Comprobación de Viáticos y Gastos por Comprobar">
+    <pagina id="1">
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="nombre"/>
+                    <campo name="primer_apellido"/>
+                    <campo name="segundo_apellido"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="inParam" nombre="inParam" interactivo="false">
+            <componente id="inParam" nombre="inParam" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" llaveForanea="false"/>
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="folio_duep" local="true" type="string" calc="$inParam.folio_duep$"/>
+                    <campo name="folio_duep_A" local="true" type="string" calc="$inParam.folio_duep_A$"/>
+                    <campo name="folio_duep_B" local="true" type="string" calc="$inParam.folio_duep_B$"/>
+                    <campo name="folio_duep_C" local="true" type="string" calc="$inParam.folio_duep_C$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="DE" nombre="Determina Expediente"  interactivo="false">
+	      	<componente id="DE" tipo="cursor" nombre="Determina Expediente">
+	      	    <tabla schema="catalog" nombre="dummy">
+	      	            <campo name="id" text="ID" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+	      	            <campo name="expediente" text="Nombre Expediente" local="true" type="string" calc="@ifThenElse($inParam.tipo_expediente$=='2','Expediente de Solicitud de Gastos por Comprobar/Validación de Comprobación', 'Expediente de Viáticos/Validación de Comprobación')"/>
+	      	    </tabla>
+	      	</componente>
+	    </nivel>
+        
+        <nivel id="DDUEP" nombre="Determina Duep"  interactivo="false">
+            <componente id="DDUEP" nombre="Determina Duep" tipo="cursor"  >
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="folio_duep_x" local="true" type="long" calc="@ifThenElse(%inParam.inParam.folio_duep_A%!=null,%inParam.inParam.folio_duep_A%,
+                                                     @ifThenElse(%inParam.inParam.folio_duep_B%!=null,%inParam.inParam.folio_duep_B%,%inParam.inParam.folio_duep_C%))"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <nivel nombre="Consulta Documento Único del Ejercicio del Presupuesto" id="DUEP_B" mostrarNivelAnterior="false" >
+            <componente tipo="reporte" id="DUEP_B" nombre="Consulta Documento Único del Ejercicio del Presupuesto">
+                <reporte nombre="documento_presupuesto_via">
+                    <!-- update="true" nombreDocumento="'Orden de Pago'" expediente="Expediente de Viáticos/Validación de Viáticos y Gastos por Comprobar"  grupo="$inParam.folio_oficio_comision$" url="$config.repository_upload_file$"
+                    -->
+                        <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />
+                        <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                        <campo name="folio_duep" type="long" calc="%DDUEP.DDUEP.folio_duep_x%"/>
+                        <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+        
+        <!--
+        <nivel id="DUEP_A" nombre="Modifica Comprobación de Viáticos y Gastos por Comprobar" mostrarNivelAnterior="false">
+            <componente tipo="reporte" id="DUEP_A" nombre="Consulta Documento Único del Ejercicio del Presupuesto">
+                <reporte nombre="documento_presupuesto_via" update="true" nombreDocumento="'Orden de Pago'" expediente="Expediente de Viáticos/Orden de Pago"  grupo="$inParam.folio_oficio_comision$" url="$config.repository_upload_file$">
+                    <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="folio_duep" type="long" calc="%inParam.inParam.folio_duep_A%"/>
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            -->
+            <!-- <componente tipo="reporte" id="cp_Orden_PagoB" nombre="Consulta Documento Unico del Ejercicio del Presupuesto ">-->
+            <!--    <reporte nombre="documento_presupuesto">-->
+            <!--        <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />-->
+            <!--        <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>-->
+            <!--        <campo name="folio_duep" type="long" calc="%inParam.inParam.folio_duep_B%"/>-->
+            <!--        <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>-->
+            <!--    </reporte>-->
+            <!--</componente>-->
+            <!--<componente tipo="reporte" id="cp_Orden_PagoC" nombre="Consulta Documento Unico del Ejercicio del Presupuesto ">-->
+            <!--    <reporte nombre="documento_presupuesto">-->
+            <!--        <campo name="ur" text="Unidad Responsable" type="long" calc="%inParam.inParam.ur%" />-->
+            <!--        <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>-->
+            <!--        <campo name="folio_duep" type="long" calc="%inParam.inParam.folio_duep_C%"/>-->
+            <!--        <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>-->
+            <!--    </reporte>-->
+            <!--</componente>-->
+        <!--</nivel>-->
+        <!--<nivel id="expediente" nombre="Soporte Documental" mostrarNivelAnterior="false">
+        <componente urlServidor="$config.urlServidor$" nombre="Documentos" tipo="VISOR" id="Documentos">
+                    <rutas grupo="%inParam.inParam.folio_duep%">
+                        <ruta>Expediente de Viáticos</ruta>
+                    </rutas>
+            </componente>
+        </nivel>-->
+        <nivel id="registraValidacionComprobacionViaticos" nombre="Registra Validación de Comprobación de Viáticos y Gastos por Comprobar" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+            <componente id="registraValidacionComprobacionViaticos" nombre="Registra Validación de Comprobación de Viáticos y Gastos por Comprobar" tipo="formulario" >
+                <tabla schema="operation" nombre="duep_solicitud_viaticos_valida_docu">
+                    <campo name="ur" text="Unidad Responsable" llaveForanea="false" calc="%inParam.inParam.ur%" visible="false"/>
+                    <campo name="periodo" text="Periodo" llaveForanea="false" calc="%inParam.inParam.periodo%" visible="false"/>
+                    <campo name="folio_duep" text="Folio Duep" llaveForanea="false" calc="%inParam.inParam.folio_duep%" visible="false"/>
+                    <campo name="folio_validacion" text="Folio Validacion" generacion="@prox()+1" autogenerado="true" columnas="3" margen-izquierdo="2"/>
+                    <campo name="comprobantes_correctos" text="¿El o los comprobantes que justifican el trámite son correctos?" columnas="3" margen-derecho="2"/>
+                    <campo name="evidencia_suficiente" text="¿El trámite contiene evidencia suficiente de la comprobación de viáticos y gastos por comprobar?" columnas="3" margen-izquierdo="2"/>
+                    <campo name="adjuntar_documentacion" text="¿Requiere Adjuntar documentación adicional al soporte digital del trámite?" columnas="3" margen-derecho="2"/>
+                    <campo name="descripcion" text="Descripcion" height="200" columnas="6" margen-derecho="2" margen-izquierdo="2"/>
+                    <campo name="comentarios" text="Comentarios" height="200" columnas="6" margen-derecho="2" margen-izquierdo="2"/>
+                    <campo name="adjunta_archivo" text="Adjunta Archivo" local="true" type="file" columnas="4" margen-izquierdo="2" margen-derecho="4" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Evidencia'" expediente="%DE.DE.expediente%"  grupo="$inParam.folio_expediente$"/>
+                    <campo name="fecha_registro" text="@fechaSistema()" visible="false"/>
+                    <campo name="ultimo_usuario_modificar" text="%barreUsuarios.barreUsuarios.id_usuario%" visible="false"/>
+                </tabla>
+                <acciones>
+                        <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <estilos>
+                    <boton nombre="grabar" posicion="derecha" visible="true" texto="Validar" />
+                </estilos>
+            </componente>
+        </nivel>
+        <nivel id="reporteValidacionComprobacionViaticos" nombre="Reporte de la Validación de Comprobación de viáticos y gastos por comprobar">
+            <componente id="reporteValidacionComprobacionViaticos" nombre="Reporte de la Validación de Comprobación de viáticos y gastos por comprobar" tipo="reporte">
+                <reporte nombre="validacion_comp" update="true" nombreDocumento="'Validación de Viáticos'" expediente="%DE.DE.expediente%"  grupo="$inParam.folio_expediente$" url="$config.repository_upload_file$">
+                    <campo name="ur" type="long" calc="%inParam.inParam.ur%"/>   
+                    <campo name="periodo" type="long" calc="%inParam.inParam.periodo%"/>   
+                    <campo name="folio_duep" type="long" calc="%inParam.inParam.folio_duep%"/>   
+                 </reporte>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
+
