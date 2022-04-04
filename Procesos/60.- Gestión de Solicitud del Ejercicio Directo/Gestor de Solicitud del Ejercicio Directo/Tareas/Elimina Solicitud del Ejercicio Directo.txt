@@ -1,0 +1,77 @@
+<tarea id="eliminaDuep" nombre="Gestión de Solicitud del Documento Único del Ejercicio Presupuestal" autor="HMVG" version="1.1">
+    <pagina id="1">
+        
+        <!--TABLA DUMMY PARA EL PASO DE PARAMETROS DESDE EL ESCRITORIO VIRTUAL-->
+        <nivel id="pasoParamNivel" nombre="Paso de parámetros" interactivo="false" mostrarProximoNivel="false">
+            <componente id="pasoParamCom" nombre="Paso de parámetros" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="Identificador" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="string" calc="$config.ur$"/><!--calc=""-->
+                    <campo name="periodo" text="Periodo" local="true" type="string" calc="$inParam.periodo$"/><!--calc="inParam.periodo"-->
+                    <campo name="folio_duep" text="Folio" local="true" type="string" calc="$inParam.folio_duep$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        
+        <!--CREACIÓN DE LAS INSTANCIAS CON LOS PARAMETROS PARA MOSTRAR EL REPROTE Y ELIMINAR.--> 
+        <nivel id="eliminaDuepNiv" nombre="Documento de Compra Menor" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="eliminaDuepComp" nombre="Documento de Compra Menor" tipo="reporte">
+                <reporte nombre="doc_presupuesto_dp">
+                    <campo name="ur" local="true" type="long" calc="@castTo(%pasoParamNivel.pasoParamCom.ur%,'long')"/>
+                    <campo name="periodo" local="true" type="long" calc="%pasoParamNivel.pasoParamCom.periodo%"/>
+                    <campo name="folio_duep" local="true" type="long" calc="%pasoParamNivel.pasoParamCom.folio_duep%"/>
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            
+            
+            <componente id="eliminaCom" nombre="Elimina Solicitud" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="folio_duep" text="Folio" visible="false" calc="%pasoParamNivel.pasoParamCom.folio_duep%"/>
+                    <campo name="descripcion_autoriza" local="true" type="string" calc="'ELIMINADA'" visible="false"/><!--calc="%pasoParamNivel.pasoParamCom.folio_duep_detalle%"-->
+                </tabla>
+                 <estilos>
+                   <boton nombre="grabar" visible="true" texto="ELIMINA SOLICITUD" margen-izquierdo="4" columnas="2" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <confirmaciones>
+                    <confirmacion confirmacionTitulo="'Eliminar Solicitud'" confirmacionMensaje="'¿Está seguro de eliminar la Solicitud?'" tipo="avanzar"/>
+                </confirmaciones>
+            </componente>
+        </nivel>
+        
+        
+        <!-- CAMBIO DE ESTATUS A ELIMINADO-->
+        <nivel id="cambioEstatus" nombre="Cambio de Estatus" interactivo="false">
+            <componente id="cambioEstatus" nombre="Cambio de Estatus" tipo="cursor" accionDefault="editar" >
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" text="Unidad Responsable" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="periodo" text="Periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamCom.periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%pasoParamNivel.pasoParamCom.folio_duep%"/>
+                    <campo name="estatus_duep" calc="3"/>
+                    <!--<campo name="estatus_duep" calc="@consultaDirec('SELECT ed.id_estatus estatus FROM catalog.estatus_duep ed 
+                    INNER JOIN operation.duep d ON ed.id_tipo_duep = d.tramite
+                    WHERE d.ur='+'\\''+%pasoParamNivel.pasoParamCom.ur%+'\\' AND d.periodo='+'\\''+%pasoParamNivel.pasoParamCom.periodo%+'\\' 
+                    AND d.folio_duep='+'\\''+%pasoParamNivel.pasoParamCom.folio_duep%+'\\' AND ed.descripcion='+'\\''+%eliminaDuepNiv.eliminaCom.descripcion_autoriza%+'\\'','estatus','long','MAGNITUS')"/>-->
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!--PASO DE PARAMETROS PARA TERMINAR LA INSTANCIA EN EL ESCRITORIO VIRTUAL-->
+        <nivel id="terminarInstancia" nombre="Terminar Instancia" interactivo="false">
+            <componente id="terminarInstancia" nombre="Terminar Instancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                        <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                        <parametro name="process" calc="$protocolarios.process$"/>
+                        <parametro name="version" calc="$protocolarios.version$"/>
+                        <parametro name="instance" calc="$protocolarios.instance$"/>
+                        <parametro name="user" calc="$protocolarios.user$"/>
+                        <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>
