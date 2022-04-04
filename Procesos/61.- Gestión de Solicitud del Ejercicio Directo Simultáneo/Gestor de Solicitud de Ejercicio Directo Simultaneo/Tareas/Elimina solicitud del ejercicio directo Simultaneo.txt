@@ -1,0 +1,125 @@
+<tarea id="EliminaSolicitudDUEPS" nombre="Elimina Solicitud del Ejercicio Directo Simulatáneo" version="1" autor="Luis Eduardo Castañeda Delgadillo">
+    <pagina id="uno" >
+        
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false" >
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" /> <!--  -->
+                    <campo name="periodo" local="true" type="string" calc="$inParam.periodo$" /> <!--  -->
+                    <campo name="folio_duep" local="true" type="string" calc="$inParam.folio_duep$"/> <!--  -->
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- REPORTE DEL DUEPS -->
+        <nivel id="nlConSolDUEPS" nombre="Documento de Solicitud de Compra Menor de Forma Simultanea" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpDUEPS" nombre="Documento de Solicitud de Compra Menor de Forma Simultanea" tipo="reporte">
+                <reporte nombre="doc_presupuesto_dp">
+                    <campo name="ur" local="true" type="long" calc="@castTo(%inParam.inParam.ur%,'long')"/>
+                    <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/>
+                    <campo name="folio_duep" local="true" type="long" calc="%inParam.inParam.folio_duep%"/>
+                    <campo name="usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                </reporte>
+            </componente>
+            <componente id="cpElimSolDUEPS" nombre="Elimina Solicitud de Compra Menor de Forma Simultanea" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" visible="false" />
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="ELIMINAR" posicion="centro"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+                <confirmaciones>
+                    <confirmacion confirmacionMensaje="'¿Está seguro qué desea eliminar la Solicitud?'" confirmacionTitulo="'Eliminación de Solicitud del Ejercicio Directo Simultáneo'" tipo="avanzar"/>
+                </confirmaciones>
+            </componente>
+        </nivel>
+        
+        <!-- CICLO QUE BORRA LOS DETALLES DEL DUEPS SELECCIONADO -->
+        <nivel id="nlBorrarDetallesDUEPS" nombre="Elimina Solicitud de Compra Menor de Forma Simultanea" interactivo="false">
+            <componente id="cpBorrarDetallesDUEPS" nombre="Elimina Solicitud de Compra Menor de Forma Simultanea" tipo="cursor">
+                <tabla schema="operation" nombre="duep_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%inParam.inParam.folio_duep%"/>
+                    <campo name="folio_duep_detalle" />
+                </tabla>
+                <nivel id="nlhjBorraDetalleDUEPS" nombre="Elimina Detalle del DUEPS" interactivo="false">
+                    <componente  id="cpBorraDetalleDUEPS" nombre="Elimina Detalle del DUEPS" tipo="bajaDirect">
+                        <tabla schema="operation" nombre="duep_detalle">
+                            <campo name="ur" calc="%nlBorrarDetallesDUEPS.cpBorrarDetallesDUEPS.ur%"/>
+                            <campo name="periodo" calc="%nlBorrarDetallesDUEPS.cpBorrarDetallesDUEPS.periodo%"/>
+                            <campo name="folio_duep" calc="%nlBorrarDetallesDUEPS.cpBorrarDetallesDUEPS.folio_duep%"/>
+                            <campo name="folio_duep_detalle" calc="%nlBorrarDetallesDUEPS.cpBorrarDetallesDUEPS.folio_duep_detalle%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <!-- CICLO QUE BORRA LOS DETALLES DE LA ORDEN DE PAGO QUE CONTENGAN EL DUEP -->
+        <nivel id="nlBorraDetallesOrdenPago" nombre="Elimita Detalles de Orden de Pago de DUEPS" interactivo="false">
+            <componente id="cpBorraDetallesOrdenPago" nombre="Elimita Detalles de Orden de Pago de DUEPS" tipo="cursor">
+                <tabla schema="operation" nombre="orden_pago_detalle">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%inParam.inParam.folio_duep%" />
+                    <campo name="orden_pago" />
+                    <campo name="id_detalle_orden_pago" />
+                </tabla>
+                <nivel id="nlhjBorraDetalleOrdenPago" nombre="Elimita Detalle de Orden de Pago de DUEPS" interactivo="false">
+                    <componente id="cpBorraDetalleOrdenPago" nombre="Elimita Detalle de Orden de Pago de DUEPS" tipo="bajaDirect">
+                        <tabla schema="operation" nombre="orden_pago_detalle">
+                            <campo name="ur" calc="%nlBorraDetallesOrdenPago.cpBorraDetallesOrdenPago.ur%"/>
+                            <campo name="id_periodo" calc="%nlBorraDetallesOrdenPago.cpBorraDetallesOrdenPago.id_periodo%"/>
+                            <campo name="orden_pago" calc="%nlBorraDetallesOrdenPago.cpBorraDetallesOrdenPago.orden_pago%"/>
+                            <campo name="id_detalle_orden_pago" calc="%nlBorraDetallesOrdenPago.cpBorraDetallesOrdenPago.id_detalle_orden_pago%"/>
+                            <campo name="folio_duep" calc="%nlBorraDetallesOrdenPago.cpBorraDetallesOrdenPago.folio_duep%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        
+        <!-- BORRA EL DUEP SIMULTÁNEO
+        <nivel id="nlBorrarDUEPS" nombre="Elimina Solicitud de Compra Menor de Forma Simultanea" interactivo="false" >
+            <componente id="cpBorrarDUEPS" nombre="Elimina Solicitud de Compra Menor de Forma Simultanea" tipo="bajaDirect">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" calc="%inParam.inParam.ur%"/>
+                    <campo name="periodo" calc="%inParam.inParam.periodo%"/>
+                    <campo name="folio_duep" calc="%inParam.inParam.folio_duep%"/>
+                </tabla>
+            </componente>
+        </nivel>-->
+        
+        <nivel id="RSSIM" nombre="Restablece la Selección del Ejercicio Directo Simultáneo" interactivo="false">
+            <componente id="RSSIM" nombre="Restablece la Selección  del Ejercicio Directo Simultáneo" tipo="cursor">
+                <tabla schema="operation" nombre="duep">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="folio_duep"/>
+                    <campo name="estatus_duep" calc="4"/><!--AUTORIZADO -->
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- TERMINAR INSTANCIA -->
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" >
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    
+    </pagina>
+</tarea>

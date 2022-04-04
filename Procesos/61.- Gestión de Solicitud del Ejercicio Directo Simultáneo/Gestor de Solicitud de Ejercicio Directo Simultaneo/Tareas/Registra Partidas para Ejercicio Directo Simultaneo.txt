@@ -1,0 +1,160 @@
+<tarea id="RegPartidasDUEPS" nombre="Registra Partidas para Ejercicio Directo Simultáneo" version="1" autor="Luis Eduardo Castañeda Delgadillo">
+    <pagina id="uno" >
+        
+        <!-- FORMULARIO PARA SELECCIONAR UNA GESTIÓN -->
+        <nivel id="nlDummySelec" nombre="Registra Partidas y PP´s para Ejercicio Directo Simultaneo" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpDummySelec" nombre="Configuración de Partidas de Gasto para Ejercicio Directo Simultaneo" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" calc="1" text="id" visible="false"/>
+                    <campo name="ur" calc="1" text="ur" visible="false" llaveForanea="false" />
+                    <campo name="selec" local="true" type="long" text="Selección de Gestión" marcador="Seleccione una gestión" columnas="3"  margen-izquierdo="2" validacion="%selec%==null" validacionMensaje="Favor de seleccionar una gestión para continuar." >
+                        <opciones>
+                            <opcion valor="1" texto="Registra Partidas para Ejercicio Directo Simultaneo" />
+                            <!--<opcion valor="2" texto="Registra Programas Presupuestarios"/>-->
+                        </opciones>
+                    </campo>
+                    <campo name="periodo" text="Año" marcador="Seleccione un año" llavesFijas="id_estatus=3" columnas="3" descripcionForanea="id_periodo" validacion="%periodo%==null" validacionMensaje="Favor de seleccionar un año para continuar." />
+               </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <!-- OBTENER ÚLTIMO USUARIO MODIFICADOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%nlDummySelec.cpDummySelec.ur%"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRegPartidasDUEPS" nombre="Registra Partidas y PP´s para Ejercicio Directo Simultaneo" ejecutar="%nlDummySelec.cpDummySelec.selec%==1" mostrarNivelAnterior="false" >
+            <componente id="cpGesPartDUEPS" nombre="Gestión Partidas para Ejercicio Directo Simultaneo" tipo="tabla" mostrarEditar="false" mostrarImportacion="true" >
+                <tabla schema="catalog" nombre="partidas_duep_simultaneo">
+                    <campo name="ur" text="Unidad Responsable" calc="%nlDummySelec.cpDummySelec.ur%" visible="false" columna-visible="false" llaveForanea="false" importacion="true" columnaImportacion="UR"  />
+                    <campo name="periodo" text="Año" calc="%nlDummySelec.cpDummySelec.periodo%" llaveForanea="false" width="50" columnas="4" importacion="true" columnaImportacion="Periodo"/>
+                    <campo name="folio_partida" text="Consecutivo" generacion="@prox()+1" autogenerado="true" width="100" columnas="4"/>
+                    <campo name="id_cat_cog" text="Id Categoría COG" calc="4" visible="false" columna-visible="false" llaveForanea="false" columnas="4" importacion="true" columnaImportacion="Consecutivo" />
+                    <campo name="id_cog" text=" Partida"  width="540" marcador="Seleccione una Partida" descripcionForanea="id_cat,descripcion" descripcionForaneaTabla="id_cat, descripcion" columnas="4" llavesFijas="afectable=true" importacion="true" columnaImportacion="Partida"/> <!-- descripcionForaneaTabla="id_cat, descripcion" -->
+                    <campo name="descripcion" text="Descipción" local="true" type="string" habilitado="false" marcador="Seleccione una partida para mostrar" 
+                    calcCliente="@consultaDirec('SELECT descripcion FROM catalog.catalogos 
+                        WHERE ur = %ur% AND id_periodo = %periodo% AND id_cat = '+'\\''+%id_cog%+'\\' AND id_catalogo = %id_cat_cog%;','descripcion','string','MAGNITUS');" columnas="4" columna-visible="false" />
+                    <campo name="id_cat_programa" text="Id Categoría Programa" calc="10" visible="false" columna-visible="false" llaveForanea="false" />
+                    <campo name="id_programa" text="Programa Presupuestario" marcador="Seleccione un Programa Presupuestario" columnas="4" habilitado="false" columna-visible="false" visible="false"/>
+                    <campo name="nivel" text="Nivel" habilitado="false" marcador="Seleccione una partida para mostrar" columnas="4"
+                    calcCliente="@consultaDirec('SELECT nivel FROM catalog.catalogos 
+                        WHERE ur = %ur% AND id_periodo = %periodo% AND id_cat = '+'\\''+%id_cog%+'\\' AND id_catalogo = %id_cat_cog%;','nivel','string','MAGNITUS');" importacion="true" columnaImportacion="Nivel" />
+                    <campo name="fecha_sistema" text="Fecha de registro" calc="@fechaSistema()" visible="false" columna-visible="false" />
+                    <campo name="ultimo_usuario_modificador" text="USM" calc="1" llaveForanea="false" visible="false" columna-visible="false" />
+                </tabla>
+                <!--<estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" />
+                </estilos>-->
+                <validaciones>
+                    <validacion tipo="borrar" validacion="@consultaDirec('SELECT COUNT(*) > 0 encontrado FROM catalog.partidas_duep_simultaneo pds
+                        INNER JOIN catalog.catalogos c ON pds.id_cog = c.id_cat
+                        INNER JOIN catalog.catalogos_foraneos cf ON  c.id_cat = cf.id_cat
+                        WHERE pds.id_cat_cog = %id_cat_cog% AND pds.id_cog = '+'\\''+%id_cog%+'\\'','encontrado','bool','MAGNITUS')==true" validacionMensaje="No se puede eliminar una partida en uso en los programas presupuestales"/>
+                </validaciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlResEstatusDUEPCatalogos" nombre="Restablece Estatus DUEP en Catálogos" interactivo="false" ejecutar="%nlDummySelec.cpDummySelec.selec%==1" >
+            <componente id="cpResEstatusDUEPCatalogos" nombre="Restablece Estatus DUEP en Catálogos" tipo="cursor">
+                <tabla schema="catalog" nombre="catalogos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlConDUEPCat.cpConDUEPCat.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlConDUEPCat.cpConDUEPCat.periodo%"/>
+                    <campo name="id_catalogo" filtroCampo="id_catalogo" filtroOperador="=" filtroValor="%nlConDUEPCat.cpConDUEPCat.id_cat_cog%"/>
+                    <campo name="id_cat" filtroCampo="id_cat" filtroOperador="=" filtroValor="%nlConDUEPCat.cpConDUEPCat.id_cog%" />
+                    <campo name="duep_sumultaneo" calc="false" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlConDUEPCat" nombre="Actualizar Estatus DUEP en Catálogos" interactivo="false" ejecutar="%nlDummySelec.cpDummySelec.selec%==1">
+            <componente id="cpConDUEPCat" nombre="Actualizar Estatus DUEP en Catálogos" tipo="cursor">
+                <tabla schema="catalog" nombre="partidas_duep_simultaneo">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlDummySelec.cpDummySelec.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlDummySelec.cpDummySelec.periodo%" />
+                    <campo name="id_cat_cog" />
+                    <campo name="id_cog" />
+                </tabla>
+                <nivel id="nlActEstatusDUEPCatalogos" nombre="Actualizar Estatus DUEP en Catálogos" interactivo="false">
+                    <componente id="cpActEstatusDUEPCatalogos" nombre="Actualizar Estatus DUEP en Catálogos" tipo="cursor">
+                        <tabla schema="catalog" nombre="catalogos">
+                            <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlConDUEPCat.cpConDUEPCat.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%nlConDUEPCat.cpConDUEPCat.periodo%"/>
+                            <campo name="id_catalogo" filtroCampo="id_catalogo" filtroOperador="=" filtroValor="%nlConDUEPCat.cpConDUEPCat.id_cat_cog%"/>
+                            <campo name="id_cat" filtroCampo="id_cat" filtroOperador="=" filtroValor="%nlConDUEPCat.cpConDUEPCat.id_cog%" />
+                            <campo name="duep_sumultaneo" calc="true" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        
+        <nivel id="nlRegProgPresuDUEPS" nombre="Registra Partidas y PP´s para Ejercicio Directo Simultaneo" ejecutar="%nlDummySelec.cpDummySelec.selec%==2" mostrarNivelAnterior="false">
+            <componente id="cpGesPartDUEPS" nombre="Gestión Partidas para Ejercicio Directo Simultaneo" tipo="tabla" >
+                <tabla schema="catalog" nombre="catalogos_foraneos">
+                    <campo name="ur" text="UR" calc="%nlDummySelec.cpDummySelec.ur%" llaveForanea="false" visible="false" columna-visible="false" />
+                    <campo name="id_periodo" text="Año" calc="%nlDummySelec.cpDummySelec.periodo%" llaveForanea="false" columnas="3"/>
+                    <campo name="id_catalogo" text="ID Catálogo" calc="4"  visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_cat" text="Partida" columnas="3" llavesFijas="duep_sumultaneo=true" descripcionForaneaTabla="id_cat,descripcion"/>
+                    <campo name="id_catalogo_foraneo" text="ID Catálogo" calc="10" visible="false" columna-visible="false" llaveForanea="false"/>
+                    <campo name="id_foranea" text="Programa Presupuestal Descripción" columnas="6"  />
+                    <campo name="usuario_modificador" calc="1" visible="false" columna-visible="false"/> <!--%barreUsuarios.barreUsuarios.id_usuario% -->
+                    <campo name="fecha_registro" calc="@fechaSistema()" visible="false" columna-visible="false"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" />
+                </estilos>
+            </componente>
+        </nivel>
+        
+        
+        
+        <nivel id="nlRepPartidasPermitidas" nombre="Reporte  de Montos Máximos y Partidas Restringidas"  mostrarNivelAnterior="false">
+            <componente id="nlRepPartidasPermitidas" nombre="Consulta Partidas para Ejercicio Directo Simultaneo" tipo="reporte">
+                <reporte nombre="repor_partidas_permitidas_jsus" >
+                    <campo name="ur" local="true" type="long" calc="%nlDummySelec.cpDummySelec.ur%" />
+                    <campo name="id_periodo" local="true" type="long" calc="%nlDummySelec.cpDummySelec.periodo%"/>
+                </reporte>
+            </componente>
+            <componente id="cpRepProgPresuDUEPSimultaneo" nombre="Consulta Programas Presupuestarios para Ejercicio Directo Simultaneo" tipo="reporte">
+                <reporte nombre="repor_Pps_EjercDirectSim_jsus">
+                    <campo name="ur" local="true" type="long" calc="%nlDummySelec.cpDummySelec.ur%" />
+                    <campo name="id_periodo" local="true" type="long" calc="%nlDummySelec.cpDummySelec.periodo%"/>
+                </reporte>
+            </componente>
+        </nivel>
+        
+          <!-- Instancia Proceso-->
+        <nivel id="lanzaInstancia" nombre="lanzaInstancia" interactivo="false">
+            <componente id="lanzaInstancia" nombre="lanzaInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'38cdde98-7380-4155-9141-650456f219ea'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="$config.ur$" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%nlRegPartidasDUEPS.cpGesPartDUEPS.periodo%" mostrarEsc="true"/>
+                    <parametro name="out_id_cat_cog" calc="%nlRegPartidasDUEPS.cpGesPartDUEPS.id_cat_cog%" mostrarEsc="true"/>
+                 <!--    <parametro name="out_duep" calc="%nlRegPartidasDUEPS.cpGesPartDUEPS.folio_duep_a%" mostrarEsc="true"/> -->
+                    <parametro name="out_centro_registro" calc="%nlRegPartidasDUEPS.cpGesPartDUEPS.descripcion%" mostrarEsc="true"/>
+           <!--          <parametro name="out_concepto" calc="%nlRegPartidasDUEPS.cpGesPartDUEPS.concepto%" mostrarEsc="true"/> -->
+                </parametros>
+            </componente>
+        </nivel>
+        <!-- Fin Instancia Proceso-->
+        
+    </pagina>
+</tarea>
+
