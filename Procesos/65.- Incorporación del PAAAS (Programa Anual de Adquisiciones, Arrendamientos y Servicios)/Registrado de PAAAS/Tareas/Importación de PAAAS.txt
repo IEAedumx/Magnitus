@@ -1,0 +1,154 @@
+<tarea id="ImportaPAAAS" nombre="Importa PAAAS" autor="PRZ">
+    <pagina id="1">
+        <nivel id="bperiodo" nombre="bperiodo" interactivo="false">
+            <componente id="bperiodo" nombre="bperiodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" /> 
+                    <campo name="id_periodo"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+       <nivel id="busuarios" nombre="busuarios" interactivo="false">
+            <componente id="busuarios" nombre="busuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <!--Limpiar tabla temporal de importación -->
+         <nivel id="nlLimpiatempo" nombre="Limpia Tabla temporal" interactivo="false" >
+            <componente id="cpLimpiatempo" nombre="Limpia Tabla temporal" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="result" text = "regreso" calc="@consultaDirec('SELECT * FROM reportes.limpiapaaastempo() AS result','result','string','MAGNITUS')" local="true" type="string" visible = "false" />
+               
+                </tabla>
+                
+            <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+              </componente>
+            
+             
+        </nivel>
+        
+        <nivel id="ImportaPAAAS" nombre="Importa PAAAS" mostrarNivelAnterior="false" MostrarProximoNivel="true">
+            <componente id="cpInstrucciones" nombre="Instrucciones" tipo="formulario" accionDefault="seleccionar" colapsado="SI"> 
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" calc="1" llaveForanea="false" visible="false"/>
+                    <etiqueta nombre="etia" texto="Instrucciones:" color="black" bold="normal" tamaño="20px" alineacion="center" interlineado="25px" width="500px" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="ida" text="ID" calc="1" local="true" type="long" visible="false"/>
+                    <etiqueta nombre="etib" texto="1. Seleccione el archivo  dando click en el recuadro Seleccionar archivo" color="black" bold="normal" tamaño="20px" alineacion="left" interlineado="50px" width="1000px" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="idb" text="ID" calc="1" local="true" type="long" visible="false"/>
+                    <etiqueta nombre="etic" texto="2. De click en el botón GRABAR" color="black" bold="normal" tamaño="20px" alineacion="left" interlineado="50px" width="1000px" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                    <campo name="idc" text="ID" calc="1" local="true" type="long" visible="false"/>
+                    <etiqueta nombre="etid" texto="3. Si la información mostrada es correcta, oprima el botón IMPORTAR" color="black" bold="normal" tamaño="20px" alineacion="left" interlineado="50px" width="1000px" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+                </tabla>
+               
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" columnas="1" margen-izquierdo="6" visible="false"/>
+                </estilos>
+                <acciones>
+                   <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+               </acciones>
+            </componente> 
+          <componente id="ImportaPAAAS" nombre="Importa Programa Anual de Adquisiciones, Arrendamientos y Servicios" tipo="tabla" mostrarImportacion="true" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false" exportarExcel="false" exportarPDF="false">
+                <tabla schema="reportes" nombre="paaas_tempo">
+                    <campo name="id_paaas" text="Renglón"   importacion="true" columnaImportacion="Renglon" width ="100" />
+                    <campo name="centro_registro" text="Centro Registro" importacion="true" columnaImportacion="Centro Registro" width ="100"/>
+                    <campo name="clave_articulo" text="Clave Artículo" importacion="true" columnaImportacion="Clave Articulo"/>
+                    <campo name="cantidad" text="Cantidad" importacion="true" columnaImportacion="Cantidad" width ="100"/>
+                    <campo name="precio_unitario" text="PU"  importacion="true" columnaImportacion="Precio Unit" width ="150"/>
+                    <campo name="valor_estimado" text="Total Estimado" importacion="true" columnaImportacion="Total Estimado" width ="200"/>
+                    <campo name="id_tipo_adjudicacion" text="Tipo Adj" importacion="true" columnaImportacion="Tipo Adj" width ="100"/>
+                    <campo name="t1" text="Trim 1" importacion="true" columnaImportacion="Trim 1" width ="300"/>
+                    <campo name="t2" text="Trim 2" importacion="true" columnaImportacion="Trim 2" width ="300"/>
+                    <campo name="t3" text="Trim 3" importacion="true" columnaImportacion="Trim 3" width ="300"/>
+                    <campo name="t4" text="Trim 4" importacion="true" columnaImportacion="Trim 4" width ="300"/> 
+                 </tabla>
+                  <validaciones>
+                    <validacion tipo="avanzar" validacion="@consultaDirec('select count(*)   AS result from operation.paaas where ur='+%bperiodo.bperiodo.id_unidad_responsable%+' and id_periodo ='+%bperiodo.bperiodo.id_periodo%,'result','long','MAGNITUS') !=0 " validacionMensaje="'Ya fue Instanciado el PAAAS'"/>
+                 </validaciones> 
+                 
+              <estilos>
+                   <boton nombre="grabar" texto="Crear Instancia" columnas="1" margen-izquierdo="6"/>
+                   
+               </estilos>
+               <acciones>
+                   <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+               </acciones>
+
+            </componente>
+             
+        </nivel>
+     <nivel id="barrePAAASTempo" nombre="barrePAAASTempo" interactivo="false">
+            <componente id="barrePAAASTempo" nombre="barrePAAASTempo" tipo="cursor">
+                <tabla schema="reportes" nombre="paaas_tempo">
+                    <campo name="centro_registro" />
+                    <campo name="clave_articulo" />
+                    <campo name="cantidad" />
+                    <campo name="precio_unitario" />
+                    <campo name="valor_estimado" />
+                    <campo name="id_tipo_adjudicacion" />
+                    <campo name="t1" />
+                    <campo name="t2" />
+                    <campo name="t3" />
+                    <campo name="t4" />
+
+                </tabla>
+                <nivel id="barrePAAASAltaA" nombre="barrePAAASAltaA" >
+                     <componente id="barrePAAASAltaA" nombre="barrePAAASAltaA" tipo="altaDirect">
+                          <tabla schema="operation" nombre="paaas">
+                              <campo name="ur" calc="%bperiodo.bperiodo.id_unidad_responsable%"/> 
+                              <campo name="id_periodo" calc="%bperiodo.bperiodo.id_periodo%"/> 
+                              <campo name="id_paaas" autogenerado="true" generacion="@prox()+1" /> 
+                              <campo name="centro_registro" calc="%barrePAAASTempo.barrePAAASTempo.centro_registro%"/> 
+                              <campo name="clave_articulo" calc="%barrePAAASTempo.barrePAAASTempo.clave_articulo%" />
+                              <campo name="cantidad" calc="%barrePAAASTempo.barrePAAASTempo.cantidad%"/>
+                              <campo name="precio_unitario" calc="%barrePAAASTempo.barrePAAASTempo.precio_unitario%" />
+                              <campo name="valor_estimado" calc="%barrePAAASTempo.barrePAAASTempo.valor_estimado%" />
+                              <campo name="id_tipo_adjudicacion" calc="%barrePAAASTempo.barrePAAASTempo.id_tipo_adjudicacion%" />
+                              <campo name="t1" calc="%barrePAAASTempo.barrePAAASTempo.t1%"/>
+                              <campo name="t2" calc="%barrePAAASTempo.barrePAAASTempo.t2%"/>
+                              <campo name="t3" calc="%barrePAAASTempo.barrePAAASTempo.t3%" />
+                              <campo name="t4" calc="%barrePAAASTempo.barrePAAASTempo.t4%"/>
+                              <campo name="total_trimestres" calc="%barrePAAASTempo.barrePAAASTempo.t1%+%barrePAAASTempo.barrePAAASTempo.t2%+%barrePAAASTempo.barrePAAASTempo.t3%+%barrePAAASTempo.barrePAAASTempo.t4%"/>
+                              <campo name="fecha_elaboracion"  calc="@fechaSistema()"/>
+                              <campo name="fecha_registro"  calc="@fechaSistema()"/>
+                              <campo name="ultimo_usuario_modificador"  calc="%busuarios.busuarios.id_usuario%"/>
+                              <campo name="id_estatus"  calc="1"/>
+                              <campo name="id_tipo_duep"  calc="3"/>
+                              <campo name="id_catalogo"  calc="2"/>
+                              <campo name="id_instancia_paaas"  calc="1"/>
+
+                          </tabla>
+                  <validaciones>
+                  <validacion tipo="avanzar" validacion="@consultaDirec('select count(*)   AS result from operation.paaas where ur='+%bperiodo.bperiodo.id_unidad_responsable%+' and id_periodo ='+%bperiodo.bperiodo.id_periodo%,'result','long','MAGNITUS') &lt;=0 " validacionMensaje="'Se deben de registrar al menos un registro'"/>
+                 </validaciones> 
+                 
+                    </componente>
+               </nivel>
+            </componente>
+        </nivel>      
+        
+          
+    <nivel nombre="Agregar Instancia PAAAS" id="nlInstanciaPAAAS" interactivo="false">
+            <componente tipo="solicitud" nombre="Agregar Instancia" id="nlInstanciaPAAAS">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'5d3de2f8-0e42-45d2-93ac-671aee1e73b7'"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="out_ur" calc="%bperiodo.bperiodo.id_unidad_responsable%" mostrarEsc="true"/>
+                    <parametro name="out_periodo" calc="%bperiodo.bperiodo.id_periodo%" mostrarEsc="true"/>
+                    <parametro name="out_paaas_instancia" calc="1" mostrarEsc="true"/>
+                    <parametro name="out_paaas" calc="'PAAAS Importado'" mostrarEsc="true"/>
+                    
+                </parametros>
+            </componente>
+        </nivel> 
+
+    </pagina>
+</tarea>

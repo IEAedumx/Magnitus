@@ -1,0 +1,68 @@
+<tarea id="EliminaPAAAS" nombre="Elimina Programa Anual de Adquisiciones, Arrendamientos y Servicios" autor="PRZ">
+    <pagina id="1">
+        <nivel id="bperiodo" nombre="bperiodo" interactivo="false">
+            <componente id="bperiodo" nombre="bperiodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" /> 
+                    <campo name="id_periodo"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+       <nivel id="busuarios" nombre="busuarios" interactivo="false">
+            <componente id="busuarios" nombre="busuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                </tabla>
+            </componente>
+        </nivel>
+             <nivel id="nlEliminaPAAAS" nombre="Elimina Programa Anual de Adquisiciones, Arrendamientos y Servicios " mostrarProximoNivel="true" mostrarNivelAnterior="false">       
+             <componente id="cpConsIPA" nombre="Programa Anual de Adquisiciones, Arrendamientos y Servicios" tipo="reporte" colapsado="SI">
+               <reporte nombre="paaas" > 
+                    <campo name="ur" text="ur" local="true" type="long" calc="$config.ur$"/>
+                    <campo name="id_periodo" type="long" local="true" calc="$inParam.periodo$"/>
+                    <campo name="nombre_usuario" text="Usuario" local="true" type="string" calc="@castTo($protocolarios.user$,'string')"/>
+                    
+                </reporte>
+            </componente>
+       
+            <componente id="cpEliminaPAAAS" nombre="Elimina Programa Anual de Adquisiciones, Arrendamientos y Servicios" tipo="formulario" accionDefault="seleccionar" >
+                <tabla schema="operation" nombre="paaas">
+                    <campo name="ur" text="Unidad Responsable"  calc="$inParam.ur$" llaveForanea="false" visible="false"/>
+                    <campo name="id_periodo" text="Periodo"  calc="%bperiodo.bperiodo.id_periodo%" llaveForanea="false" visible="false"/>
+                    <campo name="cancelar" text="Elimina" local="true" type="bool" visible="true" columnas="3" margen-izquierdo="2"/>
+                     
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Aceptar" visible="true" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+       <nivel id="CursorEst" nombre="CursorEst" interactivo="false" ejecutar="%nlEliminaPAAAS.cpEliminaPAAAS.cancelar%==true">
+            <componente id="CursorEst" nombre="CursorEst" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" text="ID" llaveForanea="false" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false"/> <!-- calc="1"-->
+                     <campo name="result" text = "regreso" calc="@consultaDirec('SELECT * FROM reportes.movimientosPAAAS('+%bperiodo.bperiodo.id_unidad_responsable%+','+%bperiodo.bperiodo.id_periodo%+','+%busuarios.busuarios.id_usuario%+',1)AS result','result','string','MAGNITUS')" local="true" type="string" visible = "true" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%nlEliminaPAAAS.cpEliminaPAAAS.cancelar%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+       
+    </pagina>
+</tarea>
