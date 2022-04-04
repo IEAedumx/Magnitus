@@ -1,0 +1,539 @@
+<tarea id="modifviaticos" nombre="Registra Modifica Solicitud de Viáticos">
+    <pagina id="1">
+        
+    <nivel id="inParametros" nombre="inParametros" interactivo="false">
+            <componente id="inParametros" nombre="inParametros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" text="UR" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="periodo" text="periodo" local="true" type="float" calc="$inParam.periodo$"/>
+                    <campo name="folio_duep" text="folio" local="true" type="string" calc="$inParam.folio_duep$"/>
+                    <campo name="folio_oficio" text="folio" local="true" type="string" calc="$inParam.folio_oficio$"/>
+                    <campo name="folio_oficio_comision" text="folio" local="true" type="string" calc="$inParam.folio_oficio_comision$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="buscaPeriodo" nombre="Registra Modifica Solicitud de Viáticos" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="regViati" nombre="Registra Modifica Solicitud de Viaticos" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="trgfViati" nombre="Registra Modifica Solicitud de Viaticos" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla id="tablaEncabezadoDUEP" schema="operation" nombre="duep_solicitud_viaticos">
+                        <campo name="ur" text="Unidad Responsable" visible="false" habilitado="false" calc="%inParametros.inParametros.ur%" llaveForanea="false" />
+                        <campo name="periodo" text="Periodo" visible="false" habilitado="false" calc="%inParametros.inParametros.periodo%"  llaveForanea="false"/> 
+                        <campo name="folio_duep" text="Folio" visible="true" habilitado="false" calc="%inParametros.inParametros.folio_duep%" llaveForanea="false" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="fecha_solicitud" text="Fecha" validacion="@after(%fecha_solicitud%,@fechaSistema())" validacionMensaje="No puede seleccionar una futura fecha"
+                         calc="%barreUsuarios.barreUsuarios.permisos_especiales%==true" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="folio_comision" text="Oficio de Comisión" local="true" type="string" columnas="2"  margen-izquierdo="1" calc="%inParametros.inParametros.folio_oficio_comision%"/>
+                        <campo name="tramite" text="Trámite" marcador="Trámite" habilitado="false" columnas="2"  margen-izquierdo="1" />
+                        <campo name="beneficiario" text="Beneficiario"  llavesFijas="id_estatus_beneficiario=1" descripcionForanea="folio_beneficiario, razon_social" habilitado="false" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" habilitado="false" llaveForanea="false" visible="false" calc="3"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" marcador="Seleccione un Fondo Contable" habilitado="false" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" habilitado="false" llaveForanea="false" calc="2"/>
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" habilitado="false" llaveForanea="true" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="id_fuente_financiamiento" habilitado="false" text="Id cat Financiamiento" llaveForanea="false" calc="5" visible="false"/>
+                        <campo name="id_cat_fuente_financiamiento" visible="false" habilitado="false" text="Fuente de Financiamiento" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="fecha_autorizacion" text="Fecha de Autorización" habilitado="false" marcador="Fecha de Autorización" visible="false"  columnas="2"  margen-izquierdo="1"/>
+                        <campo name="concepto" text="Concepto" mascara="C" marcador="Ingresa un concepto" habilitado="false" columnas="2"  margen-izquierdo="1" width="720" height="250" validacion="%concepto%==null" validacionMensaje="Favor de ingresar datos."/>
+                        <campo name="ultimo_usuario_modificador"  visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="CONTINUAR" visible="false"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="duep_detalle_solicitud_viaticos" tituloDetalle="Renglones" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="folio_duep" text="Folio" llaveForanea="false" visible="false" columna-visible="false"  width="200"/>
+                        <campo name="folio_duep_detalle" text="Renglón" generacion="@prox()+1" autogenerado="true" width="100" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="tipo_detalle" text="Tipo de Renglón"  validacion="%tipo_detalle%==null" validacionMensaje="Debe de Capturar el Tipo de Renglón" width="150" columnas="2"  margen-izquierdo="1" editarHabilitado="false"/>
+                        <campo name="articulo" text="Artículo" habilitado="false" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" marcador="Seleccione un artículo" width="100" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1"/> 
+                        <campo name="id_cat_objeto_gasto" text="Cat Objeto del Gasto" visible="false" calc="4" columna-visible="false" llaveForanea="false" habilitado="false"/>
+                        <campo name="c_objeto_gasto" text="Clasificador por Objeto del Gasto" visible="true" width="250" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="clave_presupuestal" text="clave presupuestal" columna-visible="false" habilitado="false" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="descripcion_especifica" text="Descripción Específica" local="true" type="string" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false" habilitado="false"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" marcador="Seleccione un programa presupuestal" width="200" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="indicador" text="Indicador" 
+                        calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat 
+                            INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat
+                            INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat
+                            INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo
+                                WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="folio_comprobante" text="Folio Comprobante" columna-visible="false" habilitado="false" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1"/>
+                        <!-- Datos de Retención-->
+                        <campo name="tipo_comprobante" text="Tipo de Comprobante" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <!-- Datos de Retención-->
+                        <campo name="cantidad" text="Cantidad" validacion="%tipo_detalle%==1 AND %cantidad%==null" validacionMensaje="Favor de Capturar la Cantidad" width="100" columnas="2"  margen-izquierdo="1" interaccion-visible="%tipo_detalle%==1" habilitado="false"/>
+                        <campo name="u_medida" text="Unidad de Medida" validacion="%tipo_detalle%==1 AND %u_medida%==null" validacionMensaje="Capture la Unidad de Medida" width="150" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="precio_unitario" text="Precio Unitario" validacion="%tipo_detalle%==1 AND %precio_unitario%==null" validacionMensaje="Debe de Capturar el Precio Unitario" width="100" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="descuento" text="Descuento" columna-visible="false" width="150" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1" habilitado="false"/> 
+                        <campo name="porcentaje_iva" text="% IVA" columna-visible="false" interaccion-visible="%tipo_detalle%==1" width="150" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="iva" text="Impuesto al Valor Agregado" muestraAcumulado="true" habilitado="false" calcCliente="((%precio_unitario%-%descuento%)*0.16)" width="100" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos" muestraAcumulado="true" width="150" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="importe" text="Importe Total" muestraAcumulado="true" calcCliente="@ifThenElse(%tipo_detalle%==2,(-1*%importe%),(%cantidad%*(%precio_unitario%-%descuento%)))" interaccion-visible="%tipo_detalle%==1" width="150" columnas="2"  margen-izquierdo="1" habilitado="false"/>
+                        <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" habilitado="false" visible="false" columna-visible="false" columnas="2"  margen-izquierdo="1"/>
+                        <!--<campo name="adjunta_archivo" text="Adjunta Soporte Documental" local="true" type="file" columna-visible="false"/>-->
+                    <!--<campo name="proveedor" text="Proveedor" marcador="Seleccione un proveedor" descripcionForanea="nombre, primer_apellido, segundo_apellido" descripcionForaneaTabla="nombre, primer_apellido, segundo_apellido" columna-visible="false" interaccion-visible="%tipo_detalle%==1" editarHabilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="genero_contable" text="Género" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-derecho="2"/>
+                        <campo name="tipo_afectacion" text="Tipo de Afectación" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-izquierdo="2"/>
+                        <campo name="tipo_operacion" text="Operacion" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-derecho="2"/>-->
+                        <campo name="tipo_comp" text="Tipo de Comprobante" local="true" type="string" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2"  margen-izquierdo="1" validacion="%tipo_comp%==null" validacionMensaje="Este Renglón no se puede agregar" habilitado="false"/>
+                        <campo name="descripcion_esp" text="Descripción Específica" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="genero" text="Género Contable" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="tipo_afec" text="Tipo de Afectación" local="true" type="string"  habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="opera" text="Operación" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="adjunta_soporte" text="Adjunta Soporte Documental" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2"  margen-izquierdo="1"/>
+                        <campo name="importe_uni" text="Importe Unitario" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2"  margen-izquierdo="1"/>
+                      </tabla>
+                </detalles>
+           </componente>
+        <!-- INICIO DEL REPORTE-->
+            <componente tipo="reporte" nombre="Solicitud de Viáticos" id="registraReporte">
+                <reporte nombre="DUEP"> <!-- expediente="Expediente de Viáticos/Solicitud de Viáticos" grupo="$inParam.folio_oficio_comision$" 
+                         nombreDocumento="'Solicitud Autorizada'" url="$config.repository_upload_file$" update="true"-->
+                    <campo name="ur" type="long" calc="$inParam.ur$"/>
+                    <campo name="periodo" type="long" calc="$inParam.periodo$"/>
+                    <campo name="folio_duep" type="long" calc="$inParam.folio_duep$"/>
+                </reporte>
+            </componente>
+            
+            <!--<componente id="resumen" nombre="Reporte Resumen de Afectación Programática" tipo="reporte" mostrarProximoNivel="false">-->
+            <!--    <reporte nombre="validac_prog" expediente="Expediente Gestión de Solicitud de Viaticos"  grupo="$inParam.folio_oficio_comision$" nombreDocumento="'Afectacion Programatica'" url="$config.repository_upload_file$" update="false">-->
+            <!--        <campo name="ur" type="long" calc="%inParametros.inParametros.ur%"/>-->
+            <!--        <campo name="periodo" type="long" calc="%inParametros.inParametros.periodo%"/>-->
+            <!--        <campo name="folio_duep" type="long" calc="%inParametros.inParametros.folio_duep%"/>-->
+            <!--    </reporte>-->
+            <!--</componente>-->
+            <componente tipo="formulario" id="valida" nombre="Autoriza solicitud de viáticos" mostrarProximoNivel="false">
+                <tabla schema="operation" nombre="duep_solicitud_viaticos">
+                        <campo name="ur" text="Unidad Responsable" visible="false" habilitado="false" calc="%inParametros.inParametros.ur%" llaveForanea="false" />
+                        <campo name="periodo" text="Periodo" visible="false" habilitado="false" calc="%inParametros.inParametros.periodo%"  llaveForanea="false"/> 
+                        <campo name="folio_duep" text="Folio" visible="false" habilitado="false" calc="%inParametros.inParametros.folio_duep%" llaveForanea="false"/>
+                        <campo name="autoriza_duep_obs" text="Motivo de Rechazo" height="150" columnas="8" margen-izquierdo="1"
+                        interaccion="%autoriza_duep%==false" validacion="%autoriza_duep_obs%==null AND %autoriza_duep%==false" validacionMensaje="Favor de insertar Motivo de Rechazo para continuar."/>
+                        <campo name="autoriza_duep" text="Autoriza" columnas="3" margen-izquierdo="4"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" visible="true" texto="Guardar" columnas="2" margen-izquierdo="4" margen-derecho="4"/>
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+            </nivel>
+            
+            
+          <!-- Mensaje  Rechazo -->
+        <nivel nombre="Mensaje Rechazo" id="MensajeNoAutorizado" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==false"> 
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="MensajeNoAutorizado"> 
+                 <parametros url="$config.request$" metodo="POST" accion="agregarMensaje" tipo="json">
+                     <parametro name="enterprise" calc="$protocolarios.enterprise$"/> 
+                     <parametro name="process" calc="$protocolarios.process$"/>    
+                     <parametro name="version" calc="$protocolarios.version$"/> 
+                     <parametro name="user" calc="$protocolarios.user$"/>  
+                     <parametro name="instanceId" calc="$protocolarios.instance$"/> 
+                     <parametro name="message" calc="%regViati.valida.autoriza_duep_obs%"/>
+                     <parametro name="type" calc="'1'"/> 
+                 </parametros> 
+             </componente>
+         </nivel> 
+         <!--negociar Instancia -->  
+          <nivel nombre="Instancia Rechazo" id="RechazoInstancia" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==false">
+           <componente tipo="solicitud" nombre="Enlace con dynamo" id="RechazoInstancia">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="reiniciarInstancia" calc="'true'" />
+                    <parametro name="out_observaciones" calc="%regViati.valida.autoriza_duep_obs%" mostrarEsc="true"/>
+                </parametros>
+            </componente>
+        </nivel> 
+        
+        
+         <!-- BARRIDO PARA TRAER INFORMACIÓN DEL DUEPS -->
+        <nivel id="nlBarridoDUEPS" nombre="Barrido del DUEPS" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+            <componente id="cpBarridoDUEPS" nombre="Barrido del DUEPS" tipo="cursor">
+                <tabla schema="operation" nombre="duep_solicitud_viaticos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%regViati.trgfViati.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%regViati.trgfViati.periodo%"/> 
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%regViati.trgfViati.folio_duep%"/>
+                    <campo name="id_cat_fondo_contable" />
+                    <campo name="id_fondo_contable" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+         <nivel id="barreOficioGC" nombre="barreOficioGC" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true" >
+                <componente id="barreOficioGC" nombre="barreOficioGC" tipo="cursor">
+                    <tabla schema="operation" nombre="duep_solicitud_viaticos">
+                        <campo name="ur"  filtroCampo="ur" filtroOperador="=" filtroValor="%inParametros.inParametros.ur%" />
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParametros.inParametros.periodo%" />
+                        <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%inParametros.inParametros.folio_duep%"/> 
+                        <campo name="id_cat_fondo_contable" />
+                        <campo name="id_fondo_contable" />
+                        <campo name="concepto" />
+                        <campo name="beneficiario" />
+                        <campo name="total"/>
+                       <campo name="total_letra"/>
+                       <campo name="id_fondo_contable"/>
+                    </tabla>
+            </componente>
+    </nivel>
+        
+        <nivel id="obIdSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false">
+            <componente id="obIdSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%regViati.trgfViati.ur%"/>
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%regViati.trgfViati.periodo%"/>
+                    <campo name="id_separador"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!--SEPARADOR PARA REALIZAR EL SUBSTRING -->
+        <nivel id="obSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false">
+            <componente id="obSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%obIdSeparador.obIdSeparador.id_separador%"/>
+                    <campo name="caracter"/>
+                </tabla>
+            </componente>
+        </nivel>
+
+        <!-- GENERACIÓN DE LA PÓLIZA COMPROMETIDO-->
+        
+        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+            <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%nlBarridoDUEPS.cpBarridoDUEPS.ur%"/> 
+                   <campo name="periodo" calc="%nlBarridoDUEPS.cpBarridoDUEPS.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%nlBarridoDUEPS.cpBarridoDUEPS.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%nlBarridoDUEPS.cpBarridoDUEPS.id_fondo_contable%"/>
+                   <campo name="duep_solicitud_viaticos" calc="%nlBarridoDUEPS.cpBarridoDUEPS.folio_duep%" />
+                   <campo name="duep_origen" calc="%nlBarridoDUEPS.cpBarridoDUEPS.folio_duep%" />
+                   <campo name="momento_contable" calc="4"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="1"/>
+                   <campo name="folio_reporte" calc="@concatenar(%nlBarridoDUEPS.cpBarridoDUEPS.periodo%+'-T'+
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%folio_movimiento_auxiliar%)" />
+                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                   <campo name="id_beneficiario_ganador" calc="%barreOficioGC.barreOficioGC.beneficiario%"/>
+                   <campo name="concepto_general" calc="'Póliza del Presupuesto de Egresos Comprometidos de la Solicitud de viáticos '+ @consultaDirec('select folio_duep_a as result from operation.duep_solicitud_viaticos where ur='+$inParam.ur$+' AND periodo='+$inParam.periodo$+' AND folio_duep='+$inParam.folio_duep$,'result','string','MAGNITUS')+ %regViati.trgfViati.concepto%"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+            <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
+                <tabla schema="operation" nombre="duep_detalle_solicitud_viaticos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%regViati.trgfViati.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%regViati.trgfViati.periodo%"/>
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%regViati.trgfViati.folio_duep%"/>
+                    <campo name="folio_duep_detalle"/>
+                    <campo name="importe" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="articulo"/>
+                    <campo name="precio_unitario"/> 
+                </tabla>
+                <nivel id="barrePres" nombre="Barre Presupuesto de Egresos Mensual" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true"> 
+                    <componente id="barrePres" nombre="Barre Presupuesto de Egresos Mensual" tipo="cursor">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" /> 
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$" />
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="@fechaSistema(&quot;MM&quot;)"/>
+                            <campo name="presupuesto_comprometido"
+            calc="@consultaDirec('SELECT '+%barrePres.barrePres.presupuesto_comprometido%+' + '+%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%+' AS suma','suma',numeric','MAGNITUS')"/>
+                        </tabla>
+                    </componente>
+        </nivel>
+                <!-- INGRESA EL CARGO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo de Duep" interactivo="false">
+                    <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00000'+%obSeparador.obSeparador.caracter%+
+                            '000')" />
+                            <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '4'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00000'+%obSeparador.obSeparador.caracter%+
+                            '000') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <!-- INGRESA EL ABONO A LA PÓLIZA-->
+                <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
+                    <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                            <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00000'+%obSeparador.obSeparador.caracter%+
+                            '000')" />
+                            <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.importe%"/>
+                            <campo name="concepto_bloque" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.articulo%"/>
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
+                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '2'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '0'+%obSeparador.obSeparador.caracter%+
+                            '01'+%obSeparador.obSeparador.caracter%+
+                            '00000'+%obSeparador.obSeparador.caracter%+
+                            '000') +'\\'','descripcion','string','MAGNITUS');"/>
+                            <campo name="fecha_registro" calc="@fechaSistema()" />
+                            <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                            <campo name="tipo_detalle" calc="1"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+
+        <!-- cambia estatus  -->
+        <nivel id="cambiaEstatus" nombre="cambiaEstatus" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+            <componente id="cambiaEstatus" nombre="cambiaEstatus" tipo="cursor">
+                <tabla schema="operation" nombre="duep_solicitud_viaticos">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%regViati.trgfViati.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%regViati.trgfViati.periodo%" />
+                    <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%regViati.trgfViati.folio_duep%" />
+                    <campo name="tramite" calc="5"/>
+                    <campo name="estatus_duep" calc="4"/>
+                </tabla>
+            </componente>
+        </nivel>
+                        
+    <!-- Finaliza Instancia DESCOMENTAR -->
+    
+       <nivel nombre="finalizaInstancia" id="finalizaInstancia" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true OR %regViati.valida.autoriza_duep%==true">
+            <componente tipo="solicitud" nombre="finalizaInstancia" id="finalizaInstancia" >
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="$protocolarios.process$"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        
+        <!-- LANZA INSTANCIA ORDEN DE PAGO-->
+        
+             <!--ALTA DIRECT -->
+           
+    
+            <nivel id="altaOrdenPago" nombre="altaOrdenPago" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+                <componente id="altaOrdenPago" nombre="altaOrdenPago" tipo="altaDirect">
+                    <tabla schema="operation" nombre="orden_pago">
+                        <campo name="ur"  calc="%barreOficioGC.barreOficioGC.ur%"/>
+                        <campo name="id_periodo"  calc="%barreOficioGC.barreOficioGC.periodo%" />
+                        <campo name="orden_pago" generacion="@prox()+1" autogenerado="true"/> 
+                        <campo name="folio_orden_pago" calc="@concatenar('CLC-'+@subCadena(@ifThenElse(
+                            @consultaDirec('
+                            SELECT (folio_orden_pago) AS resultado
+                            FROM operation.orden_pago
+                            WHERE ur='+$inParam.ur$+' AND id_periodo='+$inParam.periodo$+' ORDER BY resultado DESC limit 1','resultado','string','MAGNITUS')==null
+                            ,
+                            '000001'
+                            ,
+                            @consultaDirec('
+                            SELECT to_char((((substring(folio_orden_pago from char_length(folio_orden_pago)-4)::int)+1)),\\''+'00000'+'\\') as resultado
+                            FROM operation.orden_pago
+                            WHERE ur='+$inParam.ur$+' AND id_periodo='+$inParam.periodo$+' ORDER BY resultado DESC limit 1','resultado','int','MAGNITUS')
+                            ),1,6))"/> 
+                        <campo name="folio_duep" calc="%barreOficioGC.barreOficioGC.folio_duep%"/>
+                        <campo name="duep_viaticos" calc="%barreOficioGC.barreOficioGC.folio_duep%"/>
+                        <campo name="id_cat_fondo_contable" calc="%barreOficioGC.barreOficioGC.id_cat_fondo_contable%"/> 
+                        <campo name="id_fondo_contable" calc="%barreOficioGC.barreOficioGC.id_fondo_contable%"/> 
+                        <campo name="concepto" calc="%barreOficioGC.barreOficioGC.concepto%"/> 
+                        <campo name="para_deposito"/>
+                        <campo name="importe_total" calc="%barreOficioGC.barreOficioGC.total%"/> 
+                        <campo name="importe_total_letra" calc="@numeroAletra(%barreOficioGC.barreOficioGC.total%,'PESOS M.N.')"/>
+                        <campo name="funcionario_solicitante" calc="@consultaDirec('select comisionado_titular as result from catalog.oficio_comision where ur='+$config.ur$+'AND periodo='+%inParametros.inParametros.periodo%+' AND id_oficio='+%inParametros.inParametros.folio_oficio%,'result','long','MAGNITUS')"/> 
+                        <campo name="beneficiario" calc="%barreOficioGC.barreOficioGC.beneficiario%" />
+                    </tabla>
+             </componente>
+        </nivel>
+            <nivel id="barreDetalleGasto" nombre="barreDetalleGasto" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+                <componente id="barreDetalleGasto" nombre="barreDetalleGasto" tipo="cursor">
+                    <tabla schema="operation" nombre="duep_detalle_solicitud_viaticos">
+                        <campo name="ur"  filtroCampo="ur" filtroOperador="=" filtroValor="%inParametros.inParametros.ur%" />
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParametros.inParametros.periodo%" />
+                        <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%inParametros.inParametros.folio_duep%"/> 
+                        <campo name="folio_duep_detalle" />
+                        <campo name="descripcion_especifica"/> 
+                        <campo name="u_medida"/>
+                        <campo name="cantidad"/>
+                        <campo name="precio_unitario"/> 
+                        <campo name="total"/> 
+                        <campo name="importe"/> 
+                        <campo name="mes_cve_presupuestal"/> 
+                        <campo name="clave_presupuestal" /> 
+                    </tabla>
+            <nivel id="tarifa" nombre="tarifa" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+                <componente id="tarifa" nombre="tarifa" tipo="cursor">
+                    <tabla schema="catalog" nombre="oficio_comision_viaticos_requeridos">
+                        <campo name="ur"  filtroCampo="ur" filtroOperador="=" filtroValor="%inParametros.inParametros.ur%" />
+                        <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParametros.inParametros.periodo%" />
+                        <campo name="oficio_comision" filtroCampo="oficio_comision" filtroOperador="=" filtroValor="%inParametros.inParametros.folio_oficio%"/>
+                        <campo name="folio_viatico" filtroCampo="folio_viatico" filtroOperador="=" filtroValor="%barreDetalleGasto.barreDetalleGasto.folio_duep_detalle%"/>
+                        <campo name="tarifa_persona"/>
+                    </tabla>
+                    
+    
+            <nivel id="altaDetalleDuep" nombre="altaDetalleDuep" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+                <componente id="altaDetalleDuep" nombre="altaDetalleDuep" tipo="altaDirect">
+                    <tabla schema="operation" nombre="orden_pago_detalle">
+                        <campo name="ur" calc="%barreDetalleGasto.barreDetalleGasto.ur%"/>
+                        <campo name="id_periodo" calc="%barreDetalleGasto.barreDetalleGasto.periodo%"/>
+                        <campo name="orden_pago" calc="%altaOrdenPago.altaOrdenPago.orden_pago%"/> 
+                        <campo name="id_detalle_orden_pago" generacion="@prox()+1" autogenerado="true" />
+                        <campo name="folio_duep" calc="%barreDetalleGasto.barreDetalleGasto.folio_duep%"/>
+                        <campo name="concepto"  calc="%barreOficioGC.barreOficioGC.concepto%" /> 
+                        <campo name="descripcion_especifica" calc="%barreDetalleGasto.barreDetalleGasto.descripcion_especifica%"/> 
+                        <campo name="u_medida" calc="%barreDetalleGasto.barreDetalleGasto.u_medida%"/>
+                        <campo name="cantidad" calc="%barreDetalleGasto.barreDetalleGasto.cantidad%"/>
+                        <campo name="precio_unitario" calc="%barreDetalleGasto.barreDetalleGasto.precio_unitario%"/> 
+                        <campo name="total_estimado" calc="%barreDetalleGasto.barreDetalleGasto.importe%"/> 
+                        <campo name="total" calc="%barreDetalleGasto.barreDetalleGasto.importe%" /> 
+                        <campo name="cve_mes_pre" calc="%barreDetalleGasto.barreDetalleGasto.cve_mes_pre%"/> 
+                        <campo name="clave_presupuestal" calc="%barreDetalleGasto.barreDetalleGasto.clave_presupuestal%"/>
+                        <campo name="fecha_registro" calc="@fechaSistema()"/>
+                        <campo name="importe" calc="%barreDetalleGasto.barreDetalleGasto.importe%"/>
+                        <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                        <campo name="importe_letra" calc="@numeroAletra(%barreDetalleGasto.barreDetalleGasto.importe%,'PESOS M.N.')"/>
+                        <campo name="folio_duep_detalle" calc="%barreDetalleGasto.barreDetalleGasto.folio_duep_detalle%"/>
+                        <campo name="id_cat_fuente_financiamiento" calc="5"/>
+                        <campo name="id_fuente_financiamiento" calc="@consultaDirec('SELECT id_cat_foraneo as ff FROM CATALOG.CATALOGOS WHERE ID_CAT LIKE '+'\\''+%barreOficioGC.barreOficioGC.id_fondo_contable%+'\\'','ff','long','MAGNITUS')"/>
+                        <campo name="tarifaxpersona" calc="%tarifa.tarifa.tarifa_persona%"/><!--@consultaDirec('select tarifa_persona as result from catalog.oficio_comision_viaticos_requeridos where ur='+$config.ur$+'AND periodo='+%inParametros.inParametros.periodo%+' AND oficio_comision='+%inParametros.inParametros.folio_oficio%,'result','long','MAGNITUS')-->
+                    </tabla>
+                </componente>
+            </nivel>
+       </componente>
+    </nivel>
+      </componente>
+    </nivel>
+    
+    <nivel id="GE" nombre="Guarda Expediente" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+       <componente id="GE" nombre="Guarda Expediente" tipo="cursor">
+           <tabla schema="operation" nombre="duep_solicitud_viaticos">
+               <campo name="ur"  filtroCampo="ur" filtroOperador="=" filtroValor="%inParametros.inParametros.ur%"/>
+               <campo name="periodo"  filtroCampo="periodo" filtroOperador="=" filtroValor="%inParametros.inParametros.periodo%"/>
+               <campo name="folio_duep"  filtroCampo="folio_duep" filtroOperador="=" filtroValor="%inParametros.inParametros.folio_duep%"/>
+               <campo name="folio_expediente" calc="$inParam.folio_viaticos_gxc$"/>
+               <campo name="tipo_expediente" calc="$inParam.tipo_expediente$"/>
+           </tabla>
+       </componente>
+   </nivel>
+   
+
+
+        <!--INSTANCIAS -->
+
+        <nivel nombre="InstanciaOrden_Pago" id="IOP" interactivo="false" ejecutar="%regViati.valida.autoriza_duep%==true">
+            <componente tipo="solicitud" nombre="EnvioParametrosDynamo" id="IOP">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'c3bef35f-9a12-472d-b78b-b2c80e3a9eff'"/>
+                    <parametro name="out_ur" calc="$inParam.ur$" />
+                    <parametro name="out_periodo" calc="$inParam.periodo$" />
+                    <parametro name="out_folio_duep" calc="$inParam.folio_duep$" />
+                    <parametro name="out_folio_duep_detalle" calc="1" />
+                    <parametro name="out_orden_pago" calc="%altaOrdenPago.altaOrdenPago.orden_pago%"/> 
+                    <parametro name="out_folio_oficio_comision" calc="$inParam.folio_oficio_comision$"/>
+                    <parametro name="out_folio_expediente" calc="$inParam.folio_viaticos_gxc$"/>
+                    <parametro name="out_tipo_expediente" calc="$inParam.tipo_expediente$"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        
+        <!-- FIN LANZA INSTANCIA DE ORDEN DE PAGO-->
+        <!-- AFECTACION DE QUIEN SABE QUIEN COMENTE LA GENERACION DE INSTANCIA A OTRO PROCESO Y EL FINALIZAR PROCESO-->
+         
+        
+        <nivel id="nlRepAutzSolDUEPS" nombre="Reporte de la Autorización de la Solicitud del Ejercicio Directo Simultaneo" ejecutar="%regViati.valida.autoriza_duep%==true" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpPolizaPresupuestogEgComprometido" nombre="Poliza del Presupuesto de Egresos Comprometido" tipo="reporte">
+                <reporte nombre="polizacontable" expediente="Expediente de Viáticos/Solicitud de Viáticos" grupo="$inParam.folio_viaticos_gxc$" nombreDocumento="'Póliza de Solicitud de Viáticos'" url="$config.repository_upload_file$" update="true">
+                    <campo name="ur" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%"/>
+                    <campo name="periodo" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+            
+            <!--<componente id="cpPolizaPresupuestogEgComprometido" nombre="Poliza del Presupuesto de Egresos Devengado" tipo="reporte">
+                <reporte nombre="poliza_contable">
+                    <campo name="ur" type="long" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.ur%"/>
+                    <campo name="periodo" type="long" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.periodo%"/>
+                    <campo name="folio_movimiento_auxiliar" type="long" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.folio_movimiento_auxiliar%"/>
+                    <campo name="usuario" local="true" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>-->
+        </nivel>  
+    </pagina>
+</tarea>

@@ -1,0 +1,149 @@
+<tarea id="conViaticos" nombre="Consulta solicitud de viáticos">
+    <pagina id="1">
+        
+       <nivel id="inParametros" nombre="inParametros" interactivo="false">
+            <componente id="inParametros" nombre="inParametros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+                    <campo name="ur" text="UR" local="true" type="string" calc="$inParam.ur$"/>
+                    <campo name="periodo" text="periodo" local="true" type="string" calc="$inParam.periodo$"/>
+                    <campo name="folio_duep" text="folio" local="true" type="string" calc="$inParam.folio_duep$"/>
+                    <campo name="folio_oficio" text="folio" local="true" type="string" calc="$inParam.folio_oficio$"/>
+                    <campo name="folio_oficio_comision" text="folio" local="true" type="string" calc="$inParam.folio_oficio_comision$"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- LEGO TIPO CURSOR -->
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- FIN LEGO TIPO CURSOR -->
+        
+        
+        <nivel id="buscaPeriodo" nombre="Consulta solicitud de viáticos" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="regViati" nombre="Consulta solicitud de viáticos" mostrarNivelAnterior="false" >
+            <componente id="trgfViati" nombre="Consulta solicitud de viáticos" tipo="maestroDetalle">
+                <encabezado accionDefault="editar">
+                    <tabla id="tablaEncabezadoDUEP" schema="operation" nombre="duep_solicitud_viaticos">
+                        <campo name="ur" text="Unidad Responsable" visible="false" habilitado="false" calc="%inParametros.inParametros.ur%" llaveForanea="false" />
+                        <campo name="periodo" text="Periodo" visible="false" habilitado="false" calc="%inParametros.inParametros.periodo%"  llaveForanea="false"/> 
+                        <campo name="folio_duep" text="DUEP" visible="true" habilitado="false" calc="%inParametros.inParametros.folio_duep%" llaveForanea="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="fecha_solicitud" text="Fecha" validacion="@after(%fecha_solicitud%,@fechaSistema())" validacionMensaje="No puede seleccionar una futura fecha"
+                         calc="%barreUsuarios.barreUsuarios.permisos_especiales%==true" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="folio_comision" text="Oficio de Comisión" local="true" type="string" columnas="2" margen-izquierdo="1" calc="%inParametros.inParametros.folio_oficio_comision%"/>
+                        <campo name="tramite" text="Trámite" marcador="Trámite" habilitado="false" columnas="2" margen-izquierdo="1" />
+                        <campo name="beneficiario" text="Beneficiario"  llavesFijas="id_estatus_beneficiario=1" descripcionForanea="folio_beneficiario, nombre, primer_apellido, segundo_apellido" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="id_cat_fondo_contable" text="Categoría de Fondo Contable" habilitado="false" llaveForanea="false" visible="false" calc="3"/>
+                        <campo name="id_fondo_contable" text="Fondo Contable" marcador="Seleccione un Fondo Contable" habilitado="false" columnas="2" margen-izquierdo="1"/>
+                        <campo name="id_cat_unidad_ejecutora_gasto" text="Categoría Unidad Ejecutora" visible="false" habilitado="false" llaveForanea="false" calc="2"/>
+                        <campo name="id_unidad_ejecutora_gasto" text="Centro de Registro" habilitado="false" llaveForanea="true" columnas="2" margen-izquierdo="1"/>
+                        <campo name="id_fuente_financiamiento" habilitado="false" text="Id cat Financiamiento" llaveForanea="false" calc="5" visible="false"/>
+                        <campo name="id_cat_fuente_financiamiento" visible="true" habilitado="false" text="Fuente de Financiamiento" columnas="2" margen-izquierdo="1"/>
+                        <campo name="fecha_autorizacion" text="Fecha de Autorización" habilitado="false" marcador="Fecha de Autorización" visible="false"  columnas="2" margen-izquierdo="1"/>
+                        <campo name="concepto" text="Concepto" mascara="C" marcador="Ingresa un concepto" habilitado="false" columnas="2" margen-izquierdo="1" width="720" height="250" validacion="%concepto%==0" validacionMensaje="Favor de ingresar datos."/>
+                        <campo name="ultimo_usuario_modificador"  visible="false"/>
+                    </tabla>
+                    <estilos>
+                        <boton nombre="grabar" texto="CONTINUAR" visible="false"/>
+                    </estilos>
+                </encabezado>
+                <detalles>
+                    <tabla id="detalle_bloques" schema="operation" nombre="duep_detalle_solicitud_viaticos" tituloDetalle="Bloques" mostrarEliminar="false" mostrarEditar="false" mostrarAgregar="false">
+                        <campo name="ur" text="Unidad Responsable" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="periodo" text="Periodo" llaveForanea="false" visible="false" columna-visible="false"/>
+                        <campo name="folio_duep" text="Folio DUEP" llaveForanea="false" visible="false" columna-visible="false"  width="200"/>
+                        <campo name="folio_duep_detalle" text="Bloque" generacion="@prox()+1" autogenerado="true" width="100" columnas="2" margen-izquierdo="1" />
+                        <campo name="tipo_detalle" text="Tipo de Bloque"  validacion="%tipo_detalle%==null" validacionMensaje="Debe de Capturar el Tipo de Bloque" width="150" columnas="2" margen-izquierdo="1" editarHabilitado="false"/>
+                        <campo name="articulo" text="Artículo" habilitado="false" descripcionForanea="descripcion" descripcionForaneaTabla="descripcion" marcador="Seleccione un artículo" width="100" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1"/> 
+                        <campo name="id_cat_objeto_gasto" text="Cat Objeto del Gasto" visible="false" calc="4" columna-visible="false" llaveForanea="false" habilitado="false"/>
+                        <campo name="c_objeto_gasto" text="Clasificador por Objeto del Gasto" visible="true" width="250" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="clave_presupuestal" text="clave presupuestal" columna-visible="false" habilitado="false" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1"/>
+                        <campo name="descripcion_especifica" text="Descripción Específica" local="true" type="string" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="id_cat_programa_presupuestal" text="Programa Presupuestal" calc="10" llaveForanea="false" visible="false" columna-visible="false" habilitado="false"/>
+                        <campo name="programa_presupuestal" text="Programa Presupuestal" marcador="Seleccione un programa presupuestal" width="200" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="indicador" text="Indicador" 
+                        calcCliente="@consultaDirec('SELECT idp.descripcion as descripcion FROM catalog.catalogos cat 
+                            INNER JOIN catalog.programa_presupuestario pp ON cat.id_cat = pp.id_cat
+                            INNER JOIN catalog.ficha_indicador fi ON pp.id_cat = fi.id_cat
+                            INNER JOIN catalog.indicador_tipo idp ON idp.id_tipo = fi.tipo
+                                WHERE cat.id_cat='+'\\''+%programa_presupuestal%+'\\''+' AND cat.id_catalogo = 10','descripcion','string','MAGNITUS')" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1"/>
+                        <campo name="folio_comprobante" text="Folio Comprobante" columna-visible="false" habilitado="false" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1"/>
+                        <!-- Datos de Retención-->
+                        <campo name="tipo_comprobante" text="Tipo de Comprobante" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <!-- Datos de Retención-->
+                        <campo name="cantidad" text="Cantidad" validacion="%tipo_detalle%==1 AND %cantidad%==null" validacionMensaje="Favor de Capturar la Cantidad" width="100" columnas="2" margen-izquierdo="1" interaccion-visible="%tipo_detalle%==1" habilitado="false"/>
+                        <campo name="u_medida" text="Unidad de Medida" validacion="%tipo_detalle%==1 AND %u_medida%==null" validacionMensaje="Capture la Unidad de Medida" width="150" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="precio_unitario" text="Precio Unitario" validacion="%tipo_detalle%==1 AND %precio_unitario%==null" validacionMensaje="Debe de Capturar el Precio Unitario" width="100" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="descuento" text="Descuento" columna-visible="false" width="150" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1" habilitado="false"/> 
+                        <campo name="porcentaje_iva" text="% IVA" columna-visible="false" interaccion-visible="%tipo_detalle%==1" width="150" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="iva" text="Impuesto al Valor Agregado" muestraAcumulado="true" habilitado="false" calcCliente="((%precio_unitario%-%descuento%)*0.16)" width="100" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1"/>
+                        <campo name="otros_impuestos" text="Otros Impuestos" muestraAcumulado="true" width="150" columna-visible="false" interaccion-visible="%tipo_detalle%==1" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="importe" text="Importe Total" muestraAcumulado="true" calcCliente="@ifThenElse(%tipo_detalle%==2,(-1*%importe%),(%cantidad%*(%precio_unitario%-%descuento%)))" interaccion-visible="%tipo_detalle%==1" width="150" columnas="2" margen-izquierdo="1" habilitado="false"/>
+                        <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema()" habilitado="false" visible="false" columna-visible="false" columnas="2" margen-izquierdo="1"/>
+                        <!--<campo name="adjunta_archivo" text="Adjunta Soporte Documental" local="true" type="file" columna-visible="false"/>-->
+                    <!--<campo name="proveedor" text="Proveedor" marcador="Seleccione un proveedor" descripcionForanea="nombre, primer_apellido, segundo_apellido" descripcionForaneaTabla="nombre, primer_apellido, segundo_apellido" columna-visible="false" interaccion-visible="%tipo_detalle%==1" editarHabilitado="false" columnas="3" margen-izquierdo="2"/>
+                        <campo name="genero_contable" text="Género" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-derecho="2"/>
+                        <campo name="tipo_afectacion" text="Tipo de Afectación" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-izquierdo="2"/>
+                        <campo name="tipo_operacion" text="Operacion" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="3" margen-derecho="2"/>-->
+                        
+                        <campo name="tipo_comp" text="Tipo de Comprobante" local="true" type="string" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2" margen-izquierdo="1" validacion="%tipo_comp%==null" validacionMensaje="Este bloque no se puede agregar" habilitado="false"/>
+                        <campo name="descripcion_esp" text="Descripción Específica" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2" margen-izquierdo="1"/>
+                        <campo name="genero" text="Género Contable" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2" margen-izquierdo="1"/>
+                        <campo name="tipo_afec" text="Tipo de Afectación" local="true" type="string"  habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2" margen-izquierdo="1"/>
+                        <campo name="opera" text="Operación" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2" margen-izquierdo="1"/>
+                        <campo name="adjunta_soporte" text="Adjunta Soporte Documental" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2" margen-izquierdo="1"/>
+                        <campo name="importe_uni" text="Importe Unitario" local="true" type="string" habilitado="false" columna-visible="false" interaccion-visible="%tipo_detalle%==2" columnas="2" margen-izquierdo="1"/>
+                      </tabla>
+                </detalles>
+           </componente>
+        <!-- INICIO DEL REPORTE-->
+            
+            <componente tipo="reporte" nombre="Documento Unico del Ejercicio del Presupuesto" id="registraReporte">
+            	<reporte nombre="DUEP">
+            		<campo name="ur" type="long" calc="$inParam.ur$"/>
+            		<campo name="periodo" type="long" calc="$inParam.periodo$"/>
+            		<campo name="folio_duep" type="long" calc="$inParam.folio_duep$"/>
+            	</reporte>
+            </componente>
+            
+            <!--<componente id="resumen" nombre="Reporte Resumen de Afectación Programática" tipo="reporte" >-->
+            <!--    <reporte nombre="validac_prog" expediente="Expediente Gestión de Solicitud de Viaticos" grupo="$inParam.folio_oficio$" nombreDocumento="'Afectacion Programatica'" url="$config.repository_upload_file$" update="false">-->
+            <!--        <campo name="ur" type="long" calc="%inParametros.inParametros.ur%"/>-->
+            <!--        <campo name="periodo" type="long" calc="%inParametros.inParametros.periodo%"/>-->
+            <!--        <campo name="folio_duep" type="long" calc="%inParametros.inParametros.folio_duep%"/>-->
+            <!--    </reporte>-->
+            <!--</componente>-->
+        </nivel>
+            <!--<componente id="resumen" nombre="Reporte Resumen de Afectación Programática" tipo="reporte" >
+                <reporte nombre="validac_prog">
+                    <campo name="ur" type="long" calc="%inParametros.inParametros.ur%"/>
+                    <campo name="periodo" type="long" calc="%inParametros.inParametros.periodo%"/>
+                    <campo name="folio_duep" type="long" calc="%inParametros.inParametros.folio_duep%"/>
+                </reporte>
+            </componente>-->
+            <!--<componente id="resumen" nombre="Reporte Resumen de Afectación Programática" tipo="reporte" >
+                <reporte nombre="repor_Pps_EjercDirectSim_jsus">
+                    <campo name="ur" type="long" text="Unidad Responsable"  calc="@castTo($config.ur$,'long')"/> 
+                    <campo name="id_periodo" type="long" text="Periodo"  calc="%inParametros.inParametros.periodo%"/> 
+                </reporte>
+            </componente>-->
+    </pagina>
+</tarea>
+
