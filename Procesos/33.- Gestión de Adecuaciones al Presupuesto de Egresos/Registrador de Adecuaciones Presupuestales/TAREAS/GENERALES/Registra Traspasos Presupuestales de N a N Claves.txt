@@ -1,0 +1,829 @@
+<tarea id="registraTraspasoPresupuestalNaN" nombre="Registra Traspaso Presupuestal N a N">
+   <pagina id="uno">
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_periodo"/>
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true"/>
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="barreUsuarios" nombre="barreUsuarios" interactivo="false">
+            <componente id="barreUsuarios" nombre="barreUsuarios" tipo="cursor">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$"/>
+                    <campo name="id_usuario"/>
+                    <campo name="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$"/>
+                    <campo name="permisos_especiales"/>
+                    <campo name="id_cat_centro_registro" />
+                    <campo name="id_centro_registro" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlRegAdecPresuEgreA" nombre="Registra Adecuación Presupuestaria del Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpDatGralAdec" nombre="Datos Generales de la Adecuación" tipo="formulario">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" calc="$config.ur$" visible="false" llaveForanea="false"/>
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" visible="false" llaveForanea="false"/>
+                    <campo name="id_adecuacion" autogenerado="true" generacion="@prox()+1" visible="false"/>
+                    <campo name="id_cat_centro_registro" calc="2" visible="false" llaveForanea="false"/>
+                    <campo name="centro_registro" text="Centro de Registro Solicitante" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" margen-izquierdo="1" columnas="3" marcador="Seleccione un Centro de Registro" validacion="%centro_registro%==null" validacionMensaje="Seleccione Centro de Registro"/> <!--habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true"-->
+                    <campo name="id_fondo_contable" calc="3" visible="false" llaveForanea="false" />
+                    <campo name="fondo_contable" text="Fondo Contable" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" validacion="%fondo_contable%==null" validacionMensaje="Seleccione un Fondo Contable" marcador="Seleccione un Fondo Contable" columnas="3"/> 
+                    <campo name="tipo_adecuacion" text="Tipo de Adecuación" columnas="3" marcador="Seleccione un Tipo de Adecuación" validacion="%tipo_adecuacion%==null" validacionMensaje="Selecciona el tipo de adecuación" calc="3"/>
+                   
+                     <campo name="concepto" text="Concepto" columnas="6" margen-izquierdo="2" marcador="Ingrese un Concepto" validacion="%concepto%==null" validacionMensaje="Ingrese un Concepto"/>
+                     
+                    <campo name="ultimo_usuario_modificador" visible="false" calc="%barreUsuarios.barreUsuarios.id_usuario%" llaveForanea="false"/>
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" visible="false" />
+                    <campo name="estatus" calc="1" visible="false"/>
+                    <!--<campo name="nueva_clave" text="¿Requiere Nueva Clave Presupuestal?" local="true" type="string"  columnas="3"  margen-derecho="2" marcador="Seleccione si requiere Clave Presupuestal" validacion="%nueva_clave%==null AND (%tipo_adecuacion%==1 OR %tipo_adecuacion%==3)" validacionMensaje="Seleccione si Requiere Nueva Clave Presupuestal" interaccion-visible="%tipo_adecuacion%==1 OR %tipo_adecuacion%==3" visible="false" calc="2" habilitado="true">
+                        <opciones>
+                            <opcion texto="Sí" valor="1" />
+                            <opcion texto="No" valor="2" />
+                        </opciones>
+                    </campo>
+                    <campo name="val1_nueva_clave" local="true" type="string" visible="false" validacion="%tipo_adecuacion%==2 AND %nueva_clave%=='1'" validacionMensaje="Para realizar una reducción ya debe de haber una clave creada previamente."/>-->
+                </tabla>
+
+                <estilos>
+                    <boton nombre="grabar" texto="CONTINUAR" margen-izquierdo="4" columnas="2" margen-derecho="4"/><!--  -->
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlBarreAdecuacionEgreso" nombre="BarreAdecuacionEgreso" interactivo="false" >
+            <componente id="nlBarreAdecuacionEgreso" nombre="BarreAdecuacionEgreso" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" />
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+                    <campo name="folio_adecuacion" text="Folio Adecuación" calc="@concatenar(@ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==1,'A-',@ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==2,'R-','T-'))+
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;10,'00000',
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;100,'0000',
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;1000,'000',
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;10000,'00',
+                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;100000,'','')))))+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel nombre="Importación de Traspasos Presupuestales N a N" id="ITP" mostrarNivelAnterior="false" >
+            <componente tipo="tabla" nombre="Importación de Traspasos Presupuestales N a N" id="ITP" filtro="true" mostrarImportacion="true" mostrarEditar="false" mostrarAgregar="false">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_traspaso_importacion">
+                   <campo name="ur" text="UR" columna-visible="false" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" importacion="true"/>
+                   <campo name="periodo" text="periodo" columna-visible="false" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" importacion="true"/>
+                   
+                   <campo name="id_adecuacion" text="ID Adecuación" columna-visible="false" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" importacion="true"/>
+                   <campo name="id_adecuacion_importacion" text="ID Importación" width="120" autogenerado="true" generacion="@prox()+1" importacion="true"/>
+                   
+                   <campo name="clave_presupuestal_o" text="Clave Presupuestal Origen" width="245" columnaImportacion="Clave_presupuestal_o" validacionImportacion="@ifThenElse(%clave_presupuestal_o%=='', true, false)" validacionImportacionMensaje="Columna Clave_presupuestal_o vacía" columnaImportacionVisible="true" importacion="true"/>
+                   <campo name="clave_presupuestal_d" text="Clave Presupuestal Destino" width="245" columnaImportacion="Clave_presupuestal_d" validacionImportacion="@ifThenElse(%clave_presupuestal_d%=='', true, false)" validacionImportacionMensaje="Columna Clave_presupuestal_d vacía" columnaImportacionVisible="true" importacion="true" />
+                   
+                   <campo name="mes_origen" text="Mes Origen" width="95" type="long" columnaImportacion="mes_origen" validacionImportacion="@ifThenElse(%mes_origen%=='', true, false)" validacionImportacionMensaje="Columna mes_origen vacía" columnaImportacionVisible="true" importacion="true" />
+                   
+                   <campo name="enero" text="Enero" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="enero" validacionImportacion="@ifThenElse(%enero%=='', true, false)" validacionImportacionMensaje="Columna enero vacía" columnaImportacionVisible="true" importacion="true" />
+                   <campo name="febrero" text="Febrero" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="febrero" validacionImportacion="@ifThenElse(%febrero%=='', true, false)" validacionImportacionMensaje="Columna febrero vacía" columnaImportacionVisible="true" importacion="true"  />
+                   <campo name="marzo" text="Marzo" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="marzo" validacionImportacion="@ifThenElse(%marzo%=='', true, false)" validacionImportacionMensaje="Columna marzo vacía" columnaImportacionVisible="true" importacion="true" />
+                   <campo name="abril" text="Abril" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="abril" validacionImportacion="@ifThenElse(%abril%=='', true, false)" validacionImportacionMensaje="Columna abril vacía" columnaImportacionVisible="true" importacion="true" />
+                   <campo name="mayo" text="Mayo" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="mayo" validacionImportacion="@ifThenElse(%mayo%=='', true, false)" validacionImportacionMensaje="Columna mayo vacía" columnaImportacionVisible="true" importacion="true" />
+                   <campo name="junio" text="Junio" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="junio" validacionImportacion="@ifThenElse(%junio%=='', true, false)" validacionImportacionMensaje="Columna junio vacía" columnaImportacionVisible="true" importacion="true"  />
+                   <campo name="julio" text="Julio" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="julio" validacionImportacion="@ifThenElse(%julio%=='', true, false)" validacionImportacionMensaje="Columna julio vacía" columnaImportacionVisible="true" importacion="true"  />
+                   <campo name="agosto" text="Agosto" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="agosto" validacionImportacion="@ifThenElse(%agosto%=='', true, false)" validacionImportacionMensaje="Columna agosto vacía" columnaImportacionVisible="true" importacion="true"  />
+                   <campo name="septiembre" text="Septiembre" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="septiembre" validacionImportacion="@ifThenElse(%septiembre%=='', true, false)" validacionImportacionMensaje="Columna septiembre vacía" columnaImportacionVisible="true" importacion="true"  />
+                   <campo name="octubre" text="Octubre" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="octubre" validacionImportacion="@ifThenElse(%octubre%=='', true, false)" validacionImportacionMensaje="Columna octubre vacía" columnaImportacionVisible="true" importacion="true"  />
+                   <campo name="noviembre" text="Noviembre" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="noviembre" validacionImportacion="@ifThenElse(%noviembre%=='', true, false)" validacionImportacionMensaje="Columna noviembre vacía" columnaImportacionVisible="true" importacion="true"  />
+                   <campo name="diciembre" text="Diciembre" width="100" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="diciembre" validacionImportacion="@ifThenElse(%diciembre%=='', true, false)" validacionImportacionMensaje="Columna diciembre vacía" columnaImportacionVisible="true" importacion="true"  />
+                   
+                   <campo name="total" text="Total" width="120" formatoMoneda="true" muestraAcumulado="true" cellsalign="right" columnaImportacion="total" validacionImportacion="@ifThenElse(%total%=='', true, false)" validacionImportacionMensaje="Columna total vacía" columnaImportacionVisible="true" importacion="true"  />
+                </tabla>
+                <estilos>
+                   <boton nombre="grabar" texto="Guardar" visible="false" columnas="1" margen-izquierdo="6"/>
+                </estilos>
+                <acciones>
+                   <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+      <nivel  id="VCP1" nombre="VALIDACIÓN DE CLAVES PRESUPUESTALES" mostrarNivelAnterior="false" mostrarProximoNivel="false" >
+         <componente id="VCP1" nombre="VALIDACIÓN DE IMPORTACION" tipo="formulario" accionDefault="seleccionar">
+            <tabla schema="catalog" nombre="dummy">
+               <campo name="id" text="ID" calc="1" visible="false"/>
+               <campo name="id" calc="1" visible="false" />
+               <campo name="accion" text="¿Estás conforme con la Importación?" columnas="4" margen-derecho="3" margen-izquierdo="3" local="true" type="bool"/>
+            </tabla>
+            <estilos>
+               <boton nombre="grabar" texto="Continuar" columnas="2" margen-izquierdo="4"/>
+            </estilos>
+            <acciones>
+               <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+            </acciones>
+         </componente>
+      </nivel>
+      <nivel id="VCPI" nombre="Validación Clave Presupuestal Importación" interactivo="false" ejecutar="%VCP1.VCP1.accion%==true" >
+         <componente id="VCPI" nombre="Validación Clave Presupuestal Importación" tipo="cursor">
+            <tabla schema="catalog" nombre="dummy">
+               <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1"/>
+               <campo name="validacion_cp" local="true" type="long" calc="@ifThenElse(@consultaDirec('SELECT COUNT(*) AS result FROM operation.presupuesto_egresos_det WHERE id_unidad_responsable='+$config.ur$+' AND id_periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND (clave_presupuestal IN (SELECT clave_presupuestal_o FROM operation.adecuacion_presupuestaria_traspaso_importacion WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_adecuacion='+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%+') AND clave_presupuestal IN (SELECT clave_presupuestal_d FROM operation.adecuacion_presupuestaria_traspaso_importacion WHERE ur='+$config.ur$+' AND periodo='+%buscaPeriodo.buscaPeriodo.id_periodo%+' AND id_adecuacion='+%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%+'))','result','long','MAGNITUS')&gt;0,2,1)"/>
+               
+               <!--<campo name="validacion_ppto" text="Valida PPTO" local="true" type="bool" visible="false" habilitado="false" calcCliente="@ifThenElse(@consultaDirec('SELECT (presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) AS disponible FROM operation.presupuesto_egresos_mes_det WHERE id_unidad_responsable='+%ur%+' AND id_periodo='+%periodo%+' AND mes='+%mes_origen%+' AND clave_presupuestal='+'\\''+%clave_presupuestal_o%+'\\'','disponible','numeric','MAGNITUS') &gt;= 
+                      @consultaDirec('SELECT total AS traspaso FROM operation.adecuacion_presupuestaria_traspaso_importacion WHERE ur='+%ur%+' AND periodo='+%periodo%+' AND id_adecuacion='+%id_adecuacion%+' AND id_adecuacion_importacion='+%id_adecuacion_importacion%+','traspaso','numeric','MAGNITUS'),true,false)" validacion="%validacion_ppto%==false" validacionMensaje="El Presupuesto de Egresos por Aprobar no ha sido registrado correctamente.\\n\\nCierre la ventana e intente nuevamente una vez corregido su documento."/>-->
+            </tabla>
+         </componente>
+      </nivel>
+      <nivel  id="VCP" nombre="VALIDACIÓN DE CLAVES PRESUPUESTALES" mostrarNivelAnterior="false" mostrarProximoNivel="true" ejecutar="%VCPI.VCPI.validacion_cp%==1">
+         <componente id="VCP" nombre="VALIDACIÓN DE CLAVES PRESUPUESTALES" tipo="formulario" accionDefault="seleccionar">
+            <tabla schema="catalog" nombre="dummy">
+               <campo name="id" text="ID" calc="1" visible="false"/>
+               <etiqueta nombre="mensaje" texto="EL DOCUMENTO IMPORTADO NO CONTIENE CLAVES YA REGISTRADAS PARA EL TRASPASO" color="red" bold="normal" tamaño="28px" alineacion="center" interlineado="25px" width="500px" columnas="8" margen-izquierdo="1" margen-derecho="1"/>
+               <campo name="mensaje2" text="Mensaje" local="true" type="text" calc="'El Presupuesto de egresos por aprobar no ha sido registrado correctamente.\\n\\nCierre la ventana e intente nuevamente una vez corregido su documento.'" margen-izquierdo="1" height="100" columnas="8"/>
+            </tabla>
+            <estilos>
+               <boton nombre="grabar" visible="false" texto="Guardar" columnas="1" margen-izquierdo="6"/>
+            </estilos>
+            <acciones>
+               <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+            </acciones>
+         </componente>
+      </nivel>
+      <nivel id="BAJA1" nombre="Rollback Presupuesto de Egresos Detalle" interactivo="false" ejecutar="%VCPI.VCPI.validacion_cp%==1">
+         <componente id="RBPE" nombre="Rollback Presupuesto de Egresos Detalle" tipo="bajaDirect">
+            <tabla schema="operation" nombre="adecuacion_presupuestaria_traspaso_importacion">
+               <campo name="ur" text="UR" calc="$config.ur$" />
+               <campo name="periodo" text="UR" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+               <campo name="id_adecuacion" text="UR" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+               <campo name="id_adecuacion_importacion"/>
+            </tabla>
+         </componente>
+      </nivel>
+      <nivel nombre="Agrega Registros Tablas originales" id="ARTO" interactivo="false" ejecutar="%VCPI.VCPI.validacion_cp%==2">
+         <componente tipo="cursor" nombre="Agrega Registros Tablas originales" id="ARTO">
+            <tabla schema="operation" nombre="adecuacion_presupuestaria_traspaso_importacion">
+               <campo name="ur" text="UR" filtroCampo="ur" filtroOperador="=" filtroValor="$config.ur$" />
+               <campo name="periodo" text="UR" filtroCampo="periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+               <campo name="id_adecuacion" text="UR" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+               <campo name="id_adecuacion_importacion" />
+               <campo name="clave_presupuestal_o"/>
+               <campo name="clave_presupuestal_d"/>
+               <campo name="enero"/>
+               <campo name="febrero"/>
+               <campo name="marzo"/>
+               <campo name="abril"/>
+               <campo name="mayo"/>
+               <campo name="junio"/>
+               <campo name="julio"/>
+               <campo name="agosto"/>
+               <campo name="septiembre"/>
+               <campo name="octubre"/>
+               <campo name="noviembre"/>
+               <campo name="diciembre"/>
+               <campo name="total"/>
+               <campo name="mes_origen"/>
+            </tabla>
+            <nivel nombre="PIMER TABLA" id="PT" interactivo="false" ejecutar="%ARTO.ARTO.enero%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="1"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.enero%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST" interactivo="false" ejecutar="%ARTO.ARTO.enero%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="1"/>
+                     <campo name="nombre_mes_destino" calc="'ENERO'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.enero%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 01-->
+            <nivel nombre="PIMER TABLA" id="PT2" interactivo="false" ejecutar="%ARTO.ARTO.febrero%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="2"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.febrero%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST2" interactivo="false" ejecutar="%ARTO.ARTO.febrero%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT2.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="2"/>
+                     <campo name="nombre_mes_destino" calc="'FEBRERO'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.febrero%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 03-->
+            <nivel nombre="PIMER TABLA" id="PT3" interactivo="false" ejecutar="%ARTO.ARTO.marzo%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="3"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.marzo%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST3" interactivo="false" ejecutar="%ARTO.ARTO.marzo%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT3.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="3"/>
+                     <campo name="nombre_mes_destino" calc="'MARZO'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.marzo%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 04-->
+            <nivel nombre="PIMER TABLA" id="PT4" interactivo="false" ejecutar="%ARTO.ARTO.abril%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="4"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.abril%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST4" interactivo="false" ejecutar="%ARTO.ARTO.abril%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT4.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="4"/>
+                     <campo name="nombre_mes_destino" calc="'ABRIL'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.abril%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 05-->
+            <nivel nombre="PIMER TABLA" id="PT5" interactivo="false" ejecutar="%ARTO.ARTO.mayo%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="5"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.mayo%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST5" interactivo="false" ejecutar="%ARTO.ARTO.mayo%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT5.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="5"/>
+                     <campo name="nombre_mes_destino" calc="'MAYO'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.mayo%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 06-->
+            <nivel nombre="PIMER TABLA" id="PT6" interactivo="false" ejecutar="%ARTO.ARTO.junio%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="6"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.junio%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST6" interactivo="false" ejecutar="%ARTO.ARTO.junio%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT6.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="6"/>
+                     <campo name="nombre_mes_destino" calc="'JUNIO'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.junio%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 07-->
+            <nivel nombre="PIMER TABLA" id="PT7" interactivo="false" ejecutar="%ARTO.ARTO.julio%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="7"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.julio%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST7" interactivo="false" ejecutar="%ARTO.ARTO.julio%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT7.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="7"/>
+                     <campo name="nombre_mes_destino" calc="'JULIO'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.julio%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 08-->
+            <nivel nombre="PIMER TABLA" id="PT8" interactivo="false" ejecutar="%ARTO.ARTO.agosto%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="8"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.agosto%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST8" interactivo="false" ejecutar="%ARTO.ARTO.agosto%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT8.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="8"/>
+                     <campo name="nombre_mes_destino" calc="'AGOSTO'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.agosto%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 09-->
+            <nivel nombre="PIMER TABLA" id="PT9" interactivo="false" ejecutar="%ARTO.ARTO.septiembre%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="9"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.septiembre%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST9" interactivo="false" ejecutar="%ARTO.ARTO.septiembre%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT9.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="9"/>
+                     <campo name="nombre_mes_destino" calc="'SEPTIEMBRE'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.septiembre%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 10-->
+            <nivel nombre="PIMER TABLA" id="PT10" interactivo="false" ejecutar="%ARTO.ARTO.octubre%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="10"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.octubre%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST10" interactivo="false" ejecutar="%ARTO.ARTO.octubre%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT10.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="10"/>
+                     <campo name="nombre_mes_destino" calc="'OCTUBRE'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.octubre%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 11-->
+            <nivel nombre="PIMER TABLA" id="PT11" interactivo="false" ejecutar="%ARTO.ARTO.noviembre%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="11"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.noviembre%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST11" interactivo="false" ejecutar="%ARTO.ARTO.noviembre%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT11.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="11"/>
+                     <campo name="nombre_mes_destino" calc="'NOVIEMBRE'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.noviembre%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <!--MES 12-->
+            <nivel nombre="PIMER TABLA" id="PT12" interactivo="false" ejecutar="%ARTO.ARTO.diciembre%!=0.00">
+               <componente tipo="altaDirect" nombre="PIMERA TABLA" id="PT">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="id_presupuesto_egresos_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_origen" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_o%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="id_presupuesto_egresos_det_destino" calc="@consultaDirec('SELECT id_presupuesto_egresos_det AS ipe FROM operation.presupuesto_egresos_det WHERE clave_presupuestal=\\''+%ARTO.ARTO.clave_presupuestal_d%+'\\'','ipe','long','MAGNITUS')"/>
+                     <campo name="mes_registro" calc="12"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso" calc="%ARTO.ARTO.diciembre%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+            <nivel nombre="SEGUNDA TABLA" id="ST12" interactivo="false" ejecutar="%ARTO.ARTO.diciembre%!=0.00">
+               <componente tipo="altaDirect" nombre="SEGUNDA TABLA" id="ST">
+                  <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso_traspaso_mes_det">
+                     <campo name="ur" calc="%ARTO.ARTO.ur%"/>
+                     <campo name="periodo" calc="%ARTO.ARTO.periodo%"/>
+                     <campo name="id_adecuacion" calc="%ARTO.ARTO.id_adecuacion%"/>
+                     <campo name="id_adecuacion_det" calc="%PT12.PT.id_adecuacion_det%"/>
+                     <campo name="id_adecuacion_mes_det" autogenerado="true" generacion="@prox()+1"/>
+                     <campo name="mes_origen" calc="%ARTO.ARTO.mes_origen%"/>
+                     <campo name="nombre_mes_origen" calc="@ifThenElse(%ARTO.ARTO.mes_origen%==1,'ENERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==2,'FEBRERO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==3,'MARZO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==4,'ABRIL',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==5,'MAYO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==6,'JUNIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==7,'JULIO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==8,'AGOSTO',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==9,'SEPTIEMBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==10,'OCTUBRE',
+                     @ifThenElse(%ARTO.ARTO.mes_origen%==11,'NOVIEMBRE','DICIEMBRE')))))))))))"/>
+                     <campo name="clave_presupuestal_origen" calc="%ARTO.ARTO.clave_presupuestal_o%"/>
+                     <campo name="mes_destino" calc="12"/>
+                     <campo name="nombre_mes_destino" calc="'DICIEMBRE'"/>
+                     <campo name="clave_presupuestal_destino" calc="%ARTO.ARTO.clave_presupuestal_d%"/>
+                     <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)"/>
+                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                     <campo name="total_traspaso_mes" calc="%ARTO.ARTO.diciembre%"/>
+                  </tabla>
+               </componente>
+            </nivel>
+        </componente>
+      </nivel>
+      
+      <nivel id="lanzaInstanciaTraspaso" nombre="lanzaInstanciaTraspaso" interactivo="false" ejecutar="%VCPI.VCPI.validacion_cp%==2">
+            <componente id="lanzaInstanciaTraspaso" nombre="lanzaInstanciaTraspaso" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'a22fca0b-f7a8-4f60-93ef-0b7bb4006217'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" mostrarEsc="false"/>
+                    <parametro name="out_periodo" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" mostrarEsc="false"/>
+                    <parametro name="out_id_adecuacion" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_folio_adecuacion" calc="%nlBarreAdecuacionEgreso.nlBarreAdecuacionEgreso.folio_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_tipo_adecuacion_presupuestaria" calc="'TRASPASO'" mostrarEsc="false"/>
+                    <parametro name="out_centro_registro" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.centro_registro%" mostrarEsc="false"/>
+                    <parametro name="out_importe" calc="0.00" mostrarEsc="false"/>
+                </parametros>
+            </componente>
+        </nivel>
+      
+      <nivel id="RG" nombre="Registro Guardado" ejecutar="%VCPI.VCPI.validacion_cp%==2" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+         <componente id="RG" nombre="Registro Guardado" tipo="formulario" accionDefault="seleccionar">
+            <tabla schema="catalog" nombre="dummy">
+               <campo name="id" calc="1" visible="false" />
+               <etiqueta nombre="TraspasoExitoso" texto="Los Traspasos Presupuestales se registraron con éxito." color="black" bold="normal" tamaño="18px" alineacion="left" interlineado="25px" width="500px" margen-izquierdo="3" columnas="6" margen-derecho="1"/>
+            </tabla>
+            <estilos>
+               <boton nombre="grabar" visible="false"/>
+            </estilos>
+         </componente>
+         <componente id="cpReporTransPresu" nombre="Reporte Traspaso Presupuestal" tipo="reporte" update="true" nombreDocumento="'Traspaso Presupuestal'" expediente="Expediente de Adecuaciones al Presupuesto de Egresos Aprobado/Traspaso Presupuestal"  grupo="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" url="$config.repository_upload_file$">
+                <reporte nombre="R_Traspaso" update="true" nombreDocumento="'Traspasos Presupuestales N a N'" expediente="Expediente de Adecuación Presupuestaria del Egreso/Traspasos Presupuestales N a N"  
+                grupo="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" url="$config.repository_upload_file$" > 
+                    <campo name="id_adecuacion" type="long" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+                    <campo name="periodo" type="long" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="ur" type="long" calc="$config.ur$" />
+                    <campo name="usuario" type="string" calc="$protocolarios.user$" />
+                </reporte>
+            </componente>
+      </nivel>
+   </pagina>
+</tarea>
