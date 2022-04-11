@@ -43,8 +43,8 @@
                     <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" visible="false"/>
                     <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" visible="false"/>
                     <campo name="folio_duep" filtroCampo="folio_duep" filtroOperador="=" filtroValor="%inParam.inParam.folio_duep%" visible="false"/>
-                    <campo name="autoriza_duep_obs" text="Motivo Rechazo" columnas="8" margen-izquierdo="1" margen-derecho="1" height="200" interaccion="%autoriza_duep%==false" validacion="%autoriza_duep%==false AND %autoriza_duep_obs%==null" validacionMensaje="Favor de ingresar la razón por la que no se autorizó."/>
-                    <campo name="autoriza_duep" text="Autorizar" margen-izquierdo="4"/>
+                    <campo name="autoriza_duep" text="Autorizar" columnas="2" margen-izquierdo="4" margen-derecho="4" />
+                    <campo name="autoriza_duep_obs" text="Motivo Rechazo" columnas="8" margen-izquierdo="1" margen-derecho="1" height="200" interaccion-visible="%autoriza_duep%==false" validacion="%autoriza_duep%==false AND %autoriza_duep_obs%==null" validacionMensaje="Favor de ingresar la razón por la que no se autorizó."/>
                     <campo name="descripcion_autoriza" local="true" type="string" calc="'AUTORIZADA'" visible="false"/>
 
                 </tabla>
@@ -171,6 +171,7 @@
                     <campo name="folio_duep_a"/>
                     <campo name="concepto"/>
                     <campo name="cuenta_contable_sim" />
+                    <campo name="ultimo_usuario_modificador" />
                 </tabla>
             </componente>
         </nivel>
@@ -208,7 +209,45 @@
             </componente>
         </nivel>
         
-        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <nivel id="nlGenEncabezadoPolizaDeg1" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
+            <componente id="cpGenEncabezadoPolizaDeg1" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                   <campo name="ur" calc="%nlBarridoDUEPS.cpBarridoDUEPS.ur%"/> 
+                   <campo name="periodo" calc="%nlBarridoDUEPS.cpBarridoDUEPS.periodo%" />
+                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
+                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
+                   <campo name="id_catalogo" calc="%nlBarridoDUEPS.cpBarridoDUEPS.id_cat_fondo_contable%"/>
+                   <campo name="fondo_contable" calc="%nlBarridoDUEPS.cpBarridoDUEPS.id_fondo_contable%"/>
+                   <campo name="duep_origen" calc="%nlBarridoDUEPS.cpBarridoDUEPS.folio_duep%" />
+                   <campo name="momento_contable" calc="7"/>
+                   <campo name="estatus_poliza" calc="2"/>
+                   <campo name="origen_poliza" calc="1"/>
+                   <campo name="tipo_poliza" calc="3"/>
+                   <campo name="id_beneficiario_ganador" calc="%nlCambioEstatusDUEPS.cpCambiaEstatusDUEPS.beneficiario%"/>
+                   <campo name="ultimo_usuario_modificador" calc="%nlBarridoDUEPS.cpBarridoDUEPS.ultimo_usuario_modificador%"/>
+                   <campo name="usuario_autorizador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
+                    <campo name="concepto_general" calc="@concatenar('Póliza del Presupuesto de Egresos Pagada de la Solicitud de Compra Menor de Forma Simultanea  '+%nlBarridoDUEPS.cpBarridoDUEPS.folio_duep_a% + ' ' +%nlBarridoDUEPS.cpBarridoDUEPS.concepto%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel id="ActulizaFolioPolizaDev1" nombre="Actualiza Folio de Póliza Devengado" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
+            <componente id="ActulizaFolioPolizaDev1" nombre="Actualiza Folio de Devengado" tipo="cursor">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarridoDUEPS.cpBarridoDUEPS.ur%"/> 
+                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarridoDUEPS.cpBarridoDUEPS.periodo%"/>
+                   <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%"/>
+                   <campo name="folio_reporte" calc="@concatenar(%nlBarridoDUEPS.cpBarridoDUEPS.periodo%+'-'+
+                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 10,'00000',
+                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 100,'0000',
+                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 1000,'000',
+                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 10000,'00',
+                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <!-- ENCABEZADO DE LA PÓLIZA
         <nivel id="nlGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
             <componente id="cpGenEncabezadoPolizaCom" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
                 <tabla schema="operation" nombre="movimientos_auxiliares">
@@ -244,7 +283,7 @@
                    @ifThenElse(%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%)" />
                 </tabla>
             </componente>
-        </nivel>
+        </nivel> -->
         
         <nivel id="nlBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
             <componente id="cpBarridoDetalleDUEPCom" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
@@ -294,9 +333,9 @@
                 <nivel id="altaDetalleDirecCargoCom" nombre="Alta Detalle Cargo de Duep" interactivo="false">
                     <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
                         <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
-                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
-                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
-                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                             <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                             <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
                             <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
@@ -308,7 +347,7 @@
                             <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.total%"/>
                             <campo name="concepto_bloque" calc="%arti1.arti1.descripcion_articulo%"/>
                             <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '4'+%obSeparador.obSeparador.caracter%+
                                 '0'+%obSeparador.obSeparador.caracter%+
@@ -324,9 +363,9 @@
                 <nivel id="altaDetalleDirecAbonoCom" nombre="AltaDetalleDirecAbono" interactivo="false">
                     <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
                         <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
-                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.ur%" />
-                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.periodo%" />
-                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%" />
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                             <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                             <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.clave_presupuestal%"/>
                             <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
@@ -338,7 +377,7 @@
                             <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom.cpBarridoDetalleDUEPCom.total%"/>
                             <campo name="concepto_bloque" calc="%arti1.arti1.descripcion_articulo%"/>
                             <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '0'+%obSeparador.obSeparador.caracter%+
@@ -369,7 +408,7 @@
                     <campo name="tipo_operacion"/>
                 </tabla>
             </componente>
-        </nivel>-->
+        </nivel>
         
         <nivel id="nlGenEncabezadoPolizaCom1" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
             <componente id="cpGenEncabezadoPolizaCom1" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
@@ -406,7 +445,7 @@
                    @ifThenElse(%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.folio_movimiento_auxiliar%)" />
                 </tabla>
             </componente>
-        </nivel>
+        </nivel> -->
         
         <nivel id="nlBarridoDetalleDUEPCom1" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
             <componente id="cpBarridoDetalleDUEPCom1" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
@@ -455,9 +494,9 @@
                 <nivel id="altaDetalleDirecCargoCom1" nombre="Alta Detalle Cargo de Duep" interactivo="false">
                     <componente id="altaDetalleDirecCargo1" nombre="altaDetalleDirecCargo" tipo="altaDirect">
                         <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
-                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.ur%" />
-                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.periodo%" />
-                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.folio_movimiento_auxiliar%" />
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                             <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                             <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom1.cpBarridoDetalleDUEPCom1.clave_presupuestal%"/>
                             <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
@@ -469,7 +508,7 @@
                             <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPCom1.cpBarridoDetalleDUEPCom1.total%"/>
                             <campo name="concepto_bloque" calc="%arti11.arti11.descripcion_articulo%"/>
                             <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '6'+%obSeparador.obSeparador.caracter%+
                                 '0'+%obSeparador.obSeparador.caracter%+
@@ -485,9 +524,9 @@
                 <nivel id="altaDetalleDirecAbonoCom1" nombre="AltaDetalleDirecAbono" interactivo="false">
                     <componente id="altaDetalleDirecAbono1" nombre="altaDetalleDirecAbono" tipo="altaDirect">
                         <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
-                            <campo name="ur" calc="%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.ur%" />
-                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.periodo%" />
-                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.folio_movimiento_auxiliar%" />
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                             <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                             <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPCom1.cpBarridoDetalleDUEPCom1.clave_presupuestal%"/>
                             <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
@@ -499,7 +538,7 @@
                             <campo name="importe_abono" calc="%nlBarridoDetalleDUEPCom1.cpBarridoDetalleDUEPCom1.total%"/>
                             <campo name="concepto_bloque" calc="%arti11.arti11.descripcion_articulo%"/>
                             <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '5'+%obSeparador.obSeparador.caracter%+
                                '0'+%obSeparador.obSeparador.caracter%+
@@ -515,7 +554,7 @@
         </nivel>
        
      
-        <!-- ENCABEZADO DE LA PÓLIZA -->
+        <!-- ENCABEZADO DE LA PÓLIZA 
         <nivel id="nlGenEncabezadoPolizaDeg" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
             <componente id="cpGenEncabezadoPolizaDeg" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
                 <tabla schema="operation" nombre="movimientos_auxiliares">
@@ -551,7 +590,7 @@
                    @ifThenElse(%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.folio_movimiento_auxiliar%)"/>
                 </tabla>
             </componente>
-        </nivel>
+        </nivel> -->
         
         <nivel id="nlBarridoDetalleDUEPDeg" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
             <componente id="cpBarridoDetalleDUEPDeg" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
@@ -599,9 +638,9 @@
                 <nivel id="altaDetalleDirecCargoDeg" nombre="Alta Detalle Cargo de Duep" interactivo="false">
                     <componente id="altaDetalleDirecCargo" nombre="altaDetalleDirecCargo" tipo="altaDirect">
                         <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
-                            <campo name="ur" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.ur%" />
-                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.periodo%" />
-                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.folio_movimiento_auxiliar%" />
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                             <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                             <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPDeg.cpBarridoDetalleDUEPDeg.clave_presupuestal%"/>
                             <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
@@ -613,7 +652,7 @@
                             <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPDeg.cpBarridoDetalleDUEPDeg.total%"/>
                             <campo name="concepto_bloque" calc="%arti.arti.descripcion_articulo%"/>
                             <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '5'+%obSeparador.obSeparador.caracter%+
                                 '0'+%obSeparador.obSeparador.caracter%+
@@ -629,9 +668,9 @@
                 <nivel id="altaDetalleDirecAbonoDeg" nombre="AltaDetalleDirecAbono" interactivo="false">
                     <componente id="altaDetalleDirecAbono" nombre="altaDetalleDirecAbono" tipo="altaDirect">
                         <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
-                            <campo name="ur" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.ur%" />
-                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.periodo%" />
-                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.folio_movimiento_auxiliar%" />
+                            <campo name="ur" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.ur%" />
+                            <campo name="id_periodo" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                             <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                             <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPDeg.cpBarridoDetalleDUEPDeg.clave_presupuestal%"/>
                             <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
@@ -643,7 +682,7 @@
                             <campo name="importe_abono" calc="%nlBarridoDetalleDUEPDeg.cpBarridoDetalleDUEPDeg.total%"/>
                            <campo name="concepto_bloque" calc="%arti.arti.descripcion_articulo%"/>
                             <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '4'+%obSeparador.obSeparador.caracter%+
                                 '0'+%obSeparador.obSeparador.caracter%+
@@ -661,7 +700,7 @@
                         <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
                             <campo name="ur" calc="$config.ur$"/>
                             <campo name="id_periodo" calc="$inParam.periodo$"/>
-                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.folio_movimiento_auxiliar%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                             <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                             <campo name="clave_presupuestal" calc="%nlBarridoDetalleDUEPDeg.cpBarridoDetalleDUEPDeg.clave_presupuestal%"/>
                             <campo name="clave_cuenta_contable" calc="%arti.arti.cuenta_contable%" />
@@ -710,7 +749,7 @@
                         <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
                             <campo name="ur" calc="$config.ur$"/>
                             <campo name="id_periodo" calc="$inParam.periodo$"/>
-                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.folio_movimiento_auxiliar%" />
+                            <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                             <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                             <campo name="clave_presupuestal" calc=""/>
                             <campo name="clave_cuenta_contable" calc="%barreClaveRetencion.barreClaveRetencion.clave_cuenta_cont%"/>
@@ -746,57 +785,22 @@
                 <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
                     <campo name="ur" calc="$config.ur$"/>
                     <campo name="id_periodo" calc="$inParam.periodo$"/>
-                    <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg.cpGenEncabezadoPolizaDeg.folio_movimiento_auxiliar%" />
+                    <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                     <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                     <campo name="clave_presupuestal" calc=""/>
                     <campo name="clave_cuenta_contable" calc="%nlBarridoDUEPS.cpBarridoDUEPS.cuenta_contable_sim%" />
                     <campo name="importe_abono" calc="%FTD.FTD.total%"/>
                     <campo name="concepto_bloque" calc=""/>
                     <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+%cargoAbonod.cargoAbonod.clave_cuenta_contable%+'\\'','descripcion','string','MAGNITUS');"/>
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+%cargoAbonod.cargoAbonod.clave_cuenta_contable%+'\\'','descripcion','string','MAGNITUS');"/>
                     <campo name="fecha_registro" calc="@fechaSistema()" />
                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
                     <campo name="tipo_detalle" calc="2" llaveForanea="false"/> <!-- Afectación Presupuestal -->
                 </tabla>
             </componente>
         </nivel>
-               
-       <nivel id="nlGenEncabezadoPolizaDeg1" nombre="Generación del Encabezado de la Póliza" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
-            <componente id="cpGenEncabezadoPolizaDeg1" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
-                <tabla schema="operation" nombre="movimientos_auxiliares">
-                   <campo name="ur" calc="%nlBarridoDUEPS.cpBarridoDUEPS.ur%"/> 
-                   <campo name="periodo" calc="%nlBarridoDUEPS.cpBarridoDUEPS.periodo%" />
-                   <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
-                   <campo name="fecha_poliza" calc="@fechaSistema()"/>
-                   <campo name="id_catalogo" calc="%nlBarridoDUEPS.cpBarridoDUEPS.id_cat_fondo_contable%"/>
-                   <campo name="fondo_contable" calc="%nlBarridoDUEPS.cpBarridoDUEPS.id_fondo_contable%"/>
-                   <campo name="duep_origen" calc="%nlBarridoDUEPS.cpBarridoDUEPS.folio_duep%" />
-                   <campo name="momento_contable" calc="7"/>
-                   <campo name="estatus_poliza" calc="2"/>
-                   <campo name="origen_poliza" calc="1"/>
-                   <campo name="tipo_poliza" calc="3"/>
-                   <campo name="id_beneficiario_ganador" calc="%nlCambioEstatusDUEPS.cpCambiaEstatusDUEPS.beneficiario%"/>
-                   <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
-                    <campo name="concepto_general" calc="@concatenar('Póliza del Presupuesto de Egresos Pagada de la Solicitud de Compra Menor de Forma Simultanea  '+%nlBarridoDUEPS.cpBarridoDUEPS.folio_duep_a% + ' ' +%nlBarridoDUEPS.cpBarridoDUEPS.concepto%)"/>
-                </tabla>
-            </componente>
-        </nivel>
         
-        <nivel id="ActulizaFolioPolizaDev1" nombre="Actualiza Folio de Póliza Devengado" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
-            <componente id="ActulizaFolioPolizaDev1" nombre="Actualiza Folio de Devengado" tipo="cursor">
-                <tabla schema="operation" nombre="movimientos_auxiliares">
-                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlBarridoDUEPS.cpBarridoDUEPS.ur%"/> 
-                   <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlBarridoDUEPS.cpBarridoDUEPS.periodo%"/>
-                   <campo name="folio_movimiento_auxiliar" filtroCampo="folio_movimiento_auxiliar" filtroOperador="=" filtroValor="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%"/>
-                   <campo name="folio_reporte" calc="@concatenar(%nlBarridoDUEPS.cpBarridoDUEPS.periodo%+'-'+
-                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 10,'00000',
-                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 100,'0000',
-                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 1000,'000',
-                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 10000,'00',
-                   @ifThenElse(%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar% &lt; 100000,'0',null)))))+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%)"/>
-                </tabla>
-            </componente>
-        </nivel>
+       
         
         <nivel id="nlBarridoDetalleDUEPDeg1" nombre="Barrido de los Detalles del DUEP" interactivo="false" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true">
             <componente id="cpBarridoDetalleDUEPDeg1" nombre="Barrido de los Detalles del DUEP" tipo="cursor">
@@ -858,7 +862,7 @@
                             <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPDeg1.cpBarridoDetalleDUEPDeg1.total%"/>
                             <campo name="concepto_bloque" calc="%arti111.arti111.descripcion_articulo%"/>
                             <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '7'+%obSeparador.obSeparador.caracter%+
                                 '0'+%obSeparador.obSeparador.caracter%+
@@ -888,7 +892,7 @@
                             <campo name="importe_abono" calc="%nlBarridoDetalleDUEPDeg1.cpBarridoDetalleDUEPDeg1.total%"/>
                            <campo name="concepto_bloque" calc="%arti111.arti111.descripcion_articulo%"/>
                             <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ @concatenar('8'+%obSeparador.obSeparador.caracter%+
                                 '2'+%obSeparador.obSeparador.caracter%+
                                 '6'+%obSeparador.obSeparador.caracter%+
                                '0'+%obSeparador.obSeparador.caracter%+
@@ -913,7 +917,7 @@
                     <campo name="importe_cargo" calc="%nlBarridoDetalleDUEPDeg1.cpBarridoDetalleDUEPDeg1.total%"/>
                     <campo name="concepto_bloque" calc=""/>
                     <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+%nlBarridoDUEPS.cpBarridoDUEPS.cuenta_contable_sim%+'\\'','descripcion','string','MAGNITUS');"/>
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+%nlBarridoDUEPS.cpBarridoDUEPS.cuenta_contable_sim%+'\\'','descripcion','string','MAGNITUS');"/>
                     <campo name="fecha_registro" calc="@fechaSistema()" />
                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
                     <campo name="tipo_detalle" calc="2" llaveForanea="false"/> <!-- Afectación Presupuestal -->
@@ -929,11 +933,11 @@
                     <campo name="id_movimiento_auxiliar" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%" />
                     <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true"/>
                     <campo name="clave_presupuestal" calc=""/>
-                    <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT cuenta_contable as cc FROM entity.cuenta_bancaria WHERE cuenta_bancaria=(SELECT cuenta_bancaria FROM operation.duep WHERE folio_duep='+%inParam.inParam.folio_duep%+')','cc','string','MAGNITUS')" />
+                    <campo name="clave_cuenta_contable" calc="@consultaDirec('SELECT cuenta_contable as cc FROM entity.cuenta_bancaria WHERE cuenta_bancaria=(SELECT cuenta_bancaria FROM operation.duep WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND folio_duep='+%inParam.inParam.folio_duep%+')','cc','string','MAGNITUS')" />
                     <campo name="importe_abono" calc="%nlBarridoDetalleDUEPDeg1.cpBarridoDetalleDUEPDeg1.total%"/>
                     <campo name="concepto_bloque" calc=""/>
                     <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables
-                                WHERE clave_cuenta ='+'\\''+ %cargoAbonod11.cargoAbonod11.clave_cuenta_contable%+'\\'','descripcion','string','MAGNITUS');"/>
+                                WHERE periodo = '+%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.periodo%+' AND clave_cuenta ='+'\\''+ %cargoAbonod11.cargoAbonod11.clave_cuenta_contable%+'\\'','descripcion','string','MAGNITUS');"/>
                     <campo name="fecha_registro" calc="@fechaSistema()" />
                     <campo name="ultimo_usuario_modificador" calc="%barreUsuarios.barreUsuarios.id_usuario%"/>
                     <campo name="tipo_detalle" calc="2" llaveForanea="false"/> <!-- Afectación Presupuestal -->
@@ -955,7 +959,7 @@
                     <campo name="id_fondo_contable" />
                     <campo name="folio_duep_a"/>
                     <campo name="concepto"/>
-                    <campo name="poliza_devengado" calc="%nlGenEncabezadoPolizaCom.cpGenEncabezadoPolizaCom.folio_movimiento_auxiliar%"/>  
+                    <campo name="poliza_devengado" calc="%nlGenEncabezadoPolizaDeg1.cpGenEncabezadoPolizaDeg1.folio_movimiento_auxiliar%"/>  
                 </tabla>
             </componente>
         </nivel>
@@ -977,7 +981,7 @@
         
         <nivel id="nlRepAutzSolDUEPS" nombre="Reportes de la Autorizacion de la Solicitud de Compra Menor de Forma Simultánea" ejecutar="%nlAutzSolDUEPS.cpAutzSolDUEPS.autoriza_duep%==true" mostrarNivelAnterior="false" mostrarProximoNivel="false">
 
-            <componente id="cpPolizaPresupuestogEgComprometido" nombre="Poliza del Presupuesto de Egresos Comprometido" tipo="reporte" colapsado="SI">
+            <!--<componente id="cpPolizaPresupuestogEgComprometido" nombre="Poliza del Presupuesto de Egresos Comprometido" tipo="reporte" colapsado="SI">
                 <reporte nombre="polizacontable" expediente="Expediente de Compras Menores/Solicitud de Compra Menor de Forma Simultanea" nombreDocumento="'Póliza del Comprometido de Presupuesto de Egresos'" grupo="$inParam.folio_compra_menor$" url="$config.repository_upload_file$" update="true">
                     <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%"/>
                     <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/> 
@@ -1002,9 +1006,9 @@
                     <campo name="folio_movimiento_auxiliar" local="true" type="long" calc="%nlGenEncabezadoPolizaCom1.cpGenEncabezadoPolizaCom1.folio_movimiento_auxiliar%"/>
                     <campo name="usuario" local="true" type="string" calc="$protocolarios.user$" />
                 </reporte>
-            </componente>
+            </componente>-->
             
-            <componente id="cpPolizaPresupuestogEPagado" nombre="Poliza del Presupuesto de Egresos Pagado" tipo="reporte" colapsado="SI">
+            <componente id="cpPolizaPresupuestogEPagado" nombre="Poliza del Presupuesto de Egresos Pagado" tipo="reporte" >
                 <reporte nombre="polizacontable" expediente="Expediente de Compras Menores/Solicitud de Compra Menor de Forma Simultanea" nombreDocumento="'Póliza del Pagado de Presupuesto de Egresos'" grupo="$inParam.folio_compra_menor$" url="$config.repository_upload_file$" update="true">
                     <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%"/>
                     <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/> 
@@ -1013,7 +1017,7 @@
                 </reporte>
             </componente>
             
-            <componente id="nlRepDUEPSAct" nombre="Documento de la Solicitud de Compra Menor de Forma Simultanea" tipo="reporte" colapsado="SI">
+            <componente id="nlRepDUEPSAct" nombre="Documento de la Solicitud de Compra Menor de Forma Simultanea" tipo="reporte" >
                <reporte nombre="doc_presupuesto_dp" expediente="Expediente de Compras Menores/Solicitud de Compra Menor de Forma Simultanea" nombreDocumento="'Documento de Solicitud de Compra Menor de Forma Simultanea'" grupo="$inParam.folio_compra_menor$" url="$config.repository_upload_file$" update="true">
                     <campo name="ur" local="true" type="long" calc="@castTo(%inParam.inParam.ur%,'long')"/>
                     <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%"/>
