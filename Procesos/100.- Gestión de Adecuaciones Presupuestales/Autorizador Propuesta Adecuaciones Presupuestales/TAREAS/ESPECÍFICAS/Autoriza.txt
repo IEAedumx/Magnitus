@@ -1,0 +1,356 @@
+<tarea nombre="Autorizar Propuesta de traspasos presupuestales" autor="arturo">
+    <pagina id="1">
+        <!--Filtrar Usuario-->
+        <nivel id="filtrarUsuario" nombre="filtrarUsuario" interactivo="false">
+            <componente id="filtrarUsuario" nombre="filtrarUsuario" tipo="cursor" accionDefault="seleccionar">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="id_usuario" text="id_usuario" />
+                    <campo name="nombre_usuario" text="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!--Filtrar Usuario-->
+        
+        <!--Cacha Parametros-->
+        <nivel id="inParam" nombre="Paso de Parámetros" interactivo="false">
+            <componente id="inParam" nombre="Paso de Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                    <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                    <campo name="periodo" local="true" type="tring" calc="$inParam.periodo$" />
+                    <campo name="id_adecuacion" local="true" type="string" calc="$inParam.id_adecuacion$" />
+                    <campo name="folio_adecuacion" local="true" type="string" calc="$inParam.folio_adecuacion$" />
+                    <campo name="tipo_adecuacion" local="true" type="string" calc="$inParam.tipo_adecuacion_presupuestaria$" />
+                    <campo name="centro_registro" local="true" type="string" calc="$inParam.centro_registro$" />
+                    <campo name="fondo_contable" local="true" type="string" calc="$inParam.fondo_contable$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!--Cacha Parametros-->
+        
+        <!--reporte-->
+        <nivel id="nlAutAdecPresuEgre" nombre="Autoriza Adecuación Presupuestaria del Egreso" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+            <componente id="cpReporte" nombre="Reporte Adecuaciones al Presupuesto de Egresos" tipo="reporte" >
+                <reporte nombre="report_prueba" update="true" nombreDocumento="'Gestion de Adecuaciones al Presupuesto de Egresos '" expediente="Gestión de Adecuaciones de Egresos" grupo="%nlPasoParam.cpPasoParam.periodo%" url="$config.repository_upload_file$">
+                    <campo name="ur" local="true" type="long" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" local="true" type="long" calc="%inParam.inParam.periodo%" />
+                    <campo name="id_adecuacion" local="true" type="long" calc="%inParam.inParam.id_adecuacion%" />
+                    <campo name="nombre_usuario" local="true" type="string" calc="%filtrarUsuario.filtrarUsuario.nombre_usuario%" />
+                </reporte>
+            </componente>
+            <componente id="cpAutAdecPresuEgre" nombre="Autoriza Adecuación Presupuestaria del Egreso" tipo="formulario" accionDefault="seleccionar">
+                <tabla schema="catalog" nombre="dummy">
+                    <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false"/>
+                    <campo name="observaciones" text="Observaciones" local="true" type="text" margen-izquierdo="2" validacion="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.observaciones%==null AND %nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%" validacionMensaje="Favor de ingresar una observación para continuar." interaccion="%autorizar%==false" columnas="6" height="200"/> 
+                    <campo name="autorizar" text="Autorizar" local="true" type="bool" margen-izquierdo="2" columnas="6"/>
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Guardar" margen-izquierdo="4" columnas="2" margen-derecho="4" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel"/>
+                </acciones>
+            </componente>
+        </nivel>
+        <!--reporte-->
+        
+        <nivel id="nlCambiaEstatus" nombre="Cambia Estatus de la Adecuación" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true">
+            <componente id="cpCambiaEstatus" nombre="Cambia Estatus de la Adecuación" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%" />
+                    <campo name="estatus" calc="@ifThenElse(%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true,2,3)" />
+                    <campo name="ultimo_usuario_modificador"/>
+                    <campo name="usuario_autorizador" calc="%filtrarUsuario.filtrarUsuario.id_usuario%"/>
+                    <campo name="fecha_autorizacion" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                </tabla>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="barre_origen_destino_n_n" id="barre_origen_destino_n_n_AR" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true AND %inParam.inParam.tipo_adecuacion%!=3">
+            <componente tipo="cursor" nombre="barre_origen_destino_n_n_AR" id="barre_origen_destino_n_n">
+                <tabla schema="operation" nombre="origen_destino_n_n">
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%"/>
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_origen_destino_n_n"/>
+                    <campo name="tipo"/>
+                    <campo name="mes"/>
+                    <campo name="monto"/>
+                    <campo name="clave_presupuestaria_importa"/>
+                </tabla>
+                <nivel nombre="Reducción" id="reduccionAR" interactivo="false" ejecutar="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.tipo%=='RL'">
+                    <componente tipo="cursor" nombre="Reducción" id="reduccion">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.periodo%"/>
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.clave_presupuestaria_importa%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.mes%"/>
+                            <campo name="presupuesto_reduccion"/>
+                            <campo name="asignado"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="Reducción" id="reduccion_op_AR" interactivo="false" ejecutar="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.tipo%=='RL'">
+                    <componente tipo="cursor" nombre="Reducción" id="reduccion_op">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.periodo%"/>
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.clave_presupuestaria_importa%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.mes%"/>
+                            <campo name="presupuesto_reduccion" calc="%reduccionAR.reduccionAR.presupuesto_reduccion%+%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.monto%"/>
+                            <campo name="asignado" calc="%reduccionAR.reduccionAR.asignado%-%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.monto%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="Ampliación" id="ampliacionAR" interactivo="false" ejecutar="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.tipo%=='AL'">
+                    <componente tipo="cursor" nombre="Ampliación" id="ampliacion">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.periodo%"/>
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.clave_presupuestaria_importa%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.mes%"/>
+                            <campo name="presupuesto_ampliacion"/>
+                            <campo name="asignado"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="Ampliación" id="ampliacion_op_AR" interactivo="false" ejecutar="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.tipo%=='AL'">
+                    <componente tipo="cursor" nombre="Ampliación" id="ampliacion_op">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.ur%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.periodo%"/>
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.clave_presupuestaria_importa%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.mes%"/>
+                            <campo name="presupuesto_ampliacion" calc="%ampliacionAR.ampliacionAR.presupuesto_ampliacion%+%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.monto%"/>
+                            <campo name="asignado" calc="%ampliacionAR.ampliacionAR.asignado%+%barre_origen_destino_n_n_AR.barre_origen_destino_n_n_AR.monto%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+         
+        <nivel nombre="barre_origen_destino_n_n" id="barre_origen_destino_n_n" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true AND %inParam.inParam.tipo_adecuacion%==3">
+            <componente tipo="cursor" nombre="barre_origen_destino_n_n" id="barre_origen_destino_n_n">
+                <tabla schema="operation" nombre="origen_destino_n_n">
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%"/>
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%"/>
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%"/>
+                    <campo name="id_origen_destino_n_n"/>
+                    <campo name="tipo"/>
+                    <campo name="mes"/>
+                    <campo name="monto"/>
+                    <campo name="clave_presupuestaria_importa"/>
+                </tabla>
+                <nivel nombre="Reducción" id="reduccion" interactivo="false" ejecutar="%barre_origen_destino_n_n.barre_origen_destino_n_n.tipo%=='R'">
+                    <componente tipo="cursor" nombre="Reducción" id="reduccion">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.clave_presupuestaria_importa%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.mes%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.periodo%"/>
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.ur%"/>
+                            <campo name="presupuesto_reduccion"/>
+                            <campo name="asignado"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="Reducción" id="reduccion_op" interactivo="false" ejecutar="%barre_origen_destino_n_n.barre_origen_destino_n_n.tipo%=='R'">
+                    <componente tipo="cursor" nombre="Reducción" id="reduccion_op">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.clave_presupuestaria_importa%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.mes%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.periodo%"/>
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.ur%"/>
+                            <campo name="presupuesto_reduccion" calc="%reduccion.reduccion.presupuesto_reduccion%+%barre_origen_destino_n_n.barre_origen_destino_n_n.monto%"/>
+                            <campo name="asignado" calc="%reduccion.reduccion.asignado%-%barre_origen_destino_n_n.barre_origen_destino_n_n.monto%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="Ampliación" id="ampliacion" interactivo="false" ejecutar="%barre_origen_destino_n_n.barre_origen_destino_n_n.tipo%=='A'">
+                    <componente tipo="cursor" nombre="Ampliación" id="ampliacion">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.clave_presupuestaria_importa%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.mes%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.periodo%"/>
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.ur%"/>
+                            <campo name="presupuesto_ampliacion" calc="%barre_origen_destino_n_n.barre_origen_destino_n_n.monto%"/>
+                            <campo name="asignado"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+                <nivel nombre="Ampliación" id="ampliacion_op" interactivo="false" ejecutar="%barre_origen_destino_n_n.barre_origen_destino_n_n.tipo%=='A'">
+                    <componente tipo="cursor" nombre="Ampliación" id="ampliacion_op">
+                        <tabla schema="operation" nombre="presupuesto_egresos_mes_det">
+                            <campo name="clave_presupuestal" filtroCampo="clave_presupuestal" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.clave_presupuestaria_importa%"/>
+                            <campo name="mes" filtroCampo="mes" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.mes%"/>
+                            <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.periodo%"/>
+                            <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%barre_origen_destino_n_n.barre_origen_destino_n_n.ur%"/>
+                            <campo name="asignado" calc="%ampliacion.ampliacion.asignado%+%barre_origen_destino_n_n.barre_origen_destino_n_n.monto%"/>
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+         
+        <nivel id="obIdSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true">
+            <componente id="obIdSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_separador" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="obSeparador" nombre="obtenerSeparadorPeriodo" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true">
+            <componente id="obSeparador" nombre="obtenerSeparadorPeriodo" tipo="cursor">
+                <tabla schema="catalog" nombre="separador">
+                    <campo name="id_separador" filtroCampo="id_separador" filtroOperador="=" filtroValor="%obIdSeparador.obIdSeparador.id_separador%" />
+                    <campo name="caracter" />
+                </tabla>
+            </componente>
+        </nivel>
+        <nivel id="EPT" nombre="Encabezado de la Póliza Traspaso" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true">
+            <componente id="EPT" nombre="Generación del Encabezado de la Póliza" tipo="altaDirect">
+                <tabla schema="operation" nombre="movimientos_auxiliares">
+                    <campo name="ur" calc="%inParam.inParam.ur%" />
+                    <campo name="periodo" calc="%inParam.inParam.periodo%" />
+                    <campo name="folio_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                    <campo name="fecha_poliza" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                    <campo name="id_catalogo" calc="3" />
+                    <campo name="fondo_contable" calc="%inParam.inParam.fondo_contable%" />
+                    <campo name="momento_contable" calc="3" />
+                    <campo name="estatus_poliza" calc="2" />
+                    <campo name="origen_poliza" calc="1" />
+                    <campo name="tipo_poliza" calc="1" />
+                    <campo name="ultimo_usuario_modificador" calc="%nlCambiaEstatus.cpCambiaEstatus.ultimo_usuario_modificador%" />
+                    <campo name="usuario_autorizador" calc="%filtrarUsuario.filtrarUsuario.id_usuario%" />
+                    <campo name="concepto_general" calc="@concatenar('PÓLIZA DE ADECUCACIÓN PRESUPUESTAL DEL EGRESO '+@consultaDirec('SELECT folio_adecuacion AS result FROM operation.adecuacion_presupuestaria_egreso WHERE id_adecuacion='+$inParam.id_adecuacion$,'result','string','MAGNITUS')+@ifThenElse(%inParam.inParam.tipo_adecuacion%==1,' - AMPLIACIÓN LÍQUIDA',@ifThenElse(%inParam.inParam.tipo_adecuacion%==2,' - REDUCCIÓN LÍQUIDA', ' - TRASPASO')))" />
+                </tabla>
+            </componente>
+        </nivel>
+      
+        <nivel nombre="consultar_n_n_jc" id="consultar_n_n_jc" interactivo="false"  ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true">
+            <componente tipo="cursor" nombre="consultar_n_n_jc" id="consultar_n_n_jc">
+                <tabla schema="operation" nombre="origen_destino_n_n">
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%" />
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_origen_destino_n_n" />
+                    <campo name="tipo" />
+                    <campo name="mes" />
+                    <campo name="monto" />
+                    <campo name="clave_presupuestaria_importa" />
+                </tabla>
+                <nivel id="ACPT_" nombre="Alta Cargo Presupuestal Traspaso" interactivo="false" ejecutar="%consultar_n_n_jc.consultar_n_n_jc.tipo%=='R' OR %consultar_n_n_jc.consultar_n_n_jc.tipo%=='RL'">
+                    <componente id="ACPT_" nombre="Alta Detalle Cargo Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%consultar_n_n_jc.consultar_n_n_jc.ur%" />
+                            <campo name="id_periodo" calc="%consultar_n_n_jc.consultar_n_n_jc.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%EPT.EPT.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                            <campo name="clave_presupuestal" calc="%consultar_n_n_jc.consultar_n_n_jc.clave_presupuestaria_importa%" />
+                            <!--  8.2.3.0.0.01 -->
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                                                                  '2'+%obSeparador.obSeparador.caracter%+
+                                                                                  '3'+%obSeparador.obSeparador.caracter%+
+                                                                                  '0'+%obSeparador.obSeparador.caracter%+
+                                                                                  '0'+%obSeparador.obSeparador.caracter%+
+                                                                                  '01')" />
+                            <campo name="importe_cargo" calc="%consultar_n_n_jc.consultar_n_n_jc.monto%" />
+                            <campo name="concepto_bloque" calc="@ifThenElse(%inParam.inParam.tipo_adecuacion%==1,'AMPLIACIÓN LÍQUIDA',@ifThenElse(%inParam.inParam.tipo_adecuacion%==2,'REDUCCIÓN LÍQUIDA', 'TRASPASO'))" />
+                            
+                            <!--  8.2.3.0.0.01 -->
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables WHERE clave_cuenta ='+'\\''+%clave_cuenta_contable%+'\\'','descripcion','string','MAGNITUS')" />
+                            <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                            <campo name="ultimo_usuario_modificador" calc="%filtrarUsuario.filtrarUsuario.id_usuario%" />
+                            <campo name="tipo_detalle" calc="1" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        <nivel nombre="consultar_n_n_v" id="consultar_n_n_v" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true">
+            <componente tipo="cursor" nombre="consultar_n_n_v" id="consultar_n_n_v">
+                <tabla schema="operation" nombre="origen_destino_n_n">
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%inParam.inParam.id_adecuacion%" />
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%inParam.inParam.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%inParam.inParam.periodo%" />
+                    <campo name="id_origen_destino_n_n" />
+                    <campo name="tipo" />
+                    <campo name="mes" />
+                    <campo name="monto" />
+                    <campo name="clave_presupuestaria_importa" />
+                </tabla>
+       
+                <!-- DETALLE DONDE ESTABA EL ERROR -->
+                <nivel id="ACPT" nombre="Alta Cargo Presupuestal Traspaso" interactivo="false" ejecutar="%consultar_n_n_v.consultar_n_n_v.tipo%=='A' OR %consultar_n_n_jc.consultar_n_n_jc.tipo%=='AL'">
+                    <componente id="ACPT" nombre="Alta Detalle Cargo Adecuación" tipo="altaDirect">
+                        <tabla schema="operation" nombre="detalle_movimientos_auxiliares">
+                            <campo name="ur" calc="%consultar_n_n_v.consultar_n_n_v.ur%" />
+                            <campo name="id_periodo" calc="%consultar_n_n_v.consultar_n_n_v.periodo%" />
+                            <campo name="id_movimiento_auxiliar" calc="%EPT.EPT.folio_movimiento_auxiliar%" />
+                            <campo name="id_detalle_movimiento_auxiliar" generacion="@prox()+1" autogenerado="true" />
+                            <campo name="clave_presupuestal" calc="%consultar_n_n_v.consultar_n_n_v.clave_presupuestaria_importa%" />
+                        
+                            <!--  8.2.2.0.0.01 -->
+                            <campo name="clave_cuenta_contable" calc="@concatenar('8'+%obSeparador.obSeparador.caracter%+
+                                                                                  '2'+%obSeparador.obSeparador.caracter%+
+                                                                                  '2'+%obSeparador.obSeparador.caracter%+
+                                                                                  '0'+%obSeparador.obSeparador.caracter%+
+                                                                                  '0'+%obSeparador.obSeparador.caracter%+
+                                                                                  '01')" />
+                            <campo name="importe_abono" calc="%consultar_n_n_v.consultar_n_n_v.monto%" />
+                            <campo name="concepto_bloque" calc="@ifThenElse(%inParam.inParam.tipo_adecuacion%==1,'AMPLIACIÓN LÍQUIDA',@ifThenElse(%inParam.inParam.tipo_adecuacion%==2,'REDUCCIÓN LÍQUIDA', 'TRASPASO'))" />
+                        
+                            <!--  8.2.2.0.0.01 -->
+                            <campo name="referencia" calc="@consultaDirec('SELECT descripcion FROM catalog.cuentas_contables WHERE clave_cuenta = '+'\\''+%clave_cuenta_contable% +'\\'','descripcion','string','MAGNITUS')" />
+                            <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                            <campo name="ultimo_usuario_modificador" calc="%filtrarUsuario.filtrarUsuario.id_usuario%" />
+                            <campo name="tipo_detalle" calc="1" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        
+        <nivel id="nlPolizaAdecuacionTraspaso" nombre="Poliza de Adecuación de Traspaso" mostrarNivelAnterior="false" mostrarProximoNivel="true"  ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true">
+            <componente id="cpPolizaAdecuacionAmpLiqud" nombre="Póliza de Adecuación de Ampliación Líquida" tipo="reporte">
+                <reporte nombre="polizacontable">
+                    <campo name="ur" local="true" type="long" calc="1"/>
+                    <campo name="periodo" local="true" type="long" calc="$inParam.periodo$"/> 
+                    <campo name="folio_movimiento_auxiliar" local="true" type="long" calc="%EPT.EPT.folio_movimiento_auxiliar%"/>
+                    <campo name="usuario" local="true" type="string" calc="%filtrarUsuario.filtrarUsuario.nombre_usuario%"/>
+                </reporte>
+            </componente>
+         </nivel>
+           
+        <nivel nombre="negociaInstanciaMensaje" id="negociaInstanciaMensaje" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==false">
+            <componente tipo="solicitud" nombre="Enlace con dynamo" id="negociaInstanciaMensaje">
+                <parametros url="$config.request$" metodo="POST" accion="negociarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="'10629f1f-b6ef-45e8-8eb0-9fd2a4e61438'"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                    <parametro name="message" calc="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.observaciones%" mostrarEsc="true"/>
+                    <parametro name="reiniciarInstancia" calc="'true'"/>
+                </parametros>
+            </componente>
+        </nivel>
+        
+        <nivel id="terminarInstancia" nombre="terminarInstancia" interactivo="false" ejecutar="%nlAutAdecPresuEgre.cpAutAdecPresuEgre.autorizar%==true">
+            <componente id="terminarInstancia" nombre="terminarInstancia" tipo="solicitud">
+                <parametros url="$config.request$" metodo="POST" accion="terminarInstancia" tipo="json">
+                    <parametro name="enterprise" calc="$protocolarios.enterprise$"/>
+                    <parametro name="process" calc="'10629f1f-b6ef-45e8-8eb0-9fd2a4e61438'"/>
+                    <parametro name="version" calc="$protocolarios.version$"/>
+                    <parametro name="instance" calc="$protocolarios.instance$"/>
+                    <parametro name="user" calc="$protocolarios.user$"/>
+                    <parametro name="url" calc="$protocolarios.url$"/>
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+ </tarea>

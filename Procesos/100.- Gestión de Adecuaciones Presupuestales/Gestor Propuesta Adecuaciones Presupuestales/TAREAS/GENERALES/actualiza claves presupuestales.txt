@@ -1,0 +1,50 @@
+<tarea nombre="actualiza claves presuppuestales" >
+    <pagina id="1">
+        
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+         <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+            <tabla schema="catalog" nombre="periodo">
+               <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+               <campo name="id_periodo" />
+               <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true" />
+               <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" />
+            </tabla>
+         </componente>
+      </nivel>
+      
+        <nivel nombre="nlbarreclave" id="nlbarreclave" interactivo="false">
+            <componente tipo="cursor" nombre="cpbarreclave" id="cpbarreclave" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="id_unidad_responsable" />
+                    <campo name="fondo_contable"  />
+                    <campo name="clave_presupuestal" />
+                </tabla>
+            
+            <nivel nombre="bn" id="bn" interactivo="false" ejecutar="@consultaDirec('SELECT COUNT (*) &gt; 0 as encontrado FROM operation.aux_n_n WHERE clave_pre= '+'\\''+%nlbarreclave.cpbarreclave.clave_presupuestal%+'\\'','encontrado','bool','MAGNITUS')==false and %nlbarreclave.cpbarreclave.clave_presupuestal%!=null" >
+               <componente tipo="altaDirect" id="bn" >
+                  <tabla schema="operation" nombre="aux_n_n">
+                     <campo name="id_aux_n_n" autogenerado="true" generacion="@prox()+1" />
+                     <campo name="clave_pre" calc="%nlbarreclave.cpbarreclave.clave_presupuestal%" />
+                     <campo name="periodo" calc="%nlbarreclave.cpbarreclave.id_periodo%" />
+                     <campo name="ur" calc="%nlbarreclave.cpbarreclave.id_unidad_responsable%" />
+                     <campo name="fondo_contable" calc="%nlbarreclave.cpbarreclave.fondo_contable%" />
+                  </tabla>
+               </componente>
+            </nivel>
+         </componente>
+      </nivel>
+      <nivel nombre="actualiza claves" id="actclapres" mostrarNivelAnterior="false" mostrarProximoNivel="false">
+             <componente id="ActualizaClaves" nombre="actualiza claves" tipo="formulario" accionDefault="seleccionar">
+                    <tabla schema="catalog" nombre="dummy">
+                        <campo name="id" visible="false" />
+                        <etiqueta nombre="Información" texto="se han actualizado las claves presupuestales" color="black" bold="normal" tamaño="20px" alineacion="center" interlineado="25px" width="500px" columnas="10"/>
+            </tabla>
+            <estilos>
+               <boton nombre="grabar" texto="terminar" visible="false" columnas="10"  />
+            </estilos>
+            
+            </componente>
+      </nivel>
+    </pagina>
+</tarea>

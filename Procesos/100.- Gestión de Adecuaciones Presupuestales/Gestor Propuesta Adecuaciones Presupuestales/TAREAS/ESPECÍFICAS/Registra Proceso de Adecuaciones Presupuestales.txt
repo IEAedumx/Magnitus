@@ -1,0 +1,237 @@
+<tarea nombre="Registra Proceso de Adecuaciones Presupuestales" autor="Juan Carlos">
+    <pagina nombre="Registra Proceso de Adecuaciones Presupuestales" id="1">
+        <!--Log usuario-->
+        <nivel nombre="filtraUsuario" id="filtraUsuario" interactivo="false">
+            <componente tipo="cursor" nombre="filtraUsuario" id="filtraUsuario" accionDefault="seleccionar">
+                <tabla schema="entity" nombre="usuario">
+                   <campo name="id_usuario" text="id_usuario" />
+                   <campo name="nombre_usuario" text="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!--Log usuario-->
+        <!-- cacha parametros -->
+        <nivel id="cachaParametros" nombre="Cacha Parámetros" interactivo="false">
+            <componente id="cachaParametros" nombre="Cacha Parámetros" tipo="cursor">
+                <tabla schema="catalog" nombre="dummy">
+                   <campo name="id" filtroCampo="id" filtroOperador="=" filtroValor="1" visible="false" />
+                   <campo name="ur" local="true" type="string" calc="$inParam.ur$" />
+                   <campo name="periodo" local="true" type="string" calc="$inParam.periodo$" />
+                   <campo name="id_adecuacion" local="true" type="string" calc="$inParam.id_adecuacion$" />
+                   <campo name="tipo_adecuacion" local="true" type="long" calc="$inParam.tipo_adecuacion_presupuestaria$" />
+                   <campo name="id_fondo_contable" local="true" type="string" calc="$inParam.id_fondo_contable$" />
+                   <campo name="fondo_contable" local="true" type="string" calc="$inParam.fondo_contable$" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!-- cacha parametros -->
+        
+        <!--AMPLIACIONES/REDUCCIONES-->
+        <nivel nombre="Registra Proceso de Ampliaciones/Reducciones Presupuestales del Egreso" id="registraAdecuacionA" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%cachaParametros.cachaParametros.tipo_adecuacion%!=3">
+            <componente tipo="formulario" nombre="Descarga del Layout" id="layaut">
+                <tabla schema="catalog" nombre="dummy">
+                   <campo name="id" text="id" columna-visible="false" autogenerado="true" generacion="@prox()+1" importacion="true" visible="false" />
+                   <etiqueta nombre="Información" texto="&lt;a href=&quot;https://drive.google.com/uc?export=download&amp;id=1mNhyxtQpwn385V3RzFyL0GWTtyxlOpzb&quot; download=&quot;Layout Amp-Red&quot; &gt;Descargar Layout&lt;/a&gt;" color="black" bold="normal" columnas="10" tamaño="20px" alineacion="center" interlineado="25px" width="500px" />
+                </tabla>
+                <estilos>
+                   <boton nombre="grabar" texto="Continuar" visible="false" />
+                </estilos>
+            </componente>
+            <componente id="registraAdecuacionA" nombre="Ampliaciones/Reducciones" tipo="tabla" mostrarEliminar="true" mostrarAgregar="true" mostrarEditar="true" mostrarImportacion="true">
+                <tabla schema="operation" nombre="origen_destino_n_n">
+                    <campo name="ur" text="ur" columna-visible="false" calc="$inParam.ur$" importacion="true" visible="false" />
+                    <campo name="periodo" text="Periodo" columna-visible="false" calc="$inParam.periodo$" columnas="2" columnaImportacion="periodo" columnaImportacionVisible="true" importacion="true" visible="false" validacionImportacion="@ifThenElse(%periodo%=='', true, false)" validacionImportacionMensaje="COLUMNA PERIODO VACIA" />
+                    <campo name="id_origen_destino_n_n" text="ID Adecuación" autogenerado="true" generacion="@prox()+1" importacion="true" visible="false" width="115" />
+                    <campo name="id_adecuacion" text="id_adecuacion" columna-visible="false" calc="$inParam.id_adecuacion$" importacion="true" columnas="2" margen-izquierdo="2" visible="false" />
+                    
+                    <campo name="clave_presupuestaria" text="Clave Presupuestal Manual" llaveForanea="true" descripcionForanea="clave_pre" descripcionForaneaTabla="clave_pre" autoFiltrado="true" autoFiltradoDescripcion="clave_pre" columnas="8" margen-izquierdo="1" margen-derecho="1" columna-visible="false" validacion="%clave_presupuestaria%==null" validacionMensaje="Ingrese la Clave Presupuestal" llavesDinamicas="'fondo_contable=\\''+%cachaParametros.cachaParametros.fondo_contable%+'\\''" />
+                   
+                    <campo name="clave_presupuestaria_importa" text="Clave Presupuestal" width="250" columnas="3" margen-izquierdo="1" importacion="true" columnaImportacion="clave_presupuestal" columnaImportacionVisible="true" validacionImportacion="@ifThenElse(%clave_presupuestal%==null, true, @ifThenElse(@consultaDirec('SELECT COUNT(*)&gt;0 AS encontrado FROM operation.presupuesto_egresos_det WHERE id_periodo='+$inParam.periodo$+' AND clave_presupuestal IN ('+'\\''+%clave_presupuestal%+'\\''+')','encontrado','bool','MAGNITUS')==false, true, @ifThenElse(@subCadena(%clave_presupuestal%,6,9)!=%cachaParametros.cachaParametros.fondo_contable%, true, false)))" validacionImportacionMensaje="COLUMNA CLAVE PRESUPUESTAL VACIA O CLAVE PRESUPUESTAL INVÁLIDA" calcCliente="@ifThenElse(%clave_presupuestaria%!='',@consultaDirec('select clave_pre from operation.aux_n_n where id_aux_n_n='+%clave_presupuestaria%,'clave_pre','string','MAGNITUS'),%clave_presupuestaria_importa%)" visible="false" />
+                    
+                    <campo name="Enero" text="Enero" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 1','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-izquierdo="1" />
+                    <campo name="Febrero" text="Febrero" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 2','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Marzo" text="Marzo" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 3','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Abril" text="Abril" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 4','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-derecho="1" />
+                    
+                    <campo name="Mayo" text="Mayo" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 5','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-izquierdo="1" />
+                    <campo name="Junio" text="Junio" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 6','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Julio" text="Julio" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 7','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Agosto" text="Agosto" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 8','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-derecho="1" />
+                    
+                    <campo name="Septiembre" text="Septiembre" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 9','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-izquierdo="1" />
+                    <campo name="Octubre" text="Octubre" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 10','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Noviembre" text="Noviembre" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 11','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Diciembre" text="Diciembre" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible FROM operation.presupuesto_egresos_mes_det WHERE id_periodo = '+$inParam.periodo$+' AND clave_presupuestal = (SELECT clave_pre FROM operation.aux_n_n WHERE id_aux_n_n = '+%clave_presupuestaria%+') AND mes = 12','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-derecho="1" />
+                    
+                    <campo name="v1" text="v1" local="true" type="bool" visible="false" validacion="%mes%==1 and %monto%&gt;%Enero% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Enero" columna-visible="false" />
+                    <campo name="v2" text="v2" local="true" type="bool" visible="false" validacion="%mes%==2 and %monto%&gt;%Febrero% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Febrero" columna-visible="false" />
+                    <campo name="v3" text="v1" local="true" type="bool" visible="false" validacion="%mes%==3 and %monto%&gt;%Marzo% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Marzo" columna-visible="false" />
+                    <campo name="v4" text="v2" local="true" type="bool" visible="false" validacion="%mes%==4 and %monto%&gt;%Abril% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Abril" columna-visible="false" />
+                    <campo name="v5" text="v2" local="true" type="bool" visible="false" validacion="%mes%==5 and %monto%&gt;%Mayo% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Mayo" columna-visible="false" />
+                    <campo name="v6" text="v2" local="true" type="bool" visible="false" validacion="%mes%==6 and %monto%&gt;%Junio% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Junio" columna-visible="false" />
+                    <campo name="v7" text="v2" local="true" type="bool" visible="false" validacion="%mes%==7 and %monto%&gt;%Julio% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Julio" columna-visible="false" />
+                    <campo name="v8" text="v2" local="true" type="bool" visible="false" validacion="%mes%==8 and %monto%&gt;%Agosto% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Agosto" columna-visible="false" />
+                    <campo name="v9" text="v2" local="true" type="bool" visible="false" validacion="%mes%==9 and %monto%&gt;%Septiembre% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Septiembre" columna-visible="false" />
+                    <campo name="v10" text="v2" local="true" type="bool" visible="false" validacion="%mes%==10 and %monto%&gt;%Octubre% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Octubre" columna-visible="false" />
+                    <campo name="v11" text="v2" local="true" type="bool" visible="false" validacion="%mes%==11 and %monto%&gt;%Noviembre% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Noviembre" columna-visible="false" />
+                    <campo name="v12" text="v2" local="true" type="bool" visible="false" validacion="%mes%==12 and %monto%&gt;%Diciembre% and %tipo%=='RL'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Diciembre" columna-visible="false" />
+                    
+                    <campo name="tipo" text="Tipo" calcCliente="@ifThenElse(%cachaParametros.cachaParametros.tipo_adecuacion%==1,'AL','RL')" width="50" importacion="true" columnaImportacion="tipo" columnaImportacionVisible="true" columnas="8" margen-izquierdo="1" margen-derecho="1" validacionImportacion="@ifThenElse(%tipo%==null, true, @ifThenElse(%cachaParametros.cachaParametros.tipo_adecuacion%==1 AND %tipo%!='AL',true, @ifThenElse(%cachaParametros.cachaParametros.tipo_adecuacion%==2 AND %tipo%!='RL',true,false)))" validacionImportacionMensaje="COLUMNA TIPO DE ADECUACIÓN VACIA O REGISTRO DE OTRO TIPO DE ADECUACION" validacion="%tipo%==null" validacionMensaje="Seleccione el tipo de adecuacion">
+                        <opciones>
+                            <opcion texto="Ampliación" valor="AL" />
+                            <opcion texto="Reducción" valor="RL" />
+                        </opciones>
+                    </campo>
+                    
+                    <campo name="mes" text="Mes" columna-visible="false" importacion="true" columnaImportacion="mes" columnaImportacionVisible="true" columnas="8" margen-izquierdo="1" margen-derecho="1" validacionImportacion="@ifThenElse(%mes%==null, true, false)" validacionImportacionMensaje="COLUMNA MES VACIA" validacion="%mes%==null" validacionMensaje="Seleccione el mes de la adecuación" >
+                        <opciones>
+                            <opcion texto="Enero" valor="1" />
+                            <opcion texto="Febrero" valor="2" />
+                            <opcion texto="Marzo" valor="3" />
+                            <opcion texto="Abril" valor="4" />
+                            <opcion texto="Mayo" valor="5" />
+                            <opcion texto="Junio" valor="6" />
+                            <opcion texto="Julio" valor="7" />
+                            <opcion texto="Agosto" valor="8" />
+                            <opcion texto="Septiembre" valor="9" />
+                            <opcion texto="Octubre" valor="10" />
+                            <opcion texto="Noviembre" valor="11" />
+                            <opcion texto="Diciembre" valor="12" />
+                        </opciones>
+                    </campo>
+                    
+                    <campo name="nombre_mes" text="Mes" visible="false" width="110" importacion="true" columnaImportacion="nombre_mes" calcCliente="@ifThenElse(%mes%==1,'Enero',@ifThenElse(%mes%==2,'Febrero',@ifThenElse(%mes%==3,'Marzo',@ifThenElse(%mes%==4,'Abril',@ifThenElse(%mes%==5,'Mayo',@ifThenElse(%mes%==6,'Junio',@ifThenElse(%mes%==7,'Julio',@ifThenElse(%mes%==8,'Agosto',@ifThenElse(%mes%==9,'Septiembre',@ifThenElse(%mes%==10,'Octubre',@ifThenElse(%mes%==11,'Noviembre',@ifThenElse(%mes%==12,'Diciembre',''))))))))))))" />
+                                                                                                                                
+                    <campo name="monto" text="Monto" width="130" columnaImportacion="monto" columnaImportacionVisible="true" columnas="8" margen-izquierdo="1" margen-derecho="1" importacion="true" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" validacionImportacion="@ifThenElse(%tipo%=='RL',@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' AND clave_presupuestal='+'\\''+%clave_presupuestal%+'\\''+' AND mes='+%mes%,'disponible','long','MAGNITUS')&lt;@castTo(%monto%,'long'),false)" validacionImportacionMensaje="El monto de la adecuacion excede el disponible" validacion="%monto%==0.00" validacionMensaje="Ingrese el monto de la adecuación" />
+                    
+                    <campo name="apliacion" text="Ampliación" width="130" columnaImportacion="ampliacion" columnaImportacionVisible="true" importacion="true" visible="false" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" calcCliente="@ifThenElse(%tipo%=='AL',%monto%,0.00)" />
+                    <campo name="reduccion" text="Reducción" width="130" columnaImportacion="reduccion" columnaImportacionVisible="true" importacion="true" visible="false" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" calcCliente="@ifThenElse(%tipo%=='RL',%monto%,0.00)" />
+                    
+                    <campo name="fondo_contable" text="Fondo Contable" calc="%cachaParametros.cachaParametros.fondo_contable%" importacion="true" columna-visible="false" visible="false" />
+                    <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" importacion="true" columna-visible="false" visible="false" />
+                </tabla>
+                <acciones>
+                   <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+                <validaciones>
+                   <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*)&gt;0 AS encontrado FROM operation.presupuesto_egresos_det WHERE id_periodo='+$inParam.periodo$+' AND clave_presupuestal IN (SELECT clave_presupuestaria_importa FROM operation.origen_destino_n_n WHERE periodo='+$inParam.periodo$+' AND id_adecuacion='+%registraAdecuacionA.registraAdecuacionA.id_adecuacion%+')','encontrado','bool','MAGNITUS')==false" validacionMensaje="'Clave(s) Inexistentes'" />
+                </validaciones>
+                <estilos>
+                   <boton nombre="grabar" visible="true" texto="Continuar" columnas="10" />
+                   <boton nombre="formulario" visible="true" texto="Continuar" columnas="8" margen-izquierdo="1" margen-derecho="1" />
+                </estilos>
+            </componente>
+        </nivel>
+        
+        <!--TRASPASOS-->
+        <nivel nombre="Registra Proceso de Traspasos Presupuestales del Egreso" id="registraAdecuacionT" mostrarProximoNivel="false" mostrarNivelAnterior="false" ejecutar="%cachaParametros.cachaParametros.tipo_adecuacion%==3">
+            <componente tipo="formulario" nombre="Descarga del Layout" id="layaut">
+                <tabla schema="catalog" nombre="dummy">
+                   <campo name="id" text="id" columna-visible="false" autogenerado="true" generacion="@prox()+1" importacion="true" visible="false" />
+                   <etiqueta nombre="Información" texto="&lt;a href=&quot;https://drive.google.com/uc?export=download&amp;id=1nEKSLucIKX15Wup6yE90bG7aQCZ2gFu7&quot; download=&quot;Layout Traspaso&quot; &gt;Descargar Layout&lt;/a&gt;" color="black" bold="normal" columnas="10" tamaño="20px" alineacion="center" interlineado="25px" width="500px" />
+                </tabla>
+                <estilos>
+                   <boton nombre="grabar" texto="Continuar" visible="false" />
+                   <boton nombre="formulario" texto="Continuar" visible="false" />
+                </estilos>
+            </componente>
+            <componente id="OrigenDestino" nombre="Origenes y Destinos" tipo="tabla" mostrarEliminar="true" mostrarAgregar="true" mostrarEditar="false" mostrarImportacion="true">
+                <tabla schema="operation" nombre="origen_destino_n_n">
+                    <campo name="id_origen_destino_n_n" text="id_origen_destino_n_n" columna-visible="false" autogenerado="true" generacion="@prox()+1" importacion="true" visible="false" />
+                    <campo name="id_adecuacion" text="id_adecuacion" columna-visible="false" calc="$inParam.id_adecuacion$" importacion="true" columnas="2" margen-izquierdo="2" visible="false" />
+                    <campo name="ur" text="ur" columna-visible="false" calc="$inParam.ur$" importacion="true" visible="false" />
+                    <campo name="periodo" text="Periodo" columna-visible="false" calc="$inParam.periodo$" columnas="2" columnaImportacion="periodo" columnaImportacionVisible="true" importacion="true" visible="false" validacionImportacion="@ifThenElse(%periodo%=='', true, false)" validacionImportacionMensaje="COLUMNA PERIODO VACIA" />
+                    <!--<campo name="clave_presupuestaria_importa" text="Clave Presupuestal Importación" columna-visible="true" columnas="3" margen-izquierdo="1" columnaImportacion="clave_presupuestal" columnaImportacionVisible="true" validacionImportacion="@ifThenElse(%clave_presupuestal%==null, true, false) " validacionImportacionMensaje="COLUMNA CLAVE PRESUPUESTAL VACIA" importacion="true" visible="false" />
+                    <campo name="clave_presupuestaria" text="Clave Presupuestal Manual" llaveForanea="true" descripcionForanea="clave_pre" descripcionForaneaTabla="clave_pre" autoFiltrado="false" autoFiltradoDescripcion="clave_pre" columnas="8" margen-izquierdo="1" margen-derecho="1" columna-visible="true" validacion="%clave_presupuestaria%==null" validacionMensaje="ingrese la clave Presupuestal" llavesDinamicas="'fondo_contable=\\''+%cachaParametros.cachaParametros.fondo_contable%+'\\''" />-->
+                   
+                    <campo name="clave_presupuestaria" text="Clave Presupuestal Manual" llaveForanea="true" descripcionForanea="clave_pre" descripcionForaneaTabla="clave_pre" autoFiltrado="false" autoFiltradoDescripcion="clave_pre" columnas="8" margen-izquierdo="1" margen-derecho="1" columna-visible="false" validacion="%clave_presupuestaria%==null" validacionMensaje="ingrese la clave Presupuestal" llavesDinamicas="'fondo_contable=\\''+%cachaParametros.cachaParametros.fondo_contable%+'\\''" />
+                   
+                    <campo name="clave_presupuestaria_importa" text="Clave Presupuestal" width="250" columnas="3" margen-izquierdo="1" columnaImportacion="clave_presupuestal" columnaImportacionVisible="true" validacionImportacion="@ifThenElse(%clave_presupuestal%==null, true, @ifThenElse(@consultaDirec('SELECT COUNT(*)&gt;0 AS encontrado FROM operation.presupuesto_egresos_det WHERE id_periodo='+$inParam.periodo$+' AND clave_presupuestal IN ('+'\\''+%clave_presupuestal%+'\\''+')','encontrado','bool','MAGNITUS')==false, true, @ifThenElse(@subCadena(%clave_presupuestal%,6,9)!=%cachaParametros.cachaParametros.fondo_contable%, true, false)))" validacionImportacionMensaje="COLUMNA CLAVE PRESUPUESTAL VACIA" importacion="true"  calcCliente="@ifThenElse(%clave_presupuestaria%!='',@consultaDirec('select clave_pre  from operation.aux_n_n where id_aux_n_n='+%clave_presupuestaria%,'clave_pre','string','MAGNITUS'),%clave_presupuestaria_importa%)" visible="false" />
+                    
+                    <campo name="Enero" text="Enero" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria% ) and mes=1','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-izquierdo="1" />
+                    <campo name="Febrero" text="Febrero" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible  from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%) and mes=2','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Marzo" text="Marzo" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=3','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Abril" text="Abril" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=4','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-derecho="1" />
+                    <campo name="Mayo" text="Mayo" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=5','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-izquierdo="1" />
+                    <campo name="Junio" text="Junio" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=6','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Julio" text="Julio" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=7','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Agosto" text="Agosto" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=8','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-derecho="1" />
+                    <campo name="Septiembre" text="Septiembre" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=9','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-izquierdo="1" />
+                    <campo name="Octubre" text="Octubre" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=10','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Noviembre" text="Noviembre" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT                     SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible                      from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal                     =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%                      ) and mes=11','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" />
+                    <campo name="Diciembre" text="Diciembre" local="true" type="long" columnas="2" calcCliente="@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' and clave_presupuestal =(select clave_pre from operation.aux_n_n where id_aux_n_n=%clave_presupuestaria%) and mes=12','disponible','long','MAGNITUS')" habilitado="false" columna-visible="false" margen-derecho="1" />
+                    <!--validacion-->
+                    <campo name="v1" text="v1" local="true" type="bool" visible="false" validacion="%mes%==1 and %monto% &gt;%Enero% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Enero" columna-visible="false" />
+                    <campo name="v2" text="v2" local="true" type="bool" visible="false" validacion="%mes%==2 and %monto%&gt;%Febrero% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Febrero" columna-visible="false" />
+                    <campo name="v3" text="v1" local="true" type="bool" visible="false" validacion="%mes%==3 and %monto% &gt;%Marzo% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Marzo" columna-visible="false" />
+                    <campo name="v4" text="v2" local="true" type="bool" visible="false" validacion="%mes%==4 and %monto% &gt;%Abril% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Abril" columna-visible="false" />
+                    <campo name="v5" text="v2" local="true" type="bool" visible="false" validacion="%mes%==5 and %monto% &gt;%Mayo% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Mayo" columna-visible="false" />
+                    <campo name="v6" text="v2" local="true" type="bool" visible="false" validacion="%mes%==6 and %monto% &gt;%Junio% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Junio" columna-visible="false" />
+                    <campo name="v7" text="v2" local="true" type="bool" visible="false" validacion="%mes%==7 and %monto% &gt;%Julio% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Julio" columna-visible="false" />
+                    <campo name="v8" text="v2" local="true" type="bool" visible="false" validacion="%mes%==8 and %monto% &gt;%Agosto% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Agosto" columna-visible="false" />
+                    <campo name="v9" text="v2" local="true" type="bool" visible="false" validacion="%mes%==9 and %monto% &gt;%Septiembre% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Septiembre" columna-visible="false" />
+                    <campo name="v10" text="v2" local="true" type="bool" visible="false" validacion="%mes%==10 and %monto% &gt;%Octubre% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Octubre" columna-visible="false" />
+                    <campo name="v11" text="v2" local="true" type="bool" visible="false" validacion="%mes%==11 and %monto% &gt;%Noviembre% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Noviembre" columna-visible="false" />
+                    <campo name="v12" text="v2" local="true" type="bool" visible="false" validacion="%mes%==12 and %monto% &gt;%Diciembre% and %tipo%=='R'" validacionMensaje="Cuentas con presupuesto insuficiente en el Mes de Diciembre" columna-visible="false" />
+                    <!--validacion-->
+                    <campo name="tipo" text="Tipo" width="50" importacion="true" columnaImportacion="tipo" columnas="8" margen-izquierdo="1" margen-derecho="1" validacionImportacion="@ifThenElse(%tipo%==null, true, false)" validacionImportacionMensaje="COLUMNA TIPO DE ADECUACIÓN VACIA" columnaImportacionVisible="true" validacion="%tipo%==null" validacionMensaje="Seleccione el tipo de adecuacion">
+                        <opciones>
+                            <opcion texto="Ampliacion" valor="A" />
+                            <opcion texto="Reduccion" valor="R" />
+                        </opciones>
+                    </campo>
+                    <campo name="mes" text="Mes" columna-visible="false" columnaImportacion="mes"  columnaImportacionVisible="true" importacion="true" columnas="8" margen-izquierdo="1" margen-derecho="1" validacion="%mes%==null" validacionMensaje="Seleccione el mes de la adecuación" validacionImportacion="@ifThenElse(%mes%==null, true, false)" validacionImportacionMensaje="COLUMNA MES VACIA">
+                        <opciones>
+                            <opcion texto="Enero" valor="1" />
+                            <opcion texto="Febrero" valor="2" />
+                            <opcion texto="Marzo" valor="3" />
+                            <opcion texto="Abril" valor="4" />
+                            <opcion texto="Mayo" valor="5" />
+                            <opcion texto="Junio" valor="6" />
+                            <opcion texto="Julio" valor="7" />
+                            <opcion texto="Agosto" valor="8" />
+                            <opcion texto="Septiembre" valor="9" />
+                            <opcion texto="Octubre" valor="10" />
+                            <opcion texto="Noviembre" valor="11" />
+                            <opcion texto="Diciembre" valor="12" />
+                        </opciones>
+                    </campo>
+                    <!--Compo importacion-->
+                    <campo name="nombre_mes" text="Mes" width="110" visible="false" importacion="true" columnaImportacion="nombre_mes"  columna-visible="true" calcCliente="@ifThenElse(%mes%==1,'Enero',@ifThenElse(%mes%==2,'Febrero',@ifThenElse(%mes%==3,'Marzo',@ifThenElse(%mes%==4,'Abril',@ifThenElse(%mes%==5,'Mayo',@ifThenElse(%mes%==6,'Junio',@ifThenElse(%mes%==7,'Julio',@ifThenElse(%mes%==8,'Agosto',@ifThenElse(%mes%==9,'Septiembre',@ifThenElse(%mes%==10,'Octubre',@ifThenElse(%mes%==11,'Noviembre',@ifThenElse(%mes%==12,'Diciembre',''))))))))))))" />
+                    <!-- <campo name="monto" text="Monto" columna-visible="false" columnaImportacion="monto" columnaImportacionVisible="true" columnas="8" margen-izquierdo="1" margen-derecho="1" importacion="true" muestraAcumulado="true" formatoMoneda="true" validacionImportacion=" @consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' AND clave_presupuestal='+'\\''+%clave_presupuestal%+'\\''+' AND mes='+%mes%,'disponible','long','MAGNITUS')&#60;@castTo(%monto%,'long') " validacionImportacionMensaje="el monto de la adecuacion excede el disponible" validacion="%monto%==0.00" validacionMensaje="ingrese el monto de la adecuación" />
+                    -->
+                    <campo name="monto" text="Monto" width="130" columnaImportacion="monto" columnaImportacionVisible="true" columnas="8" margen-izquierdo="1" margen-derecho="1" importacion="true" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" validacionImportacion="@ifThenElse(%tipo%=='R',@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' AND clave_presupuestal='+'\\''+%clave_presupuestal%+'\\''+' AND mes='+%mes%,'disponible','long','MAGNITUS')&lt;@castTo(%monto%,'long'),false)" validacionImportacionMensaje="el monto de la adecuacion excede el disponible" validacion="%monto%==0.00" validacionMensaje="ingrese el monto de la adecuación" />
+                    <!--
+                    -->
+                    <campo name="apliacion" text="Ampliación" width="130" columnaImportacion="ampliacion" columnaImportacionVisible="true" importacion="true" visible="false" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" calcCliente="@ifThenElse(%tipo%=='A',%monto%,0.00)" />
+                    <campo name="reduccion" text="Reducción" width="130" columnaImportacion="reduccion" columnaImportacionVisible="true" importacion="true" visible="false" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" calcCliente="@ifThenElse(%tipo%=='R',%monto%,0.00)" />
+                    <campo name="fecha_registro" text="fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" importacion="true" columna-visible="false" visible="false" columnas="6" margen-izquierdo="2" />
+                </tabla>
+                <acciones>
+                   <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+                <validaciones>
+                   <validacion tipo="avanzar" validacion="@consultaDirec('select COUNT(*) &gt; 0 encontrado from operation.origen_destino_n_n where (select sum(monto) from operation.origen_destino_n_n where tipo like  \\'A\\' and id_adecuacion= '+$inParam.id_adecuacion$+' and ur= '+$inParam.ur$+' and periodo= '+$inParam.periodo$+')= (select sum(monto) from operation.origen_destino_n_n where tipo like \\'R\\' and id_adecuacion= '+$inParam.id_adecuacion$+' and ur= '+$inParam.ur$+' and periodo = '+$inParam.periodo$+')','encontrado','bool','MAGNITUS')==false" validacionMensaje="'Las Cantidades no Coinciden'" />
+                   <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*)&gt;0 AS encontrado FROM operation.presupuesto_egresos_det WHERE id_periodo='+$inParam.periodo$+' AND clave_presupuestal IN (SELECT clave_presupuestaria_importa FROM operation.origen_destino_n_n WHERE periodo='+$inParam.periodo$+' AND id_adecuacion='+%registraAdecuacionA.registraAdecuacionA.id_adecuacion%+')','encontrado','bool','MAGNITUS')==false" validacionMensaje="'Clave(s) Inexistentes'" />
+                </validaciones>
+                <estilos>
+                   <boton nombre="grabar" visible="true" texto="Continuar" columnas="10" />
+                   <boton nombre="formulario" visible="true" texto="Continuar" columnas="8" margen-izquierdo="1" margen-derecho="1" />
+                </estilos>
+            </componente>
+        </nivel>
+        
+        <nivel nombre="turnarInstancia" id="tI" interactivo="false">
+            <componente tipo="solicitud" nombre="" id="tI">
+                <parametros url="$config.request$" metodo="POST" accion="turnarInstancia" tipo="json">
+                   <parametro name="enterprise" calc="$protocolarios.enterprise$" />
+                   <parametro name="process" calc="'10629f1f-b6ef-45e8-8eb0-9fd2a4e61438'"/>
+                   <parametro name="version" calc="$protocolarios.version$" />
+                   <parametro name="instance" calc="$protocolarios.instance$" />
+                   <parametro name="user" calc="$protocolarios.user$" />
+                   <parametro name="url" calc="$protocolarios.url$" />
+                </parametros>
+            </componente>
+        </nivel>
+    </pagina>
+</tarea>

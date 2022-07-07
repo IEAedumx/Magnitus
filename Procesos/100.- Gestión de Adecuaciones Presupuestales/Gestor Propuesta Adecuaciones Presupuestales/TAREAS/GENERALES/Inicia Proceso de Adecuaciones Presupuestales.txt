@@ -1,0 +1,178 @@
+<tarea id="Genera Genera Instancia Propuesta Adecuaciones Presupuestales" autor="Juan Carlos">
+   <pagina id="1">
+        <!--Busca Periodo-->
+        <nivel id="buscaPeriodo" nombre="buscaPeriodo" interactivo="false">
+            <componente tipo="cursor" id="buscaPeriodo" nombre="buscaPeriodo">
+                <tabla schema="catalog" nombre="periodo">
+                    <campo name="id_unidad_responsable" filtroCampo="id_unidad_responsable" filtroOperador="=" filtroValor="$config.ur$" />
+                    <campo name="id_periodo" />
+                    <campo name="estatus" filtroCampo="estatus" filtroOperador="=" filtroValor="true" />
+                    <campo name="id_estatus" filtroCampo="id_estatus" filtroOperador="=" filtroValor="3" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!--Busca Periodo-->
+        <!--Log usuario-->
+        <nivel nombre="filtraUsuario" id="filtraUsuario" interactivo="false">
+            <componente tipo="cursor" nombre="filtraUsuario" id="filtraUsuario" accionDefault="seleccionar">
+                <tabla schema="entity" nombre="usuario">
+                    <campo name="nombre_usuario" text="nombre_usuario" filtroCampo="nombre_usuario" filtroOperador="=" filtroValor="$protocolarios.user$" />
+                    <campo name="id_usuario" text="id_usuario" />
+                    <campo name="nombre" text="nombre" />
+                    <campo name="primer_apellido" text="primer_apellido" />
+                    <campo name="segundo_apellido" text="segundo_apellido" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!--Log usuario-->
+        <!--Actualiza Claves Presupuestales-->
+        <nivel nombre="nlbarreclave" id="nlbarreclave" interactivo="false">
+            <componente tipo="cursor" nombre="cpbarreclave" id="cpbarreclave" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_unidad_responsable" />
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                    <campo name="clave_presupuestal" />
+                    <campo name="fondo_contable"  />
+                </tabla>
+            
+                <nivel nombre="bn" id="bn" interactivo="false" ejecutar="@consultaDirec('SELECT COUNT (*) &gt; 0 as encontrado FROM operation.aux_n_n WHERE clave_pre= '+'\\''+%nlbarreclave.cpbarreclave.clave_presupuestal%+'\\'','encontrado','bool','MAGNITUS')==false and %nlbarreclave.cpbarreclave.clave_presupuestal%!=null" >
+                   <componente tipo="altaDirect" id="bn" >
+                      <tabla schema="operation" nombre="aux_n_n">
+                         <campo name="ur" calc="%nlbarreclave.cpbarreclave.id_unidad_responsable%" />
+                         <campo name="periodo" calc="%nlbarreclave.cpbarreclave.id_periodo%" />
+                         <campo name="id_aux_n_n" autogenerado="true" generacion="@prox()+1" />
+                         <campo name="clave_pre" calc="%nlbarreclave.cpbarreclave.clave_presupuestal%" />
+                         <campo name="fondo_contable" calc="%nlbarreclave.cpbarreclave.fondo_contable%" />
+                      </tabla>
+                   </componente>
+                </nivel>
+            </componente>
+        </nivel>
+            
+        <!--Formulario-->
+        <nivel id="nlRegAdecPresuEgreA" nombre="Propuesta Adecuaciones Presupuestales" mostrarProximoNivel="false" mostrarNivelAnterior="false">
+            <componente id="cpDatGralAdec" nombre="Propuesta Adecuaciones Presupuestales" accionDefault="insertar" tipo="formulario">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" text="Unidad Responsable" calc="1" llaveForanea="false" visible="false" />
+                    
+                    <campo name="periodo" text="Periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" llaveForanea="false" habilitado="false" columnas="6" margen-izquierdo="2" />
+                    <campo name="id_fondo_contable" calc="3" visible="false" llaveForanea="false" />
+                    <campo name="fondo_contable" text="Fondo Contable" autoFiltrado="true" autoFiltradoDescripcion="id_cat,descripcion" validacion="%fondo_contable%==null" validacionMensaje="Seleccione un Fondo Contable" marcador="Seleccione un Fondo Contable" columnas="6" margen-derecho="2" margen-izquierdo="2" />
+                    <campo name="concepto" text="Concepto de la Adecuación" columnas="6" margen-derecho="2" margen-izquierdo="2" validacion="%concepto%==null" validacionMensaje="Escribe el Concepto" marcador="Escriba el Concepto de la Adecuación" />
+                    <campo name="id_adecuacion" autogenerado="true" generacion="@prox()+1" visible="false" />
+                    <campo name="tipo_adecuacion" text="Tipo de Adecuación" columnas="6" margen-izquierdo="2" margen-derecho="2" marcador="Seleccione el Tipo de Adecuación a Realizar" validacion="%tipo_adecuacion%==null" validacionMensaje="Debes seleccionar un Tipo de Adecuación"/>
+                    <campo name="estatus" calc="1" visible="false" />
+                    <campo name="fecha_registro" text="Fecha Registro" calc="@fechaSistema(&quot; YYYY/MM/dd HH:mm:ss&quot;)" habilitado="false" columnas="6" margen-derecho="2" margen-izquierdo="2" />
+                    <campo name="id_cat_centro_registro" calc="2" visible="false" llaveForanea="false" />
+                    <campo name="centro_registro" text="Centro de Registro Solicitante" calc="3.338" habilitado="false" columnas="6" margen-derecho="2" margen-izquierdo="2" marcador="Seleccione un Centro de Registro" validacion="%centro_registro%==null" validacionMensaje="Seleccione Centro de Registro"/> <!--habilitado="%barreUsuarios.barreUsuarios.permisos_especiales%==true"-->
+                    <campo name="importe_total" calc="0.00" visible="false" />
+                    <!--<campo name="documentacion" text="Documentación" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Documento'" grupo="%id_adecuacion%" expediente="Expediente de Adecuaciones al Presupuesto de Egresos Aprobado" columnas="6" margen-derecho="2" margen-izquierdo="2" />-->
+                    <!-- <campo name="documentacion" text="Documentación" local="true" type="file" update="true" fileType="normal" url="$config.repository_upload_file$" nombreDocumento="'Documento'" grupo="%id_adecuacion%"  columnas="6" margen-derecho="2" margen-izquierdo="2" />-->
+                    <campo name="documentacion" text="Documentación" local="true" type="file" update="true" url="$config.repository_upload_file$" nombreDocumento="'doc'" grupo="'%id_adecuacion%'" expediente="Traspasoss" fileType="normal" columnas="6" margen-derecho="2" margen-izquierdo="2"/>
+                  
+                </tabla>
+                <estilos>
+                    <boton nombre="grabar" texto="Crear Instancia" margen-izquierdo="2" columnas="6" margen-derecho="2" />
+                </estilos>
+                <acciones>
+                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
+                </acciones>
+            </componente>
+        </nivel>
+      
+        <!--Formulario-->
+        <nivel id="nlBarreAdecuacionEgreso" nombre="BarreAdecuacionEgreso" interactivo="false">
+            <componente id="nlBarreAdecuacionEgreso" nombre="BarreAdecuacionEgreso" tipo="cursor">
+                <tabla schema="operation" nombre="adecuacion_presupuestaria_egreso">
+                    <campo name="ur" filtroCampo="ur" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" />
+                    <campo name="periodo" filtroCampo="periodo" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" />
+                    <campo name="id_adecuacion" filtroCampo="id_adecuacion" filtroOperador="=" filtroValor="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+                    <campo name="folio_adecuacion" visible="false" text="Folio Adecuación" calc="@concatenar(@ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==1, 'AL-',
+                                                                                            @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%==2, 'RL-',
+                                                                                            'T-')) + @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;10,'00000',
+                                                                                                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;100,'0000',
+                                                                                                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;1000,'000',
+                                                                                                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;10000,'00',
+                                                                                                    @ifThenElse(%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion% &lt;100000, '', ''))))) +
+                                                                                                    %nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%)"/>
+                </tabla>
+            </componente>
+        </nivel>
+      
+        <!--
+      
+        <nivel nombre="nlbarreclave" id="nlbarreclave" interactivo="false">
+            <componente tipo="cursor" nombre="cpbarreclave" id="cpbarreclave" accionDefault="seleccionar">
+                <tabla schema="operation" nombre="presupuesto_egresos_det">
+                    <campo name="id_periodo" filtroCampo="id_periodo" filtroOperador="=" filtroValor="$inParam.periodo$" />
+                    <campo name="id_unidad_responsable" />
+                    <campo name="fondo_contable"  />
+                    <campo name="clave_presupuestal" />
+                </tabla>
+            
+                <nivel nombre="bn" id="bn" interactivo="false" ejecutar="@consultaDirec('SELECT COUNT (*) &gt; 0 as encontrado FROM operation.aux_n_n WHERE clave_pre= '+'\\''+%nlbarreclave.cpbarreclave.clave_presupuestal%+'\\'','encontrado','bool','MAGNITUS')==false and %nlbarreclave.cpbarreclave.clave_presupuestal%!=null" >
+                    <componente tipo="altaDirect" id="bn" >
+                        <tabla schema="operation" nombre="aux_n_n">
+                            <campo name="id_aux_n_n" autogenerado="true" generacion="@prox()+1" />
+                            <campo name="clave_pre" calc="%nlbarreclave.cpbarreclave.clave_presupuestal%" />
+                            <campo name="periodo" calc="%nlbarreclave.cpbarreclave.id_periodo%" />
+                            <campo name="ur" calc="%nlbarreclave.cpbarreclave.id_unidad_responsable%" />
+                            <campo name="id_adecuacion" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" />
+                            <campo name="fondo_contable" calc="%nlbarreclave.cpbarreclave.fondo_contable%" />
+                        </tabla>
+                    </componente>
+                </nivel>
+            </componente>
+        </nivel>
+        -->
+      
+        <!--Bitacora-->
+        <nivel nombre="Bitácora" id="bicacora" interactivo="false">
+            <componente tipo="altaDirect" nombre="Bitácora" id="bicacora">
+                <tabla schema="public" nombre="bitacora">
+                    <campo name="id_bitacora" autogenerado="true" generacion="@prox()+1" />
+                    <campo name="usuario" calc="$protocolarios.user$" />
+                    <campo name="proceso" calc="'GESTIÓN DE ADECUACIONES AL PRESUPUESTO DE EGRESOS'" />
+                    <campo name="tarea" calc="'Tarea general. Generación de instancia'" />
+                    <campo name="observacion" calc="@concatenar('Se creó la instancia ')" />
+                    <campo name="fecha_registro" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" />
+                    <campo name="periodo" calc="%buscaPeriodo.buscaPeriodo.id_periodo%" />
+                </tabla>
+            </componente>
+        </nivel>
+        <!--Bitacora-->
+        <!--Instncia-->
+        <!--<nivel nombre="crearNuevaInstancia" id="cI" interactivo="false">
+            <componente tipo="solicitud" nombre="" id="cI">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json">
+                    <parametro name="enterprise" calc="'MAGNITUS'" />
+                    <parametro name="process" calc="'ab1daa70-985f-421c-a567-3234bd2442b4'" />
+                    <parametro name="user" calc="$protocolarios.user$" />
+                    <parametro name="out_ur" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" mostrarEsc="true" />
+                    <parametro name="out_periodo" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" mostrarEsc="true" />
+                    <parametro name="out_id_adecuacion" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" mostrarEsc="true" />
+                    <parametro name="out_id_fondo_contable" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_fondo_contable%" mostrarEsc="true" />
+                    <parametro name="out_fondo_contable" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.fondo_contable%" mostrarEsc="true" />
+                </parametros>
+            </componente>
+        </nivel>-->
+        <nivel nombre="crearNuevaInstancia" id="cI" interactivo="false">
+            <componente tipo="solicitud" nombre="" id="cI">
+                <parametros url="$config.request$" metodo="POST" accion="crearNuevaInstancia" tipo="json"> 
+                    <parametro name="enterprise" calc="'MAGNITUS'"/>
+                    <parametro name="process" calc="'10629f1f-b6ef-45e8-8eb0-9fd2a4e61438'"/>
+                    <parametro name="user" calc="$protocolarios.user$" mostrarEsc="false"/>
+                    <parametro name="out_ur" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.ur%" mostrarEsc="true" />
+                    <parametro name="out_periodo" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.periodo%" mostrarEsc="true" />
+                    <parametro name="out_id_adecuacion" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_adecuacion%" mostrarEsc="true" />
+                    <parametro name="out_folio_adecuacion" calc="%nlBarreAdecuacionEgreso.nlBarreAdecuacionEgreso.folio_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_tipo_adecuacion_presupuestaria" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.tipo_adecuacion%" mostrarEsc="false"/>
+                    <parametro name="out_centro_registro" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.centro_registro%" mostrarEsc="false"/>
+                    <parametro name="out_id_fondo_contable" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.id_fondo_contable%" mostrarEsc="true" />
+                    <parametro name="out_fondo_contable" calc="%nlRegAdecPresuEgreA.cpDatGralAdec.fondo_contable%" mostrarEsc="true" />
+                </parametros>
+            </componente>
+        </nivel>
+        <!--Instncia-->
+    </pagina>
+</tarea>
