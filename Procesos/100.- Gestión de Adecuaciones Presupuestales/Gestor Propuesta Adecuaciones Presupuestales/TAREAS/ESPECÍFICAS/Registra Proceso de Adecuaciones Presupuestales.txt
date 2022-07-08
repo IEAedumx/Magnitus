@@ -31,17 +31,17 @@
             <componente tipo="formulario" nombre="Descarga del Layout" id="layaut">
                 <tabla schema="catalog" nombre="dummy">
                    <campo name="id" text="id" columna-visible="false" autogenerado="true" generacion="@prox()+1" importacion="true" visible="false" />
-                   <etiqueta nombre="Información" texto="&lt;a href=&quot;https://drive.google.com/uc?export=download&amp;id=1mNhyxtQpwn385V3RzFyL0GWTtyxlOpzb&quot; download=&quot;Layout Amp-Red&quot; &gt;Descargar Layout&lt;/a&gt;" color="black" bold="normal" columnas="10" tamaño="20px" alineacion="center" interlineado="25px" width="500px" />
+                   <etiqueta nombre="Información" texto="&lt;a href=&quot;https://drive.google.com/uc?export=download&amp;id=1mNhyxtQpwn385V3RzFyL0GWTtyxlOpzb&amp;authuser=0&quot; download=&quot;Layout Amp-Red&quot; &gt;Descargar Layout&lt;/a&gt;" color="black" bold="normal" columnas="10" tamaño="20px" alineacion="center" interlineado="25px" width="500px" />
                 </tabla>
                 <estilos>
                    <boton nombre="grabar" texto="Continuar" visible="false" />
                 </estilos>
             </componente>
-            <componente id="registraAdecuacionA" nombre="Ampliaciones/Reducciones" tipo="tabla" mostrarEliminar="true" mostrarAgregar="true" mostrarEditar="true" mostrarImportacion="true">
+            <componente id="registraAdecuacionA" nombre="Ampliaciones/Reducciones" tipo="tabla" mostrarEliminar="true" mostrarAgregar="true" mostrarEditar="false" mostrarImportacion="true">
                 <tabla schema="operation" nombre="origen_destino_n_n">
                     <campo name="ur" text="ur" columna-visible="false" calc="$inParam.ur$" importacion="true" visible="false" />
                     <campo name="periodo" text="Periodo" columna-visible="false" calc="$inParam.periodo$" columnas="2" columnaImportacion="periodo" columnaImportacionVisible="true" importacion="true" visible="false" validacionImportacion="@ifThenElse(%periodo%=='', true, false)" validacionImportacionMensaje="COLUMNA PERIODO VACIA" />
-                    <campo name="id_origen_destino_n_n" text="ID Adecuación" autogenerado="true" generacion="@prox()+1" importacion="true" visible="false" width="115" />
+                    <campo name="id_origen_destino_n_n" text="ID Adecuación" autogenerado="true" generacion="@prox()+1" importacion="true" visible="false" columna-visible="false" />
                     <campo name="id_adecuacion" text="id_adecuacion" columna-visible="false" calc="$inParam.id_adecuacion$" importacion="true" columnas="2" margen-izquierdo="2" visible="false" />
                     
                     <campo name="clave_presupuestaria" text="Clave Presupuestal Manual" llaveForanea="true" descripcionForanea="clave_pre" descripcionForaneaTabla="clave_pre" autoFiltrado="true" autoFiltradoDescripcion="clave_pre" columnas="8" margen-izquierdo="1" margen-derecho="1" columna-visible="false" validacion="%clave_presupuestaria%==null" validacionMensaje="Ingrese la Clave Presupuestal" llavesDinamicas="'fondo_contable=\\''+%cachaParametros.cachaParametros.fondo_contable%+'\\''" />
@@ -104,8 +104,8 @@
                                                                                                                                 
                     <campo name="monto" text="Monto" width="130" columnaImportacion="monto" columnaImportacionVisible="true" columnas="8" margen-izquierdo="1" margen-derecho="1" importacion="true" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" validacionImportacion="@ifThenElse(%tipo%=='RL',@consultaDirec('SELECT SUM(presupuesto_autorizado+presupuesto_ampliacion-presupuesto_reduccion-presupuesto_precomprometido-presupuesto_comprometido) as disponible from operation.presupuesto_egresos_mes_det where id_periodo='+$inParam.periodo$+' AND clave_presupuestal='+'\\''+%clave_presupuestal%+'\\''+' AND mes='+%mes%,'disponible','long','MAGNITUS')&lt;@castTo(%monto%,'long'),false)" validacionImportacionMensaje="El monto de la adecuacion excede el disponible" validacion="%monto%==0.00" validacionMensaje="Ingrese el monto de la adecuación" />
                     
-                    <campo name="apliacion" text="Ampliación" width="130" columnaImportacion="ampliacion" columnaImportacionVisible="true" importacion="true" visible="false" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" calcCliente="@ifThenElse(%tipo%=='AL',%monto%,0.00)" />
-                    <campo name="reduccion" text="Reducción" width="130" columnaImportacion="reduccion" columnaImportacionVisible="true" importacion="true" visible="false" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" calcCliente="@ifThenElse(%tipo%=='RL',%monto%,0.00)" />
+                    <campo name="apliacion" text="Ampliación" width="130" columnaImportacion="ampliacion" columnaImportacionVisible="true" importacion="true" validacionImportacion="@ifThenElse(%tipo%=='AL' AND %monto%!=%ampliacion%, true, false)" validacionImportacionMensaje="VALORES DE LOS MONTO PARA LA AMPLIACIÓN DISTINTOS" visible="false" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" calcCliente="@ifThenElse(%tipo%=='AL',%monto%,0.00)" />
+                    <campo name="reduccion" text="Reducción" width="130" columnaImportacion="reduccion" columnaImportacionVisible="true" importacion="true" validacionImportacion="@ifThenElse(%tipo%=='RL' AND %monto%!=%reduccion%, true, false)" validacionImportacionMensaje="VALORES DE LOS MONTOS PARA LA REDUCCIÓN DISTINTOS" visible="false" muestraAcumulado="true" formatoMoneda="true" cellsalign="right" calcCliente="@ifThenElse(%tipo%=='RL',%monto%,0.00)" />
                     
                     <campo name="fondo_contable" text="Fondo Contable" calc="%cachaParametros.cachaParametros.fondo_contable%" importacion="true" columna-visible="false" visible="false" />
                     <campo name="fecha_registro" text="Fecha" calc="@fechaSistema(&quot;YYYY/MM/dd HH:mm:ss&quot;)" importacion="true" columna-visible="false" visible="false" />
@@ -113,9 +113,9 @@
                 <acciones>
                    <accion nombre="grabar" hacer="saltar siguiente nivel" />
                 </acciones>
-                <validaciones>
-                   <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*)&gt;0 AS encontrado FROM operation.presupuesto_egresos_det WHERE id_periodo='+$inParam.periodo$+' AND clave_presupuestal IN (SELECT clave_presupuestaria_importa FROM operation.origen_destino_n_n WHERE periodo='+$inParam.periodo$+' AND id_adecuacion='+%registraAdecuacionA.registraAdecuacionA.id_adecuacion%+')','encontrado','bool','MAGNITUS')==false" validacionMensaje="'Clave(s) Inexistentes'" />
-                </validaciones>
+                <!--<validaciones>-->
+                <!--   <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*)&gt;0 AS encontrado FROM operation.presupuesto_egresos_det WHERE id_periodo='+$inParam.periodo$+' AND clave_presupuestal IN (SELECT clave_presupuestaria_importa FROM operation.origen_destino_n_n WHERE periodo='+$inParam.periodo$+' AND id_adecuacion='+%registraAdecuacionA.registraAdecuacionA.id_adecuacion%+')','encontrado','bool','MAGNITUS')==false" validacionMensaje="'Clave(s) Inexistentes'" />-->
+                <!--</validaciones>-->
                 <estilos>
                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="10" />
                    <boton nombre="formulario" visible="true" texto="Continuar" columnas="8" margen-izquierdo="1" margen-derecho="1" />
@@ -144,7 +144,7 @@
                     <!--<campo name="clave_presupuestaria_importa" text="Clave Presupuestal Importación" columna-visible="true" columnas="3" margen-izquierdo="1" columnaImportacion="clave_presupuestal" columnaImportacionVisible="true" validacionImportacion="@ifThenElse(%clave_presupuestal%==null, true, false) " validacionImportacionMensaje="COLUMNA CLAVE PRESUPUESTAL VACIA" importacion="true" visible="false" />
                     <campo name="clave_presupuestaria" text="Clave Presupuestal Manual" llaveForanea="true" descripcionForanea="clave_pre" descripcionForaneaTabla="clave_pre" autoFiltrado="false" autoFiltradoDescripcion="clave_pre" columnas="8" margen-izquierdo="1" margen-derecho="1" columna-visible="true" validacion="%clave_presupuestaria%==null" validacionMensaje="ingrese la clave Presupuestal" llavesDinamicas="'fondo_contable=\\''+%cachaParametros.cachaParametros.fondo_contable%+'\\''" />-->
                    
-                    <campo name="clave_presupuestaria" text="Clave Presupuestal Manual" llaveForanea="true" descripcionForanea="clave_pre" descripcionForaneaTabla="clave_pre" autoFiltrado="false" autoFiltradoDescripcion="clave_pre" columnas="8" margen-izquierdo="1" margen-derecho="1" columna-visible="false" validacion="%clave_presupuestaria%==null" validacionMensaje="ingrese la clave Presupuestal" llavesDinamicas="'fondo_contable=\\''+%cachaParametros.cachaParametros.fondo_contable%+'\\''" />
+                    <campo name="clave_presupuestaria" text="Clave Presupuestal Manual" llaveForanea="true" descripcionForanea="clave_pre" descripcionForaneaTabla="clave_pre" autoFiltrado="true" autoFiltradoDescripcion="clave_pre" columnas="8" margen-izquierdo="1" margen-derecho="1" columna-visible="false" validacion="%clave_presupuestaria%==null" validacionMensaje="ingrese la clave Presupuestal" llavesDinamicas="'fondo_contable=\\''+%cachaParametros.cachaParametros.fondo_contable%+'\\''" />
                    
                     <campo name="clave_presupuestaria_importa" text="Clave Presupuestal" width="250" columnas="3" margen-izquierdo="1" columnaImportacion="clave_presupuestal" columnaImportacionVisible="true" validacionImportacion="@ifThenElse(%clave_presupuestal%==null, true, @ifThenElse(@consultaDirec('SELECT COUNT(*)&gt;0 AS encontrado FROM operation.presupuesto_egresos_det WHERE id_periodo='+$inParam.periodo$+' AND clave_presupuestal IN ('+'\\''+%clave_presupuestal%+'\\''+')','encontrado','bool','MAGNITUS')==false, true, @ifThenElse(@subCadena(%clave_presupuestal%,6,9)!=%cachaParametros.cachaParametros.fondo_contable%, true, false)))" validacionImportacionMensaje="COLUMNA CLAVE PRESUPUESTAL VACIA" importacion="true"  calcCliente="@ifThenElse(%clave_presupuestaria%!='',@consultaDirec('select clave_pre  from operation.aux_n_n where id_aux_n_n='+%clave_presupuestaria%,'clave_pre','string','MAGNITUS'),%clave_presupuestaria_importa%)" visible="false" />
                     
@@ -212,7 +212,6 @@
                 </acciones>
                 <validaciones>
                    <validacion tipo="avanzar" validacion="@consultaDirec('select COUNT(*) &gt; 0 encontrado from operation.origen_destino_n_n where (select sum(monto) from operation.origen_destino_n_n where tipo like  \\'A\\' and id_adecuacion= '+$inParam.id_adecuacion$+' and ur= '+$inParam.ur$+' and periodo= '+$inParam.periodo$+')= (select sum(monto) from operation.origen_destino_n_n where tipo like \\'R\\' and id_adecuacion= '+$inParam.id_adecuacion$+' and ur= '+$inParam.ur$+' and periodo = '+$inParam.periodo$+')','encontrado','bool','MAGNITUS')==false" validacionMensaje="'Las Cantidades no Coinciden'" />
-                   <validacion tipo="avanzar" validacion="@consultaDirec('SELECT COUNT(*)&gt;0 AS encontrado FROM operation.presupuesto_egresos_det WHERE id_periodo='+$inParam.periodo$+' AND clave_presupuestal IN (SELECT clave_presupuestaria_importa FROM operation.origen_destino_n_n WHERE periodo='+$inParam.periodo$+' AND id_adecuacion='+%registraAdecuacionA.registraAdecuacionA.id_adecuacion%+')','encontrado','bool','MAGNITUS')==false" validacionMensaje="'Clave(s) Inexistentes'" />
                 </validaciones>
                 <estilos>
                    <boton nombre="grabar" visible="true" texto="Continuar" columnas="10" />
